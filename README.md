@@ -109,7 +109,7 @@ fixlasso (matrix, lam, typ ='LS ', meth ='choose ', plot_time =True, plot_sol =T
 
 ### For solving the problem for the whole path :
 ```python
-pathlasso (matrix, lambdas ='choose ', lamin =1e -2, typ='LS ', meth ='ODE ', plot_time =True, plot_sol =True, plot_sigm =True, rho = 1.345, compare = False )
+pathlasso (matrix, lambdas = 'choose ', lamin = 1e -2, typ= 'LS ', meth = 'ODE ', plot_time = True, plot_sol = True, plot_sigm = True, rho = 1.345, compare = False )
 ```
 
 
