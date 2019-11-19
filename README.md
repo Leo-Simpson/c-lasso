@@ -1,5 +1,17 @@
 # Constrained sparse regression functions in Python
 
+## Table of Contents
+
+* [How to use the package](#How to use the package)
+* [Different type of problem](#Different type of problem)
+* [Different methods for solving the problems](#Different methods for solving the problems)
+* [Two main functions](#Two main functions)
+* [Little functions](#Little functions)
+* [Example](#Example)
+
+
+##  How to use the package : 
+
 ### To install the package : 
 ```shell
 pip install c_lasso
