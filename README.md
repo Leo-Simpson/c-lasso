@@ -4,6 +4,7 @@
 ```shell
 pip install c_lasso
 ```
+https://github.com/Leo-Simpson/classo/blob/master/figures/path.png
 
 ### To import the package :
 ```python
@@ -221,7 +222,5 @@ sol,path = pathlasso(matrices,lamin=0.05)
 
 Results : 
 Running time : 0.07373 sec
-
-![path] (figures/path.png)
 
 
