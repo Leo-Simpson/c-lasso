@@ -187,10 +187,34 @@ Where k is the number of 'cluster' used, test is the proportion of sample kept f
 
 
 
+## Example : 
+
+Here is an example of use of one of the methods  : concomitant algorithm with theoritical lambda, tested on data generated randomly. 
 
 
+```python
+from classo import *
+m,d,d_nonzero,k,sigma =100,200,5,5,0.5
+matrices,sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True)
 
+lam0 = model_selection(m,d)
+plt.bar(range(len(sol)),sol),plt.title("True solution Beta-hat"),plt.savefig('True solution Beta-hat.png'),plt.show()
+X1,s = Classo(matrices,lam0,typ='Concomitant')
+```
+Results : 
+```python
+sigma =  0.578
+Running time : 0.04192 sec
+```
+![true sol] (https://imgur.com/zsHRy0I)
+![algo sol] (https://imgur.com/sYKd3zU)
 
+```python
+sol,path = pathlasso(matrices,lamin=0.05)
+```
 
+Results : 
+Running time : 0.07373 sc
+![path] (https://imgur.com/DxqXug0)
 
 
