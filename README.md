@@ -20,10 +20,13 @@ pip install time
     
 
 ##  Different type of problem : 
-	- Least square :             <img src="https://latex.codecogs.com/gif.latex?\min&space;||&space;Ax-y&space;||^2&space;&plus;&space;\lambda&space;||x||_1" title="\min || Ax-y ||^2 + \lambda ||x||_1" />
-	- Huber  :                   <img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(Ax-y)&space;&plus;&space;\lambda&space;||x||_1" title="\min h_{\rho}(Ax-y) + \lambda ||x||_1" />
-	- Concomitant Least square : <img src="https://latex.codecogs.com/gif.latex?\min&space;\frac{||&space;Ax-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" title="\min \frac{|| Ax-y ||^2}{\sigma}+ n\sigma + \lambda ||x||_1" />
-	- Concomitant Huber :        <img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(\frac{Ax-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" title="\min h_{\rho}(\frac{Ax-y}{\sigma} ) + n\sigma + \lambda ||x||_1" />
+### Least square :             <img src="https://latex.codecogs.com/gif.latex?\min&space;||&space;Ax-y&space;||^2&space;&plus;&space;\lambda&space;||x||_1" title="\min || Ax-y ||^2 + \lambda ||x||_1" />
+
+### Huber  :                   <img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(Ax-y)&space;&plus;&space;\lambda&space;||x||_1" title="\min h_{\rho}(Ax-y) + \lambda ||x||_1" />
+
+### Concomitant Least square : <img src="https://latex.codecogs.com/gif.latex?\min&space;\frac{||&space;Ax-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" title="\min \frac{|| Ax-y ||^2}{\sigma}+ n\sigma + \lambda ||x||_1" />
+
+### Concomitant Huber :        <img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(\frac{Ax-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" title="\min h_{\rho}(\frac{Ax-y}{\sigma} ) + n\sigma + \lambda ||x||_1" />
 
 
 
