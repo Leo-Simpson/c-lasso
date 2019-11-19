@@ -206,10 +206,11 @@ Results :
 sigma =  0.578
 Running time : 0.04192 sec
 ```
-![Alt text] (classo/figures/True solution Beta-hat.png)
+
+![beta hat](figures/True solution Beta-hat.png)
 
 
-![Alt text] (figures/Problem Concomitant solved with ODE method.png)
+![beta](figures/Problem Concomitant solved with ODE method.png)
 
 
 
@@ -220,6 +221,7 @@ sol,path = pathlasso(matrices,lamin=0.05)
 
 Results : 
 Running time : 0.07373 sec
-![path] (https://raw.githubusercontent.com/Leo-Simpson/classo/master/figures/path.png)
+
+![path] (figures/path.png)
 
 
