@@ -22,7 +22,7 @@ pip install time
 ##  Different type of problem : 
 #### Least square :             
 
-<img src="https://latex.codecogs.com/gif.latex?\min&space;||&space;Ax-y&space;||^2&space;&plus;&space;\lambda&space;||x||_1" title="\min || Ax-y ||^2 + \lambda ||x||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\min&space;||&space;Ax-y&space;||^2&space;&plus;&space;\lambda&space;||x||_1" />
 
 #### Huber  :                   
 
@@ -176,7 +176,7 @@ The function returns :
 ```python
 model_selection(m,d)
 ```
-Where m is the number of sample and d the number of parameter, it returns : <img src="https://latex.codecogs.com/gif.latex?lam0&space;=&space;\sqrt{\frac{2}{m}}&space;\Phi^{-1}(1-t)" title="lam0 = \sqrt{\frac{2}{m}} \Phi^{-1}(1-t)" />, with <img src="https://latex.codecogs.com/gif.latex?\Phi^{-1}" title="\Phi^{-1}" /> the quantile function for the standard normal distribution, and t is the solution to the equation <img src="https://latex.codecogs.com/gif.latex?t.p&space;=&space;\Phi^{-1}(1-t)^4&space;&plus;&space;2\Phi^{-1}(1-t)^2" title="t.p = \Phi^{-1}(1-t)^4 + 2\Phi^{-1}(1-t)^2" />
+Where m is the number of sample and d the number of parameter, it returns : <img src="https://latex.codecogs.com/gif.latex?lam0&space;=&space;\sqrt{2/m}&space;\Phi^{-1}(1-t)" title="lam0 = \sqrt{\frac{2}{m}} \Phi^{-1}(1-t)" />, with <img src="https://latex.codecogs.com/gif.latex?\Phi^{-1}" title="\Phi^{-1}" /> the quantile function for the standard normal distribution, and t is the solution to the equation <img src="https://latex.codecogs.com/gif.latex?t.p&space;=&space;\Phi^{-1}(1-t)^4&space;&plus;&space;2\Phi^{-1}(1-t)^2" title="t.p = \Phi^{-1}(1-t)^4 + 2\Phi^{-1}(1-t)^2" />
 
 
 ### For computing the solution using cross-validation and the previous main functions : 
