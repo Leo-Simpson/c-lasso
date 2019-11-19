@@ -206,8 +206,8 @@ Results :
 sigma =  0.578
 Running time : 0.04192 sec
 ```
-![true sol] (https://imgur.com/zsHRy0I)
-![algo sol] (https://imgur.com/sYKd3zU)
+![true sol] (https://imgur.com/zsHRy0I.png)
+![algo sol] (https://imgur.com/sYKd3zU.png)
 
 ```python
 sol,path = pathlasso(matrices,lamin=0.05)
@@ -215,6 +215,6 @@ sol,path = pathlasso(matrices,lamin=0.05)
 
 Results : 
 Running time : 0.07373 sc
-![path] (https://imgur.com/DxqXug0)
+![path] (https://imgur.com/DxqXug0.png)
 
 
