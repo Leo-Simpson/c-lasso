@@ -20,13 +20,21 @@ pip install time
     
 
 ##  Different type of problem : 
-### Least square :             <img src="https://latex.codecogs.com/gif.latex?\min&space;||&space;Ax-y&space;||^2&space;&plus;&space;\lambda&space;||x||_1" title="\min || Ax-y ||^2 + \lambda ||x||_1" />
+#### Least square :             
 
-### Huber  :                   <img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(Ax-y)&space;&plus;&space;\lambda&space;||x||_1" title="\min h_{\rho}(Ax-y) + \lambda ||x||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\min&space;||&space;Ax-y&space;||^2&space;&plus;&space;\lambda&space;||x||_1" title="\min || Ax-y ||^2 + \lambda ||x||_1" />
 
-### Concomitant Least square : <img src="https://latex.codecogs.com/gif.latex?\min&space;\frac{||&space;Ax-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" title="\min \frac{|| Ax-y ||^2}{\sigma}+ n\sigma + \lambda ||x||_1" />
+#### Huber  :                   
 
-### Concomitant Huber :        <img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(\frac{Ax-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" title="\min h_{\rho}(\frac{Ax-y}{\sigma} ) + n\sigma + \lambda ||x||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(Ax-y)&space;&plus;&space;\lambda&space;||x||_1" title="\min h_{\rho}(Ax-y) + \lambda ||x||_1" />
+
+#### Concomitant Least square : 
+
+<img src="https://latex.codecogs.com/gif.latex?\min&space;\frac{||&space;Ax-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" title="\min \frac{|| Ax-y ||^2}{\sigma}+ n\sigma + \lambda ||x||_1" />
+
+#### Concomitant Huber :        
+
+<img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(\frac{Ax-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" title="\min h_{\rho}(\frac{Ax-y}{\sigma} ) + n\sigma + \lambda ||x||_1" />
 
 
 
@@ -35,30 +43,30 @@ pip install time
 ### Four main methods have been implemented for those.
 
 
-        Forward Backward splitting method:
-            Standard way to solve a convex minimisation problem with an addition of
-            smooth and non-smooth function : Projected Proximal Gradient Descent. This
-            method only works with the two non concomitants problems. For the huber
-            problem, we use the second formulation.
+#### Forward Backward splitting method:
+Standard way to solve a convex minimisation problem with an addition of
+smooth and non-smooth function : Projected Proximal Gradient Descent. This
+method only works with the two non concomitants problems. For the huber
+problem, we use the second formulation.
 
-        No-proj method
-            Similar to the Projected Proximal Gradient Descent, but which does not involve
-            a projection, which can be difficult to compute for some matrix C. Only for
-            non concomitant problems.
+#### No-proj method
+Similar to the Projected Proximal Gradient Descent, but which does not involve
+a projection, which can be difficult to compute for some matrix C. Only for
+non concomitant problems.
 
-        Double prox method
-            Use of Doulgas Rachford splitting algorithm which use the proximal operator of
-            both functions. It also solves concomitant problems, but it is usefull even in the
-            non concomitant case because it is usually more efficient than forward backward
-            splitting method. For the huber problem, we use the second formulation, then
-            we change it into a Least square problem of dimension m (m + d) instead of m d.
+#### Double prox method
+Use of Doulgas Rachford splitting algorithm which use the proximal operator of
+both functions. It also solves concomitant problems, but it is usefull even in the
+non concomitant case because it is usually more efficient than forward backward
+splitting method. For the huber problem, we use the second formulation, then
+we change it into a Least square problem of dimension m (m + d) instead of m d.
 
-        ODE method  
-            From the KKT conditions, we can derive an simple ODE for the solution of
-            the non concomitants problems, which shows that the solution is piecewise-
-            affine. For the least square, as the problem can always be reported to a a non
-            concomitant problem for another lambda, one can use the whole non-concomitant-
-            path computed with the ODE method to then solve the concomitant-path.
+#### ODE method  
+From the KKT conditions, we can derive an simple ODE for the solution of
+the non concomitants problems, which shows that the solution is piecewise-
+affine. For the least square, as the problem can always be reported to a a non
+concomitant problem for another lambda, one can use the whole non-concomitant-
+path computed with the ODE method to then solve the concomitant-path.
 
 
 
