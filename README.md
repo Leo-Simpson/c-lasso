@@ -206,9 +206,11 @@ Results :
 sigma =  0.578
 Running time : 0.04192 sec
 ```
-![true sol] (https://i.imgur.com/zsHRy0I.png)
+![true sol] (figures/True solution Beta-hat.png)
 
-![algo sol] (https://imgur.com/sYKd3zU.png)
+
+![algo sol] (figures/Problem Concomitant solved with ODE method.png)
+
 
 
 One can also compute the solution for a lambda-path : 
@@ -218,6 +220,6 @@ sol,path = pathlasso(matrices,lamin=0.05)
 
 Results : 
 Running time : 0.07373 sc
-![path] (https://imgur.com/DxqXug0.png)
+![path] (figures/path.png)
 
 
