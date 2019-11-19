@@ -124,50 +124,48 @@ pathlasso (matrix, lambdas = 'choose ', lamin = 1e -2, typ= 'LS ', meth = 'ODE '
 ```
 
 
-        -matrix
-            Matrices (A;C; y) of the problem.
+#### matrix
+Matrices (A;C; y) of the problem.
 
-        -lambdas
-            Gives the list of lambda/lambdamax in [0; 1] where we need the problem to be solved. 
-            If a boolean is given, it is the next parameter that will give the path.
+#### lambdas
+Gives the list of lambda/lambdamax in [0; 1] where we need the problem to be solved. 
+If a boolean is given, it is the next parameter that will give the path.
 
-        -lamin
-            If lambdas is a boolean, it gives the lambda/lambdamax minimum : 
-            the algorithm will solve the problem for all lambda in [lamin * lambdamax; lambdamax] 
-            (with 100 points).	
+#### lamin
+If lambdas is a boolean, it gives the lambda/lambdamax minimum : the algorithm will solve the problem for all lambda in [lamin * lambdamax; lambdamax] (with 100 points).	
 
-        -typ
-            Type of problem : 'Huber', 'Concomitant' , 'Concomitant Huber' or 'LS'. 
-            Any other string will set the type of problem to Least Square.
+#### typ
+Type of problem : 'Huber', 'Concomitant' , 'Concomitant Huber' or 'LS'. 
+Any other string will set the type of problem to Least Square.
 
-        -meth
-            Method to solve the problem. If wrong input, the algorithm choose the method according to lambda.
-                - Possibilities for types 'LS' and 'Huber' : 'FB', 'Noproj', '2prox', 'ODE'.
-                - Possibilities for type 'Concomitant' : '2prox', 'ODE'.
-                - Possibilities for type 'Concomitant Huber' : '2prox'.
+#### meth
+Method to solve the problem. If wrong input, the algorithm choose the method according to lambda.
+    - Possibilities for types 'LS' and 'Huber' : 'FB', 'Noproj', '2prox', 'ODE'.
+    - Possibilities for type 'Concomitant' : '2prox', 'ODE'.
+    - Possibilities for type 'Concomitant Huber' : '2prox'.
 
-            For each case except 'ODE', the algorithm solves the problem for each lambda of the path using warm starts.
+For each case except 'ODE', the algorithm solves the problem for each lambda of the path using warm starts.
 
 
-        -plot_time
-            If set to True : prints the running time.
+#### plot_time
+If set to True : prints the running time.
 
-        -plot_sol
-            If set to True : plots the solution in a bars diagram.
+#### plot_sol
+If set to True : plots the solution in a bars diagram.
 
-        -plot_sigm
-            If set to True and the type we solve a concomitant problem : prints sigma/sigmamax.
+#### plot_sigm
+If set to True and the type we solve a concomitant problem : prints sigma/sigmamax.
 
-        -rho
-            Normalized rho for non-concomitant Huber problem : rho * sqrt(m) / norm_inf(y)
-            Unormalized sigma for concomitant Huber problem.
+#### rho
+Normalized rho for non-concomitant Huber problem : rho * sqrt(m) / norm_inf(y)
+Unormalized sigma for concomitant Huber problem.
 
 
-        -returns
-            The function returns :  
-                a list 'numpy.ndarray' type vector representing the solution beta for each lambda ;
-                the list of lambda corresponding (unormalized), 
-                also the list of sigmas for the concomitant problems.
+#### returns
+The function returns :  
+    a list 'numpy.ndarray' type vector representing the solution beta for each lambda ;
+    the list of lambda corresponding (unormalized), 
+    also the list of sigmas for the concomitant problems.
 
 
 
@@ -178,14 +176,14 @@ pathlasso (matrix, lambdas = 'choose ', lamin = 1e -2, typ= 'LS ', meth = 'ODE '
 ```python
 model_selection(m,d)
 ```
-            Where m is the number of sample and d the number of parameter, it returns : <img src="https://latex.codecogs.com/gif.latex?lam0&space;=&space;\sqrt{\frac{2}{m}}&space;\Phi^{-1}(1-t)" title="lam0 = \sqrt{\frac{2}{m}} \Phi^{-1}(1-t)" />, with <img src="https://latex.codecogs.com/gif.latex?\Phi^{-1}" title="\Phi^{-1}" /> the quantile function for the standard normal distribution, and t is the solution to the equation <img src="https://latex.codecogs.com/gif.latex?t.p&space;=&space;\Phi^{-1}(1-t)^4&space;&plus;&space;2\Phi^{-1}(1-t)^2" title="t.p = \Phi^{-1}(1-t)^4 + 2\Phi^{-1}(1-t)^2" />
+Where m is the number of sample and d the number of parameter, it returns : <img src="https://latex.codecogs.com/gif.latex?lam0&space;=&space;\sqrt{\frac{2}{m}}&space;\Phi^{-1}(1-t)" title="lam0 = \sqrt{\frac{2}{m}} \Phi^{-1}(1-t)" />, with <img src="https://latex.codecogs.com/gif.latex?\Phi^{-1}" title="\Phi^{-1}" /> the quantile function for the standard normal distribution, and t is the solution to the equation <img src="https://latex.codecogs.com/gif.latex?t.p&space;=&space;\Phi^{-1}(1-t)^4&space;&plus;&space;2\Phi^{-1}(1-t)^2" title="t.p = \Phi^{-1}(1-t)^4 + 2\Phi^{-1}(1-t)^2" />
 
 
 ### For computing the solution using cross-validation and the previous main functions : 
 ```python
 CV(matrices,k=5,typ='LS',test=0.4,lamin=1e-2, print_lam= True)
 ```
-            Where k is the number of 'cluster' used, test is the proportion of sample kept for testing, and print lam tells us if the function also print the lambda/lambdamax used. The function returns the solution Beta as a 'numpy.ndarray'.
+Where k is the number of 'cluster' used, test is the proportion of sample kept for testing, and print lam tells us if the function also print the lambda/lambdamax used. The function returns the solution Beta as a 'numpy.ndarray'.   
 
 
 
