@@ -206,7 +206,7 @@ Results :
 sigma =  0.578
 Running time : 0.04192 sec
 ```
-![Alt text] (figures/True solution Beta-hat.png)
+![Alt text] (classo/figures/True solution Beta-hat.png)
 
 
 ![Alt text] (figures/Problem Concomitant solved with ODE method.png)
