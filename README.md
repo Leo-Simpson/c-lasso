@@ -26,15 +26,15 @@ pip install time
 
 #### Huber  :                   
 
-<img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(Ax-y)&space;&plus;&space;\lambda&space;||x||_1" title="\min h_{\rho}(Ax-y) + \lambda ||x||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(Ax-y)&space;&plus;&space;\lambda&space;||x||_1"  />
 
 #### Concomitant Least square : 
 
-<img src="https://latex.codecogs.com/gif.latex?\min&space;\frac{||&space;Ax-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" title="\min \frac{|| Ax-y ||^2}{\sigma}+ n\sigma + \lambda ||x||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\min&space;\frac{||&space;Ax-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1"  />
 
 #### Concomitant Huber :        
 
-<img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(\frac{Ax-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" title="\min h_{\rho}(\frac{Ax-y}{\sigma} ) + n\sigma + \lambda ||x||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(\frac{Ax-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" />
 
 
 
@@ -154,10 +154,10 @@ If set to True : prints the running time.
 If set to True : plots the solution in a bars diagram.
 
 #### plot_sigm
-If set to True and the type we solve a concomitant problem : prints sigma/sigmamax.
+If set to True and the type we solve a concomitant problem : prints <img src="https://latex.codecogs.com/gif.latex?\sigma&space;/&space;\sigma_{max}" />.
 
 #### rho
-Normalized rho for non-concomitant Huber problem : rho * sqrt(m) / norm_inf(y)
+Normalized rho for non-concomitant Huber problem : <img src="https://latex.codecogs.com/gif.latex?\rho&space;*&space;\sqrt{m}&space;/&space;||y||_{\infty}" />
 Unormalized sigma for concomitant Huber problem.
 
 
@@ -176,7 +176,7 @@ The function returns :
 ```python
 model_selection(m,d)
 ```
-Where m is the number of sample and d the number of parameter, it returns : <img src="https://latex.codecogs.com/gif.latex?lam0&space;=&space;\sqrt{2/m}&space;\Phi^{-1}(1-t)" title="lam0 = \sqrt{\frac{2}{m}} \Phi^{-1}(1-t)" />, with <img src="https://latex.codecogs.com/gif.latex?\Phi^{-1}" title="\Phi^{-1}" /> the quantile function for the standard normal distribution, and t is the solution to the equation <img src="https://latex.codecogs.com/gif.latex?t.p&space;=&space;\Phi^{-1}(1-t)^4&space;&plus;&space;2\Phi^{-1}(1-t)^2" title="t.p = \Phi^{-1}(1-t)^4 + 2\Phi^{-1}(1-t)^2" />
+Where m is the number of sample and d the number of parameter, it returns : <img src="https://latex.codecogs.com/gif.latex?lam0&space;=&space;\sqrt{2/m}&space;\Phi^{-1}(1-t)"  />, with <img src="https://latex.codecogs.com/gif.latex?\Phi^{-1}" /> the quantile function for the standard normal distribution, and t is the solution to the equation <img src="https://latex.codecogs.com/gif.latex?t.p&space;=&space;\Phi^{-1}(1-t)^4&space;&plus;&space;2\Phi^{-1}(1-t)^2"  />
 
 
 ### For computing the solution using cross-validation and the previous main functions : 
