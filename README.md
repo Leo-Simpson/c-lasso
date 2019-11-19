@@ -220,6 +220,9 @@ sol,path = pathlasso(matrices,lamin=0.05)
 ```
 
 Results : 
+```python
 Running time : 0.07373 sec
+```
+
 
 ![path](figures/path.png)
