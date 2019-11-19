@@ -4,7 +4,6 @@
 ```shell
 pip install c_lasso
 ```
-https://github.com/Leo-Simpson/classo/blob/master/figures/path.png
 
 ### To import the package :
 ```python
@@ -208,10 +207,10 @@ sigma =  0.578
 Running time : 0.04192 sec
 ```
 
-![beta hat](figures/True solution Beta-hat.png)
+![betah](figures/betah.png)
 
 
-![beta](figures/Problem Concomitant solved with ODE method.png)
+![beta](figures/beta.png)
 
 
 
