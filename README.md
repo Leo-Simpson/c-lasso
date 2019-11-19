@@ -77,41 +77,41 @@ path computed with the ODE method to then solve the concomitant-path.
 fixlasso (matrix, lam, typ ='LS ', meth ='choose ', plot_time =True, plot_sol =True, plot_sigm =True, rho = 1.345)
 ```
   
-         -matrix
-            Matrices (A;C; y) of the problem.
+#### matrix
+Matrices (A;C; y) of the problem.
 
-         -lam
-            Lambda/lambdamax in [0; 1] where lambdamax is a majoration of the lambda when the solution is null 
-            (depends on the type of problem).
+#### lam
+Lambda/lambdamax in [0; 1] where lambdamax is a majoration of the lambda when the solution is null 
+(depends on the type of problem).
 
-         -typ
-            Type of problem : 'Huber', 'Concomitant' , 'Concomitant Huber' or 'LS'. 
-            Any other string will set the type of problem to Least Square.
+#### typ
+Type of problem : 'Huber', 'Concomitant' , 'Concomitant Huber' or 'LS'. 
+Any other string will set the type of problem to Least Square.
 
-         -meth
-            Method to solve the problem. If wrong input, the algorithm choose the method according to lambda
-                - Possibilities for types 'LS' and 'Huber' : 'FB', 'Noproj', '2prox', 'ODE'.
-                - Possibilities for type 'Concomitant' : '2prox', 'ODE'.
-                - Possibilities for type 'Concomitant Huber' : '2prox'.
+#### meth
+Method to solve the problem. If wrong input, the algorithm choose the method according to lambda
+    - Possibilities for types 'LS' and 'Huber' : 'FB', 'Noproj', '2prox', 'ODE'.
+    - Possibilities for type 'Concomitant' : '2prox', 'ODE'.
+    - Possibilities for type 'Concomitant Huber' : '2prox'.
 
-         -plot_time
-            If set to True : prints the running time.
+#### plot_time
+If set to True : prints the running time.
 
-         -plot_sol
-            If set to True : plots the solution in a bars diagram.
+#### plot_sol
+If set to True : plots the solution in a bars diagram.
 
-         -plot_sigm
-            If set to True and the type we solve a concomitant problem : prints sigma/sigmamax.
+#### plot_sigm
+If set to True and the type we solve a concomitant problem : prints sigma/sigmamax.
 
-         -rho
-            Normalized rho for non-concomitant Huber problem : rho * sqrt(m) / norm_inf(y)
-            Unormalized sigma for concomitant Huber problem.
+#### rho
+Normalized rho for non-concomitant Huber problem : rho * sqrt(m) / norm_inf(y)
+Unormalized sigma for concomitant Huber problem.
 
 
-         -returns
-            The function returns : 
-                An 'numpy.ndarray' type vector representing the solution betafor non concomitant problems, 
-                A tuple containing beta and sigma for the concomitant problems.
+#### returns
+The function returns : 
+    An 'numpy.ndarray' type vector representing the solution betafor non concomitant problems, 
+    A tuple containing beta and sigma for the concomitant problems.
 
 
 
