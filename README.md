@@ -2,26 +2,26 @@
 
 ## Table of Contents
 
-* [How to use the package](#How to use the package)
-* [Different type of problem](#Different type of problem)
-* [Different methods for solving the problems](#Different methods for solving the problems)
-* [Two main functions](#Two main functions)
-* [Little functions](#Little functions)
+* [How to use the package](#How-to-use-the-package)
+* [Different type of problem](#Different-type-of-problem)
+* [Different methods for solving the problems](#Different-methods-for-solving-the-problems)
+* [Two main functions](#Two main-functions)
+* [Little functions](#Little-functions)
 * [Example](#Example)
 
 
 ##  How to use the package : 
 
-### To install the package : 
+#### To install the package : 
 ```shell
 pip install c_lasso
 ```
 
-### To import the package :
+#### To import the package :
 ```python
 from classo import *
 ```
-### To import the required packages  :
+#### To import the required packages  :
 ```shell
 pip install numpy
 pip install matplotlib
