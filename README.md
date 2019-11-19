@@ -206,9 +206,12 @@ Results :
 sigma =  0.578
 Running time : 0.04192 sec
 ```
-![true sol] (https://imgur.com/zsHRy0I.png)
+![true sol] (https://i.imgur.com/zsHRy0I.png)
+
 ![algo sol] (https://imgur.com/sYKd3zU.png)
 
+
+One can also compute the solution for a lambda-path : 
 ```python
 sol,path = pathlasso(matrices,lamin=0.05)
 ```
