@@ -7,7 +7,7 @@ pip install c_lasso
 
 ### To import the package :
 ```python
-import classo
+from classo import *
 ```
 ### To import the required packages  :
 ```shell
