@@ -1,22 +1,22 @@
 # Constrained sparse regression functions in Python
 
 ### To install the package : 
-    ```shell
-    pip install c_lasso
-    ```
+```shell
+pip install c_lasso
+```
 
 ### To import the package :
-    ```python
-    import classo
-    ```
+```python
+import classo
+```
 ### To import the required packages  :
-    ```shell
-    pip install numpy
-    pip install matplotlib
-    pip install scipy
-    pip install pandas
-    pip install time
-    ```
+```shell
+pip install numpy
+pip install matplotlib
+pip install scipy
+pip install pandas
+pip install time
+```
     
 
 ##  Different type of problem : 
@@ -62,9 +62,9 @@
 ## Two main functions 
 
 ### For solving the problem for a fix \lambda : 
-    ```python
-    fixlasso (matrix, lam, typ ='LS ', meth ='choose ', plot_time =True, plot_sol =True, plot_sigm =True, rho = 1.345)
-    ```
+```python
+fixlasso (matrix, lam, typ ='LS ', meth ='choose ', plot_time =True, plot_sol =True, plot_sigm =True, rho = 1.345)
+```
   
          -matrix
             Matrices (A;C; y) of the problem.
@@ -108,9 +108,9 @@
 
 
 ### For solving the problem for the whole path :
-    ```python
-    pathlasso (matrix, lambdas ='choose ', lamin =1e -2, typ='LS ', meth ='ODE ', plot_time =True, plot_sol =True, plot_sigm =True, rho = 1.345, compare = False )
-    ```
+```python
+pathlasso (matrix, lambdas ='choose ', lamin =1e -2, typ='LS ', meth ='ODE ', plot_time =True, plot_sol =True, plot_sigm =True, rho = 1.345, compare = False )
+```
 
 
         -matrix
@@ -164,16 +164,16 @@
 
 ## Little functions :
 ### For computing the theoretical lambda/lambdamax in the case of concomitant problems :  
-        ```python
-        model_selection(m,d)
-        ```
+```python
+model_selection(m,d)
+```
             Where m is the number of sample and d the number of parameter, it returns : <img src="https://latex.codecogs.com/gif.latex?lam0&space;=&space;\sqrt{\frac{2}{m}}&space;\Phi^{-1}(1-t)" title="lam0 = \sqrt{\frac{2}{m}} \Phi^{-1}(1-t)" />, with <img src="https://latex.codecogs.com/gif.latex?\Phi^{-1}" title="\Phi^{-1}" /> the quantile function for the standard normal distribution, and t is the solution to the equation <img src="https://latex.codecogs.com/gif.latex?t.p&space;=&space;\Phi^{-1}(1-t)^4&space;&plus;&space;2\Phi^{-1}(1-t)^2" title="t.p = \Phi^{-1}(1-t)^4 + 2\Phi^{-1}(1-t)^2" />
 
 
 ### For computing the solution using cross-validation and the previous main functions : 
-        ```python
-        CV(matrices,k=5,typ='LS',test=0.4,lamin=1e-2, print_lam= True)
-        ```
+```python
+CV(matrices,k=5,typ='LS',test=0.4,lamin=1e-2, print_lam= True)
+```
             Where k is the number of 'cluster' used, test is the proportion of sample kept for testing, and print lam tells us if the function also print the lambda/lambdamax used. The function returns the solution Beta as a 'numpy.ndarray'.
 
 
