@@ -74,7 +74,7 @@ def Classo(matrix,lam,typ = 'LS', meth='choose',plot_time=True , plot_sol=True,p
         
     if (plot_sigm and typ in ['Concomitant','Concomitant_Huber']): print('sigma = ',s)
     if (plot_time): print('Running time :', round(dt,5))
-    if (plot_sol): plt.bar(range(len(X)),X),plt.title('Problem '+typ+' , lam ='+str(round(lam,3))+' solved with '+ meth +' method'), plt.show()
+    if (plot_sol): plt.bar(range(len(X)),X),plt.title('Problem '+typ+' , lam ='+str(round(lam,3))+' solved with '+ meth +' method'),plt.savefig('Problem '+typ+' solved with '+ meth +' method'+'.png'), plt.show()
     if (typ  in ['Concomitant','Concomitant_Huber']): return(X,s)
     return(X)
 
@@ -143,9 +143,9 @@ def pathlasso(matrix,lambdas=False,lamin=1e-2,typ='LS',meth='ODE',plot_time=True
     if (plot_time): print('Running time :', round(dt,5))
     if (plot_sol): 
         affichage(X,real_path,title=typ+' Path for the method '+meth),plt.show()
-        if not (type(compare)==bool): affichage([X[i]-diff[i] for i in range(len(X))],real_path,title='Difference between both methods'),plt.show()
+        if not (type(compare)==bool): affichage([X[i]-diff[i] for i in range(len(X))],real_path,title='Difference between both methods'),plt.savefig('Difference between both methods'+'.png'),plt.show()
     if (plot_sigm and typ in ['Concomitant','Concomitant Huber']): 
-        plt.plot(real_path,S),plt.ylabel("sigma / sigmaMAX"),plt.xlabel("lambda"), plt.title('Sigma for Concomitant'),plt.show()
+        plt.plot(real_path,S),plt.ylabel("sigma / sigmaMAX"),plt.xlabel("lambda"), plt.title('Sigma for Concomitant'),plt.savefig('Sigma for Concomitant'+'.png'),plt.show()
         return(X,real_path,S)
     return(X,real_path)
  
