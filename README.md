@@ -219,7 +219,7 @@ sol,path = pathlasso(matrices,lamin=0.05)
 ```
 
 Results : 
-Running time : 0.07373 sc
-![Alt text] (figures/path.png)
+Running time : 0.07373 sec
+![path] (https://raw.githubusercontent.com/Leo-Simpson/classo/master/figures/path.png)
 
 
