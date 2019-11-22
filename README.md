@@ -1,4 +1,4 @@
-# Constrained sparse regression functions in Python
+# C-lasso, a Python package for sparse regression with linear equality constraints
 
 ## Table of Contents
 
