@@ -1,15 +1,27 @@
-# Constrained sparse regression functions in Python
+# C-lasso, a Python package for sparse regression with linear equality constraints
 
-### To install the package : 
+## Table of Contents
+
+* [How to use the package](#how-to-use-the-package)
+* [Different type of problem](#different-type-of-problem)
+* [Different methods for solving the problems](#different-methods-for-solving-the-problems)
+* [Two main functions](#two-main-functions)
+* [Little functions](#little-functions)
+* [Example](#example)
+
+
+##  How to use the package
+
+#### To install the package : 
 ```shell
 pip install c_lasso
 ```
 
-### To import the package :
+#### To import the package :
 ```python
 from classo import *
 ```
-### To import the required packages  :
+#### To import the required packages  :
 ```shell
 pip install numpy
 pip install matplotlib
@@ -19,7 +31,7 @@ pip install time
 ```
     
 
-##  Different type of problem : 
+##  Different type of problem
 #### Least square :             
 
 <img src="https://latex.codecogs.com/gif.latex?\min&space;||&space;Ax-y&space;||^2&space;&plus;&space;\lambda&space;||x||_1" />
@@ -38,7 +50,7 @@ pip install time
 
 
 
-## Different methods for solving the problems : 
+## Different methods for solving the problems
 
 ### Four main methods have been implemented for those.
 
@@ -171,7 +183,7 @@ The function returns :
 
 
 
-## Little functions :
+## Little functions
 ### For computing the theoretical lambda/lambdamax in the case of concomitant problems :  
 ```python
 model_selection(m,d)
@@ -187,7 +199,7 @@ Where k is the number of 'cluster' used, test is the proportion of sample kept f
 
 
 
-## Example : 
+## Example
 
 Here is an example of use of one of the methods  : concomitant algorithm with theoritical lambda, tested on data generated randomly. 
 
@@ -220,6 +232,9 @@ sol,path = pathlasso(matrices,lamin=0.05)
 ```
 
 Results : 
+```python
 Running time : 0.07373 sec
+```
 
 
+![path](figures/path.png)
