@@ -59,7 +59,7 @@ def solve_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no
 
             if(concomitant=='path'): 
                 R.append(r)
-                if (sigma <= LA.norm(r)): 
+                if (sigma <= LA.norm(r) or (type(n_active)==int and number_act>= n_active)) :
                     return(BETA,LAM,R)
             else : 
                 if (sigma <= LA.norm(r)): return((beta_old,beta),(sigma_old,sigma),(r_old,r))               
