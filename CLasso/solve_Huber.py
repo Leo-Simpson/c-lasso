@@ -128,11 +128,12 @@ def algo_Huber(pb,lam, compute=True):
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or wuth the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.  
 '''
     
-def pathalgo_Huber(pb,path):
+def pathalgo_Huber(pb,path,n_active=False):
     n = pb.dim[0]
     BETA,tol = [],pb.tol
     if(pb.type == 'ODE'):
-        X,sp_path = solve_huber_path(pb.matrix,path[-1],pb.rho)
+        X,sp_path = solve_huber_path(pb.matrix,path[-1],pb.rho,n_active)
+        if (type(n_active)==int): return(X,sp_path)
         i=0
         for lam in path:
             while (lam<sp_path[i+1]): i+=1
@@ -143,15 +144,16 @@ def pathalgo_Huber(pb,path):
     save_init = pb.init   
     pb.regpath = True
     pb.compute_param()
+    if (type(n_active)==int) : n_act = n_active
+    else : n_act = n
     for lam in path:
         X = algo_Huber(pb,lam,compute=False)  
         BETA.append(X[0])
         pb.init = X[1]
-        if(sum([ (abs(X[0][i])>1e-2) for i in range(len(X[0])) ])>=n):
+        if(sum([ (abs(X[0][i])>1e-2) for i in range(len(X[0])) ])>=n_act):
                 pb.init = save_init
                 BETA = BETA + [BETA[-1]]*(len(path)-len(BETA))
                 pb.regpath = False
-                print('stop the path because number of active param reach n')
                 return(BETA)
             
     pb.init = save_init
