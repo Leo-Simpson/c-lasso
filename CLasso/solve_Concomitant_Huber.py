@@ -29,14 +29,14 @@ def algo_Concomitant_Huber(pb,lam):
     proj_sigm = lambda vect: ([sum(vect)/len(vect)]*len(vect))
     xs,nu,o,xbar,x = pb.init
     #2prox
-    print(pb.sigmax)
     if (pb_type == '2prox'):
         
         for i in range(pb.N):
             nv_b, nv_s = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x-xbar), (xs+nu)/2
             if (i>0 and LA.norm(b-nv_b)*Anorm +LA.norm(s-nv_s)<2*tol):
-                if (regpath):return(b,(xs,nu,o,xbar,x),sum(s)/len(s)/pb.sigmax) 
-                else :       return(b,sum(s)/len(s))
+                if (regpath):
+                            return(b,(xs,nu,o,xbar,x),sum(s)/len(s)/pb.sigmax)
+                else :      return(b,sum(s)/len(s))
                         
             s,b = nv_s, nv_b
             Ab = A.dot(b)
@@ -48,11 +48,7 @@ def algo_Concomitant_Huber(pb,lam):
                 return(b,np.sqrt(m)*sum(s)/len(s))
         print('NO CONVERGENCE')
         return(b,sum(s)/len(s))
-    
-    
-    
-    
-    
+
     print('none of the cases ! ')        
     
     
@@ -62,19 +58,20 @@ def algo_Concomitant_Huber(pb,lam):
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or wuth the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.  
 '''
     
-def pathalgo_Concomitant_Huber(pb,path):
+def pathalgo_Concomitant_Huber(pb,path,n_active=False):
     n = pb.dim[0]
     BETA,SIGMA,tol = [],[],pb.tol
 
     save_init = pb.init   
     pb.regpath = True
     for lam in path:
-        X = algo_Concomitant_Huber(pb,lam)     
+        X = algo_Concomitant_Huber(pb,lam)
         BETA.append(X[0]), SIGMA.append(X[2])
-        pb.init = X[1]    
-        if(sum([ (abs(X[0][i])>1e-2) for i in range(len(X[0])) ])>=n):
-                pb.init, BETA = save_init, BETA + [BETA[-1]]*(len(path)-len(BETA))
-                print('stop the path because number of active param reach n')
+        pb.init = X[1]
+        if (type(n_active)==int) : n_act = n_active
+        else : n_act = n
+        if(sum([ (abs(X[0][i])>1e-1) for i in range(len(X[0])) ])>=n_act):
+                pb.init, BETA, SIGMA = save_init, BETA + [BETA[-1]]*(len(path)-len(BETA)),SIGMA + [SIGMA[-1]]*(len(path)-len(SIGMA))
                 return(BETA,SIGMA)
             
     pb.init = save_init
@@ -96,7 +93,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 class problem_Concomitant_Huber :
     
     def __init__(self,data,algo,rho):
-        self.N = 500000
+        self.N = 10000
         
         if(len(data)==3): (A,C,y), self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
         elif(len(data)==5):
@@ -106,9 +103,8 @@ class problem_Concomitant_Huber :
         
         (m,d,k) = self.dim
         self.weights = np.ones(d)
-        self.tol = 1e-6
-         
-          
+        self.tol = 1e-3
+
         self.regpath = False
         self.name = algo + ' Concomitant Huber'
         self.type = algo          # type of algorithm used
@@ -119,6 +115,7 @@ class problem_Concomitant_Huber :
         self.c = (d/LA.norm(A,2))**2  # parameter for Concomitant problem : the matrix is scaled as c*A^2 
         self.gam = np.sqrt(d)
         sigmax = find_sigmax(y,rho)
+        self.sigmax = sigmax
         self.lambdamax = 2/sigmax*LA.norm((A.T).dot(h_prime(y,rho*sigmax)),np.infty)
         self.init = sigmax*np.ones(m),sigmax*np.ones(m),np.zeros(m), np.zeros(d), np.zeros(d)
            
