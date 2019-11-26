@@ -57,7 +57,7 @@ def CV(matrices,k,typ='LS',test=0.4,lamin=1e-2):
     i2 = np.argmin(AVG2)
     lam1 = LAM[i1]
     lam2 = LAM[i2]
-    print('lam',lam1)
+    print('lam =',lam1)
     beta1 = Classo((A[idx_train],C,y[idx_train]),lam1,typ=typ,plot_time=False,plot_sol=False,plot_sigm=False)
     beta2 = Classo((A[idx_train],C,y[idx_train]),lam2,typ=typ,plot_time=False,plot_sol=False,plot_sigm=False)
     return(beta1)
