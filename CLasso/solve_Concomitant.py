@@ -81,7 +81,7 @@ def algo_Concomitant(pb,lam, compute=True):
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or wuth the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.  
 '''
     
-def pathalgo_Concomitant(pb,path):
+def pathalgo_Concomitant(pb,path,n_active=False):
     n = pb.dim[0]
     BETA,SIGMA,tol = [],[],pb.tol
 
@@ -90,7 +90,8 @@ def pathalgo_Concomitant(pb,path):
     if(pb.type=='ODE'):
         y=pb.matrix[2]
         sigmax= LA.norm(y) * np.sqrt(2)
-        X,LAM,R = solve_path(pb.matrix,path[-1],concomitant = 'path')
+        X,LAM,R = solve_path(pb.matrix,path[-1],concomitant = 'path',n_active=n_active)
+        if (type(n_active)==int): return(X,[LA.norm(r)*sigmax for r in R],LAM)
         beta2,l2,r2,j = X[0],path[0]+0.1,-y/LA.norm(y),0
         for lam in path: 
             while (LA.norm(r2)<l2/lam): beta1,l1,r1,beta2,l2,r2,j = beta2,l2,r2,X[j],LAM[j],R[j],j+1
@@ -110,12 +111,13 @@ def pathalgo_Concomitant(pb,path):
         X = algo_Concomitant(pb,lam,compute=False)     
         BETA.append(X[0])
         SIGMA.append(X[-1])
-        pb.init = X[1]    
-        if(sum([ (abs(X[0][i])>1e-2) for i in range(len(X[0])) ])>=n):
+        pb.init = X[1]
+        if (type(n_active)==int) : n_act = n_active
+        else : n_act = n
+        if(sum([ (abs(X[0][i])>1e-2) for i in range(len(X[0])) ])>=n_act):
                 pb.init = save_init
                 BETA = BETA + [BETA[-1]]*(len(path)-len(BETA))
                 pb.regpath = False
-                print('stop the path because number of active param reach n')
                 return(BETA,SIGMA)
             
     pb.init = save_init
