@@ -82,7 +82,7 @@ This function compute the the solution for a given path of lam : by calling the 
 '''
     
 def pathalgo_Concomitant(pb,path,n_active=False):
-    n = pb.dim[0]
+    n,d,k  = pb.dim
     BETA,SIGMA,tol = [],[],pb.tol
 
     
@@ -94,13 +94,12 @@ def pathalgo_Concomitant(pb,path,n_active=False):
         if (type(n_active)==int): return(X,[LA.norm(r)*sigmax for r in R],LAM)
         beta2,l2,r2,j = X[0],path[0]+0.1,-y/LA.norm(y),0
         for lam in path: 
-            while (LA.norm(r2)<l2/lam): beta1,l1,r1,beta2,l2,r2,j = beta2,l2,r2,X[j],LAM[j],R[j],j+1
+            while (LA.norm(r2)<l2/lam) and (j < len(LAM)): beta1,l1,r1,beta2,l2,r2,j = beta2,l2,r2,X[j],LAM[j],R[j],j+1
             s1,s2 = l1/lam,l2/lam
             dr,ds = r1-r2,s1-s2
             teta  = root_2(LA.norm(dr)**2-ds**2 ,np.vdot(dr,r2)-s2*ds,LA.norm(r2)**2-s2**2)
             SIGMA.append((s1*teta + s2*(1-teta))*sigmax)
             BETA.append(beta1 *teta + beta2 *(1-teta))
-            
         return(BETA,SIGMA)
 
     
