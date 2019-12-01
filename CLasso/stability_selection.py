@@ -33,38 +33,84 @@ def non_nul_indices(array):
 
 
 
-def Bstability(matrix,lam=0.1, q = 10 ,B = 50, pourcent_nS = 0.5 , problem = 'LS', meth = 'choose',plot_time=True):
+
+
+
+
+
+def stability(matrix,SSmethod = 'first',numerical_method = "ODE",
+              lam = 0.1,hd = False, q = 10 ,B = 50, pourcent_nS = 0.5 ,
+              formulation = 'LS',plot_time=True, seed = 1 ):
+    
+    rd.seed(seed)    
+
     t0 = time()
     n, d = len(matrix[2]), len(matrix[0][0])
     nS = int(pourcent_nS*n)
     distribution=np.zeros(d)
-    for i in range(B):
-        subset = build_subset(n,nS)
-        submatrix = build_submatrix(matrix,subset)
-        regress = Classo(submatrix,lam,typ = problem, meth=meth,plot_time=False , plot_sol=False,plot_sigm=False)
-        if (problem  in ['Concomitant','Concomitant_Huber']): beta =[0]
-        else : beta = regress
-        qbiggest = biggest_indexes(abs(beta),q)
-        for i in qbiggest:
-            distribution[i]+=1
+    
+    
+    if (SSmethod == 'first') : 
+    
+    
+    
+        for i in range(B):
+            subset = build_subset(n,nS)
+            submatrix = build_submatrix(matrix,subset)
+            # compute the path until n_active = q, and only take the last Beta
+            beta = pathlasso(submatrix,n_active=q,lamin=0,
+                             typ=formulation, meth = numerical_method,
+                             plot_time=False,plot_sol=False,plot_sigm=False )[0][-1]
+            qfirst = non_nul_indices(beta)
+            for i in qfirst:
+                distribution[i]+=1
+    
+    
+    
+    elif (SSmethod == 'lam') : 
+    
+        for i in range(B):
+            subset = build_subset(n,nS)
+            submatrix = build_submatrix(matrix,subset)
+            regress = Classo(submatrix,lam,typ = formulation,
+                             meth=numerical_method,plot_time=False,
+                             plot_sol=False,plot_sigm=False)
+            if (problem  in ['Concomitant','Concomitant_Huber']): beta =[0]
+            else : beta = regress
+            qbiggest = biggest_indexes(abs(beta),q)
+            for i in qbiggest:
+                distribution[i]+=1
+                
+    
+    
+    
+    elif (SSmethod == 'max') : 
+        
+        
+        # !!!!! A faire !!!!!!!!
+        
+        for i in range(B):
+            subset = build_subset(n,nS)
+            submatrix = build_submatrix(matrix,subset)
+            # compute the path until n_active = q, and only take the last Beta
+            beta = pathlasso(submatrix,n_active=q,lamin=0,
+                             typ=formulation,meth = numerical_method,
+                             plot_time=False,plot_sol=False,plot_sigm=False )[0][-1]
+            qfirst = non_nul_indices(beta)
+            for i in qfirst:
+                distribution[i]+=1           
+                
+                
+    
+    
     if (plot_time): print("Running time : ", round(time()-t0,3))
     return(distribution * 1./B)
 
 
 
 
-def Fstability(matrix, q = 10 ,B = 50, pourcent_nS = 0.5 , problem = 'LS',plot_time=True):
-    t0 = time()
-    n, d = len(matrix[2]), len(matrix[0][0])
-    nS = int(pourcent_nS*n)
-    distribution=np.zeros(d)
-    for i in range(B):
-        subset = build_subset(n,nS)
-        submatrix = build_submatrix(matrix,subset)
-        # compute the path, and only take the last Beta, because it has exactly q actives parameters : the firsts in order of coming
-        beta = pathlasso(submatrix,n_active=q,lamin=0,typ=problem,plot_time=False,plot_sol=False,plot_sigm=False )[0][-1]
-        qfirst = non_nul_indices(beta)
-        for i in qfirst:
-            distribution[i]+=1
-    if (plot_time): print("Running time : ", round(time()-t0,3))
-    return(distribution * 1./B)
+
+
+
+
+
