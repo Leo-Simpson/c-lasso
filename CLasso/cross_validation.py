@@ -23,44 +23,39 @@ def train_test_i (SUBLIST,i):
     return(training_set,test_set)
             
 
-def training(matrices,typ,lamin, training_set):
+def training(matrices,typ,meth,lamin, training_set):
     (A,C,y)   = matrices
     mat       = (A[training_set],C,y[training_set]) 
-    return(pathlasso(mat,lamin=lamin,typ=typ,meth='ODE',plot_time=False,plot_sol=False,plot_sigm=False)[0])
+    sol = pathlasso(mat,lamin=lamin,typ=typ,meth=meth,plot_time=False,plot_sol=False,plot_sigm=False)[0]
+    return(sol)
 
 
-def test_i (matrices,typ,lamin, SUBLIST,i):
+def test_i (matrices,typ,meth,lamin, SUBLIST,i):
     training_set,test_set = train_test_i (SUBLIST,i)
-    BETA                  = training(matrices,typ,lamin, training_set)
+    BETA                  = training(matrices,typ,meth,lamin, training_set)
     L = np.zeros(n_lam)
     for j in range(n_lam):
         L[j] = accuracy_func(matrices[0][test_set],matrices[2][test_set],BETA[j],typ)
     return(L)
 
-def average_test(matrices,typ,lamin, SUBLIST):
+def average_test(matrices,typ,meth,lamin, SUBLIST):
     AVG = np.zeros(n_lam)
     for i in range(len(SUBLIST)):
-        L = test_i (matrices,typ,lamin, SUBLIST,i)
+        L = test_i (matrices,typ,meth,lamin, SUBLIST,i)
         AVG=AVG+L
     return(AVG)
 
-def CV(matrices,k,typ='LS',test=0.4,lamin=1e-2):
+def CV(matrices,k,typ='LS',meth="ODE",test=0.,lamin=1e-2, seed = 1):
+    
+    rd.seed(seed)
     (A,C,y) = matrices
     SUBLIST, idx_train, idx_test = train_test_CV(len(y),k,test)
-    AVG1  = average_test(matrices,typ,lamin, SUBLIST) 
+    AVG  = average_test(matrices,typ,meth,lamin, SUBLIST) 
     LAM = np.linspace(1.,lamin,n_lam)
-    Davg = (AVG1[2]-AVG1[-1])
-    AVG2 = AVG1 - LAM*Davg
-#     plt.plot(LAM,AVG1),plt.xlabel("lambda"),plt.ylabel("||y-Ax||2"),plt.title('AVG1'),plt.show()
-#     plt.plot(LAM,AVG2),plt.xlabel("lambda"),plt.ylabel("||y-Ax||2"),plt.title('AVG2'),plt.show()
-    i1 = np.argmin(AVG1)
-    i2 = np.argmin(AVG2)
-    lam1 = LAM[i1]
-    lam2 = LAM[i2]
-    print('lam =',lam1)
-    beta1 = Classo((A[idx_train],C,y[idx_train]),lam1,typ=typ,plot_time=False,plot_sol=False,plot_sigm=False)
-    beta2 = Classo((A[idx_train],C,y[idx_train]),lam2,typ=typ,plot_time=False,plot_sol=False,plot_sigm=False)
-    return(beta1)
+    i = np.argmin(AVG)
+    lam = LAM[i]
+    beta = Classo((A[idx_train],C,y[idx_train]),lam,typ=typ,meth=meth,plot_time=False,plot_sol=False,plot_sigm=False)
+    return(beta)
     
         
 # Cost fucntions for the three 'easiest' problems. 
