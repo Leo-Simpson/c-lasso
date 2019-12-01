@@ -171,7 +171,7 @@ def proj_c(M,d):
     return(np.eye(d)-LA.multi_dot([M.T,np.linalg.inv(M.dot(M.T) ),M]) )
 
 from scipy.special import erfinv
-def model_selection(n,p):
+def theoritical_lam(n,d):
     x=0.
     dx = 0.1
     for i in range(10):
@@ -179,8 +179,8 @@ def model_selection(n,p):
         while bo :
             x    += dx
             f     = erfinv(1-2*x)
-            xp    = 4/p * (f**4+f**2)
-            bo    = (xp>x)           
+            xd    = 4/d * (f**4+f**2)
+            bo    = (xd>x)           
         x = x-dx
         dx = dx/10
     return(4*f/np.sqrt(n))
