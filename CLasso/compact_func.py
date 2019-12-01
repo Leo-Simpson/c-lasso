@@ -15,7 +15,7 @@ Classo and pathlasso are the main functions, they can call every algorithm acord
 
 
 
-def Classo(matrix,lam,typ = 'LS', meth='choose',plot_time=True , plot_sol=True,plot_sigm=True , rho = 1.345):
+def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,plot_sigm=True , rho = 1.345):
     
         
 
