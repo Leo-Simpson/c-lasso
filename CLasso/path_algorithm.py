@@ -18,13 +18,12 @@ def solve_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no
     
     
     (A,C,y)   = matrices
-    d,k       = len(A[0]),len(C)
+    n,d,k       = len(A),len(A[0]),len(C)
     AtA       = A.T.dot(A)
     s         = 2*A.T.dot(y)
     lambdamax = LA.norm(s,np.inf)
     s = s/lambdamax
     lam, LAM =1., [1.]
-    
     
     # activity saves which vareiable are actives
     # idr saves the independant rows of the matrix C resctricted to the actives parameters
@@ -33,8 +32,17 @@ def solve_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no
     lam,LAM,beta,BETA,activity,idr,number_act = 1.,[1.],np.zeros(d),[np.zeros(d)],[False]*d,[False]*k,0
     
     if  (concomitant=='no')  : lamin                          = stop
-    elif(concomitant=='path'): lamin,SIGMA,R = 0,[1.],[-y/LA.norm(y)]
-    else                     : lamin,beta_old,sigma_old,r_old = 0,beta,1.,-y/LA.norm(y)
+    
+    else: 
+        
+        # to compute r = (A beta - y)/||y|| more efficientely :
+        A_over_ly, y_over_ly = A/ LA.norm(y) , y / LA.norm(y) 
+        
+        # we set reduclam=lam/stop to 1 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
+        
+        reduclam = 1     
+        if(concomitant=='path'): lamin,R = 0,[-y_over_ly]
+        else                     : lamin,beta_old,reduclam_old,r_old = 0,beta,1.,-y/LA.norm(y)
     
     # set up the sets activity and idr    
     for i in range(d):
@@ -49,21 +57,23 @@ def solve_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no
     else : M  = np.concatenate((np.concatenate((2*AtA,C.T),axis=1),np.concatenate(( C,np.zeros((k, k)) ),axis=1)), axis=0)
     Xt = LA.inv(M[activity+idr,:] [:,activity+idr])    # initialise Xt
     
+    
     for i in range(N) :
         
         up(lambdamax,lamin,M,C)
         BETA.append(beta), LAM.append(lam)
         
         if not (concomitant=='no'):
-            r,sigma = (A.dot(beta)-y)/LA.norm(y), lam/stop
+            r = A_over_ly.dot(beta)-y_over_ly
+            if (stop != 0) : reduclam = lam/stop
 
             if(concomitant=='path'): 
                 R.append(r)
-                if (sigma <= LA.norm(r) or (type(n_active)==int and number_act>= n_active)) :
+                if reduclam <= LA.norm(r) or (number_act >= n-k) or (type(n_active)==int and number_act>= n_active) :
                     return(BETA,LAM,R)
             else : 
-                if (sigma <= LA.norm(r)): return((beta_old,beta),(sigma_old,sigma),(r_old,r))               
-                beta_old,sigma_old,r_old = beta,sigma,r
+                if reduclam <= LA.norm(r): return((beta_old,beta),(reduclam_old,reduclam),(r_old,r))               
+                beta_old,reduclam_old,r_old = beta,reduclam,r
             
         elif ((type(n_active)==int and number_act>= n_active) or lam == lamin): 
             if(return_lmax):    return(BETA,LAM,lambdamax)
