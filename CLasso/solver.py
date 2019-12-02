@@ -236,10 +236,10 @@ class classo_problem :
             
             output = Classo(matrices,lam,
                             typ = formulation, meth=numerical_method, 
-                            plot_time=False , plot_sol=False, plot_sigm=False , rho = rho)
+                            plot_time=False , plot_sol=False, plot_sigm=False , rho = rho,get_lambdamax = True)
             
-            if len(output) == 2 : solution.beta_LAMfixed, solution.sigma_LAMfixed = output  
-            else                : solution.beta_LAMfixed = output
+            if len(output) == 3 : solution.lambdamax, solution.beta_LAMfixed, solution.sigma_LAMfixed = output  
+            else                : solution.lambdamax, solution.beta_LAMfixed = output
                 
             solution.time_LAMfixed = time()-t0
 
