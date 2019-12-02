@@ -15,7 +15,7 @@ Classo and pathlasso are the main functions, they can call every algorithm acord
 
 
 
-def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,plot_sigm=True , rho = 1.345):
+def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,plot_sigm=True , rho = 1.345, get_lambdamax = False):
     
         
 
@@ -74,9 +74,11 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
     if (plot_sigm and typ in ['Concomitant','Concomitant_Huber']): print('sigma = ',s)
     if (plot_time): print('Running time :', round(dt,5))
     if (plot_sol): plt.bar(range(len(X)),X),plt.title('Problem '+typ+' , lam ='+str(round(lam,3))+' solved with '+ meth +' method'),plt.savefig('Problem '+typ+' solved with '+ meth +' method'+'.png'), plt.show()
-    if (typ  in ['Concomitant','Concomitant_Huber']): return(X,s)
-    return(X)
-
+    if (typ  in ['Concomitant','Concomitant_Huber']): 
+        if (get_lambdamax): return(pb.lambdamax,X,s)
+        else              : return(X,s)
+    if (get_lambdamax): return(pb.lambdamax,X)
+    else              : return(X)
 
 
 
