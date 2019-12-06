@@ -31,13 +31,31 @@ class classo_problem :
                 self.rescale = False               # booleen to know if we rescale the matrices
                 self.X = X
                 self.y = y
-                if C=='zero-sum' : C = np.ones( (1,len(X[0])) )
+                if type(C)==str : C = np.ones( (1,len(X[0])) )
                 self.C = C
         ''' End of the definition''' 
         
         self.data = classo_data(X,y,C)
-        self.rho = 1.345                  # only used for huber problems
-        self.formulation      = 'Concomitant'
+        
+        
+        
+        class classo_formulation :
+            def __init__(self):
+                self.huber = False
+                self.concomitant = True
+                self.rho = 1.345
+                
+            def name(self):
+                if self.concomitant : 
+                    if self.huber : return('Concomitant_Huber')
+                    else     : return('Concomitant')
+                else :
+                    if self.huber : return('Huber')
+                    else     : return('LS')
+            def __repr__(self): return(self.name())
+        
+
+        self.problem_formulation      = classo_formulation()
         '''
         define the class model_selection inside the class classo_problem
         '''
@@ -52,13 +70,15 @@ class classo_problem :
                     def __init__(self):
 
                         self.seed             = 1
-                        self.formulation      = 'not specified'     
-                        # can also be : 'LS' ; 'Concomitant' ; 'Concomitant_Huber' or 'Huber'
+                        self.problem_formulation      = 'not specified'     
                         self.numerical_method = 'choose'            
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
                         self.Nsubset          = 5                       # Number of subsets used
                         self.lamin            =  1e-2
+                    def __repr__(self): return('Nsubset = '+str(self.Nsubset) 
+                                               + '  lamin = '+ str(self.lamin)
+                                               + ';  numerical_method = '+ str(self.numerical_method))
                 ''' End of the definition''' 
                 
                 self.CVparameters = CVparameters()
@@ -70,8 +90,7 @@ class classo_problem :
                 class SSparameters :
                     def __init__(self,n,d):
                         self.seed = 1
-                        self.formulation      = 'not specified'      
-                        # can also be : 'LS' ; 'Concomitant' ; 'Concomitant_Huber' or 'Huber'
+                        self.problem_formulation      = 'not specified'      
                         self.numerical_method = 'choose'            
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
@@ -83,6 +102,12 @@ class classo_problem :
                         self.hd               = False            # if set to True, then the 'max' will stop when it reaches n-k actives parameters
                         self.lam              = 'theoritical'  # can also be a float, for the 'lam' method
                         self.theoritical_lam  = round(theoritical_lam(int(n*self.pourcent_nS),d),4)
+                    def __repr__(self): return('method = '+str(self.method) 
+                                               + ';  lamin = '+ str(self.lamin)
+                                               + ';  B = '+ str(self.B)
+                                               + ';  q = '+ str(self.q)
+                                               + ';  pourcent_nS = '+ str(self.pourcent_nS)
+                                               + ';  numerical_method = '+ str(self.numerical_method))
                 ''' End of the definition''' 
                 
                 self.SSparameters = SSparameters(n,d)
@@ -97,14 +122,22 @@ class classo_problem :
                     def __init__(self,n,d):
                         self.lam              = 'theoritical'
                         self.theoritical_lam  = round(theoritical_lam(n,d),3)
-                        self.formulation      = 'not specified'      
-                        # can also be : 'LS' ; 'Concomitant' ; 'Concomitant_Huber' or 'Huber'
+                        self.problem_formulation      = 'not specified'      
                         self.numerical_method = 'choose'            
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
+                    def __repr__(self): return('lam = '+str(self.lam) 
+                                               + ';  theoritical_lam = '+ str(self.theoritical_lam)
+                                               + ';  numerical_method = '+ str(self.numerical_method))
                 ''' End of the definition''' 
                 
                 self.LAMparameters = LAMparameters(n,d)
-        
+                
+            def __repr__(self) : 
+                string = ''
+                if self.CV : string+='CV,  '
+                if self.SS : string+='SS, '
+                if self.LAMfixed : string+= ' LAMfixed'
+                return string
         ''' End of the definition of model_selection class'''
         
         self.model_selection = model_selection(n,d)
@@ -124,7 +157,6 @@ class classo_problem :
         
         n,d      = len(y), len(X[0])
         matrices = (X,C,y)
-        rho      = self.rho
         
         ''' define the class classo_data that contains the solution '''
         class classo_solution : 
@@ -171,33 +203,36 @@ class classo_problem :
                                                         #          mean of initial y )
         model_selection = self.model_selection
         
+        problem_formulation = self.problem_formulation
+        rho = problem_formulation.rho
+        
+        
+        
         if model_selection.CV : 
             
             t0 = time()
             param = model_selection.CVparameters
             
             
-            ''' Formulation choosing '''
-            if param.formulation == 'not specified' : param.formulation = self.formulation
-            formulation           = param.formulation
-            if not formulation in Lformulation:
-                print("One of the formulations used does not exist yet on classo, please try one of the following : \n  -LS \n -Concomitant \n -Concomitant_Huber \n -Huber")
-                return()
+            #Formulation choosing
+            if param.problem_formulation == 'not specified' : param.problem_formulation = problem_formulation
+            name_formulation       = param.problem_formulation.name()
             
-           
-            K                     = param.Nsubset
-            lamin                 = param.lamin
-            seed                  = param.seed
-            
-            numerical_method = choose_numerical_method(param.numerical_method, 'CV', formulation)
+            # Algorithmic method choosing
+            numerical_method = choose_numerical_method(param.numerical_method, 'CV', param.problem_formulation)
             param.numerical_method = numerical_method
             
+            # Compute the solution and is the formulation is concomitant, it also compute sigma
+            if param.problem_formulation.concomitant : 
+                solution.beta_CV, solution.sigma_CV = CV(matrices,param.Nsubset,
+                                                         typ=name_formulation,meth=numerical_method,
+                                                         lamin=param.lamin,seed=param.seed)
+            else : 
+                solution.beta_CV                    = CV(matrices,param.Nsubset,
+                                                         typ=name_formulation,meth=numerical_method,
+                                                         lamin=param.lamin,seed=param.seed)
             
-            output = CV(matrices,K,typ=formulation,meth=numerical_method,lamin=lamin,seed=seed)
-            
-            if len(output) == 2 :    solution.beta_CV, solution.sigma_CV = output   
-            else :                   solution.beta_CV = output
-              
+
             solution.time_CV = time()-t0
 
 
@@ -206,34 +241,26 @@ class classo_problem :
             t0 = time()
             param = model_selection.SSparameters
             
-            ''' Formulation choosing '''
-            if param.formulation == 'not specified' : param.formulation = self.formulation
-            formulation = param.formulation
-            if not formulation in Lformulation:
-                print("One of the formulations used does not exist yet on classo, please try one of the following : \n  -LS \n -Concomitant \n -Concomitant_Huber \n -Huber")
-                return()
-            
-    
-            seed        = param.seed
-            SSmethod    = param.method
-            hd          = param.hd
-            q           = param.q
-            B           = param.B
-            pourcent_nS = param.pourcent_nS
+            #Formulation choosing
+            if param.problem_formulation == 'not specified' : param.problem_formulation = problem_formulation
+            name_formulation       = param.problem_formulation.name()
             
             
-
+            #Compute the theoritical lam if necessary
             if param.lam == 'theoritical' : lam = param.theoritical_lam
             else                          : lam = param.lam 
                 
-  
-            numerical_method = choose_numerical_method(param.numerical_method,'SS', formulation,
-                                                       SSmethod = SSmethod, lam = lam)
-            param.numerical_method = numerical_method
-
-            solution.distribution_SS = stability(matrices, SSmethod = SSmethod, numerical_method = numerical_method,
-                                    lam=lam, hd = hd, q = q ,B = B, pourcent_nS = pourcent_nS,
-                                    formulation = formulation,plot_time=False,seed=seed)
+                
+            # Algorithmic method choosing
+            numerical_method = choose_numerical_method(param.numerical_method,'SS', param.problem_formulation,
+                                                       SSmethod = param.method, lam = lam)
+            param.numerical_method = numerical_method  
+                
+ 
+            # Compute the distribution
+            solution.distribution_SS = stability(matrices, SSmethod = param.method, numerical_method = numerical_method,
+                                    lam=lam, hd = param.hd, q = param.q ,B = param.B, pourcent_nS = param.pourcent_nS,
+                                    formulation = name_formulation,plot_time=False,seed=param.seed)
             
 
             solution.time_SS = time()-t0
@@ -244,31 +271,33 @@ class classo_problem :
             t0 = time()
             param = model_selection.LAMparameters
             
-            ''' Formulation choosing '''
-            if param.formulation == 'not specified' : param.formulation = self.formulation
-            formulation       = param.formulation
-            if not formulation in Lformulation:
-                print("One of the formulations used does not exist yet on classo, please try one of the following : \n  -LS \n -Concomitant \n -Concomitant_Huber \n -Huber")
-                return()
+            #Formulation choosing
+            if param.problem_formulation == 'not specified' : param.problem_formulation = problem_formulation
+            name_formulation       = param.problem_formulation.name()
             
             
-            
-            numerical_method  = param.formulation
-            
-            
+            #Compute the theoritical lam if necessary
             if param.lam == 'theoritical' : lam = param.theoritical_lam
             else                          : lam = param.lam 
             
-            numerical_method = choose_numerical_method(param.numerical_method,'LAM', formulation, lam = lam)
+            
+            # Algorithmic method choosing
+            numerical_method = choose_numerical_method(param.numerical_method,'LAM', param.problem_formulation, lam = lam)
             param.numerical_method = numerical_method
             
             
-            output = Classo(matrices,lam,
-                            typ = formulation, meth=numerical_method, 
-                            plot_time=False , plot_sol=False, plot_sigm=False , rho = rho,get_lambdamax = True)
-            
-            if len(output) == 3 : solution.lambdamax, solution.beta_LAMfixed, solution.sigma_LAMfixed = output  
-            else                : solution.lambdamax, solution.beta_LAMfixed = output
+
+            # Compute the solution and is the formulation is concomitant, it also compute sigma
+            if param.problem_formulation.concomitant : 
+                solution.lambdamax, solution.beta_LAMfixed, solution.sigma_LAMfixed = Classo(
+                    matrices,lam, typ = name_formulation, meth=numerical_method, 
+                       plot_time=False , plot_sol=False, plot_sigm=False , rho = rho,get_lambdamax = True)
+            else : 
+                solution.lambdamax, solution.beta_LAMfixed                          = Classo(
+                    matrices,lam, typ = name_formulation, meth=numerical_method, 
+                       plot_time=False , plot_sol=False, plot_sigm=False , rho = rho,get_lambdamax = True)
+                
+
                 
             solution.time_LAMfixed = time()-t0
 
@@ -284,33 +313,35 @@ class classo_problem :
 ''' Annex function in order to choose the right numerical method, if the one gave is invalid''' 
 def choose_numerical_method(method,model,formulation,SSmethod = None, lam = None):
     
-    if (formulation == 'Concomitant_Huber'):
+    if (formulation.concomitant and formulation.huber):
         if not method in ['2prox']: return '2prox'
     
     
         
     # cases where we use classo at a fixed lambda    
     elif (model == 'LAM') or (model == 'SS' and SSmethod == 'lam') : 
-        
-        if formulation in ['Huber','LS']:
-            if not method in ['ODE','2prox','FB','Noproj']:
-                if (lam>0.1): return 'ODE'
-                else        : return '2prox'            
+              
         
         
-        else :
+        if formulation.concomitant :
             if not method in ['ODE','2prox']:
                 if (lam>0.1): return 'ODE'
                 else        : return '2prox'
       
+        else:
+            if not method in ['ODE','2prox','FB','Noproj']:
+                if (lam>0.1): return 'ODE'
+                else        : return '2prox'     
+    
+    
     
     # cases where we use pathlasso                
     else:
-        if formulation in ['Huber','LS']:
-            if not method in ['ODE','2prox','FB','Noproj']: return 'ODE'         
-
-        else :
+        if formulation.concomitant :
             if not method in ['ODE','2prox']: return 'ODE'
+            
+        else:
+            if not method in ['ODE','2prox','FB','Noproj']: return 'ODE'         
             
     return method
                     
