@@ -23,39 +23,40 @@ def train_test_i (SUBLIST,i):
     return(training_set,test_set)
             
 
-def training(matrices,typ,meth,lamin, training_set):
+def training(matrices,typ,meth,lamin, training_set, rho):
     (A,C,y)   = matrices
     mat       = (A[training_set],C,y[training_set]) 
-    sol = pathlasso(mat,lamin=lamin,typ=typ,meth=meth,plot_time=False,plot_sol=False,plot_sigm=False)[0]
+    sol = pathlasso(mat,lamin=lamin,typ=typ,meth=meth,plot_time=False,plot_sol=False,plot_sigm=False, rho = rho)[0]
     return(sol)
 
 
-def test_i (matrices,typ,meth,lamin, SUBLIST,i):
+def test_i (matrices,typ,meth,lamin, SUBLIST,i, rho):
     training_set,test_set = train_test_i (SUBLIST,i)
-    BETA                  = training(matrices,typ,meth,lamin, training_set)
+    BETA                  = training(matrices,typ,meth,lamin, training_set, rho)
     L = np.zeros(n_lam)
     for j in range(n_lam):
         L[j] = accuracy_func(matrices[0][test_set],matrices[2][test_set],BETA[j],typ)
     return(L)
 
-def average_test(matrices,typ,meth,lamin, SUBLIST):
-    AVG = np.zeros(n_lam)
+def average_test(matrices,typ,meth,lamin, SUBLIST, rho):
+    SUM = np.zeros(n_lam)
+    SE = np.zeros(n_lam)
     for i in range(len(SUBLIST)):
-        L = test_i (matrices,typ,meth,lamin, SUBLIST,i)
-        AVG=AVG+L
-    return(AVG)
+        L = test_i (matrices,typ,meth,lamin, SUBLIST,i, rho)
+        SUM=SUM+L
+    return(SUM/len(SUBLIST),SE)
 
-def CV(matrices,k,typ='LS',meth="ODE",test=0.,lamin=1e-2, seed = 1):
+def CV(matrices,k,typ='LS',meth="ODE",test=0.,lamin=1e-2, seed = 1, rho = 1.345):
     
     rd.seed(seed)
     (A,C,y) = matrices
     SUBLIST, idx_train, idx_test = train_test_CV(len(y),k,test)
-    AVG  = average_test(matrices,typ,meth,lamin, SUBLIST) 
+    AVG,SE  = average_test(matrices,typ,meth,lamin, SUBLIST, rho) 
     LAM = np.linspace(1.,lamin,n_lam)
     i = np.argmin(AVG)
     lam = LAM[i]
-    beta = Classo((A[idx_train],C,y[idx_train]),lam,typ=typ,meth=meth,plot_time=False,plot_sol=False,plot_sigm=False)
-    return(beta)
+    out = Classo((A[idx_train],C,y[idx_train]),lam,typ=typ,meth=meth,plot_time=False,plot_sol=False,plot_sigm=False, rho=rho)
+    return(out,LAM,i,AVG,SE)
     
         
 # Cost fucntions for the three 'easiest' problems. 
