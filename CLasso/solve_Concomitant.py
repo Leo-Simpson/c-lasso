@@ -25,6 +25,8 @@ def algo_Concomitant(pb,lam, compute=True):
                          
         (beta1,beta2), (s1,s2), (r1,r2) = solve_path((A,C,y),lam,concomitant = 'fix_lam')
         dr,ds = r1-r2,s1-s2
+        
+        
         teta  = root_2(LA.norm(dr)**2-ds**2 ,np.vdot(dr,r2)-s2*ds,LA.norm(r2)**2-s2**2)
         s     = s1    *teta + s2    *(1-teta)
         beta  = beta1 *teta + beta2 *(1-teta)
@@ -91,12 +93,15 @@ def pathalgo_Concomitant(pb,path,n_active=False):
         y=pb.matrix[2]
         sigmax= LA.norm(y) * np.sqrt(2)
         X,LAM,R = solve_path(pb.matrix,path[-1],concomitant = 'path',n_active=n_active)
-        if (type(n_active)==int): return(X,[LA.norm(r)*sigmax for r in R],LAM)
+        LAM.append(path[-1]),X.append(X[-1]),R.append(R[-1])
         beta2,l2,r2,j = X[0],path[0]+0.1,-y/LA.norm(y),0
         for lam in path: 
+            if (lam==0): lam=1e-4
             while (LA.norm(r2)<l2/lam) and (j < len(LAM)): beta1,l1,r1,beta2,l2,r2,j = beta2,l2,r2,X[j],LAM[j],R[j],j+1
             s1,s2 = l1/lam,l2/lam
             dr,ds = r1-r2,s1-s2
+            
+            
             teta  = root_2(LA.norm(dr)**2-ds**2 ,np.vdot(dr,r2)-s2*ds,LA.norm(r2)**2-s2**2)
             SIGMA.append((s1*teta + s2*(1-teta))*sigmax)
             BETA.append(beta1 *teta + beta2 *(1-teta))
@@ -232,13 +237,33 @@ def prox_phi_1(sig,u,gamma,warm_start):
 
 
     
-# Return the positive root in [0,1] of the polynomial aX^2 + 2bX + c if it exists
+# Return the positive root in [0,1] of the polynomial aX^2 + 2bX + c if it exists, 1. if not
+    
+    
 def root_2(a,b,c):
-    root=-(np.sqrt(b**2-a*c)+b)/a
-    if (root< 0 or root > 1) : return(0)
+    
+    if (a==0.) : return(c/(2*b))
+    root=   (-np.sqrt(b**2-a*c)-b)/a
+    if (root > 1) : return(1.)
     return(root)
 
 
+# The aim : 
+    # solve the equation : 
+    # |dr|^2 teta^2 + 2 (dr.r2) teta  + |r2|^2 =
+    # |ds|^2 teta^2 + 2 (ds.s2) teta  + |s2|^2
+
+    # Which comes from the equation : 
+    # | teta r1 + (1-teta) r2 | = | teta s1 + (1-teta) s2 |
+    
+    #  Which comes from the equation : 
+    # lam * | teta r1 + (1-teta) r2 | = | teta l1 + (1-teta) l2 |
+    
+    # lam * | y - X.( teta beta1 + (1-teta)beta2 ) | = | teta l1 + (1-teta) l2 |
+    
+    # in other word : $lam.|y-X.beta(gamma)| = gamma $
+    
+    # so find a gamma such that sigma(gamma) * lam = gamma 
 
 
 
