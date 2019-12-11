@@ -38,9 +38,9 @@ def solve_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no
         # to compute r = (A beta - y)/||y|| more efficientely :
         A_over_ly, y_over_ly = A/ LA.norm(y) , y / LA.norm(y) 
         
-        # we set reduclam=lam/stop to 1 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
+        # we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
         
-        reduclam = 1     
+        reduclam = 2.
         if(concomitant=='path'): lamin,R = 0,[-y_over_ly]
         else                     : lamin,beta_old,reduclam_old,r_old = 0,beta,1.,-y/LA.norm(y)
     
@@ -69,8 +69,7 @@ def solve_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no
 
             if(concomitant=='path'): 
                 R.append(r)
-                if reduclam <= LA.norm(r) or (number_act >= n-k) or (type(n_active)==int and number_act>= n_active) :
-                    return(BETA,LAM,R)
+                if reduclam <= LA.norm(r) or (number_act >= n-k) or (type(n_active)==int and number_act>= n_active) : return(BETA,LAM,R)
             else : 
                 if reduclam <= LA.norm(r): return((beta_old,beta),(reduclam_old,reduclam),(r_old,r))               
                 beta_old,reduclam_old,r_old = beta,reduclam,r
