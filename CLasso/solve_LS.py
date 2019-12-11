@@ -169,7 +169,10 @@ def pathalgo_LS(pb,path,n_active=False,return_sp_path=False):
     BETA,tol = [],pb.tol
     if(pb.type == 'ODE'):
         beta,sp_path = solve_path(pb.matrix,path[-1],n_active=n_active)
-        if (return_sp_path or (type(n_active)==int)): return(beta,sp_path)
+        if (return_sp_path): return(beta,sp_path)
+        
+        sp_path.append(path[-1]),beta.append(beta[-1])
+        
         i=0
         for lam in path:
             while (lam<sp_path[i+1]): i+=1
@@ -188,7 +191,7 @@ def pathalgo_LS(pb,path,n_active=False,return_sp_path=False):
         pb.init = X[1]
         if (type(n_active)==int) : n_act = n_active
         else : n_act = n
-        if(sum([ (abs(X[0][i])>1e-2) for i in range(len(X[0])) ])>=n_act):
+        if(sum([ (abs(X[0][i])>1e-4) for i in range(len(X[0])) ])>=n_act):
                 pb.init = save_init
                 BETA = BETA + [BETA[-1]]*(len(path)-len(BETA))
                 pb.regpath = False
