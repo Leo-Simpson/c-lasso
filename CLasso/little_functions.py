@@ -192,3 +192,15 @@ def support_dist(x,y):
         x_null, y_null = (abs(x[k])<1e-4), (abs(y[k])<1e-4)
         if (x_null and not y_null) or (y_null and not x_null): s+=1
     return(s)
+
+
+
+# function to do LS : return  X (X^t X)^-1  X^t y
+def min_LS(matrices,selected):
+    X,C,y = matrices
+    Xr, Cr = X[:,selected],C.T[selected]
+    proj = np.eye(len(Cr)) - Cr.dot(LA.pinv(Cr))
+    ls = LA.multi_dot([ proj, LA.pinv(Xr.dot(proj)),y]) 
+    beta = np.zeros(len(X[0]))
+    beta[selected] = ls
+    return(beta)
