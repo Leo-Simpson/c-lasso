@@ -30,7 +30,7 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
             if (lam>0.1): meth = 'ODE'        # use path algorithm if lam is high, but prox algo if lam is little
 
         pb = problem_Concomitant(matrix,meth)
-        X,s = algo_Concomitant(pb,lam)
+        beta,s = algo_Concomitant(pb,lam)
         
         dt = time()-t0
     
@@ -41,7 +41,7 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
         if not meth in ['2prox']: meth='2prox'
 
         pb  = problem_Concomitant_Huber(matrix,meth,rho)
-        X,s = algo_Concomitant_Huber(pb,lam)
+        beta,s = algo_Concomitant_Huber(pb,lam)
         
         dt = time()-t0
         
@@ -54,7 +54,7 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
             if (lam>0.1): meth = 'ODE'        # use path algorithm if lam is high, but prox algo if lam is little
 
         pb = problem_Huber(matrix,meth,rho)
-        X = algo_Huber(pb,lam)
+        beta = algo_Huber(pb,lam)
         
         dt = time()-t0     
             
@@ -67,18 +67,18 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
             if (lam>0.1): meth = 'ODE'        # use path algorithm if lam is high, but prox algo if lam is little
 
         pb = problem_LS(matrix,meth)
-        X = algo_LS(pb,lam)
+        beta = algo_LS(pb,lam)
  
         dt = time()-t0
         
     if (plot_sigm and typ in ['Concomitant','Concomitant_Huber']): print('sigma = ',s)
     if (plot_time): print('Running time :', round(dt,5))
-    if (plot_sol): plt.bar(range(len(X)),X),plt.title('Problem '+typ+' , lam ='+str(round(lam,3))+' solved with '+ meth +' method'),plt.savefig('Problem '+typ+' solved with '+ meth +' method'+'.png'), plt.show()
+    if (plot_sol): plt.bar(range(len(beta)),beta),plt.title('Problem '+typ+' , lam ='+str(round(lam,3))+' solved with '+ meth +' method'),plt.savefig('Problem '+typ+' solved with '+ meth +' method'+'.png'), plt.show()
     if (typ  in ['Concomitant','Concomitant_Huber']): 
-        if (get_lambdamax): return(pb.lambdamax,X,s)
-        else              : return(X,s)
-    if (get_lambdamax): return(pb.lambdamax,X)
-    else              : return(X)
+        if (get_lambdamax): return(pb.lambdamax,beta,s)
+        else              : return(beta,s)
+    if (get_lambdamax): return(pb.lambdamax,beta)
+    else              : return(beta)
 
 
 
@@ -95,14 +95,13 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
     else: lambdas = np.linspace(1.,lamin,100)
 
     if(typ=='Huber'):
-        
         t0 = time()
         pb = problem_Huber(matrix,meth,rho)
         lambdamax = pb.lambdamax
         if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         sol  = pathalgo_Huber(pb,lambdas,n_active=n_active)
-        if (type(sol)== tuple): X,LAM = sol
-        else : X,LAM= sol,lambdas
+        if (type(sol)== tuple): BETA,LAM = sol
+        else : BETA,LAM= sol,lambdas
         real_path = [lam*lambdamax for lam in LAM]
         dt = time()-t0
         
@@ -114,9 +113,9 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
         lambdamax = pb.lambdamax
         if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         sol  = pathalgo_Concomitant(pb,lambdas,n_active=n_active)
-        if (len(sol)== 3): X,S,LAM = sol
+        if (len(sol)== 3): BETA,S,LAM = sol
         else :
-            X,S= sol
+            BETA,S= sol
             LAM = lambdas
         real_path = [lam*lambdamax for lam in LAM]
         dt = time()-t0
@@ -128,7 +127,7 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
         pb = problem_Concomitant_Huber(matrix,meth,rho)
         lambdamax = pb.lambdamax
         if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
-        X,S = pathalgo_Concomitant_Huber(pb,lambdas,n_active=n_active)
+        BETA,S = pathalgo_Concomitant_Huber(pb,lambdas,n_active=n_active)
         real_path = [lam*lambdamax for lam in lambdas]
         dt = time()-t0
         
@@ -140,8 +139,8 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
         lambdamax = pb.lambdamax
         if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         sol = pathalgo_LS(pb,lambdas,n_active=n_active)  #if n_active is not False, then the function will return a tuple with the list of lambdas
-        if (type(sol) == tuple): X,LAM = sol
-        else : X,LAM= sol,lambdas
+        if (type(sol) == tuple): BETA,LAM = sol
+        else : BETA,LAM= sol,lambdas
         real_path = [lam*lambdamax for lam in LAM]
         dt = time()-t0
 
@@ -151,12 +150,12 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
 
     if (plot_time): print('Running time :', round(dt,5))
     if (plot_sol): 
-        affichage(X,real_path,title=typ+' Path for the method '+meth),plt.show()
-        if not (type(compare)==bool): affichage([X[i]-diff[i] for i in range(len(X))],real_path,title='Difference between both methods'),plt.savefig('Difference between both methods'+'.png'),plt.show()
+        affichage(BETA,real_path,title=typ+' Path for the method '+meth),plt.show()
+        if not (type(compare)==bool): affichage([BETA[i]-diff[i] for i in range(len(BETA))],real_path,title='Difference between both methods'),plt.savefig('Difference between both methods'+'.png'),plt.show()
     if (plot_sigm and typ in ['Concomitant','Concomitant_Huber']):
         plt.plot(real_path,S),plt.ylabel("sigma / sigmaMAX"),plt.xlabel("lambda"), plt.title('Sigma for Concomitant'),plt.savefig('Sigma for Concomitant'+'.png'),plt.show()
-        return(X,real_path,S)
-    return(X,real_path)
+        return(BETA,real_path,S)
+    return(BETA,real_path)
  
     
     
