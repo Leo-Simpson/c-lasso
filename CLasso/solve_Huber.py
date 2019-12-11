@@ -128,13 +128,14 @@ def algo_Huber(pb,lam, compute=True):
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or wuth the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.  
 '''
     
+    
 def pathalgo_Huber(pb,path,n_active=False):
     n = pb.dim[0]
     BETA,tol = [],pb.tol
     if(pb.type == 'ODE'):
         X,sp_path = solve_huber_path(pb.matrix,path[-1],pb.rho,n_active)
-        if (type(n_active)==int): return(X,sp_path)
         i=0
+        sp_path.append(path[-1]),X.append(X[-1])
         for lam in path:
             while (lam<sp_path[i+1]): i+=1
             teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
