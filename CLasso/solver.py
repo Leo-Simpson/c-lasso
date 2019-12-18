@@ -22,28 +22,26 @@ We build a class called classo_problem, that will contains all the information a
 
 
 '''
-        
+
+
+
+
+''' define the class classo_data that contains the data '''
+class classo_data : 
+    def __init__(self,X,y,C):
+        self.rescale = False               # booleen to know if we rescale the matrices
+        self.X = X
+        self.y = y
+        if type(C)==str : C = np.ones( (1,len(X[0])) )
+        self.C = C
+''' End of the definition'''     
+    
+    
+    
 class classo_problem :
     
-    def __init__(self,X,y,C='zero-sum'): #zero sum constraint by default, but it can be any matrix
-
-        n,d = len(X),len(X[0])
-
-        
-        ''' define the class classo_data that contains the data '''
-        class classo_data : 
-            def __init__(self,X,y,C):
-                self.rescale = False               # booleen to know if we rescale the matrices
-                self.X = X
-                self.y = y
-                if type(C)==str : C = np.ones( (1,len(X[0])) )
-                self.C = C
-        ''' End of the definition''' 
-        
+    def __init__(self,X=np.zeros((2,2)),y=np.zeros(2),C='zero-sum'): #zero sum constraint by default, but it can be any matrix
         self.data = classo_data(X,y,C)
-        
-        
-        
         class classo_formulation :
             def __init__(self):
                 self.huber = False
@@ -65,7 +63,7 @@ class classo_problem :
         define the class model_selection inside the class classo_problem
         '''
         class model_selection :
-            def __init__(self,n,d):
+            def __init__(self):
                 
                 # Model selection parameters
 
@@ -80,9 +78,11 @@ class classo_problem :
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
                         self.Nsubset          = 5                       # Number of subsets used
-                        self.lamin            =  1e-2
+                        self.lambdas          = np.linspace(1.,1e-3,500) 
+                        self.oneSE            = True
                     def __repr__(self): return('Nsubset = '+str(self.Nsubset) 
-                                               + '  lamin = '+ str(self.lamin)
+                                               + '  lamin = '+ str(self.lambdas[-1])
+                                               + '  n_lam = '+ str(len(self.lambdas))
                                                + ';  numerical_method = '+ str(self.numerical_method))
                 ''' End of the definition''' 
                 
@@ -93,7 +93,7 @@ class classo_problem :
                 ''' STABILITY SELECTION PARAMETERS'''
                 self.SS = True 
                 class SSparameters :
-                    def __init__(self,n,d):
+                    def __init__(self):
                         self.seed = 1
                         self.formulation      = 'not specified'      
                         self.numerical_method = 'choose'            
@@ -106,8 +106,8 @@ class classo_problem :
                         self.lamin            = 1e-2          # the lambda where one stop for 'max' method
                         self.hd               = False            # if set to True, then the 'max' will stop when it reaches n-k actives parameters
                         self.lam              = 'theoritical'  # can also be a float, for the 'lam' method
-                        self.theoritical_lam  = round(theoritical_lam(int(n*self.pourcent_nS),d),4)
                         self.threshold        = 0.9
+                        self.theoritical_lam  = 0.0
                         
                     def __repr__(self): return('method = '+str(self.method) 
                                                + ';  lamin = '+ str(self.lamin)
@@ -118,7 +118,7 @@ class classo_problem :
                                                + ';  numerical_method = '+ str(self.numerical_method))
                 ''' End of the definition''' 
                 
-                self.SSparameters = SSparameters(n,d)
+                self.SSparameters = SSparameters()
 
 
                 
@@ -127,18 +127,18 @@ class classo_problem :
                 ''' PROBLEM AT A FIXED LAMBDA PARAMETERS'''
                 self.LAMfixed = False             
                 class LAMfixedparameters : 
-                    def __init__(self,n,d):
+                    def __init__(self):
                         self.lam              = 'theoritical'
-                        self.theoritical_lam  = round(theoritical_lam(n,d),3)
                         self.formulation      = 'not specified'      
-                        self.numerical_method = 'choose'            
+                        self.numerical_method = 'choose' 
+                        self.theoritical_lam  = 0.0
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
                     def __repr__(self): return('lam = '+str(self.lam) 
-                                               + ';  theoritical_lam = '+ str(self.theoritical_lam)
+                                               + ';  theoritical_lam = '+ str(round(self.theoritical_lam,4))
                                                + ';  numerical_method = '+ str(self.numerical_method))
                 ''' End of the definition''' 
                 
-                self.LAMfixedparameters = LAMfixedparameters(n,d)
+                self.LAMfixedparameters = LAMfixedparameters()
                 
             def __repr__(self) : 
                 string = ''
@@ -148,7 +148,7 @@ class classo_problem :
                 return string
         ''' End of the definition of model_selection class'''
         
-        self.model_selection = model_selection(n,d)
+        self.model_selection = model_selection()
         
 
 
@@ -160,6 +160,11 @@ class classo_problem :
         data = self.data
         matrices = (data.X, data.C , data.y)
         solution = classo_solution()
+        
+        n,d = len(data.X),len(data.X[0])
+        
+        
+        
         
         if data.rescale : 
             matrices, data.scaling = rescale(matrices)         #SCALING contains  :
@@ -175,12 +180,17 @@ class classo_problem :
             
         #Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
         if self.model_selection.SS : 
-            solution.SS = solution_SS(matrices,self.model_selection.SSparameters,self.formulation)
+            param = self.model_selection.SSparameters
+            param.theoritical_lam  = theoritical_lam(int(n*param.pourcent_nS),d)
+
+            solution.SS = solution_SS(matrices,param,self.formulation)
             
             
         #Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
         if self.model_selection.LAMfixed : 
-            solution.LAMfixed = solution_LAMfixed(matrices,self.model_selection.LAMfixedparameters,self.formulation)
+            param = self.model_selection.LAMfixedparameters
+            param.theoritical_lam  = theoritical_lam(n,d)
+            solution.LAMfixed = solution_LAMfixed(matrices,param,self.formulation)
         
         self.solution=solution
 
@@ -223,20 +233,34 @@ class solution_CV:
         param.numerical_method = numerical_method
 
         # Compute the solution and is the formulation is concomitant, it also compute sigma
-        out, LAM,i,AVG,SE     =  CV(matrices,param.Nsubset,
-                                    typ=name_formulation,meth=numerical_method,
-                                    lamin=param.lamin,seed=param.seed,rho=rho)
-
+        out,self.yGraph,self.standard_error,self.index_min,self.index_1SE =  CV(matrices,param.Nsubset,
+                                                                                 typ=name_formulation,num_meth=numerical_method,
+                                                                                 lambdas=param.lambdas,seed=param.seed,rho=rho,
+                                                                                 oneSE = param.oneSE)
+        
+        self.xGraph = param.lambdas
+        
         if param.formulation.concomitant : self.beta, self.sigma = out
         else : self.beta                    = out
 
         self.selected_param = self.beta != 0. # boolean array, false iff beta_i =0
-        self.refit = min_LS(matrices,self.selected_param)
-        self.time = time()-t0  
+        self.refit          = min_LS(matrices,self.selected_param)
+        self.time           = time()-t0  
         
     def __repr__(self):
         plt.bar(range(len(self.refit)),self.refit),   plt.title("Cross Validation refit"),   plt.show()
         return (    " Running time for Cross Validation    : "  + str(round(self.time,3))       +"s")
+    
+    def graphic(self,mse_max = 1.):
+        i_min, i_1SE    = self.index_min,self.index_1SE
+        for j in range(len(self.xGraph)):
+            if(self.yGraph[j]<mse_max): break
+        
+        plt.errorbar(self.xGraph[j:],self.yGraph[j:],self.standard_error[j:],label='mean over the k groups of data')
+        plt.plot(self.xGraph[i_min],self.yGraph[i_min],'k+',label='lam that minimize MSE')
+        plt.plot(self.xGraph[i_1SE],self.yGraph[i_1SE],'r+',label='lam with 1SE')
+        plt.ylabel('mean of residual over lambda'),plt.xlabel('lam')
+        plt.legend(),plt.title("Selection of lambda with Cross Validation"),plt.show()
         
                     
 class solution_SS:
