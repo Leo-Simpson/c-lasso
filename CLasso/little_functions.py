@@ -8,6 +8,7 @@ import pandas as pd
 
 
 def random_data(m,d,d_nonzero,k,sigma,zerosum=False):
+    np.random.seed()
     A= np.random.randn(m,d)
     if (zerosum): C,k = np.ones((1,d)),1
     else :
