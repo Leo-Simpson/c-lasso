@@ -3,5 +3,5 @@ import scipy.io as sio
 from CLasso.compact_func import Classo, pathlasso
 from CLasso.cross_validation import CV
 from CLasso.stability_selection import stability
-
-from CLasso.solver import classo_problem
+from CLasso.performance import performance
+from CLasso.solver import classo_problem, classo_data
