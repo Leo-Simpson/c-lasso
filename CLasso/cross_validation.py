@@ -3,7 +3,13 @@ import matplotlib.pyplot as plt
 import numpy.random as rd
 import numpy.linalg as LA
 from CLasso.compact_func import Classo,pathlasso
-n_lam = 100
+n_lam = 500
+
+def compute_1SE(mse_max,MSE,i): 
+    j=i
+    while(MSE[j]<mse_max): j-=1
+    return j
+
 
 def train_test_CV(n,k,test_pourcent):
     idx, training_size = rd.permutation(n), int(n-n*test_pourcent)
@@ -23,40 +29,48 @@ def train_test_i (SUBLIST,i):
     return(training_set,test_set)
             
 
-def training(matrices,typ,meth,lamin, training_set, rho):
+def training(matrices,typ,num_meth, training_set, rho,lambdas):
     (A,C,y)   = matrices
     mat       = (A[training_set],C,y[training_set]) 
-    sol = pathlasso(mat,lamin=lamin,typ=typ,meth=meth,plot_time=False,plot_sol=False,plot_sigm=False, rho = rho)[0]
+    sol       = pathlasso(mat,lambdas = lambdas,typ=typ,meth=num_meth,
+                            plot_time=False,plot_sol=False,plot_sigm=False,rho = rho)[0]
     return(sol)
 
 
-def test_i (matrices,typ,meth,lamin, SUBLIST,i, rho):
+def test_i (matrices,typ,num_meth, SUBLIST,i, rho,lambdas):
     training_set,test_set = train_test_i (SUBLIST,i)
-    BETA                  = training(matrices,typ,meth,lamin, training_set, rho)
-    L = np.zeros(n_lam)
+    BETA                  = training(matrices,typ,num_meth, training_set, rho, lambdas)
+    n_lam = len(lambdas)
+    residual = np.zeros(n_lam)
     for j in range(n_lam):
-        L[j] = accuracy_func(matrices[0][test_set],matrices[2][test_set],BETA[j],typ)
-    return(L)
+        residual[j] = accuracy_func(matrices[0][test_set],matrices[2][test_set],BETA[j],typ)/len(test_set)
+    return(residual)
 
-def average_test(matrices,typ,meth,lamin, SUBLIST, rho):
-    SUM = np.zeros(n_lam)
-    SE = np.zeros(n_lam)
-    for i in range(len(SUBLIST)):
-        L = test_i (matrices,typ,meth,lamin, SUBLIST,i, rho)
-        SUM=SUM+L
-    return(SUM/len(SUBLIST),SE)
+def average_test(matrices,typ,num_meth, SUBLIST, rho,lambdas):
+    k = len(SUBLIST)
+    n_lam = len(lambdas)
+    RESIDUAL = np.zeros((k,n_lam))
+    for i in range(k):
+        RESIDUAL[i,:] = test_i (matrices,typ,num_meth, SUBLIST,i, rho, lambdas)
+    MSE = np.mean(RESIDUAL,axis = 0)
+    SE = np.std(RESIDUAL,axis = 0) # official standard error should be divided by sqrt(k) ... 
+    return(MSE,SE)
 
-def CV(matrices,k,typ='LS',meth="ODE",test=0.,lamin=1e-2, seed = 1, rho = 1.345):
+def CV(matrices,k,typ='LS',num_meth="ODE",test=0., seed = 1, rho = 1.345,lambdas = np.linspace(1.,1e-3,500),oneSE = True):
     
     rd.seed(seed)
     (A,C,y) = matrices
     SUBLIST, idx_train, idx_test = train_test_CV(len(y),k,test)
-    AVG,SE  = average_test(matrices,typ,meth,lamin, SUBLIST, rho) 
-    LAM = np.linspace(1.,lamin,n_lam)
-    i = np.argmin(AVG)
-    lam = LAM[i]
-    out = Classo((A[idx_train],C,y[idx_train]),lam,typ=typ,meth=meth,plot_time=False,plot_sol=False,plot_sigm=False, rho=rho)
-    return(out,LAM,i,AVG,SE)
+    MSE,SE  = average_test(matrices,typ,num_meth, SUBLIST, rho, lambdas) 
+    i       = np.argmin(MSE)
+    lam     = lambdas[i]
+    i_1SE   = compute_1SE(MSE[i]+SE[i],MSE,i)
+    lam_1SE = lambdas[i_1SE]
+    if oneSE : 
+        out = Classo((A[idx_train],C,y[idx_train]),lam_1SE,typ=typ,meth=num_meth,plot_time=False,plot_sol=False,plot_sigm=False, rho=rho)
+    else :     
+        out = Classo((A[idx_train],C,y[idx_train]),lam,typ=typ,meth=meth,plot_time=False,plot_sol=False,plot_sigm=False, rho=rho)
+    return(out,MSE,SE,i,i_1SE)
     
         
 # Cost fucntions for the three 'easiest' problems. 
