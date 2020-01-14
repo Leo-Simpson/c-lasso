@@ -105,11 +105,11 @@ Stability Selection      :  Running time for Stability Selection    : 4.323s
 Solution for a fixed lam : 'not computed'
 ```
 
-![11](figures_example1/Figure_1.png)
+![Ex1.1](figures_example1/Figure1.png)
 
-![12](figures_example1/Figure_2.png)
+![Ex1.2](figures_example1/Figure2.png)
 
-![13](figures_example1/Figure_3.png)
+![Ex1.3](figures_example1/Figure3.png)
 
 
 Example of different settings (example2) : 
@@ -134,12 +134,15 @@ Solution for a fixed lam :  Running time for LAM fixed       : 0.11s
 ```
 
 
-![21](figures_example2/Figure_1.png)
+![Ex2.1](figures_example2/Figure1.png)
 
-![22](figures_example2/Figure_2.png)
+![Ex2.2](figures_example2/Figure2.png)
 
-![23](figures_example2/Figure_3.png)
+![Ex2.3](figures_example2/Figure3.png)
 
-![24](figures_example2/Figure_4.png)
+![Ex2.4](figures_example2/Figure4.png)
 
-![25](figures_example2/Figure_5.png)
+![Ex2.5](figures_example2/Figure5.png)
+
+
+
