@@ -106,8 +106,6 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
     else              : return(beta)
 
 
-
-
 def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE',plot_time=True,plot_sol=True,plot_sigm=True,rho = 1.345, compare=False, true_lam = False ):
 
     if (type(compare)!= bool):

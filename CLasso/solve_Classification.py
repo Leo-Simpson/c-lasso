@@ -19,7 +19,7 @@ def algo_Cl(pb,lam, compute=True):
     # ODE
     # here we compute the path algo until our lambda, and just take the last beta
     if(pb_type == 'ODE'):
-        BETA = solve_path(pb.matrix, lam)[0]
+        BETA = solve_cl_path(pb.matrix, lam)[0]
         return(BETA[-1])
     
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix            
@@ -27,18 +27,7 @@ def algo_Cl(pb,lam, compute=True):
     tol = pb.tol * LA.norm(y)/LA.norm(A,'fro')  # tolerance rescaled
     regpath = pb.regpath 
     
-    
-    #cvx
-    # call to the cvx function of minimization
-    if (pb_type == 'cvx'):
-        import cvxpy as cp
-        lamb = lam*2*LA.norm(A.T.dot(y),np.infty)
-        x = cp.Variable(d)
-        objective, constraints = cp.Minimize(cp.sum_squares(A*x-y)+ lamb*cp.norm(x, 1)), [C*x == 0]
-        prob = cp.Problem(objective, constraints)
-        result = prob.solve(warm_start=regpath,eps_abs= tol)
-        if (regpath): return(x.value,True) 
-        return(x.value)
+
     
     
 
@@ -47,32 +36,6 @@ def algo_Cl(pb,lam, compute=True):
     gamma, tau    = pb.gam / (2*pb.AtAnorm),    pb.tauN
     w,zerod       = lamb *gamma*pb.weights, np.zeros(d) # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
 
-
-    
-    # NO PROJ
-    
-    if (pb_type == 'Noproj'):     # y1 --> S ; p1 --> p . ; p2 --> y2
-        (x,v) = pb.init
-        for i in range(pb.N):    
-            
-            S = x - gamma*(AtA.dot(x)-Aty)*2 - (C.T).dot(v)
-            p = prox(S,w,zerod)
-            
-            y2 = v + tau*C.dot(x)
-            v  = v + tau*C.dot(p)
-            
-            eps = p - gamma*(AtA.dot(p)-Aty)*2 - C.T.dot(y2)-S
-            x = x + eps
-            
-            if (i>0 and LA.norm(eps)<tol): 
-                if (regpath): return(x,(x,v)) 
-                else :        return(x) 
-            
-            if (LA.norm(x)+LA.norm(p)+LA.norm(v)>1e6): 
-                print('DIVERGENCE')
-                return(x)
-        print('NO CONVERGENCE')
-        return(x)
     
 
     #FORARD BACKWARD
@@ -133,32 +96,7 @@ def algo_Cl(pb,lam, compute=True):
 
         print('NO CONVERGENCE')
         return(b)  
- 
-    
-#     if (pb_type=='2prox_old'):
-        
-#         Q1,Q2  = QQ(c,A) 
-#         QA,qy = Q1.dot(A), Q1.dot(y)
-        
-#         qo,xbar,x = pb.init 
-#         proxLS = 1/(1+2*gamma/c)
-        
-#         QA_mult = QA*(2*mu*proxLS-mu)
-#         qy_mult = qy*(mu-mu*proxLS)
-        
-#         for i in range(pb.N):
-#             nv_b = x-QA.dot(x)+qo - Q2.dot(x-xbar)
-#             if (i%2==1 and LA.norm(b-nv_b)<tol): 
-#                 if (regpath):return(b,(qo,xbar,x)) 
-#                 else :       return(b)          
-#             b = nv_b
-             
-#             qo = qo*(1-mu*proxLS)+QA_mult.dot(b)+qy_mult
-            
-#             xbar,x = xbar+mu*(prox(2*b-xbar,w,zerod)-b) ,  x+mu*(Proj.dot(2*b-x)-b)
-    
-#         print('NO CONVERGENCE')
-#         return(b)  
+
     
 '''
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or with the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.
@@ -168,7 +106,7 @@ def pathalgo_Cl(pb,path,n_active=False,return_sp_path=False):
     n = pb.dim[0]
     BETA,tol = [],pb.tol
     if(pb.type == 'ODE'):
-        beta,sp_path = solve_path(pb.matrix,path[-1],n_active=n_active)
+        beta,sp_path = solve_cl_path(pb.matrix,path[-1],n_active=n_active)
         if (return_sp_path): return(beta,sp_path)
         
         sp_path.append(path[-1]),beta.append(beta[-1])
@@ -186,7 +124,7 @@ def pathalgo_Cl(pb,path,n_active=False,return_sp_path=False):
     pb.regpath = True
     pb.compute_param()
     for lam in path:
-        X = algo_LS(pb,lam,compute=False)     
+        X = algo_Cl(pb,lam,compute=False)
         BETA.append(X[0])
         pb.init = X[1]
         if (type(n_active)==int) : n_act = n_active
@@ -228,7 +166,6 @@ class problem_Cl :
         (m,d,k) = self.dim
         
         if(algo=='FB') : self.init = np.zeros(d), np.zeros(d), np.zeros(k)
-        elif (algo=='Noproj')         : self.init = np.zeros(d), np.zeros(k)
         else                        : self.init = np.zeros(d), np.zeros(d), np.zeros(d)
         self.tol = 1e-6 
          
@@ -281,25 +218,4 @@ def proj_c(M,d):
 
 
 def QQ(coef,A): return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*A.dot(A.T))),LA.inv(2*np.eye(A.shape[1])+coef*(A.T).dot(A)))    
-
-
-
-def generate_random(dim):                # Function to generate random A, y, and C with given dimensions 
-        (m,d,k,d_nonzero,sigma) = dim
-        A, sol, sol_reduc= np.random.randn(m, d),np.zeros(d), np.random.rand(d_nonzero)
-        if (k==0):
-            C , list_i = np.zeros((1,d)), np.random.randint(d, size=d_nonzero)
-            sol[list_i]=sol_reduc
-        else:
-            rank1,rank2 = 0,0
-            while (rank1 !=k) :        
-                C = np.random.randint(low=-1,high=2, size=(k, d))
-                rank1 = LA.matrix_rank(C)
-            while (rank2!=k):
-                list_i = np.random.randint(d, size=d_nonzero)
-                C_reduc = np.array([C.T[i] for i in list_i]).T
-                rank2 = LA.matrix_rank(C_reduc)
-            proj = proj_c(C_reduc,d_nonzero).dot(sol_reduc)
-            sol[list_i]=proj
-            return(A,C,sol)
 

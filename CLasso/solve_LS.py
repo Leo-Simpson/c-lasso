@@ -282,24 +282,3 @@ def proj_c(M,d):
 
 def QQ(coef,A): return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*A.dot(A.T))),LA.inv(2*np.eye(A.shape[1])+coef*(A.T).dot(A)))    
 
-
-
-def generate_random(dim):                # Function to generate random A, y, and C with given dimensions 
-        (m,d,k,d_nonzero,sigma) = dim
-        A, sol, sol_reduc= np.random.randn(m, d),np.zeros(d), np.random.rand(d_nonzero)
-        if (k==0):
-            C , list_i = np.zeros((1,d)), np.random.randint(d, size=d_nonzero)
-            sol[list_i]=sol_reduc
-        else:
-            rank1,rank2 = 0,0
-            while (rank1 !=k) :        
-                C = np.random.randint(low=-1,high=2, size=(k, d))
-                rank1 = LA.matrix_rank(C)
-            while (rank2!=k):
-                list_i = np.random.randint(d, size=d_nonzero)
-                C_reduc = np.array([C.T[i] for i in list_i]).T
-                rank2 = LA.matrix_rank(C_reduc)
-            proj = proj_c(C_reduc,d_nonzero).dot(sol_reduc)
-            sol[list_i]=proj
-            return(A,C,sol)
-

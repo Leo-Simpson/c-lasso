@@ -25,7 +25,7 @@ def algo_Huber_Cl(pb,lam, compute=True):
     # here we compute the path algo until our lambda, and just take the last beta
     
     if(pb_type == 'ODE'):                         
-        beta = solve_huber_path((A,C,y), lam,rho)[0]
+        beta = solve_huber_cl_path((A,C,y), lam,rho)[0]
         return(beta[-1])
     
     tol = pb.tol * LA.norm(y)/LA.norm(A,'fro')  # tolerance rescaled
@@ -133,7 +133,7 @@ def pathalgo_Huber_Cl(pb,path,n_active=False):
     n = pb.dim[0]
     BETA,tol = [],pb.tol
     if(pb.type == 'ODE'):
-        X,sp_path = solve_huber_path(pb.matrix,path[-1],pb.rho,n_active)
+        X,sp_path = solve_huber_cl_path(pb.matrix,path[-1],pb.rho,n_active)
         i=0
         sp_path.append(path[-1]),X.append(X[-1])
         for lam in path:
@@ -148,7 +148,7 @@ def pathalgo_Huber_Cl(pb,path,n_active=False):
     if (type(n_active)==int) : n_act = n_active
     else : n_act = n
     for lam in path:
-        X = algo_Huber(pb,lam,compute=False)  
+        X = algo_Huber_Cl(pb,lam,compute=False)
         BETA.append(X[0])
         pb.init = X[1]
         if(sum([ (abs(X[0][i])>1e-2) for i in range(len(X[0])) ])>=n_act):
@@ -241,28 +241,3 @@ def h_prime(y,rho):
     lrho = rho*np.ones(m)
     return(np.maximum(lrho,-y)+ np.minimum(y-lrho,0))
         
-
-
-
-
-
-
-def generate_random(dim):                # Function to generate random A, y, and C with given dimensions 
-        (m,d,k,d_nonzero,sigma) = dim
-        A, sol, sol_reduc= np.random.randn(m, d),np.zeros(d), np.random.rand(d_nonzero)
-        if (k==0):
-            C , list_i = np.zeros((1,d)), np.random.randint(d, size=d_nonzero)
-            sol[list_i]=sol_reduc
-        else:
-            rank1,rank2 = 0,0
-            while (rank1 !=k) :        
-                C = np.random.randint(low=-1,high=2, size=(k, d))
-                rank1 = LA.matrix_rank(C)
-            while (rank2!=k):
-                list_i = np.random.randint(d, size=d_nonzero)
-                C_reduc = np.array([C.T[i] for i in list_i]).T
-                rank2 = LA.matrix_rank(C_reduc)
-            proj = proj_c(C_reduc,d_nonzero).dot(sol_reduc)
-            sol[list_i]=proj
-            return(A,C,sol)
-
