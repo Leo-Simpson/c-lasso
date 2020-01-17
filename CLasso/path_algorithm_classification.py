@@ -13,7 +13,7 @@ In all the code, capital letter variable are lists that contains the small varia
 
 
 
-def solve_cl_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no'):
+def solve_cl_path(matrices,lamin,n_active=False):
     global number_act,idr,Xt,activity,beta,s,lam
     
     
@@ -30,19 +30,8 @@ def solve_cl_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 
     # number_act is the number of active parameter
     # activity[i] = True iff s[i]= +- 1
     lam,LAM,beta,BETA,activity,idr,number_act = 1.,[1.],np.zeros(d),[np.zeros(d)],[False]*d,[False]*k,0
-    
-    if  (concomitant=='no')  : lamin                          = stop
-    
-    else: 
-        
-        # to compute r = (A beta - y)/||y|| more efficientely :
-        A_over_ly, y_over_ly = A/ LA.norm(y) , y / LA.norm(y) 
-        
-        # we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
-        
-        reduclam = 2.
-        if(concomitant=='path'): lamin,R = 0,[-y_over_ly]
-        else                     : lamin,beta_old,reduclam_old,r_old = 0,beta,1.,-y/LA.norm(y)
+
+
     
     # set up the sets activity and idr    
     for i in range(d):
@@ -59,24 +48,9 @@ def solve_cl_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 
     
     
     for i in range(N) :
-        
         up(lambdamax,lamin,M,C)
         BETA.append(beta), LAM.append(lam)
-        
-        if not (concomitant=='no'):
-            r = A_over_ly.dot(beta)-y_over_ly
-            if (stop != 0) : reduclam = lam/stop
-
-            if(concomitant=='path'): 
-                R.append(r)
-                if reduclam <= LA.norm(r) or (number_act >= n-k) or (type(n_active)==int and number_act>= n_active) : return(BETA,LAM,R)
-            else : 
-                if reduclam <= LA.norm(r): return((beta_old,beta),(reduclam_old,reduclam),(r_old,r))               
-                beta_old,reduclam_old,r_old = beta,reduclam,r
-            
-        elif ((type(n_active)==int and number_act>= n_active) or lam == lamin): 
-            if(return_lmax):    return(BETA,LAM,lambdamax)
-            else:               return(BETA,LAM)
+        if ((type(n_active)==int and number_act>= n_active) or lam == lamin): return(BETA,LAM)
             
     print('no conv')
     return(BETA,LAM)
@@ -182,18 +156,19 @@ def next_inv(Xt,B,al,ligne):
     return(np.concatenate((col1,np.array([col]).T,col2), axis = 1))
 
 
-  
-
-'''
-Function that solve the concomitant problem for every lambda thanks to the previous function : we firstly compute all the non concomitant Least square problems, then we use it to find sigma and so the solution, using the equation for sigma: 
-
-sigma = || A*B(lambda*sigma) - y ||_2       (where B(lambda) is found thanks to solve_path)
-
-            teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
-'''
-    
 
     
+
+# Fonction to interpolate the solution path between the breaking points
+def pathalgo_Cl(matrix,path,n_active=False):
+    BETA, i = [], 0
+    X,sp_path = solve_cl_path(matrix,path[-1],n_active)
+    sp_path.append(path[-1]),X.append(X[-1])
+    for lam in path:
+        while (lam<sp_path[i+1]): i+=1
+        teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
+        BETA.append(X[i]*(1-teta)+X[i+1]*teta)
+    return(BETA)
     
     
     

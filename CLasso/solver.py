@@ -375,21 +375,16 @@ class solution_LAMfixed :
 ''' Annex function in order to choose the right numerical method, if the one gave is invalid'''
 def choose_numerical_method(method,model,formulation,SSmethod = None, lam = None):
 
+    if (formulation.classification): return('ODE')
 
-    if (formulation.concomitant and formulation.huber):
-        if not method in ['2prox']: return '2prox'
+    if (formulation.concomitant and formulation.huber): return '2prox'
 
 
 
     # cases where we use classo at a fixed lambda    
     elif (model == 'LAM') or (model == 'SS' and SSmethod == 'lam') :
 
-
-        if formulation.classification :
-            if not method in ['ODE','2prox','FB']:
-                if (lam>0.1): return 'ODE'
-                else        : return '2prox'
-        elif formulation.concomitant :
+        if formulation.concomitant :
             if not method in ['ODE','2prox']:
                 if (lam>0.1): return 'ODE'
                 else        : return '2prox'

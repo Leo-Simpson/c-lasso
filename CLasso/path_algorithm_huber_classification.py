@@ -9,7 +9,7 @@ Main function that solve the Least square problem for all lambda using the ODE, 
 
 
 
-def solve_huber_cl_path(matrices,lamin,rho,n_active=False,return_lmax=False):
+def solve_huber_cl_path(matrices,lamin,rho,n_active=False):
     global number_act,idr,Xt,activity,F,beta,s, lam, M,r
     
     (A,C,y)   = matrices
@@ -38,16 +38,12 @@ def solve_huber_cl_path(matrices,lamin,rho,n_active=False,return_lmax=False):
     
     Xt = LA.inv(M[activity+idr,:] [:,activity+idr])    # initialise Xt
     for i in range(N) :
-        
         up(lambdamax,lamin,A,rho)
         BETA.append(beta), LAM.append(lam)
-        if ((type(n_active)==int and number_act>= n_active) or lam == lamin): 
-            if(return_lmax):    return(BETA,LAM,lambdamax)
-            else:               return(BETA,LAM)
+        if ((type(n_active)==int and number_act>= n_active) or lam == lamin): return(BETA,LAM)
             
     print('no conv')
-    if(return_lmax):    return(BETA,LAM,lambdamax)
-    else:               return(BETA,LAM)
+    return(BETA,LAM)
 
 #function that search the next lambda where something happen, and update the solution Beta
 def up(lambdamax,lamin,A,rho):
@@ -170,7 +166,8 @@ sigma = || A*B(lambda*sigma) - y ||_2       (where B(lambda) is found thanks to 
             teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
 '''
     
-
+def h_lambdamax(X,y,rho) :
+    return 2 * LA.norm(X.T.dot(h_prime(y, rho)), np.infty)
     
     
 # Compute the derivative of the huber function, particulary useful for the computing of lambdamax 
@@ -178,4 +175,16 @@ def h_prime(y,rho):
     m = len(y)
     lrho = rho*np.ones(m)
     return(np.maximum(lrho,-y)+ np.minimum(y-lrho,0))    
-    
+
+
+
+# Fonction to interpolate the solution path between the breaking points
+def pathalgo_Huber_Cl(matrix, path, rho, n_active=False):
+    BETA, i = [], 0
+    X,sp_path = solve_huber_cl_path(matrix,path[-1],rho,n_active)
+    sp_path.append(path[-1]),X.append(X[-1])
+    for lam in path:
+        while (lam<sp_path[i+1]): i+=1
+        teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
+        BETA.append(X[i]*(1-teta)+X[i+1]*teta)
+    return(BETA)
