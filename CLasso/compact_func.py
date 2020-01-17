@@ -1,6 +1,7 @@
 from time import time
 import numpy as np
 import matplotlib.pyplot as plt
+import numpy.linalg as LA
 
 from CLasso.solve_LS import problem_LS, algo_LS, pathalgo_LS
 from CLasso.solve_Huber import problem_Huber, algo_Huber, pathalgo_Huber
