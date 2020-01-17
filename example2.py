@@ -10,6 +10,7 @@ problem.model_selection.CV                  = True
 problem.model_selection.LAMfixed            = True
 problem.model_selection.SSparameters.method = 'max'
 
+print(problem)
 problem.solve()
 print(problem.solution)
 

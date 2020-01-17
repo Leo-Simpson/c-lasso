@@ -111,7 +111,7 @@ def stability(matrix,SSmethod = 'first',numerical_method = "ODE",
             subset = build_subset(n,nS)
             submatrix = build_submatrix(matrix,subset)
             # compute the path until n_active = q, and only take the last Beta
-            BETA = pathlasso(submatrix,n_active=False,lamin=0.1,
+            BETA = pathlasso(submatrix,n_active=False,lamin=1e-2,
                              typ=formulation,meth = numerical_method,
                              plot_time=False,plot_sol=False,plot_sigm=False, rho = rho )[0]
             betamax = np.amax( abs(np.array(BETA)), axis = 0 )

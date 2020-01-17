@@ -27,76 +27,74 @@ We build a class called classo_problem, that will contains all the information a
 
 
 ''' define the class classo_data that contains the data '''
-class classo_data : 
+class classo_data :
     def __init__(self,X,y,C):
         self.rescale = False               # booleen to know if we rescale the matrices
         self.X = X
         self.y = y
         if type(C)==str : C = np.ones( (1,len(X[0])) )
         self.C = C
-''' End of the definition'''     
-    
-    
-    
+''' End of the definition'''
+
+
+
 class classo_problem :
-    
+
     def __init__(self,X=np.zeros((2,2)),y=np.zeros(2),C='zero-sum'): #zero sum constraint by default, but it can be any matrix
         self.data = classo_data(X,y,C)
+
+        # define the class formulation of the problem inside the class classo_problem
         class classo_formulation :
             def __init__(self):
                 self.huber = False
                 self.concomitant = True
                 self.rho = 1.345
-                
             def name(self):
-                if self.concomitant : 
+                if self.concomitant :
                     if self.huber : return('Concomitant_Huber')
                     else     : return('Concomitant')
                 else :
                     if self.huber : return('Huber')
                     else     : return('LS')
             def __repr__(self): return(self.name())
-        
+        self.formulation = classo_formulation()
 
-        self.formulation      = classo_formulation()
-        '''
-        define the class model_selection inside the class classo_problem
-        '''
+        #define the class model_selection inside the class classo_problem
         class model_selection :
             def __init__(self):
-                
+
                 # Model selection parameters
 
                 ''' CROSS VALIDATION PARAMETERS'''
-                self.CV = False                          
-                class CVparameters : 
+                self.CV = False
+                class CVparameters :
                     def __init__(self):
 
                         self.seed             = 1
-                        self.formulation      = 'not specified'     
-                        self.numerical_method = 'choose'            
+                        self.formulation      = 'not specified'
+                        self.numerical_method = 'choose'
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
                         self.Nsubset          = 5                       # Number of subsets used
-                        self.lambdas          = np.linspace(1.,1e-3,500) 
+                        self.lambdas          = np.linspace(1.,1e-3,500)
                         self.oneSE            = True
-                    def __repr__(self): return('Nsubset = '+str(self.Nsubset) 
+                    def __repr__(self): return('Nsubset = '+str(self.Nsubset)
                                                + '  lamin = '+ str(self.lambdas[-1])
                                                + '  n_lam = '+ str(len(self.lambdas))
                                                + ';  numerical_method = '+ str(self.numerical_method))
-                ''' End of the definition''' 
-                
+                ''' End of the definition'''
+
                 self.CVparameters = CVparameters()
 
-                
-                
+
+
                 ''' STABILITY SELECTION PARAMETERS'''
-                self.SS = True 
+                self.SS = True
                 class SSparameters :
                     def __init__(self):
                         self.seed = 1
-                        self.formulation      = 'not specified'      
-                        self.numerical_method = 'choose'            
+                        self.formulation      = 'not specified'
+                        self.numerical_method = 'choose'
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
                         self.method           = 'first'      # Can be 'first' ; 'max' or 'lam'
@@ -108,125 +106,128 @@ class classo_problem :
                         self.lam              = 'theoritical'  # can also be a float, for the 'lam' method
                         self.threshold        = 0.9
                         self.theoritical_lam  = 0.0
-                        
-                    def __repr__(self): return('method = '+str(self.method) 
+
+                    def __repr__(self): return('method = '+str(self.method)
                                                + ';  lamin = '+ str(self.lamin)
                                                + ';  B = '+ str(self.B)
                                                + ';  q = '+ str(self.q)
                                                + ';  pourcent_nS = '+ str(self.pourcent_nS)
                                                + ';  threshold = '+ str(self.threshold)
                                                + ';  numerical_method = '+ str(self.numerical_method))
-                ''' End of the definition''' 
-                
+                ''' End of the definition'''
+
                 self.SSparameters = SSparameters()
 
 
-                
-                
-                
+
+
+
                 ''' PROBLEM AT A FIXED LAMBDA PARAMETERS'''
-                self.LAMfixed = False             
-                class LAMfixedparameters : 
+                self.LAMfixed = False
+                class LAMfixedparameters :
                     def __init__(self):
                         self.lam              = 'theoritical'
-                        self.formulation      = 'not specified'      
-                        self.numerical_method = 'choose' 
+                        self.formulation      = 'not specified'
+                        self.numerical_method = 'choose'
                         self.theoritical_lam  = 0.0
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
-                    def __repr__(self): return('lam = '+str(self.lam) 
+                    def __repr__(self): return('lam = '+str(self.lam)
                                                + ';  theoritical_lam = '+ str(round(self.theoritical_lam,4))
                                                + ';  numerical_method = '+ str(self.numerical_method))
-                ''' End of the definition''' 
-                
+                ''' End of the definition'''
+
                 self.LAMfixedparameters = LAMfixedparameters()
-                
-            def __repr__(self) : 
+            def __repr__(self) :
                 string = ''
-                if self.CV : string+='CV,  '
-                if self.SS : string+='SS, '
-                if self.LAMfixed : string+= ' LAMfixed'
+                if self.CV : string+='Cross Validation,  '
+                if self.SS : string+='Stability selection, '
+                if self.LAMfixed : string+= 'Lambda fixed'
                 return string
-        ''' End of the definition of model_selection class'''
-        
         self.model_selection = model_selection()
-        
-
-
-
-
 
     def solve(self):
-        
+
         data = self.data
         matrices = (data.X, data.C , data.y)
         solution = classo_solution()
-        
+
         n,d = len(data.X),len(data.X[0])
-        
-        
-        
-        
-        if data.rescale : 
+
+
+
+
+        if data.rescale :
             matrices, data.scaling = rescale(matrices)         #SCALING contains  :
-                                                        #(list of initial norms of A-colomns, 
+                                                        #(list of initial norms of A-colomns,
                                                         #         initial norm of centered y,
                                                         #          mean of initial y )
-        
+
 
         #Compute the cross validation thanks to the class solution_CV which contains directely the computation in the initialisation
-        if self.model_selection.CV : 
+        if self.model_selection.CV :
             solution.CV = solution_CV(matrices,self.model_selection.CVparameters,self.formulation)
-            
-            
+
+
         #Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
-        if self.model_selection.SS : 
+        if self.model_selection.SS :
             param = self.model_selection.SSparameters
             param.theoritical_lam  = theoritical_lam(int(n*param.pourcent_nS),d)
 
             solution.SS = solution_SS(matrices,param,self.formulation)
-            
-            
+
+
         #Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
-        if self.model_selection.LAMfixed : 
+        if self.model_selection.LAMfixed :
             param = self.model_selection.LAMfixedparameters
             param.theoritical_lam  = theoritical_lam(n,d)
             solution.LAMfixed = solution_LAMfixed(matrices,param,self.formulation)
-        
+
         self.solution=solution
 
-        
-        
+    def __repr__(self):
+        print_parameters = ''
+        if (self.model_selection.CV):
+            print_parameters += '\n \nCROSS VALIDATION PARAMETERS: ' + self.model_selection.CVparameters.__repr__()
+        if (self.model_selection.SS):
+            print_parameters += '\n \nSTABILITY SELECTION PARAMETERS: ' + self.model_selection.SSparameters.__repr__()
+        if (self.model_selection.LAMfixed):
+            print_parameters += '\n \nLAMBDA FIXED PARAMETERS: ' + self.model_selection.LAMfixedparameters.__repr__()
+
+        return (' \n \nFORMULATION : ' + self.formulation.__repr__()
+                + '\n \n' +
+                'MODEL SELECTION COMPUTED :  ' + self.model_selection.__repr__()
+                + print_parameters + '\n'
+                )
+
+
+
+
 
 
 
 
 ''' define the class classo_data that contains the solution '''
-class classo_solution : 
-    
-    def __init__(self) : 
+class classo_solution :
+    def __init__(self) :
         self.CV       = 'not computed'
         self.SS       = 'not computed'
         self.LAMfixed = 'not computed'
-
     def __repr__(self):
-        return(         'Cross Validation         : ' + self.CV.__repr__() 
-               + '\n' + 'Stability Selection      : ' + self.SS.__repr__() 
-               + '\n' + 'Solution for a fixed lam : ' + self.LAMfixed.__repr__() )
-                    
-                    
-        
-        
-        
-        
+        return( "SPEEDNESS : " + '\n'
+                'Running time for Cross Validation    : '+ self.CV.__repr__() + '\n'
+               +'Running time for Stability Selection : '+ self.SS.__repr__() + '\n'
+               +'Running time for Fixed LAM           : '+ self.LAMfixed.__repr__()
+                )
+
+
 class solution_CV:
-    
     def __init__(self,matrices,param,formulation):
         t0 = time()
 
         #Formulation choosing
         if param.formulation == 'not specified' : param.formulation = formulation
         name_formulation       = param.formulation.name()
-        
+
         rho = param.formulation.rho
         # Algorithmic method choosing
         numerical_method = choose_numerical_method(param.numerical_method, 'CV', param.formulation)
@@ -237,32 +238,30 @@ class solution_CV:
                                                                                  typ=name_formulation,num_meth=numerical_method,
                                                                                  lambdas=param.lambdas,seed=param.seed,rho=rho,
                                                                                  oneSE = param.oneSE)
-        
+
         self.xGraph = param.lambdas
-        
+
         if param.formulation.concomitant : self.beta, self.sigma = out
         else : self.beta                    = out
 
         self.selected_param = self.beta != 0. # boolean array, false iff beta_i =0
         self.refit          = min_LS(matrices,self.selected_param)
-        self.time           = time()-t0  
-        
+        self.time           = time()-t0
     def __repr__(self):
         plt.bar(range(len(self.refit)),self.refit),   plt.title("Cross Validation refit"),   plt.show()
-        return (    " Running time for Cross Validation    : "  + str(round(self.time,3))       +"s")
-    
+        return ( str(round(self.time,3))       +"s")
     def graphic(self,mse_max = 1.):
         i_min, i_1SE    = self.index_min,self.index_1SE
         for j in range(len(self.xGraph)):
             if(self.yGraph[j]<mse_max): break
-        
+
         plt.errorbar(self.xGraph[j:],self.yGraph[j:],self.standard_error[j:],label='mean over the k groups of data')
         plt.plot(self.xGraph[i_min],self.yGraph[i_min],'k+',label='lam that minimize MSE')
         plt.plot(self.xGraph[i_1SE],self.yGraph[i_1SE],'r+',label='lam with 1SE')
         plt.ylabel('mean of residual over lambda'),plt.xlabel('lam')
         plt.legend(),plt.title("Selection of lambda with Cross Validation"),plt.show()
-        
-                    
+
+
 class solution_SS:
     def __init__(self,matrices,param,formulation):
         t0 = time()
@@ -274,13 +273,13 @@ class solution_SS:
         rho = param.formulation.rho
         #Compute the theoritical lam if necessary
         if param.lam == 'theoritical' : lam = param.theoritical_lam
-        else                          : lam = param.lam 
+        else                          : lam = param.lam
 
 
         # Algorithmic method choosing
         numerical_method = choose_numerical_method(param.numerical_method,'SS', param.formulation,
                                                    SSmethod = param.method, lam = lam)
-        param.numerical_method = numerical_method  
+        param.numerical_method = numerical_method
 
 
         # Compute the distribution
@@ -297,10 +296,9 @@ class solution_SS:
         self.selected_param = selected_param(self.distribution,param.threshold)
 
         self.refit = min_LS(matrices,self.selected_param)
-        self.time = time()-t0            
-    
+        self.time = time()-t0
     def __repr__(self):
-        
+
         D                      = self.distribution
         Dpath                  = self.distribution_path
         selected               = self.selected_param
@@ -314,7 +312,7 @@ class solution_SS:
         plt.bar(range(len(Dunselected)),Dunselected,color = 'b',label = 'unselected parameters')
         plt.legend(),plt.title("Distribution of Stability Selection"), plt.show()
 
-        if (type(Dpath)!= str): 
+        if (type(Dpath)!= str):
             lambdas = self.lambdas_path
             N = len(lambdas)
             for i in range(len(selected)):
@@ -324,15 +322,14 @@ class solution_SS:
 
             plt.legend(handles=[p1,p2])
             plt.title("Distribution of probability of apparence as a function of lambda"),plt.show()
-        
-        
-        
-        
+
+
+
+
         plt.bar(range(len(self.refit)),self.refit),   plt.title("Solution for Stability Selection with refit"),   plt.show()
-        return (    " Running time for Stability Selection    : "  + str(round(self.time,3))       +"s")
-        
-        
-        
+        return ( str(round(self.time,3))       +"s")
+
+
 class solution_LAMfixed :
     def __init__(self,matrices,param,formulation):
         t0 = time()
@@ -344,7 +341,7 @@ class solution_LAMfixed :
         rho = param.formulation.rho
         #Compute the theoritical lam if necessary
         if param.lam == 'theoritical' : lam = param.theoritical_lam
-        else                          : lam = param.lam 
+        else                          : lam = param.lam
 
 
         # Algorithmic method choosing
@@ -353,10 +350,10 @@ class solution_LAMfixed :
 
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         out = Classo(
-                matrices,lam, typ = name_formulation, meth=numerical_method, 
+                matrices,lam, typ = name_formulation, meth=numerical_method,
                 plot_time=False , plot_sol=False, plot_sigm=False , rho = rho,get_lambdamax = True)
-        
-        if param.formulation.concomitant : 
+
+        if param.formulation.concomitant :
             self.lambdamax, self.beta, self.sigma = out
         else : self.lambdamax, self.beta          = out
 
@@ -364,60 +361,44 @@ class solution_LAMfixed :
         self.selected_param = self.beta !=0.
         self.refit = min_LS(matrices,self.selected_param)
         self.time = time()-t0
-        
     def __repr__(self):
         plt.bar(range(len(self.refit)),self.refit),   plt.title("Solution for a fixed lambda with refit"),   plt.show()
-        return (    " Running time for LAM fixed       : "  + str(round(self.time,3))       +"s")
+        return ( str(round(self.time,3))       +"s")
 
-        
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-                
 
-''' Annex function in order to choose the right numerical method, if the one gave is invalid''' 
+
+''' Annex function in order to choose the right numerical method, if the one gave is invalid'''
 def choose_numerical_method(method,model,formulation,SSmethod = None, lam = None):
-    
+
     if (formulation.concomitant and formulation.huber):
         if not method in ['2prox']: return '2prox'
-    
-    
-        
+
+
+
     # cases where we use classo at a fixed lambda    
-    elif (model == 'LAM') or (model == 'SS' and SSmethod == 'lam') : 
-              
-        
-        
+    elif (model == 'LAM') or (model == 'SS' and SSmethod == 'lam') :
+
+
+
         if formulation.concomitant :
             if not method in ['ODE','2prox']:
                 if (lam>0.1): return 'ODE'
                 else        : return '2prox'
-      
+
         else:
             if not method in ['ODE','2prox','FB','Noproj']:
                 if (lam>0.1): return 'ODE'
-                else        : return '2prox'     
-    
-    
-    
-    # cases where we use pathlasso                
+                else        : return '2prox'
+
+
+
+    # cases where we use pathlasso
     else:
         if formulation.concomitant :
             if not method in ['ODE','2prox']: return 'ODE'
-            
+
         else:
-            if not method in ['ODE','2prox','FB','Noproj']: return 'ODE'         
-            
+            if not method in ['ODE','2prox','FB','Noproj']: return 'ODE'
+
     return method

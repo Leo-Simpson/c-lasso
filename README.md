@@ -94,15 +94,24 @@ m,d,d_nonzero,k,sigma =100,100,5,1,0.5
 Use of the package with default settings (example1) :
 ```python
 problem = classo_problem(X,y,C) 
+print(problem)
 problem.solve()
 print(problem.solution)
 ```
 
 Results : 
+
 ```
-Cross Validation         : 'not computed'
-Stability Selection      :  Running time for Stability Selection    : 4.323s
-Solution for a fixed lam : 'not computed'
+FORMULATION : Concomitant
+ 
+MODEL SELECTION COMPUTED :  Stability selection, 
+ 
+STABILITY SELECTION PARAMETERS: method = first;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.9;  numerical_method = choose
+
+SPEEDNESS : 
+Running time for Cross Validation    : 'not computed'
+Running time for Stability Selection : 2.791s
+Running time for Fixed LAM           : 'not computed'
 ```
 
 ![Ex1.1](figures_example1/Figure1.png)
@@ -120,6 +129,7 @@ problem.formulation.concomitant             = False
 problem.model_selection.CV                  = True
 problem.model_selection.LAMfixed            = True
 problem.model_selection.SSparameters.method = 'max'
+print(problem)
 problem.solve()
 print(problem.solution)
 
@@ -128,9 +138,20 @@ problem.solution.CV.graphic(mse_max = 1.)
 
 Results : 
 ```
-Cross Validation         :  Running time for Cross Validation    : 1.878s
-Stability Selection      :  Running time for Stability Selection    : 2.843s
-Solution for a fixed lam :  Running time for LAM fixed       : 0.11s
+FORMULATION : Huber
+ 
+MODEL SELECTION COMPUTED :  Cross Validation,  Stability selection, Lambda fixed
+ 
+CROSS VALIDATION PARAMETERS: Nsubset = 5  lamin = 0.001  n_lam = 500;  numerical_method = choose
+ 
+STABILITY SELECTION PARAMETERS: method = max;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.9;  numerical_method = choose
+ 
+LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 0.0;  numerical_method = choose
+
+SPEEDNESS : 
+Running time for Cross Validation    : 1.065s
+Running time for Stability Selection : 3.081s
+Running time for Fixed LAM           : 0.076s
 ```
 
 
