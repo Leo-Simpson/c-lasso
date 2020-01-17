@@ -48,14 +48,19 @@ class classo_problem :
             def __init__(self):
                 self.huber = False
                 self.concomitant = True
+                self.classification = False
                 self.rho = 1.345
             def name(self):
-                if self.concomitant :
-                    if self.huber : return('Concomitant_Huber')
-                    else     : return('Concomitant')
+                if self.huber :
+                    if self.classification : return('Huber_Classification')
+                    else :
+                        if self.concomitant : return('Concomitant_Huber')
+                        else     : return('Huber')
                 else :
-                    if self.huber : return('Huber')
-                    else     : return('LS')
+                    if self.classification : return('Classification')
+                    else :
+                        if self.concomitant : return('Concomitant')
+                        else     : return('LS')
             def __repr__(self): return(self.name())
         self.formulation = classo_formulation()
 
@@ -364,7 +369,6 @@ class solution_LAMfixed :
     def __repr__(self):
         plt.bar(range(len(self.refit)),self.refit),   plt.title("Solution for a fixed lambda with refit"),   plt.show()
         return ( str(round(self.time,3))       +"s")
-
 
 
 

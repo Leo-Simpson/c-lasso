@@ -213,7 +213,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 '''
 
 
-class problem_LS :
+class problem_Cl :
     
     def __init__(self,data,algo):
         self.N = 500000

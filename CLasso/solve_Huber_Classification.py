@@ -173,7 +173,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 '''
 
 
-class problem_Huber :
+class problem_Huber_Cl :
     
     def __init__(self,data,algo,rho_to_normalise):
         self.N = 500000

@@ -19,9 +19,7 @@ Classo and pathlasso are the main functions, they can call every algorithm acord
 
 def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,plot_sigm=True , rho = 1.345, get_lambdamax = False):
     
-        
 
-        
         
     if(typ=='Concomitant'):
         
@@ -35,8 +33,7 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
         beta,s = algo_Concomitant(pb,lam)
         
         dt = time()-t0
-    
-    
+
     elif(typ=='Concomitant_Huber'):
         t0 = time() 
         
@@ -58,8 +55,34 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
         pb = problem_Huber(matrix,meth,rho)
         beta = algo_Huber(pb,lam)
         
-        dt = time()-t0     
-            
+        dt = time()-t0
+
+    elif (typ == 'Huber_Classification'):
+
+        t0 = time()
+
+        if not meth in ['ODE', '2prox','FB']:
+            meth = '2prox'
+            if (lam > 0.1): meth = 'ODE'  # use path algorithm if lam is high, but prox algo if lam is little
+
+        pb = problem_Huber_Cl(matrix, meth, rho)
+        beta = algo_Huber_Cl(pb, lam)
+
+        dt = time() - t0
+
+    elif (typ == 'Classification'):
+
+        t0 = time()
+
+        if not meth in ['ODE', '2prox', 'FB']:
+            meth = '2prox'
+            if (lam > 0.1): meth = 'ODE'  # use path algorithm if lam is high, but prox algo if lam is little
+
+        pb = problem_Cl(matrix, meth)
+        beta = algo_Cl(pb, lam)
+
+        dt = time() - t0
+
     else: 
        
         t0 = time()  
@@ -106,8 +129,7 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
         else : BETA,LAM= sol,lambdas
         real_path = [lam*lambdamax for lam in LAM]
         dt = time()-t0
-        
-        
+
     elif(typ=='Concomitant'):
         
         t0 = time()
@@ -121,8 +143,7 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
             LAM = lambdas
         real_path = [lam*lambdamax for lam in LAM]
         dt = time()-t0
-    
-    
+
     elif(typ=='Concomitant_Huber'):
         t0 = time()
         meth='2prox'
@@ -133,7 +154,32 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
         real_path = [lam*lambdamax for lam in lambdas]
         dt = time()-t0
         
-            
+    elif(typ == 'Huber_Classification'):
+
+        t0 = time()
+        pb = problem_Huber_Cl(matrix,meth,rho)
+        lambdamax = pb.lambdamax
+        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
+        sol = pathalgo_Huber_Cl(pb,lambdas,n_active=n_active)  #if n_active is not False, then the function will return a tuple with the list of lambdas
+        if (type(sol) == tuple): BETA,LAM = sol
+        else : BETA,LAM= sol,lambdas
+        real_path = [lam*lambdamax for lam in LAM]
+        dt = time()-t0
+
+    elif (typ == 'Classification'):
+
+        t0 = time()
+        pb = problem_Cl(matrix, meth)
+        lambdamax = pb.lambdamax
+        if (true_lam): lambdas = [lamb / lambdamax for lamb in lambdas]
+        sol = pathalgo_Cl(pb, lambdas,n_active=n_active)  # if n_active is not False, then the function will return a tuple with the list of lambdas
+        if (type(sol) == tuple):
+            BETA, LAM = sol
+        else:
+            BETA, LAM = sol, lambdas
+        real_path = [lam * lambdamax for lam in LAM]
+        dt = time() - t0
+
     else: 
 
         t0 = time()
@@ -177,9 +223,6 @@ def hub(r,rho) :
         elif(r[j]>0)     : h+= (2*r[j]-rho)*rho
         else             : h+= (-2*r[j]-rho)*rho
     return(h)
-
-
-
 
 def ordre(meth):
     m,r_nonzero,k,sigma = 100,0.1,4,0.5
