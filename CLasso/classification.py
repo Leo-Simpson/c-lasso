@@ -29,7 +29,7 @@ def solve_cl_path(matrices,lamin,n_active=False, huber = False, rho = 0):
     # number_act is the number of active parameter
     # activity[i] = True iff s[i]= +- 1
     # F is the set where r<1 and if huber, then it is the set where rho<r<1
-    lam, LAM, beta, BETA, r, activity, idr, F, number_act = 1., [1.], np.zeros(d), [np.zeros(d)], 0, [False] * d, [False] * k, [True] * n, 0
+    lam, LAM, beta, BETA, r, activity, idr, F, number_act = 1., [1.], np.zeros(d), [np.zeros(d)], np.zeros(n), [False] * d, [False] * k, [True] * n, 0
 
     #if (huber and rho > 0): F=[False] maybe ??
 
