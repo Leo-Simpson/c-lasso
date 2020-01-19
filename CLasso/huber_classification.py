@@ -166,8 +166,7 @@ sigma = || A*B(lambda*sigma) - y ||_2       (where B(lambda) is found thanks to 
             teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
 '''
     
-def h_lambdamax(X,y,rho) :
-    return 2 * LA.norm(X.T.dot(h_prime(y, rho)), np.infty)
+
     
     
 # Compute the derivative of the huber function, particulary useful for the computing of lambdamax 

@@ -7,8 +7,7 @@ from CLasso.solve_LS import problem_LS, algo_LS, pathalgo_LS
 from CLasso.solve_Huber import problem_Huber, algo_Huber, pathalgo_Huber
 from CLasso.solve_Concomitant import problem_Concomitant, algo_Concomitant, pathalgo_Concomitant
 from CLasso.solve_Concomitant_Huber import problem_Concomitant_Huber, algo_Concomitant_Huber, pathalgo_Concomitant_Huber
-from CLasso.classification import solve_cl_path, pathalgo_Cl
-from CLasso.huber_classification import solve_huber_cl_path, pathalgo_Huber_Cl, h_lambdamax
+from CLasso.classification import solve_cl_path, pathalgo_Cl, h_lambdamax
 from CLasso.little_functions import affichage, random_data
 
 '''
@@ -39,7 +38,7 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
         beta = algo_Huber(pb,lam)
 
     elif (typ == 'Huber_Classification'):
-        BETA = solve_huber_cl_path(matrix, lam, rho)[0]
+        BETA = solve_cl_path(matrix, lam, huber= True, rho = rho)[0]
         beta = BETA[0]
 
     elif (typ == 'Classification'):
@@ -108,7 +107,7 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
 
         lambdamax = h_lambdamax(matrix[0],matrix[2],rho)
         if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
-        sol = pathalgo_Huber_Cl(matrix, lambdas, rho,n_active=n_active)  #if n_active is not False, then the function will return a tuple with the list of lambdas
+        sol = pathalgo_Cl(matrix, lambdas,n_active=n_active, huber = True, rho = rho)  #if n_active is not False, then the function will return a tuple with the list of lambdas
         if (type(sol) == tuple): BETA,LAM = sol
         else : BETA,LAM= sol,lambdas
         real_path = [lam*lambdamax for lam in LAM]

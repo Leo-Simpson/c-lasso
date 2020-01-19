@@ -7,7 +7,7 @@ import pandas as pd
 
 
 
-def random_data(m,d,d_nonzero,k,sigma,zerosum=False,seed=False):
+def random_data(m,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification = False):
     if (type(seed) == int): np.random.seed(seed)
     else : np.random.seed()
     A= np.random.randn(m,d)
@@ -36,6 +36,7 @@ def random_data(m,d,d_nonzero,k,sigma,zerosum=False,seed=False):
             sol[list_i[i]]=proj[i]
         break
     y = A.dot(sol)+np.random.randn(m)*sigma
+    if classification : y = np.sign(y)
     return((A,C,y),sol)
 
 def name(tol,string): return(string+'  tol={:.0e}'.format(float(tol)))   
