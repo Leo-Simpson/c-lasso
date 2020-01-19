@@ -118,7 +118,7 @@ def algo_LS(pb,lam, compute=True):
         
         qy_mult = qy*(mu-1)
         
-        b,xbar,x = pb.init 
+        b,xbar,x = pb.init
         for i in range(pb.N):
             xbar= xbar + mu*(prox(2*b-xbar,w,zerod)-b)
             x   = x    + mu*(Proj.dot(2*b-x)       -b)
@@ -126,7 +126,8 @@ def algo_LS(pb,lam, compute=True):
             nv_b = (2-mu)*b
             nv_b = nv_b + qy_mult + Q2.dot(x+xbar- 2*nv_b)
             if (i%2==1 and LA.norm(b-nv_b)<tol): 
-                if (regpath):return(b,(b,xbar,x)) 
+                if (regpath):
+                    return(b,(b,xbar,x))
                 else :       return(b)  
     
             b = nv_b

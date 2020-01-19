@@ -27,9 +27,23 @@ def algo_Huber(pb,lam, compute=True):
     if(pb_type == 'ODE'):                         
         beta = solve_huber_path((A,C,y), lam,rho)[0]
         return(beta[-1])
-    
-    tol = pb.tol * LA.norm(y)/LA.norm(A,'fro')  # tolerance rescaled
+
+    # 2 prox :
     regpath = pb.regpath
+    r = lamb / (2 * rho)
+    if (pb_type == '2prox'):
+        Ahuber = np.concatenate((A, r * np.eye(len(A))), axis=1)
+        Chuber = np.concatenate((C, np.zeros((len(C), len(y)))), axis=1)
+        matrices_huber = (Ahuber, Chuber, y)
+        prob = problem_LS(matrices_huber, '2prox')
+        prob.regpath = regpath
+        if (len(pb.init) == 3): prob.init = pb.init
+        if not (regpath): return (algo_LS(prob, lamb / prob.lambdamax)[:d])
+        x, warm_start = algo_LS(prob, lamb / prob.lambdamax)
+        return (x[:d], warm_start)
+
+
+    tol = pb.tol * LA.norm(y)/LA.norm(A,'fro')  # tolerance rescaled
     
     #cvx 
     # call to the cvx function of minimization
@@ -43,7 +57,7 @@ def algo_Huber(pb,lam, compute=True):
         return(x.value)
      
     if(compute): pb.compute_param()
-    tau,r,Proj, AtA, Aty = pb.tauN, lamb/(2*rho),  proj_c(C,d), pb.AtA, pb.Aty  
+    tau,Proj, AtA, Aty = pb.tauN,  proj_c(C,d), pb.AtA, pb.Aty
     gamma                 = pb.gam / (2*(pb.AtAnorm+r**2))   
     t                     = lamb * gamma
     w,tm,zerom,zerod      = t*pb.weights,t*np.ones(m), np.zeros(m), np.zeros(d) 
@@ -108,18 +122,7 @@ def algo_Huber(pb,lam, compute=True):
     
     
     
-    # 2 prox :
-    
-    if (pb_type == '2prox'):
-        Ahuber = np.concatenate((A,r*np.eye(len(A))),axis = 1 )
-        Chuber = np.concatenate((C,np.zeros((len(C),len(y)))),axis = 1 )
-        matrices_huber = (Ahuber,Chuber,y)
-        prob = problem_LS(matrices_huber,'2prox')
-        prob.regpath = regpath
-        if (len(pb.init)==3): prob.init = pb.init
-        if not (regpath): return(algo_LS(prob,lamb/prob.lambdamax)[:d])
-        x , warm_start = algo_LS(prob,lamb/prob.lambdamax)
-        return(x[:d],warm_start)
+
     
     
 

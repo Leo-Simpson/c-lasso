@@ -2,7 +2,7 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from CLasso.little_functions import random_data, csv_to_mat, rescale, theoritical_lam, min_LS
+from CLasso.little_functions import random_data, csv_to_mat, rescale, theoritical_lam, min_LS, affichage
 import scipy.io as sio
 from CLasso.compact_func import Classo, pathlasso
 from CLasso.cross_validation import CV
@@ -69,6 +69,26 @@ class classo_problem :
             def __init__(self):
 
                 # Model selection parameters
+                ''' PATH PARAMETERS'''
+                self.PATH = False
+                class PATHparameters:
+                    def __init__(self):
+                        self.formulation = 'not specified'
+                        self.numerical_method = 'choose'
+                        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
+
+                        self.n_active = False
+                        self.lambdas = np.linspace(1., 1e-2, 100)
+
+                    def __repr__(self): return ('Npath = ' + str(len(self.lambdas))
+                                                + '  n_active = ' + str(self.n_active)
+                                                + '  lamin = ' + str(self.lambdas[-1])
+                                                + '  n_lam = ' + str(len(self.lambdas))
+                                                + ';  numerical_method = ' + str(self.numerical_method))
+                ''' End of the definition'''
+                self.PATHparameters = PATHparameters()
+
+
 
                 ''' CROSS VALIDATION PARAMETERS'''
                 self.CV = False
@@ -88,7 +108,6 @@ class classo_problem :
                                                + '  n_lam = '+ str(len(self.lambdas))
                                                + ';  numerical_method = '+ str(self.numerical_method))
                 ''' End of the definition'''
-
                 self.CVparameters = CVparameters()
 
 
@@ -120,7 +139,6 @@ class classo_problem :
                                                + ';  threshold = '+ str(self.threshold)
                                                + ';  numerical_method = '+ str(self.numerical_method))
                 ''' End of the definition'''
-
                 self.SSparameters = SSparameters()
 
 
@@ -140,12 +158,13 @@ class classo_problem :
                                                + ';  theoritical_lam = '+ str(round(self.theoritical_lam,4))
                                                + ';  numerical_method = '+ str(self.numerical_method))
                 ''' End of the definition'''
-
                 self.LAMfixedparameters = LAMfixedparameters()
+
             def __repr__(self) :
                 string = ''
-                if self.CV : string+='Cross Validation,  '
-                if self.SS : string+='Stability selection, '
+                if self.PATH     : string+='Path,  '
+                if self.CV       : string+='Cross Validation,  '
+                if self.SS       : string+='Stability selection, '
                 if self.LAMfixed : string+= 'Lambda fixed'
                 return string
         self.model_selection = model_selection()
@@ -155,11 +174,7 @@ class classo_problem :
         data = self.data
         matrices = (data.X, data.C , data.y)
         solution = classo_solution()
-
         n,d = len(data.X),len(data.X[0])
-
-
-
 
         if data.rescale :
             matrices, data.scaling = rescale(matrices)         #SCALING contains  :
@@ -167,6 +182,9 @@ class classo_problem :
                                                         #         initial norm of centered y,
                                                         #          mean of initial y )
 
+        #Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
+        if self.model_selection.PATH :
+            solution.PATH = solution_PATH(matrices,self.model_selection.PATHparameters,self.formulation)
 
         #Compute the cross validation thanks to the class solution_CV which contains directely the computation in the initialisation
         if self.model_selection.CV :
@@ -207,23 +225,44 @@ class classo_problem :
 
 
 
-
-
-
-
 ''' define the class classo_data that contains the solution '''
 class classo_solution :
     def __init__(self) :
+        self.PATH     = 'not computed'
         self.CV       = 'not computed'
         self.SS       = 'not computed'
         self.LAMfixed = 'not computed'
     def __repr__(self):
         return( "SPEEDNESS : " + '\n'
-                'Running time for Cross Validation    : '+ self.CV.__repr__() + '\n'
+                'Running time for Path computation    : '+ self.PATH.__repr__() + '\n'
+               +'Running time for Cross Validation    : '+ self.CV.__repr__() + '\n'
                +'Running time for Stability Selection : '+ self.SS.__repr__() + '\n'
                +'Running time for Fixed LAM           : '+ self.LAMfixed.__repr__()
                 )
 
+
+class solution_PATH:
+    def __init__(self,matrices,param,formulation):
+        t0 = time()
+
+        #Formulation choosing
+        if param.formulation == 'not specified' : param.formulation = formulation
+        name_formulation       = param.formulation.name()
+        rho = param.formulation.rho
+        # Algorithmic method choosing
+        numerical_method = choose_numerical_method(param.numerical_method,'PATH', param.formulation)
+        param.numerical_method = numerical_method
+        # Compute the solution and is the formulation is concomitant, it also compute sigma
+        self.BETA, self.LAMBDAS = pathlasso(matrices,lambdas=param.lambdas,n_active=param.n_active,
+                        typ=name_formulation,meth=numerical_method,
+                        plot_time=False,plot_sol=False,plot_sigm=False,rho = rho)
+
+        self.formulation = formulation
+        self.method      = numerical_method
+        self.time = time()-t0
+    def __repr__(self):
+        affichage(self.BETA, self.LAMBDAS, title= self.formulation.name() + ' Path for the method ' + self.method), plt.show()
+        return ( str(round(self.time,3))       +"s")
 
 class solution_CV:
     def __init__(self,matrices,param,formulation):
@@ -249,7 +288,7 @@ class solution_CV:
         if param.formulation.concomitant : self.beta, self.sigma = out
         else : self.beta                    = out
 
-        self.selected_param = self.beta != 0. # boolean array, false iff beta_i =0
+        self.selected_param = abs(self.beta) > 1e-3 # boolean array, false iff beta_i =0
         self.refit          = min_LS(matrices,self.selected_param)
         self.time           = time()-t0
     def __repr__(self):
@@ -265,7 +304,6 @@ class solution_CV:
         plt.plot(self.xGraph[i_1SE],self.yGraph[i_1SE],'r+',label='lam with 1SE')
         plt.ylabel('mean of residual over lambda'),plt.xlabel('lam')
         plt.legend(),plt.title("Selection of lambda with Cross Validation"),plt.show()
-
 
 class solution_SS:
     def __init__(self,matrices,param,formulation):
@@ -334,7 +372,6 @@ class solution_SS:
         plt.bar(range(len(self.refit)),self.refit),   plt.title("Solution for Stability Selection with refit"),   plt.show()
         return ( str(round(self.time,3))       +"s")
 
-
 class solution_LAMfixed :
     def __init__(self,matrices,param,formulation):
         t0 = time()
@@ -363,7 +400,7 @@ class solution_LAMfixed :
         else : self.lambdamax, self.beta          = out
 
 
-        self.selected_param = self.beta !=0.
+        self.selected_param = abs(self.beta) > 1e-3
         self.refit = min_LS(matrices,self.selected_param)
         self.time = time()-t0
     def __repr__(self):
