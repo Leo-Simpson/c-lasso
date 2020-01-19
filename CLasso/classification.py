@@ -14,13 +14,13 @@ In all the code, capital letter variable are lists that contains the small varia
 
 
 def solve_cl_path(matrices,lamin,n_active=False, huber = False, rho = 0):
-    global number_act,idr,Xt,activity,beta,s,lam, M, y, r, F
+    global number_act,idr,Xt,activity,beta,s,lam, M, y, r, F, Fhuber
     
     
     (A,C,y)   = matrices
     n,d,k       = len(A),len(A[0]),len(C)
-    AtA       = A.T.dot(A)
-    s         = 2*A.T.dot(y)
+    if huber: s= 2*A.T.dot(y)   # change smt here ! ! !
+    else    : s= 2*A.T.dot(y)
     lambdamax = LA.norm(s,np.inf)
     s = s/lambdamax
     lam, LAM =1., [1.]
@@ -28,11 +28,11 @@ def solve_cl_path(matrices,lamin,n_active=False, huber = False, rho = 0):
     # idr saves the independant rows of the matrix C resctricted to the actives parameters
     # number_act is the number of active parameter
     # activity[i] = True iff s[i]= +- 1
-    lam, LAM, beta, BETA, r, activity, idr, F, number_act = 1., [1.], np.zeros(d), [np.zeros(d)], -y, [False] * d, [False] * k, [True] * n, 0
-    AtA = A[F].T.dot(A[F])
-    if (k==0): M = 2*AtA
-    else : M  = np.concatenate((np.concatenate((2*AtA,C.T),axis=1),np.concatenate(( C,np.zeros((k, k)) ),axis=1)), axis=0)
-    
+    # F is the set where r<1 and if huber, then it is the set where rho<r<1
+    lam, LAM, beta, BETA, r, activity, idr, F, number_act = 1., [1.], np.zeros(d), [np.zeros(d)], 0, [False] * d, [False] * k, [True] * n, 0
+
+    #if (huber and rho > 0): F=[False] maybe ??
+
     # set up the sets activity and idr    
     for i in range(d):
         if (s[i]==1. or s[i]==-1.): 
@@ -42,6 +42,12 @@ def solve_cl_path(matrices,lamin,n_active=False, huber = False, rho = 0):
                 to_ad = next_idr1(idr,C[:,activity])
                 if(type(to_ad)==int): idr[to_ad] = True
 
+    AtA = A[F].T.dot(A[F])
+    if (k == 0):
+        M = 2 * AtA
+    else:
+        M = np.concatenate((np.concatenate((2 * AtA, C.T), axis=1), np.concatenate((C, np.zeros((k, k))), axis=1)),
+                           axis=0)
     Xt = LA.inv(M[activity+idr,:] [:,activity+idr])    # initialise Xt
     
     
