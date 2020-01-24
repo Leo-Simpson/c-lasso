@@ -4,7 +4,7 @@ import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
 import pandas as pd
-
+import h5py
 
 
 def random_data(m,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification = False):
@@ -138,9 +138,9 @@ def aff(M):
         
         
         
-def csv_to_mat(file):
+def csv_to_mat(file,begin = 1):
     tab1=pd.read_csv(file)
-    return(np.array(tab1)[:,1:])
+    return(np.array(tab1)[:,begin:])
     
 
     
@@ -219,5 +219,11 @@ def clr(array, coef=0.5):
     null_set = (M <= 0.)
     M[null_set] = np.ones(M[null_set].shape)*coef
     M = np.log(M)
-    print(np.mean(M,axis = 0).shape)
     return(M - np.mean(M, axis=0))
+
+def mat_to_np(file):
+    arrays = {}
+    f = h5py.File(file)
+    for k,v in f.items():
+        arrays[k]=np.array(v)
+    return arrays
