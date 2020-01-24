@@ -1,4 +1,4 @@
-from CLasso.little_functions import random_data, csv_to_mat, rescale,clr, theoritical_lam
+from CLasso.little_functions import random_data, csv_to_mat, mat_to_np, rescale,clr, theoritical_lam
 import scipy.io as sio
 from CLasso.compact_func import Classo, pathlasso
 from CLasso.cross_validation import CV
