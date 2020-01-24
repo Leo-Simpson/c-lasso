@@ -59,7 +59,8 @@ def biggest_indexes(array,q):
 
 def stability(matrix,SSmethod = 'first',numerical_method = "ODE",
               lam = 0.1,hd = False, q = 10 ,B = 50, pourcent_nS = 0.5 ,
-              formulation = 'LS',plot_time=True, seed = 1, rho=1.345 ):
+              formulation = 'LS',plot_time=True, seed = 1, rho=1.345,
+              true_lam = False):
     
     rd.seed(seed)    
 
@@ -93,7 +94,7 @@ def stability(matrix,SSmethod = 'first',numerical_method = "ODE",
             submatrix = build_submatrix(matrix,subset)
             regress = Classo(submatrix,lam,typ = formulation,
                              meth=numerical_method,plot_time=False,
-                             plot_sol=False,plot_sigm=False, rho = rho)
+                             plot_sol=False,plot_sigm=False, rho = rho, true_lam = true_lam)
             if (formulation  in ['Concomitant','Concomitant_Huber']): beta =regress[0]
             else : beta = regress
             qbiggest = biggest_indexes(abs(beta),q)

@@ -174,6 +174,12 @@ def proj_c(M,d):
     return(np.eye(d)-LA.multi_dot([M.T,np.linalg.inv(M.dot(M.T) ),M]) )
 
 from scipy.special import erfinv
+
+# this function reteurns 4/sqrt(n) * erfinv(1 - 2*x) where x is the solution of :
+# x = 4/d ( erfinv(1-2x)**4 + erfinv(1-2x)**2 )
+# which is the same as : sqrt(2/n) * norminv(1-k/p) with k such that :
+# k = norminv(1 - k/p)^4 + 2*norminv(1 - k/p)^2
+# thanks to formula : norminv(1-t) = sqrt(2)erfinv(1-2t) !!
 def theoritical_lam(n,d):
     x=0.
     dx = 0.1
@@ -207,3 +213,11 @@ def min_LS(matrices,selected):
     beta = np.zeros(len(X[0]))
     beta[selected] = ls
     return(beta)
+
+def clr(array, coef=0.5):
+    M = np.copy(array)
+    null_set = (M <= 0.)
+    M[null_set] = np.ones(M[null_set].shape)*coef
+    M = np.log(M)
+    print(np.mean(M,axis = 0).shape)
+    return(M - np.mean(M, axis=0))

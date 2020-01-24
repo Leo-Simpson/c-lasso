@@ -13,14 +13,12 @@ In all the code, capital letter variable are lists that contains the small varia
 
 
 
-def solve_cl_path(matrices,lamin,n_active=False, huber = False, rho = 0):
-    global number_act,idr,Xt,activity,beta,s,lam, M, y, r, F, Fhuber
-    
-    
+def solve_cl_path(matrices,lamin,n_active=False):
+    global number_act,idr,Xt,activity,beta,s,lam, M, y, r, F
+
     (A,C,y)   = matrices
     n,d,k       = len(A),len(A[0]),len(C)
-    if huber: s= 2*A.T.dot(y)   # change smt here ! ! !
-    else    : s= 2*A.T.dot(y)
+    s= 2*A.T.dot(y)
     lambdamax = LA.norm(s,np.inf)
     s = s/lambdamax
     lam, LAM =1., [1.]
@@ -30,8 +28,6 @@ def solve_cl_path(matrices,lamin,n_active=False, huber = False, rho = 0):
     # activity[i] = True iff s[i]= +- 1
     # F is the set where r<1 and if huber, then it is the set where rho<r<1
     lam, LAM, beta, BETA, r, activity, idr, F, number_act = 1., [1.], np.zeros(d), [np.zeros(d)], np.zeros(n), [False] * d, [False] * k, [True] * n, 0
-
-    #if (huber and rho > 0): F=[False] maybe ??
 
     # set up the sets activity and idr    
     for i in range(d):
@@ -52,7 +48,7 @@ def solve_cl_path(matrices,lamin,n_active=False, huber = False, rho = 0):
     
     
     for i in range(N) :
-        up(lambdamax,lamin,A,C)
+        up(lambdamax,lamin,A)
         BETA.append(beta), LAM.append(lam)
         if ((type(n_active)==int and number_act>= n_active) or lam == lamin): return(BETA,LAM)
             
@@ -62,7 +58,7 @@ def solve_cl_path(matrices,lamin,n_active=False, huber = False, rho = 0):
 
 
 #function that search the next lambda where something happen, and update the solution Beta
-def up(lambdamax,lamin,A,C):
+def up(lambdamax,lamin,A):
     global number_act,idr,Xt,activity,F,beta,s, lam, M,r, y
 
     d = len(activity)
@@ -85,8 +81,8 @@ def up(lambdamax,lamin,A,C):
     max_up, yADl = False, y*A.dot(D) * lambdamax
     j_switch = None
     for j in range(len(r)):
-        #     find if there is a  0< dl < dlamb such that F[j] and |r[j]+ADl[j]*dl|>rho
-        # or  find if there is a  0< dl < dlamb such that not F[j] |r[j]+ADl[j]*dl|<rho
+        #     find if there is a  0< dl < dlamb such that F[j] and r[j]+yADl[j]*dl > 1
+        # or  find if there is a  0< dl < dlamb such that not F[j] r[j]+yADl[j]*dl < 1
         if (abs(r[j]-1)<1e-4): continue
         if (yADl[j] != 0.): dl = (1-r[j]) / yADl[j]
         else : dl = -1
@@ -179,22 +175,16 @@ def next_inv(Xt,B,al,ligne):
     
 
 # Fonction to interpolate the solution path between the breaking points
-def pathalgo_Cl(matrix,path,n_active=False, huber = False, rho = 0):
+def pathalgo_cl(matrix,path,n_active=False):
     BETA, i = [], 0
-    X,sp_path = solve_cl_path(matrix,path[-1],n_active, huber = huber, rho=rho)
+    X,sp_path = solve_cl_path(matrix,path[-1],n_active)
     sp_path.append(path[-1]),X.append(X[-1])
     for lam in path:
         while (lam<sp_path[i+1]): i+=1
         teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
         BETA.append(X[i]*(1-teta)+X[i+1]*teta)
     return(BETA)
-    
-# Compute the derivative of the huber function, particulary useful for the computing of lambdamax
-def h_prime(y,rho):
-    m = len(y)
-    lrho = rho*np.ones(m)
-    return(np.maximum(lrho,-y)+ np.minimum(y-lrho,0))
 
-def h_lambdamax(X,y,rho) :
-    return 2 * LA.norm(X.T.dot(h_prime(y, rho)), np.infty)
+
+
     

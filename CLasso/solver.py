@@ -78,7 +78,7 @@ class classo_problem :
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
                         self.n_active = False
-                        self.lambdas = np.linspace(1., 1e-2, 100)
+                        self.lambdas = np.linspace(1., 1e-2, 500)
 
                     def __repr__(self): return ('Npath = ' + str(len(self.lambdas))
                                                 + '  n_active = ' + str(self.n_active)
@@ -128,6 +128,7 @@ class classo_problem :
                         self.lamin            = 1e-2          # the lambda where one stop for 'max' method
                         self.hd               = False            # if set to True, then the 'max' will stop when it reaches n-k actives parameters
                         self.lam              = 'theoritical'  # can also be a float, for the 'lam' method
+                        self.true_lam         = False
                         self.threshold        = 0.9
                         self.theoritical_lam  = 0.0
 
@@ -152,6 +153,7 @@ class classo_problem :
                         self.lam              = 'theoritical'
                         self.formulation      = 'not specified'
                         self.numerical_method = 'choose'
+                        self.true_lam         =  False
                         self.theoritical_lam  = 0.0
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
                     def __repr__(self): return('lam = '+str(self.lam)
@@ -328,7 +330,8 @@ class solution_SS:
         # Compute the distribution
         output = stability(matrices, SSmethod = param.method, numerical_method = numerical_method,
                                 lam=lam, hd = param.hd, q = param.q ,B = param.B, pourcent_nS = param.pourcent_nS,
-                                formulation = name_formulation,plot_time=False,seed=param.seed,rho=rho)
+                                formulation = name_formulation,plot_time=False,seed=param.seed,rho=rho,
+                                true_lam = param.true_lam)
 
         if (param.method =='first'): distribution, distribution_path,lambdas = output
         else                       : distribution, distribution_path,lambdas = output,'not computed','not used'
@@ -393,7 +396,8 @@ class solution_LAMfixed :
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         out = Classo(
                 matrices,lam, typ = name_formulation, meth=numerical_method,
-                plot_time=False , plot_sol=False, plot_sigm=False , rho = rho,get_lambdamax = True)
+                plot_time=False , plot_sol=False, plot_sigm=False , rho = rho,
+                get_lambdamax = True, true_lam=param.true_lam)
 
         if param.formulation.concomitant :
             self.lambdamax, self.beta, self.sigma = out
