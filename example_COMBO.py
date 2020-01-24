@@ -20,6 +20,8 @@ n = len(y)
 X_C = CaloriData - np.mean(CaloriData, axis=0)
 X_F = FatData - np.mean(FatData, axis=0)
 
+print(CaloriData[0])
+
 # Predictor labels
 #PredLabels = GeneraPhylo[:,7],['Calorie'],['Fat']
 
@@ -27,11 +29,6 @@ X_F = FatData - np.mean(FatData, axis=0)
 # CLR transform data with pseudo count of 0.5 ;
 X0 = clr(GeneraCounts, 1 / 2)
 
-
-print(n)
-print(X0.shape)
-print(X_C.shape)
-print(X_F.shape)
 # Joint microbiome and covariate data and offset
 X = np.concatenate((X0, X_C, X_F, np.ones((n, 1))), axis=1)
 

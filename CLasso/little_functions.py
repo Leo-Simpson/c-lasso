@@ -138,8 +138,8 @@ def aff(M):
         
         
         
-def csv_to_mat(file,begin = 1):
-    tab1=pd.read_csv(file)
+def csv_to_mat(file,begin = 1, header=None):
+    tab1=pd.read_csv(file,header=header)
     return(np.array(tab1)[:,begin:])
     
 

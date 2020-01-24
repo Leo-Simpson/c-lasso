@@ -44,6 +44,7 @@ def biggest_indexes(array,q):
     nonnul = non_nul_indices(array)
     reduc_array = array[nonnul]
     for i1 in range(q):
+        if not np.any(nonnul): break
         reduc_index = np.argmax(reduc_array)
         index = nonnul[reduc_index]
         if (reduc_array[reduc_index]==0.): break
