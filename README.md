@@ -82,7 +82,7 @@ path computed with the ODE method to then solve the concomitant-path.
 
 
 
-## Example
+## Example on random data
 
 Here is an example of use of one of the methods  : concomitant algorithm with theoritical lambda, tested on data generated randomly. 
 
@@ -166,4 +166,101 @@ Running time for Fixed LAM           : 0.065s
 ![Ex2.5](figures_example2/Figure5.png)
 
 
+## Example on microbiome data
 
+Here is now the code of the file "example_COMBO" which uses microbiome data : 
+
+```python
+from CLasso import *
+import numpy as np
+
+
+CaloriData           = csv_to_mat('data/CaloriData.csv',begin=0).astype(float)
+FatData              = csv_to_mat('data/FatData.csv',begin=0).astype(float)
+BMI                  = csv_to_mat('data/BMI.csv',begin=0).astype(float)[:,0]
+GeneraFilteredCounts = csv_to_mat('data/GeneraFilteredCounts.csv',begin=0).astype(float)
+GeneraCounts         = csv_to_mat('data/GeneraCounts.csv',begin=0).astype(float).T
+CFiltered            = sio.loadmat('data/CFiltered.mat')
+# load phylogenetic tree
+GeneraPhylo          = csv_to_mat('data/GeneraPhylo.csv').astype(str)[:,-1]
+
+labels = np.concatenate([GeneraPhylo,np.array(['Calorie','Fat','Biais'])])
+#BMI data (n=96)
+y = BMI - np.mean(BMI)
+#Covariate data
+X_C = CaloriData - np.mean(CaloriData, axis=0)
+X_F = FatData - np.mean(FatData, axis=0)
+
+# Countdata of 87 genera
+# CLR transform data with pseudo count of 0.5 ;
+X0 = clr(GeneraCounts, 1 / 2)
+# Joint microbiome and covariate data and offset
+X = np.concatenate((X0, X_C, X_F, np.ones((n, 1))), axis=1)
+C = np.ones((1,len(X[0])))
+C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
+
+
+
+problem = classo_problem(X,y,C, labels=labels)
+problem.formulation.concomitant = True
+
+# Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
+problem.model_selection.LAMfixed = True
+problem.model_selection.LAMfixedparameters.true_lam = True
+
+
+# Solve the stability selection : (by default, it will use the theoritical lambda)
+problem.model_selection.SS                       = True
+problem.model_selection.SSparameters.method      = 'lam'
+problem.model_selection.SSparameters.true_lam    =  True
+problem.model_selection.SSparameters.threshold   = 0.6
+
+
+# Solve the entire path
+problem.model_selection.PATH = True
+problem.model_selection.PATHparameters.plot_sigma = True
+
+
+problem.solve()
+
+print(problem)
+print(problem.solution)
+
+
+```
+
+Results : 
+```
+FORMULATION : Concomitant
+ 
+MODEL SELECTION COMPUTED :  Path,  Stability selection, Lambda fixed
+ 
+STABILITY SELECTION PARAMETERS: method = lam;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.6;  numerical_method = ODE
+ 
+LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 0.1997;  numerical_method = ODE
+ 
+PATH PARAMETERS: Npath = 500  n_active = False  lamin = 0.05  n_lam = 500;  numerical_method = ODE
+
+SELECTED PARAMETERS : 
+15  Alistipes
+27  Clostridium
+56  Acidaminococcus
+SPEEDNESS : 
+Running time for Path computation    : 14.24s
+Running time for Cross Validation    : 'not computed'
+Running time for Stability Selection : 0.313s
+Running time for Fixed LAM           : 0.007s
+
+
+```
+
+
+![Ex3.1](figures_exampleCOMBO/Figure_1.png)
+
+![Ex3.2](figures_exampleCOMBO/Figure_2.png)
+
+![Ex3.3](figures_exampleCOMBO/Figure_3.png)
+
+![Ex3.4](figures_exampleCOMBO/Figure_4.png)
+
+![Ex3.5](figures_exampleCOMBO/Figure_5.png)

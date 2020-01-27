@@ -95,6 +95,7 @@ class classo_problem:
 
                         self.n_active = False
                         self.lambdas = np.linspace(1., 0.05, 500)
+                        self.plot_sigma = False
 
                     def __repr__(self): return ('Npath = ' + str(len(self.lambdas))
                                                 + '  n_active = ' + str(self.n_active)
@@ -275,7 +276,11 @@ class solution_PATH:
         numerical_method = choose_numerical_method(param.numerical_method, 'PATH', param.formulation)
         param.numerical_method = numerical_method
         # Compute the solution and is the formulation is concomitant, it also compute sigma
-        self.BETA, self.LAMBDAS = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
+        if(param.plot_sigma and formulation.concomitant):
+            self.BETA, self.LAMBDAS, self.SIGMAS = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
+                                                typ=name_formulation, meth=numerical_method,
+                                                plot_time=False, plot_sol=False, plot_sigm=True, rho=rho, e=e)
+        else : self.BETA, self.LAMBDAS = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
                                             typ=name_formulation, meth=numerical_method,
                                             plot_time=False, plot_sol=False, plot_sigm=False, rho=rho, e=e)
 
@@ -339,8 +344,6 @@ class solution_CV:
 
 
 class solution_SS:
-    global label
-
     def __init__(self, matrices, param, formulation):
         t0 = time()
 
