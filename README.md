@@ -246,11 +246,10 @@ SELECTED PARAMETERS :
 27  Clostridium
 56  Acidaminococcus
 SPEEDNESS : 
-Running time for Path computation    : 14.24s
+Running time for Path computation    : 2.699s
 Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 0.313s
-Running time for Fixed LAM           : 0.007s
-
+Running time for Stability Selection : 0.351s
+Running time for Fixed LAM           : 0.009s
 
 ```
 

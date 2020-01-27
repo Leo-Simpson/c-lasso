@@ -53,8 +53,10 @@ problem.solve()
 print(problem)
 print(problem.solution)
 
+'''
 problem.formulation.huber = True
 
 problem.solve()
 print(problem)
 print(problem.solution)
+'''
