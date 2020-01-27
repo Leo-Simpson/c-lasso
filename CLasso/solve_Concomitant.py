@@ -17,20 +17,18 @@ def algo_Concomitant(pb,lam, compute=True):
     pb_type = pb.type                          # ODE, 2prox
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     lamb = lam * pb.lambdamax
-    sigmax= LA.norm(y) * np.sqrt(2)
-
+    sigmax= pb.sigmax
     #ODE
     # here we compute the path algo until our lambda, and just take the last beta
-    if(pb_type == 'ODE'):       
-                         
+
+    # solve the problem : min ||Ab-y||^2 / sigma + sigma + lambda ||b||_1
+    if(pb_type == 'ODE'):
         (beta1,beta2), (s1,s2), (r1,r2) = solve_path((A,C,y),lam,concomitant = 'fix_lam')
         dr,ds = r1-r2,s1-s2
-        
-        
         teta  = root_2(LA.norm(dr)**2-ds**2 ,np.vdot(dr,r2)-s2*ds,LA.norm(r2)**2-s2**2)
-        s     = s1    *teta + s2    *(1-teta)
+        sigma = (s1    *teta + s2    *(1-teta) ) *sigmax
         beta  = beta1 *teta + beta2 *(1-teta)
-        return(beta,s*sigmax)
+        return(beta,sigma)
     
 
     if(compute): pb.compute_param()
@@ -173,7 +171,7 @@ class problem_Concomitant :
         self.gam        = np.sqrt(self.dim[1])
         self.Aty        = (A.T).dot(y)
         self.lambdamax  = np.sqrt(2)*LA.norm(self.Aty,np.infty)/LA.norm(y)
-        sigmax          = np.sqrt(2)*LA.norm(y)
+        self.sigmax          = np.sqrt(2)*LA.norm(y)
         self.init       = 1.,1.,np.zeros(m), np.zeros(d), np.zeros(d)    
             
             

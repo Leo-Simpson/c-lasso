@@ -17,20 +17,22 @@ Classo and pathlasso are the main functions, they can call every algorithm acord
 
 
 
-def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,plot_sigm=True , rho = 1.345, get_lambdamax = False, true_lam=False):
+def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,plot_sigm=True , rho = 1.345, get_lambdamax = False, true_lam=False, e=1.):
     t0 = time()
     if(typ=='Concomitant'):
         if not meth in ['ODE','2prox']:
             meth='2prox'
             if (lam>0.1): meth = 'ODE'        # use path algorithm if lam is high, but prox algo if lam is little
         pb = problem_Concomitant(matrix,meth)
-        if (true_lam): beta,s = algo_Concomitant(pb,lam/pb.lambdamax)
+        if (true_lam):
+            beta,s = algo_Concomitant(pb,lam/pb.lambdamax)
         else : beta, s = algo_Concomitant(pb, lam)
 
     elif(typ=='Concomitant_Huber'):
         meth='2prox'
         pb  = problem_Concomitant_Huber(matrix,meth,rho)
-        if (true_lam): beta,s = algo_Concomitant_Huber(pb,lam/pb.lambdamax)
+        if (true_lam):
+            beta,s = algo_Concomitant_Huber(pb,lam/pb.lambdamax)
         else : beta, s = algo_Concomitant_Huber(pb, lam)
 
     elif(typ=='Huber'):
@@ -71,7 +73,7 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
     else              : return(beta)
 
 
-def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE',plot_time=True,plot_sol=True,plot_sigm=True,rho = 1.345, compare=False, true_lam = False ):
+def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE',plot_time=True,plot_sol=True,plot_sigm=True,rho = 1.345, compare=False, true_lam = False, e= 1.):
     t0 = time()
     if (type(compare)!= bool):
         diff,path = compare

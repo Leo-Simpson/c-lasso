@@ -1,4 +1,9 @@
-colo = ['red','orange','g','b','pink','y','c','m','purple','yellowgreen','silver','coral','plum','lime']
+colo = ['red','orange','g','b','pink','y','c','m','purple',
+        'yellowgreen','silver','coral','plum','lime',
+        'hotpink','palegreen', 'tan', 'firebrick','darksalmon',
+        'sienna', 'sandybrown','olive', 'cadetblue','lawngreen',
+        'palevioletred','papayawhip','turquoise', 'teal',
+        'khaki','peru','indianred','brown', 'slategrey']
 colo = colo*100
 import numpy as np
 import numpy.linalg as LA
@@ -80,19 +85,13 @@ def influence(sol,top):
         l_influence.append(argmaxi)
     return(l_influence)
 
-def plot_influence(labels,l_influence):
-    print("influent parameters  : \n \n")
-    for beta in l_influence:
-        string=''
-        for colo in range(1,7):
-            string+= str(labels.loc[beta+1,colo])
-        print(string + '\n')
+
 
 
 def plot_betai(labels,l_index,path,BETA):
     for i in range(len(l_index)) :
-        leg = 'index = '+str(l_index[i]+1)
-        if not (type(labels)==bool): leg+='  '+ str(labels.loc[l_index[i]+1,6])
+        leg = 'index = '+str(l_index[i])
+        if not (type(labels)==bool): leg+='  '+ str(labels[l_index[i]])
         if (i>10): plt.plot(path,[BETA[ilam][l_index[i]] for ilam in range(len(path))],color=colo[l_index[i]])
         else:     plt.plot(path,[BETA[ilam][l_index[i]] for ilam in range(len(path))],label=leg,color=colo[l_index[i]])
 
@@ -114,7 +113,7 @@ def denorm(B,lna,ly): return(np.array([ly*B[j]/(np.sqrt(len(B))*lna[j]) for j in
 
 def affichage(LISTE_BETA,path,title=' ',labels=False,pix=False):
     naffichage = len(LISTE_BETA[0])//4
-    l_index  = influence(LISTE_BETA[-1],naffichage)
+    l_index  = influence(LISTE_BETA[-20],naffichage)
     plt.figure(figsize=(10,3), dpi=80)
     if (pix=='path'): plt.plot(path,[0]*len(path),'r+')
     plot_betai(labels,l_index,path,LISTE_BETA)
@@ -192,7 +191,7 @@ def theoritical_lam(n,d):
             bo    = (xd>x)           
         x = x-dx
         dx = dx/10
-    return(4*f/np.sqrt(n))
+    return(2*f/np.sqrt(n))
 
 def support_dist(x,y):
     s = 0 
@@ -227,3 +226,29 @@ def mat_to_np(file):
     for k,v in f.items():
         arrays[k]=np.array(v)
     return arrays
+
+
+'''
+def verify(obj,beta,sigma):
+    epsilon = 0.01
+    N = 1000
+    booleans = np.array([True]*N)
+    opt = obj(beta,sigma)
+    for i in range(N):
+        beta_prime = beta[:]
+        for j in range(len(beta_prime)):
+            beta_prime[j]+=epsilon*np.random.random()
+        sigma_prime = sigma + epsilon*np.random.random()
+        booleans[i] = (obj(beta_prime,sigma_prime) > opt)
+    return(np.all(booleans))
+
+
+def plot_influence(labels,l_influence):
+    print("influent parameters  : \n \n")
+    for beta in l_influence:
+        string=''
+        for colo in range(1,7):
+            string+= str(labels.loc[beta,colo])
+        print(string + '\n')
+        
+'''

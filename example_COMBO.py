@@ -1,6 +1,6 @@
 from CLasso import *
 import numpy as np
-
+import numpy.linalg as LA
 
 
 CaloriData           = csv_to_mat('data/CaloriData.csv',begin=0).astype(float)
@@ -10,8 +10,9 @@ GeneraFilteredCounts = csv_to_mat('data/GeneraFilteredCounts.csv',begin=0).astyp
 GeneraCounts         = csv_to_mat('data/GeneraCounts.csv',begin=0).astype(float).T
 CFiltered            = sio.loadmat('data/CFiltered.mat')
 # load phylogenetic tree
-#GeneraPhylo          = mat_to_np('data/GeneraPhylo.mat')['#refs#'].astype(str)
+GeneraPhylo          = csv_to_mat('data/GeneraPhylo.csv').astype(str)[:,-1]
 
+labels = np.concatenate([GeneraPhylo,np.array(['Calorie','Fat','Biais'])])
 #BMI data (n=96)
 y = BMI - np.mean(BMI)
 n = len(y)
@@ -19,8 +20,6 @@ n = len(y)
 #Covariate data
 X_C = CaloriData - np.mean(CaloriData, axis=0)
 X_F = FatData - np.mean(FatData, axis=0)
-
-print(CaloriData[0])
 
 # Predictor labels
 #PredLabels = GeneraPhylo[:,7],['Calorie'],['Fat']
@@ -42,12 +41,12 @@ C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
 
 
 
-problem = classo_problem(X,y,C)
-
+problem = classo_problem(X,y,C, labels=labels)
+problem.formulation.concomitant = True
 
 # Solve the problem for a fixed lambda
 lam0 = theoritical_lam(n,p)
-lam  = lam0 * n
+lam  = lam0
 problem.model_selection.LAMfixed = True
 problem.model_selection.LAMfixedparameters.lam = lam
 problem.model_selection.LAMfixedparameters.true_lam = True
@@ -56,24 +55,29 @@ problem.model_selection.LAMfixedparameters.true_lam = True
 # Solve the stability selection :
 pourcent_nS = 0.5
 lam0_nS = theoritical_lam(n*pourcent_nS,p)
-lam_nS = n*pourcent_nS*lam0_nS
+lam_nS = lam0_nS
 problem.model_selection.SS                       = True
 problem.model_selection.SSparameters.pourcent_nS = 0.5
 problem.model_selection.SSparameters.method      = 'lam'
 problem.model_selection.SSparameters.lam         = lam_nS
 problem.model_selection.SSparameters.true_lam    =  True
+problem.model_selection.SSparameters.threshold   = 0.6
 
 
 # Solve the entire path
-
 problem.model_selection.PATH = True
 
+
+
 problem.solve()
+
 print(problem)
 print(problem.solution)
 
+'''
 problem.formulation.huber = True
 
 problem.solve()
 print(problem)
 print(problem.solution)
+'''

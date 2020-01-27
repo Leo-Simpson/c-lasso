@@ -61,7 +61,7 @@ def biggest_indexes(array,q):
 def stability(matrix,SSmethod = 'first',numerical_method = "ODE",
               lam = 0.1,hd = False, q = 10 ,B = 50, pourcent_nS = 0.5 ,
               formulation = 'LS',plot_time=True, seed = 1, rho=1.345,
-              true_lam = False):
+              true_lam = False, e=1.):
     
     rd.seed(seed)    
 
@@ -82,7 +82,7 @@ def stability(matrix,SSmethod = 'first',numerical_method = "ODE",
             # compute the path until n_active = q, and only take the last Beta
             BETA = pathlasso(submatrix,lambdas=lambdas,n_active=q+1,lamin=0,
                              typ=formulation, meth = numerical_method,
-                             plot_time=False,plot_sol=False,plot_sigm=False, rho = rho )[0]
+                             plot_time=False,plot_sol=False,plot_sigm=False, rho = rho,e=e )[0]
             distr_path = distr_path + indicator(BETA)
         distribution = distr_path[-1]
         if (plot_time): print("Running time : ", round(time()-t0,3))
@@ -95,7 +95,7 @@ def stability(matrix,SSmethod = 'first',numerical_method = "ODE",
             submatrix = build_submatrix(matrix,subset)
             regress = Classo(submatrix,lam,typ = formulation,
                              meth=numerical_method,plot_time=False,
-                             plot_sol=False,plot_sigm=False, rho = rho, true_lam = true_lam)
+                             plot_sol=False,plot_sigm=False, rho = rho, e=e, true_lam = true_lam)
             if (formulation  in ['Concomitant','Concomitant_Huber']): beta =regress[0]
             else : beta = regress
             qbiggest = biggest_indexes(abs(beta),q)
@@ -115,7 +115,7 @@ def stability(matrix,SSmethod = 'first',numerical_method = "ODE",
             # compute the path until n_active = q, and only take the last Beta
             BETA = pathlasso(submatrix,n_active=False,lamin=1e-2,
                              typ=formulation,meth = numerical_method,
-                             plot_time=False,plot_sol=False,plot_sigm=False, rho = rho )[0]
+                             plot_time=False,plot_sol=False,plot_sigm=False, rho = rho, e=e )[0]
             betamax = np.amax( abs(np.array(BETA)), axis = 0 )
             qmax = biggest_indexes(betamax,q)
             for i in qmax:
