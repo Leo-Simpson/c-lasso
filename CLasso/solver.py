@@ -54,7 +54,7 @@ class classo_problem:
                 self.concomitant = True
                 self.classification = False
                 self.rho = 1.345
-                self.e = 1.
+                self.e = 'n/2'
 
             def name(self):
                 if self.huber:
@@ -141,19 +141,20 @@ class classo_problem:
                         self.method = 'first'  # Can be 'first' ; 'max' or 'lam'
                         self.B = 50
                         self.q = 10
-                        self.pourcent_nS = 0.5
+                        self.percent_nS = 0.5
                         self.lamin = 1e-2  # the lambda where one stop for 'max' method
                         self.hd = False  # if set to True, then the 'max' will stop when it reaches n-k actives parameters
                         self.lam = 'theoritical'  # can also be a float, for the 'lam' method
                         self.true_lam = False
                         self.threshold = 0.8
+                        self.threshold_label = 0.7
                         self.theoritical_lam = 0.0
 
                     def __repr__(self): return ('method = ' + str(self.method)
                                                 + ';  lamin = ' + str(self.lamin)
                                                 + ';  B = ' + str(self.B)
                                                 + ';  q = ' + str(self.q)
-                                                + ';  pourcent_nS = ' + str(self.pourcent_nS)
+                                                + ';  percent_nS = ' + str(self.percent_nS)
                                                 + ';  threshold = ' + str(self.threshold)
                                                 + ';  numerical_method = ' + str(self.numerical_method))
 
@@ -195,6 +196,8 @@ class classo_problem:
         matrices = (data.X, data.C, data.y)
         solution = classo_solution()
         n, d = len(data.X), len(data.X[0])
+        if (self.formulation.e == 'n/2'): self.formulation.e = n/2
+        elif(self.formulation.e == 'n'): self.formulation.e = n
 
         if data.rescale:
             matrices, data.scaling = rescale(matrices)  # SCALING contains  :
@@ -213,7 +216,8 @@ class classo_problem:
         # Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
         if self.model_selection.SS:
             param = self.model_selection.SSparameters
-            param.theoritical_lam = theoritical_lam(int(n * param.pourcent_nS), d)
+            param.theoritical_lam = theoritical_lam(int(n * param.percent_nS), d)
+            if(param.true_lam): param.theoritical_lam = param.theoritical_lam*int(n * param.percent_nS)
 
             solution.SS = solution_SS(matrices, param, self.formulation)
 
@@ -221,6 +225,7 @@ class classo_problem:
         if self.model_selection.LAMfixed:
             param = self.model_selection.LAMfixedparameters
             param.theoritical_lam = theoritical_lam(n, d)
+            if(param.true_lam): param.theoritical_lam = param.theoritical_lam*n
             solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation)
 
         self.solution = solution
@@ -276,11 +281,12 @@ class solution_PATH:
         numerical_method = choose_numerical_method(param.numerical_method, 'PATH', param.formulation)
         param.numerical_method = numerical_method
         # Compute the solution and is the formulation is concomitant, it also compute sigma
-        if(param.plot_sigma and formulation.concomitant):
-            self.BETA, self.LAMBDAS, self.SIGMAS = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
-                                                typ=name_formulation, meth=numerical_method,
-                                                plot_time=False, plot_sol=False, plot_sigm=True, rho=rho, e=e)
-        else : self.BETA, self.LAMBDAS = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
+        self.SIGMAS = 'not computed'
+        if(formulation.concomitant):
+            self.BETAS, self.LAMBDAS, self.SIGMAS = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
+                                                typ=name_formulation, meth=numerical_method, return_sigm=True,
+                                                plot_time=False, plot_sol=False, plot_sigm=False, rho=rho, e=e)
+        else : self.BETAS, self.LAMBDAS = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
                                             typ=name_formulation, meth=numerical_method,
                                             plot_time=False, plot_sol=False, plot_sigm=False, rho=rho, e=e)
 
@@ -289,8 +295,10 @@ class solution_PATH:
         self.time = time() - t0
 
     def __repr__(self):
-        affichage(self.BETA, self.LAMBDAS, labels=list(label),
+        affichage(self.BETAS, self.LAMBDAS, labels=label,
                   title=self.formulation.name() + ' Path for the method ' + self.method), plt.show()
+        if(type(self.SIGMAS)!=str):plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel("sigma/sigMAX"), plt.xlabel("lambda")
+        plt.title('Sigma for Concomitant'), plt.savefig('Sigma for Concomitant' + '.png'), plt.show()
         return (str(round(self.time, 3)) + "s")
 
 
@@ -366,7 +374,7 @@ class solution_SS:
 
         # Compute the distribution
         output = stability(matrices, SSmethod=param.method, numerical_method=numerical_method,
-                           lam=lam, hd=param.hd, q=param.q, B=param.B, pourcent_nS=param.pourcent_nS,
+                           lam=lam, hd=param.hd, q=param.q, B=param.B, pourcent_nS=param.percent_nS,
                            formulation=name_formulation, plot_time=False, seed=param.seed, rho=rho,
                            true_lam=param.true_lam, e=e)
 
@@ -378,7 +386,7 @@ class solution_SS:
         self.distribution = distribution
         self.distribution_path = distribution_path
         self.lambdas_path = lambdas
-        self.selected_param = selected_param(self.distribution, param.threshold)
+        self.selected_param,self.to_label = selected_param(self.distribution, param.threshold,param.threshold_label)
 
         self.refit = min_LS(matrices, self.selected_param)
         self.time = time() - t0
@@ -395,8 +403,12 @@ class solution_SS:
         Dunselected[unselected] = D[unselected]
         plt.bar(range(len(Dselected)), Dselected, color='r', label='selected parameters')
         plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected parameters')
+        if (type(label) != bool):
+            print(self.to_label)
+            print(label[self.to_label])
+            plt.xticks(self.to_label, label[self.to_label], rotation=30)
         plt.legend(), plt.title("Distribution of Stability Selection"), plt.show()
-        if (type(label) != 'bool'):
+        if (type(label) != bool):
             print("SELECTED PARAMETERS : ")
             for i in range(len(D)):
                 if (selected[i]): print(i, label[i])
@@ -411,7 +423,6 @@ class solution_SS:
                     plt.plot(lambdas, [Dpath[j][i] for j in range(N)], 'b', label='unselected parameters')
             p1, p2 = mpatches.Patch(color='red', label='selected parameters'), mpatches.Patch(color='blue',
                                                                                               label='unselected parameters')
-            plt.xlabel()
             plt.legend(handles=[p1, p2])
             plt.title("Distribution of probability of apparence as a function of lambda"), plt.show()
 
@@ -446,11 +457,8 @@ class solution_LAMfixed:
             plot_time=False, plot_sol=False, plot_sigm=False, rho=rho,
             get_lambdamax=True, true_lam=param.true_lam, e=e)
 
-        if param.formulation.concomitant:
-            self.lambdamax, self.beta, self.sigma = out
-        else:
-            self.lambdamax, self.beta = out
-
+        if param.formulation.concomitant: self.lambdamax, self.beta, self.sigma = out
+        else: self.lambdamax, self.beta = out
         self.selected_param = abs(self.beta) > 1e-3
         self.refit = min_LS(matrices, self.selected_param)
         self.time = time() - t0

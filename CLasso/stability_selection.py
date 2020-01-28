@@ -15,11 +15,12 @@ def indicator(BETA):
     return IND
 
 
-def selected_param(distribution,threshold):
-    selected  = [False]*len(distribution)
+def selected_param(distribution,threshold,threshold_label):
+    selected, to_label  = [False]*len(distribution), []
     for i in range(len(distribution)):
         if (distribution[i] > threshold): selected[i]=True
-    return(selected)
+        if (distribution[i] > threshold_label): to_label.append(i)
+    return(selected, to_label)
 
 
 def build_subset(n,nS): return(rd.permutation(n)[:nS])

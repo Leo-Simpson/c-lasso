@@ -23,10 +23,11 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
         if not meth in ['ODE','2prox']:
             meth='2prox'
             if (lam>0.1): meth = 'ODE'        # use path algorithm if lam is high, but prox algo if lam is little
-        pb = problem_Concomitant(matrix,meth)
+        pb = problem_Concomitant(matrix,meth,e=e)
         if (true_lam):
             beta,s = algo_Concomitant(pb,lam/pb.lambdamax)
         else : beta, s = algo_Concomitant(pb, lam)
+        s = s/np.sqrt(e)
 
     elif(typ=='Concomitant_Huber'):
         meth='2prox'
@@ -73,7 +74,7 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
     else              : return(beta)
 
 
-def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE',plot_time=True,plot_sol=True,plot_sigm=True,rho = 1.345, compare=False, true_lam = False, e= 1.):
+def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE',plot_time=True,plot_sol=True,plot_sigm=True,rho = 1.345, compare=False, true_lam = False, e= 1.,return_sigm= False):
     t0 = time()
     if (type(compare)!= bool):
         diff,path = compare
@@ -94,7 +95,7 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
         real_path = [lam*lambdamax for lam in LAM]
 
     elif(typ=='Concomitant'):
-        pb = problem_Concomitant(matrix,meth)
+        pb = problem_Concomitant(matrix,meth,e=e)
         lambdamax = pb.lambdamax
         if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         sol  = pathalgo_Concomitant(pb,lambdas,n_active=n_active)
@@ -103,6 +104,7 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
             BETA,S= sol
             LAM = lambdas
         real_path = [lam*lambdamax for lam in LAM]
+        S=np.array(S)/np.sqrt(e)
 
     elif(typ=='Concomitant_Huber'):
         meth='2prox'
@@ -147,9 +149,9 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
     if (plot_sol): 
         affichage(BETA,real_path,title=typ+' Path for the method '+meth),plt.show()
         if not (type(compare)==bool): affichage([BETA[i]-diff[i] for i in range(len(BETA))],real_path,title='Difference between both methods'),plt.savefig('Difference between both methods'+'.png'),plt.show()
-    if (plot_sigm and typ in ['Concomitant','Concomitant_Huber']):
-        plt.plot(real_path,S),plt.ylabel("sigma / sigmaMAX"),plt.xlabel("lambda"), plt.title('Sigma for Concomitant'),plt.savefig('Sigma for Concomitant'+'.png'),plt.show()
-        return(BETA,real_path,S)
+    if(typ in ['Concomitant','Concomitant_Huber']):
+        if(plot_sigm): plt.plot(real_path,S),plt.ylabel("sigma / sigmaMAX"),plt.xlabel("lambda"), plt.title('Sigma for Concomitant'),plt.savefig('Sigma for Concomitant'+'.png'),plt.show()
+        if(return_sigm) : return(BETA,real_path,S)
     return(BETA,real_path)
  
     

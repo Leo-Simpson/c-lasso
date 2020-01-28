@@ -1,4 +1,4 @@
-N=10000
+N=100000
 import numpy as np
 import numpy.linalg as LA
 
@@ -36,13 +36,13 @@ def solve_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no
     else: 
         
         # to compute r = (A beta - y)/||y|| more efficientely :
-        A_over_ly, y_over_ly = A/ LA.norm(y) , y / LA.norm(y) 
+        A_over_NORMy, y_over_NORMy = A/ (LA.norm(y))  , y / (LA.norm(y))
         
         # we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
         
         reduclam = 2.
-        if(concomitant=='path'): lamin,R = 0,[-y_over_ly]
-        else                     : lamin,beta_old,reduclam_old,r_old = 0,beta,1.,-y/LA.norm(y)
+        if(concomitant=='path'): lamin,R = 0,[-y_over_NORMy]
+        else                     : lamin,beta_old,reduclam_old,r_old = 0,beta,1.,-y_over_NORMy
     
     # set up the sets activity and idr    
     for i in range(d):
@@ -64,7 +64,7 @@ def solve_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no
         BETA.append(beta), LAM.append(lam)
         
         if not (concomitant=='no'):
-            r = A_over_ly.dot(beta)-y_over_ly
+            r = A_over_NORMy.dot(beta)-y_over_NORMy
             if (stop != 0) : reduclam = lam/stop
 
             if(concomitant=='path'): 

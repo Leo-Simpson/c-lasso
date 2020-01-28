@@ -125,6 +125,8 @@ def affichage(LISTE_BETA,path,title=' ',labels=False,pix=False):
     if (type(pix)==bool and pix==True):
         plt.matshow([[(abs(LISTE_BETA[i][j])>1e-2) for i in range(len(LISTE_BETA))] for j in range(len(LISTE_BETA[0]))])
         plt.show()
+
+
     
 def aff(M):
     (m,n)= M.shape
