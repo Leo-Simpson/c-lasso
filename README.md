@@ -84,7 +84,7 @@ path computed with the ODE method to then solve the concomitant-path.
 
 ## Example on random data
 
-Here is an example of use of one of the methods  : concomitant algorithm with theoritical lambda, tested on data generated randomly. 
+Here is an example of use of one of the methods  : concomitant algorithm with theoretical lambda, tested on data generated randomly. 
 
 To generate the data :
 ```python
@@ -204,12 +204,12 @@ C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
 problem = classo_problem(X,y,C, labels=labels)
 problem.formulation.concomitant = True
 
-# Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
+# Solve the problem for a fixed lambda (by default, it will use the theoretical lambda)
 problem.model_selection.LAMfixed = True
 problem.model_selection.LAMfixedparameters.true_lam = True
 
 
-# Solve the stability selection : (by default, it will use the theoritical lambda)
+# Solve the stability selection : (by default, it will use the theoretical lambda)
 problem.model_selection.SS                       = True
 problem.model_selection.SSparameters.method      = 'lam'
 problem.model_selection.SSparameters.true_lam    =  True
