@@ -152,6 +152,7 @@ class classo_problem:
 
                     def __repr__(self): return ('method = ' + str(self.method)
                                                 + ';  lamin = ' + str(self.lamin)
+                                                + ';  lam = ' + str(self.lam)
                                                 + ';  B = ' + str(self.B)
                                                 + ';  q = ' + str(self.q)
                                                 + ';  percent_nS = ' + str(self.percent_nS)
@@ -403,10 +404,7 @@ class solution_SS:
         Dunselected[unselected] = D[unselected]
         plt.bar(range(len(Dselected)), Dselected, color='r', label='selected parameters')
         plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected parameters')
-        if (type(label) != bool):
-            print(self.to_label)
-            print(label[self.to_label])
-            plt.xticks(self.to_label, label[self.to_label], rotation=30)
+        if (type(label) != bool): plt.xticks(self.to_label, label[self.to_label], rotation=30)
         plt.legend(), plt.title("Distribution of Stability Selection"), plt.show()
         if (type(label) != bool):
             print("SELECTED PARAMETERS : ")
