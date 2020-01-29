@@ -1,5 +1,6 @@
 import numpy as np
 import numpy.linalg as LA
+from CLasso.solve_Concomitant import problem_Concomitant, algo_Concomitant
     
 '''    
 Problem    :   min h_rho((Ab - y)/sigma)sigma + simga + lambda ||b||1 with C.b= 0, sigma>0 
@@ -10,13 +11,19 @@ The first function compute a solution of a Lasso problem for a given lambda. The
 '''    
 
 
-def algo_Concomitant_Huber(pb,lam):
-    
-    pb_type = pb.type      # 2prox
-    (m,d,k),(A,C,y)  = pb.dim,pb.matrix 
+def algo_Concomitant_Huber(pb,lam,e=1.):
+    pb_type = pb.type      # 2prox, ODE
+    (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     lamb,rho  = lam * pb.lambdamax, pb.rho
-
     regpath = pb.regpath
+    if pb_type=='ODE' and not regpath:
+        matrix_aug = (np.concatenate((A,lamb/(2*rho)*np.eye(m)),axis=1),np.concatenate((C,np.zeros((k,m))),axis=1),y)
+        pb_aug = problem_Concomitant(matrix_aug, 'ODE', e=e)
+        beta,s = algo_Concomitant(pb_aug, lamb / pb_aug.lambdamax)
+        s = s / np.sqrt(e)
+        beta= beta[:d]
+        return beta,s
+
     Anorm   = LA.norm(A,'fro')
     tol     = pb.tol * LA.norm(y) # tolerance rescaled
     Proj    = proj_c(C,d)   # Proj = I - C^t . (C . C^t )^-1 . C 
@@ -92,13 +99,10 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 
 class problem_Concomitant_Huber :
     
-    def __init__(self,data,algo,rho):
+    def __init__(self,data,algo,rho,e=1.):
         self.N = 10000
         
-        if(len(data)==3): (A,C,y), self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
-        elif(len(data)==5):
-            (A,C,sol), self.dim = generate_random(data), data[:3]
-            self.sol,y = sol, A.dot(sol)+np.random.randn(data[0])*data[-1]
+        (A,C,y), self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
         self.matrix = (A,C,y)
         
         (m,d,k) = self.dim
@@ -108,7 +112,7 @@ class problem_Concomitant_Huber :
         self.regpath = False
         self.name = algo + ' Concomitant Huber'
         self.type = algo          # type of algorithm used
-
+        rho_max = LA.norm(y,np.inf)
         self.rho = rho
         self.mu  = 1.95
          
@@ -117,6 +121,7 @@ class problem_Concomitant_Huber :
         sigmax = find_sigmax(y,rho)
         self.sigmax = sigmax
         self.lambdamax = 2/sigmax*LA.norm((A.T).dot(h_prime(y,rho*sigmax)),np.infty)
+        self.lambdamax = 2 * LA.norm(A.T.dot(y), np.infty) / LA.norm(y) * np.sqrt(e)
         self.init = sigmax*np.ones(m),sigmax*np.ones(m),np.zeros(m), np.zeros(d), np.zeros(d)
            
 

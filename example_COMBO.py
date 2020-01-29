@@ -37,14 +37,13 @@ problem.solve()
 print(problem)
 print(problem.solution)
 
-'''
-problem.formulation.huber = True
 
+problem.formulation.huber = True
+# We don't solve the entire path here
+problem.model_selection.PATH = False
 problem.solve()
 print(problem)
 print(problem.solution)
-'''
-
 
 ''' 
 print(np.linalg.norm(y)/np.sqrt(n/2))

@@ -432,7 +432,7 @@ class solution_SS:
 class solution_LAMfixed:
     def __init__(self, matrices, param, formulation):
         t0 = time()
-
+        self.formulation = formulation
         # Formulation choosing
         if param.formulation == 'not specified': param.formulation = formulation
         name_formulation = param.formulation.name()
@@ -463,6 +463,7 @@ class solution_LAMfixed:
 
     def __repr__(self):
         plt.bar(range(len(self.refit)), self.refit), plt.title("Solution for a fixed lambda with refit"), plt.show()
+        if(self.formulation.concomitant) : print("SIGMA FOR LAMFIXED  : ", self.sigma )
         return (str(round(self.time, 3)) + "s")
 
 
@@ -472,17 +473,12 @@ class solution_LAMfixed:
 def choose_numerical_method(method, model, formulation, SSmethod=None, lam=None):
     if (formulation.classification): return ('ODE')
 
-    if (formulation.concomitant and formulation.huber):
-        return '2prox'
-
-
-
     # cases where we use classo at a fixed lambda    
     elif (model == 'LAM') or (model == 'SS' and SSmethod == 'lam'):
 
         if formulation.concomitant:
             if not method in ['ODE', '2prox']:
-                if (lam > 0.1):
+                if (lam > 0.05):
                     return 'ODE'
                 else:
                     return '2prox'
