@@ -191,13 +191,13 @@ C = np.ones((1,len(X[0])))
 C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
 
 problem = classo_problem(X,y,C, labels=labels)
-<<<<<<< HEAD
+
 # Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
 problem.model_selection.LAMfixed                    = True
 problem.model_selection.LAMfixedparameters.true_lam = True
 
 # Solve the stability selection : (by default, it will use the theoritical lambda)
-=======
+
 problem.formulation.concomitant = True
 
 # Solve the problem for a fixed lambda (by default, it will use the theoretical lambda)
@@ -206,7 +206,7 @@ problem.model_selection.LAMfixedparameters.true_lam = True
 
 
 # Solve the stability selection : (by default, it will use the theoretical lambda)
->>>>>>> 5adf6004e80ea8e7ab4bc4fbce61aad687d47ba1
+
 problem.model_selection.SS                       = True
 problem.model_selection.SSparameters.method      = 'lam'
 problem.model_selection.SSparameters.true_lam    =  True
