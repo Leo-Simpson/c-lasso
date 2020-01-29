@@ -210,6 +210,12 @@ problem.solve()
 print(problem)
 print(problem.solution)
 
+problem.formulation.huber = True
+# We don't solve the entire path here
+problem.model_selection.PATH = False
+problem.solve()
+print(problem)
+print(problem.solution)
 
 
 ```
@@ -236,6 +242,24 @@ Running time for Cross Validation    : 'not computed'
 Running time for Stability Selection : 0.877s
 Running time for Fixed LAM           : 0.021s
 
+FORMULATION : Concomitant_Huber
+ 
+MODEL SELECTION COMPUTED :  Stability selection, Lambda fixed
+ 
+STABILITY SELECTION PARAMETERS: method = lam;  lamin = 0.01;  lam = theoritical;  B = 50;  q = 10;  percent_nS = 0.5;  threshold = 0.7;  numerical_method = ODE
+ 
+LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 19.1709;  numerical_method = ODE
+
+SELECTED PARAMETERS : 
+27  Clostridium
+SIGMA FOR LAMFIXED  :  6.1870642392818755
+SPEEDNESS : 
+Running time for Path computation    : 'not computed'
+Running time for Cross Validation    : 'not computed'
+Running time for Stability Selection : 1.755s
+Running time for Fixed LAM           : 0.035s
+
+
 ```
 
 
@@ -248,3 +272,7 @@ Running time for Fixed LAM           : 0.021s
 ![Ex3.4](figures_exampleCOMBO/beta1.png)
 
 ![Ex3.5](figures_exampleCOMBO/beta2.png)
+
+![Ex3.6](figures_exampleCOMBO/Sselection_huber.png)
+
+![Ex3.7](figures_exampleCOMBO/beta_huber.png)
