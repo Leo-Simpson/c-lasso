@@ -286,8 +286,7 @@ Running time for Fixed LAM           : 0.035s
 
 ![Ex3.6](figures_exampleCOMBO/Sselection_huber.png)
 
-<<<<<<< HEAD
 ![Ex3.7](figures_exampleCOMBO/beta_huber.png)
-=======
-![Ex3.5](figures_exampleCOMBO/Figure_5.png)
->>>>>>> 5adf6004e80ea8e7ab4bc4fbce61aad687d47ba1
+
+
+
