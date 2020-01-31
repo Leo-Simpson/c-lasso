@@ -2,7 +2,8 @@ from CLasso import *
 import numpy as np
 pH = sio.loadmat('Data/pHData.mat')
 tax = sio.loadmat('Data/taxTablepHData.mat')['None'][0]
-X,Y_uncent, header = pH['X'],pH['Y'].T[0] , pH['__header__']
+
+X,Y_uncent = pH['X'],pH['Y'].T[0]
 y = Y_uncent-np.mean(Y_uncent) # Center Y
 problem = classo_problem(X,y) # zero sum is default C
 
