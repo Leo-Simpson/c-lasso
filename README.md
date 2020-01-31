@@ -227,8 +227,6 @@ problem.model_selection.PATH = False
 problem.solve()
 print(problem)
 print(problem.solution)
-
-
 ```
 
 Results : 
@@ -289,4 +287,61 @@ Running time for Fixed LAM           : 0.035s
 ![Ex3.7](figures_exampleCOMBO/beta_huber.png)
 
 
+Here is now the code of the file "example_pH" which uses microbiome data : 
 
+```python
+from CLasso import *
+import numpy as np
+pH = sio.loadmat('Data/pHData.mat')
+tax = sio.loadmat('Data/taxTablepHData.mat')['None'][0]
+X,Y_uncent, header = pH['X'],pH['Y'].T[0] , pH['__header__']
+y = Y_uncent-np.mean(Y_uncent) # Center Y
+problem = classo_problem(X,y) # zero sum is default C
+
+problem.model_selection.SSparameters.seed = 1
+# Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
+problem.model_selection.LAMfixed                    = True
+# Solve the stability selection : (by default, it will use the theoritical lambda)
+problem.model_selection.SS                       = True
+problem.model_selection.SSparameters.method      = 'lam'
+problem.model_selection.SSparameters.threshold   = 0.7
+# Solve the entire path
+problem.model_selection.PATH = True
+problem.model_selection.PATHparameters.plot_sigma = True
+
+
+
+problem.solve()
+print(problem)
+print(problem.solution)
+```
+
+
+Results : 
+```
+FORMULATION : Concomitant
+ 
+MODEL SELECTION COMPUTED :  Path,  Stability selection, Lambda fixed
+ 
+STABILITY SELECTION PARAMETERS: method = lam;  lamin = 0.01;  lam = theoritical;  B = 50;  q = 10;  percent_nS = 0.5;  threshold = 0.7;  numerical_method = ODE
+ 
+LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 19.1991;  numerical_method = ODE
+ 
+PATH PARAMETERS: Npath = 500  n_active = False  lamin = 0.05  n_lam = 500;  numerical_method = ODE
+
+
+SIGMA FOR LAMFIXED  :  0.7473015322224758
+SPEEDNESS : 
+Running time for Path computation    : 0.08s
+Running time for Cross Validation    : 'not computed'
+Running time for Stability Selection : 1.374s
+Running time for Fixed LAM           : 0.024s
+```
+
+![Ex4.1](figures_examplePH/Path.png)
+
+![Ex4.2](figures_examplePH/Sigma.png)
+
+![Ex4.3](figures_examplePH/Sselection.png)
+
+![Ex4.4](figures_examplePH/beta.png)

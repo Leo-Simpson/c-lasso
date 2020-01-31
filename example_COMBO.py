@@ -18,6 +18,7 @@ C = np.ones((1,len(X[0])))
 C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
 
 problem = classo_problem(X,y,C, labels=labels)
+
 # Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
 problem.model_selection.LAMfixed                    = True
 problem.model_selection.LAMfixedparameters.true_lam = True

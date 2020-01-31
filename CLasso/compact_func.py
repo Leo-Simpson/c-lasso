@@ -36,6 +36,7 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox',plot_time=True , plot_sol=True,pl
             beta,s = algo_Concomitant_Huber(pb,lam/pb.lambdamax,e=e)
         else : beta, s = algo_Concomitant_Huber(pb, lam,e=e)
 
+
     elif(typ=='Huber'):
         if not meth in ['ODE','2prox','FB','Noproj','cvx']:
             meth='FB'

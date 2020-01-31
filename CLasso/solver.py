@@ -111,7 +111,7 @@ class classo_problem:
 
                 class CVparameters:
                     def __init__(self):
-                        self.seed = 1
+                        self.seed = None
                         self.formulation = 'not specified'
                         self.numerical_method = 'choose'
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
@@ -133,7 +133,7 @@ class classo_problem:
 
                 class SSparameters:
                     def __init__(self):
-                        self.seed = 1
+                        self.seed = None
                         self.formulation = 'not specified'
                         self.numerical_method = 'choose'
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
@@ -145,7 +145,7 @@ class classo_problem:
                         self.lamin = 1e-2  # the lambda where one stop for 'max' method
                         self.hd = False  # if set to True, then the 'max' will stop when it reaches n-k actives parameters
                         self.lam = 'theoritical'  # can also be a float, for the 'lam' method
-                        self.true_lam = False
+                        self.true_lam = True
                         self.threshold = 0.8
                         self.threshold_label = 0.7
                         self.theoritical_lam = 0.0
@@ -170,7 +170,7 @@ class classo_problem:
                         self.lam = 'theoritical'
                         self.formulation = 'not specified'
                         self.numerical_method = 'choose'
-                        self.true_lam = False
+                        self.true_lam = True
                         self.theoritical_lam = 0.0
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
