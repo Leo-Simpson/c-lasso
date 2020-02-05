@@ -406,10 +406,13 @@ class solution_SS:
         plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected parameters')
         if (type(label) != bool): plt.xticks(self.to_label, label[self.to_label], rotation=30)
         plt.legend(), plt.title("Distribution of Stability Selection"), plt.show()
+        print("SELECTED PARAMETERS : ")
         if (type(label) != bool):
-            print("SELECTED PARAMETERS : ")
             for i in range(len(D)):
                 if (selected[i]): print(i, label[i])
+        else:
+            for i in range(len(D)):
+                if (selected[i]): print(i)
 
         if (type(Dpath) != str):
             lambdas = self.lambdas_path

@@ -6,7 +6,7 @@ tax = sio.loadmat('Data/taxTablepHData.mat')['None'][0]
 X,Y_uncent = pH['X'],pH['Y'].T[0]
 y = Y_uncent-np.mean(Y_uncent) # Center Y
 problem = classo_problem(X,y) # zero sum is default C
-
+print('SIGMAX = ',np.linalg.norm(y)/np.sqrt(len(y)/2))
 problem.model_selection.SSparameters.seed = 4
 # Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
 problem.model_selection.LAMfixed                    = True
