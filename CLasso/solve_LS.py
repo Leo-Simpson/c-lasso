@@ -7,14 +7,16 @@ Problem    :   min ||Ab - y||^2 + lambda ||b||1 with C.b= 0
 
 Dimensions :   A : m*d  ;  y : m  ;  b : d   ; C : k*d
 
-The first function compute a solution of a Lasso problem for a given lambda. The parameters are lam (lambda/lambdamax, \in [0,1]) and pb, which has to be a 'problem_LS type', which is defined bellow in order to contain all the important parameters of the problem. One can initialise it this way : pb = class_of_problem.problem(data=(A,C,y),type_of_algo). We solve the problem without normalizing anything. 
+The first function compute a solution of a Lasso problem for a given lambda. 
+The parameters are lam (lambda/lambdamax, in [0,1]) and pb, which has to be a 'problem_LS type'
+ which is defined bellow in order to contain all the important parameters of the problem. 
 '''    
 
 
 
-def algo_LS(pb,lam, compute=True):
+def algo_LS(pb,lam):
     
-    pb_type = pb.type   # ODE, cvx, Noproj, FB, 2prox_old, 2prox
+    pb_type = pb.type   # can be : ODE, cvx, Noproj, FB or 2prox
 
     # ODE
     # here we compute the path algo until our lambda, and just take the last beta
@@ -26,8 +28,7 @@ def algo_LS(pb,lam, compute=True):
     lamb = lam * pb.lambdamax
     tol = pb.tol * LA.norm(y)/LA.norm(A,'fro')  # tolerance rescaled
     regpath = pb.regpath 
-    
-    
+
     #cvx
     # call to the cvx function of minimization
     if (pb_type == 'cvx'):
@@ -39,16 +40,13 @@ def algo_LS(pb,lam, compute=True):
         result = prob.solve(warm_start=regpath,eps_abs= tol)
         if (regpath): return(x.value,True) 
         return(x.value)
-    
-    
 
-    if(compute): pb.compute_param()
+    if(not regpath): pb.compute_param()   # this is a way to compute costful matrices computation like A^tA only once when we do pathcomputation with warm starts.
     Proj,AtA, Aty = proj_c(C,d), pb.AtA, pb.Aty     # Save some matrix products already computed in problem.compute_param()
     gamma, tau    = pb.gam / (2*pb.AtAnorm),    pb.tauN
     w,zerod       = lamb *gamma*pb.weights, np.zeros(d) # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
 
 
-    
     # NO PROJ
     
     if (pb_type == 'Noproj'):     # y1 --> S ; p1 --> p . ; p2 --> y2
@@ -99,17 +97,10 @@ def algo_LS(pb,lam, compute=True):
                 return(x)
         print('NO CONVERGENCE')
         return(x)
-    
-    
-    
+
     gamma             = gamma/(2*lam)
     w                 = w /(2*lam)
     mu,ls, c, root    = pb.mu,[], pb.c, 0.
-    
-
-
-
-    
      # 2 PROX  
     if (pb_type=='2prox'):
         
@@ -137,7 +128,6 @@ def algo_LS(pb,lam, compute=True):
  
     
 #     if (pb_type=='2prox_old'):
-        
 #         Q1,Q2  = QQ(c,A) 
 #         QA,qy = Q1.dot(A), Q1.dot(y)
         
@@ -170,24 +160,23 @@ def pathalgo_LS(pb,path,n_active=False,return_sp_path=False):
     BETA,tol = [],pb.tol
     if(pb.type == 'ODE'):
         beta,sp_path = solve_path(pb.matrix,path[-1],n_active=n_active)
-        if (return_sp_path): return(beta,sp_path)
-        
-        sp_path.append(path[-1]),beta.append(beta[-1])
-        
-        i=0
-        for lam in path:
-            while (lam<sp_path[i+1]): i+=1
-            teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
-            BETA.append(beta[i]*(1-teta)+beta[i+1]*teta)
-        return(BETA)
+        if (return_sp_path): return(beta,sp_path) # in the method ODE, we only compute the solution for breaking points. We can stop here if return_sp_path=True
+        else : # else, we do a little manipulation to interpolated the value of beta between those points, as we know beta is affine between those breaking points.
+            sp_path.append(path[-1]),beta.append(beta[-1])
+            i=0
+            for lam in path:
+                while (lam<sp_path[i+1]): i+=1
+                teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
+                BETA.append(beta[i]*(1-teta)+beta[i+1]*teta)
+            return(BETA)
     
     
-    
+    # Now we are in the case where we have to do warm starts.
     save_init = pb.init   
     pb.regpath = True
     pb.compute_param()
     for lam in path:
-        X = algo_LS(pb,lam,compute=False)     
+        X = algo_LS(pb,lam)
         BETA.append(X[0])
         pb.init = X[1]
         if (type(n_active)==int) : n_act = n_active
@@ -210,7 +199,7 @@ def pathalgo_LS(pb,path,n_active=False,return_sp_path=False):
 
 
 '''
-Class of problem : we define a type, which will contain as keys, all the parameters we need for a given problem.
+Class of problem : we define a type, which will contain as attributes all the parameters we need for a given problem.
 '''
 
 
@@ -244,7 +233,8 @@ class problem_LS :
         self.tau = 0.5         # equation for the convergence of Noproj and LS algorithms : gam + tau < 1
         if (algo in ['2prox_old','2prox']): self.gam = self.dim[1]
 
-            
+
+    #this is a method of the class pb that is used to computed the expensive multiplications only once. (espacially usefull for warm start. )
 
     def compute_param(self):
         (A,C,y) = self.matrix

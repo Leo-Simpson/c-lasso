@@ -3,7 +3,7 @@ import numpy as np
 import numpy.linalg as LA
     
 '''    
-Problem    :   min ||Ab - y||^2/sigma + 0.5 sigma + lambda ||b||1 with C.b= 0 and sigma > 0
+Problem    :   min ||Ab - y||^2/sigma + e sigma + lambda ||b||1 with C.b= 0 and sigma > 0
 
 Dimensions :   A : m*d  ;  y : m  ;  b : d   ; C : k*d
 
@@ -12,14 +12,16 @@ The first function compute a solution of a Lasso problem for a given lambda. The
 
 
 
-def algo_Concomitant(pb,lam, compute=True):
+def algo_Concomitant(pb,lam):
     pb_type = pb.type                          # ODE, 2prox
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     sigmax = LA.norm(y)*np.sqrt(2)
     #ODE
     # here we compute the path algo until our lambda, and just take the last beta
 
-    # solve the problem : min ||Ab-y||^2 / sigma + sigma + lambda ||b||_1
+    # here we use our path algorithm for concomitant problem, and then only takes the last beta.
+    # Actually, the function solve_path has the argument concomitant= 'fix_lam' so it means it will directly stop when it has to.
+    # Then we only have to finc the solution between the last beta computed and the one before.
     if(pb_type == 'ODE'):
         (beta1,beta2), (s1,s2), (r1,r2) = solve_path((A,C,y),lam,concomitant = 'fix_lam')
         dr,ds = r1-r2,s1-s2
@@ -29,18 +31,16 @@ def algo_Concomitant(pb,lam, compute=True):
         return(beta,sigma)
     
 
-    if(compute): pb.compute_param()
+    if(not pb.regpath): pb.compute_param()
 
     lamb          = lam * LA.norm(pb.Aty, np.infty) / LA.norm(y) * np.sqrt(2)
     Anorm         = LA.norm(A,'fro')
     tol,regpath   = pb.tol * LA.norm(y)/Anorm,pb.regpath   # tolerance rescaled
     Proj          = proj_c(C,d)   # Proj = I - C^t . (C . C^t )^-1 . C
-    AtA, Aty      = pb.AtA, pb.Aty     # Save some matrix products already computed in problem.compute_param() 
-    gamma         = pb.gam / (pb.AtAnorm*lam)   # Normalize gamma
+    QA, Q1, Q2    = pb.QA, pb.Q1, pb.Q2     # Save some matrix products already computed in problem.compute_param()
+    gamma         = pb.gam / (pb.Anorm2*lam)   # Normalize gamma
     w,zerod       = lamb *gamma*pb.weights, np.zeros(d) # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
     mu, c, root   = pb.mu, pb.c, 0.
-    Q1,Q2         = QQ(c,A) 
-    QA            = Q1.dot(A)
     xs,nu,o,xbar,x= pb.init
 
     #2prox
@@ -94,7 +94,7 @@ def pathalgo_Concomitant(pb,path,n_active=False,e=1.):
     pb.regpath = True
     pb.compute_param()
     for lam in path:
-        X = algo_Concomitant(pb,lam,compute=False)     
+        X = algo_Concomitant(pb,lam)
         BETA.append(X[0])
         SIGMA.append(X[-1])
         pb.init = X[1]
@@ -140,15 +140,16 @@ class problem_Concomitant :
         self.lambdamax = 2 * LA.norm(self.Aty, np.infty) / self.sigmax
         self.init       = 1.,1.,np.zeros(m), np.zeros(d), np.zeros(d)    
 
+
+    # Here we compute the costful matrices products and inverts in order to compute it only once, which is especially helpful for warmstarts.
     def compute_param(self):
         (A,C,y) = self.matrix
         m,d,k = self.dim
-        self.c = (d/LA.norm(A,2))**2  # parameter for Concomitant problem : the matrix is scaled as c*A^2 
-        
-        self.AtA        =(A.T).dot(A)
-        self.Cnorm      = LA.norm(C,2)**2
-        self.AtAnorm    = LA.norm(self.AtA,2)
-        
+        self.Anorm2 = LA.norm(A, 2) ** 2
+        c = d**2/self.Anorm2  # parameter for Concomitant problem : the matrix is scaled as c*A^2
+        self.c = c
+        self.Q1, self.Q2 = QQ(c, A)
+        self.QA = self.Q1.dot(A)
 
 
         

@@ -2,50 +2,42 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from CLasso.little_functions import random_data, csv_to_mat, rescale, theoritical_lam, min_LS, affichage
-import scipy.io as sio
+from CLasso.little_functions import rescale, theoritical_lam, min_LS, affichage
 from CLasso.compact_func import Classo, pathlasso
 from CLasso.cross_validation import CV
 from CLasso.stability_selection import stability, selected_param
 import matplotlib.patches as mpatches
 
 '''
-We build a class called classo_problem, that will contains all the information about the problem, settled in 4 categories : 
+We build a class called classo_problem, that will contains all the information about the problem, settled in other objects : 
        - data : the matrices X, C, y to solve a problem of type y = X beta + sigma.epsilon under the constraint C.beta = 0
         
-       - problem formulation : to know the formulation of the problem, huber function or not ; jointly estimate of sigma or not..
+       - problem formulation : to know the formulation of the problem, robust ?  ; Jointly estimate sigma (Concomitant) ? , classification ? Default parameter is only concomitant
        
-       - model selection : Cross Validation ; stability selection ; or Lasso problem for a fixed lambda. also contains the parameters of each of those model selection
+       - model selection : Path computation ; Cross Validation ; stability selection ; or Lasso problem for a fixed lambda. also contains the parameters of each of those model selection
        
        - solution : once we used the method .solve() , this componant will be added, with the solutions of the model-selections selected, with respect to the problem formulation selected
 
+The method __repr__ allows to print this object in a way that it prints the important informations about what we are solving. 
 
+The class of 'model selection' is defined inside the class 'problem' because we will never use it outside the class. 
 '''
-
-''' define the class classo_data that contains the data '''
-
 
 class classo_data:
     def __init__(self, X, y, C):
         self.rescale = False  # booleen to know if we rescale the matrices
-        self.X = X
-        self.y = y
-        if type(C) == str: C = np.ones((1, len(X[0])))
-        self.C = C
-
-
-''' End of the definition'''
-
+        self.X,self.y,self.C = y = X, y,C
+        if type(C) == str: self.C = np.ones((1, len(X[0])))
 
 class classo_problem:
-    global label
+    global label #label will stay global, it is more easy because there is plenty of part of the code where it is used
 
-    def __init__(self, X=np.zeros((2, 2)), y=np.zeros(2), C='zero-sum',
-                 labels=False):  # zero sum constraint by default, but it can be any matrix
+    def __init__(self, X=np.zeros((2, 2)), y=np.zeros(2), C='zero-sum', labels=False):  # zero sum constraint by default, but it can be any matrix
         global label
         label = labels
-        self.data = classo_data(X, y, C)
         self.label = label
+
+        self.data = classo_data(X, y, C)
 
         # define the class formulation of the problem inside the class classo_problem
         class classo_formulation:
@@ -54,7 +46,8 @@ class classo_problem:
                 self.concomitant = True
                 self.classification = False
                 self.rho = 1.345
-                self.e = 'n/2'
+                self.rho_classification = -1.
+                self.e = 'not specified'
 
             def name(self):
                 if self.huber:
@@ -94,7 +87,9 @@ class classo_problem:
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
                         self.n_active = False
-                        self.lambdas = np.linspace(1., 0.05, 500)
+                        delta=2.
+                        nlam = 20
+                        self.lambdas = np.array([10**(-delta * float(i) / nlam) for i in range(0,nlam) ] )
                         self.plot_sigma = False
 
                     def __repr__(self): return ('Npath = ' + str(len(self.lambdas))
@@ -129,9 +124,9 @@ class classo_problem:
                 self.CVparameters = CVparameters()
 
                 ''' STABILITY SELECTION PARAMETERS'''
-                self.SS = True
+                self.StabSel = True            # Only model selection that is used by default
 
-                class SSparameters:
+                class StabSelparameters:
                     def __init__(self):
                         self.seed = None
                         self.formulation = 'not specified'
@@ -160,7 +155,7 @@ class classo_problem:
                                                 + ';  numerical_method = ' + str(self.numerical_method))
 
                 ''' End of the definition'''
-                self.SSparameters = SSparameters()
+                self.StabSelparameters = StabSelparameters()
 
                 ''' PROBLEM AT A FIXED LAMBDA PARAMETERS'''
                 self.LAMfixed = False
@@ -185,20 +180,25 @@ class classo_problem:
                 string = ''
                 if self.PATH: string += 'Path,  '
                 if self.CV: string += 'Cross Validation,  '
-                if self.SS: string += 'Stability selection, '
+                if self.StabSel: string += 'Stability selection, '
                 if self.LAMfixed: string += 'Lambda fixed'
                 return string
 
         self.model_selection = model_selection()
 
+
+    # This method is the way to solve the model selections contained in the object model_selection, with the formulation of 'formulation' and the data.
     def solve(self):
 
         data = self.data
         matrices = (data.X, data.C, data.y)
         solution = classo_solution()
         n, d = len(data.X), len(data.X[0])
-        if (self.formulation.e == 'n/2'): self.formulation.e = n/2
-        elif(self.formulation.e == 'n'): self.formulation.e = n
+        if (self.formulation.e == 'n/2'): self.formulation.e = n/2  #useful to be able to write e='n/2' as it is in the default parameters
+        elif(self.formulation.e == 'n'): self.formulation.e = n     # same
+        elif(self.formulation.e == 'not specified'):
+            if (self.formulation.huber): self.formulation.e = n
+            else                       : self.formulation.e = n / 2
 
         if data.rescale:
             matrices, data.scaling = rescale(matrices)  # SCALING contains  :
@@ -215,12 +215,12 @@ class classo_problem:
             solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation)
 
         # Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
-        if self.model_selection.SS:
-            param = self.model_selection.SSparameters
+        if self.model_selection.StabSel:
+            param = self.model_selection.StabSelparameters
             param.theoritical_lam = theoritical_lam(int(n * param.percent_nS), d)
             if(param.true_lam): param.theoritical_lam = param.theoritical_lam*int(n * param.percent_nS)
 
-            solution.SS = solution_SS(matrices, param, self.formulation)
+            solution.StabSel = solution_StabSel(matrices, param, self.formulation)
 
         # Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
         if self.model_selection.LAMfixed:
@@ -235,8 +235,8 @@ class classo_problem:
         print_parameters = ''
         if (self.model_selection.CV):
             print_parameters += '\n \nCROSS VALIDATION PARAMETERS: ' + self.model_selection.CVparameters.__repr__()
-        if (self.model_selection.SS):
-            print_parameters += '\n \nSTABILITY SELECTION PARAMETERS: ' + self.model_selection.SSparameters.__repr__()
+        if (self.model_selection.StabSel):
+            print_parameters += '\n \nSTABILITY SELECTION PARAMETERS: ' + self.model_selection.StabSelparameters.__repr__()
         if (self.model_selection.LAMfixed):
             print_parameters += '\n \nLAMBDA FIXED PARAMETERS: ' + self.model_selection.LAMfixedparameters.__repr__()
 
@@ -250,25 +250,35 @@ class classo_problem:
                 )
 
 
-''' define the class classo_data that contains the solution '''
 
+'''
+Here is now the class of the object 'solution' that will be filled when the method solve() will be used. 
+It does not contain much for now, but it has always four attributes : PATH ; CV ; StabSel ; LAMfixed . 
 
+It corresponds to the 4 model selections implemented here. Default parameter is that we only compute StabSel with its own default parameters
+
+It also has a metho __repr__ which gives the final plot of the solution is the respectives plots of each model selection + the running time for each.
+
+Each class solution_... has its own method __repr__ that plot some graphs and/or write something. 
+
+'''
 class classo_solution:
     def __init__(self):
-        self.PATH = 'not computed'
-        self.CV = 'not computed'
-        self.SS = 'not computed'
+        self.PATH = 'not computed' #this will be filled with an object of the class 'solution_PATH' when the method solve() will be used.
+        self.CV = 'not computed'  # will be an object of the class 'solution_PATH'
+        self.StabSel = 'not computed' # will be an object of the class 'solution_StabSel'
         self.LAMfixed = 'not computed'
 
     def __repr__(self):
         return ("SPEEDNESS : " + '\n'
                                  'Running time for Path computation    : ' + self.PATH.__repr__() + '\n'
                 + 'Running time for Cross Validation    : ' + self.CV.__repr__() + '\n'
-                + 'Running time for Stability Selection : ' + self.SS.__repr__() + '\n'
+                + 'Running time for Stability Selection : ' + self.StabSel.__repr__() + '\n'
                 + 'Running time for Fixed LAM           : ' + self.LAMfixed.__repr__()
                 )
 
 
+#Here, the main function used is pathlasso ; from the file compact_func
 class solution_PATH:
     def __init__(self, matrices, param, formulation):
         t0 = time()
@@ -277,32 +287,35 @@ class solution_PATH:
         if param.formulation == 'not specified': param.formulation = formulation
         name_formulation = param.formulation.name()
         rho = param.formulation.rho
+        rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Algorithmic method choosing
         numerical_method = choose_numerical_method(param.numerical_method, 'PATH', param.formulation)
         param.numerical_method = numerical_method
         # Compute the solution and is the formulation is concomitant, it also compute sigma
-        self.SIGMAS = 'not computed'
-        if(formulation.concomitant):
-            self.BETAS, self.LAMBDAS, self.SIGMAS = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
+
+        out = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
                                                 typ=name_formulation, meth=numerical_method, return_sigm=True,
-                                                plot_time=False, plot_sol=False, plot_sigm=False, rho=rho, e=e)
-        else : self.BETAS, self.LAMBDAS = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
-                                            typ=name_formulation, meth=numerical_method,
-                                            plot_time=False, plot_sol=False, plot_sigm=False, rho=rho, e=e)
+                                                rho=rho, e=e,rho_classification=rho_classification)
+        if(formulation.concomitant): self.BETAS, self.LAMBDAS, self.SIGMAS = out
+        else :
+            self.BETAS, self.LAMBDAS = out
+            self.SIGMAS = 'not computed'
 
         self.formulation = formulation
+        self.plot_sigma = param.plot_sigma
         self.method = numerical_method
         self.time = time() - t0
 
     def __repr__(self):
         affichage(self.BETAS, self.LAMBDAS, labels=label,
                   title=self.formulation.name() + ' Path for the method ' + self.method), plt.show()
-        if(type(self.SIGMAS)!=str):plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel("sigma/sigMAX"), plt.xlabel("lambda")
-        plt.title('Sigma for Concomitant'), plt.savefig('Sigma for Concomitant' + '.png'), plt.show()
+        if(type(self.SIGMAS)!=str and self.plot_sigma):
+            plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel("sigma/sigMAX"), plt.xlabel("lambda")
+            plt.title('Sigma for Concomitant'), plt.savefig('Sigma for Concomitant' + '.png'), plt.show()
         return (str(round(self.time, 3)) + "s")
 
-
+#Here, the main function used is CV ; from the file cross_validation
 class solution_CV:
     def __init__(self, matrices, param, formulation):
         t0 = time()
@@ -312,6 +325,7 @@ class solution_CV:
         name_formulation = param.formulation.name()
 
         rho = param.formulation.rho
+        rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Algorithmic method choosing
         numerical_method = choose_numerical_method(param.numerical_method, 'CV', param.formulation)
@@ -323,6 +337,7 @@ class solution_CV:
                                                                                    num_meth=numerical_method,
                                                                                    lambdas=param.lambdas,
                                                                                    seed=param.seed, rho=rho,
+                                                                                   rho_classification=rho_classification,
                                                                                    oneSE=param.oneSE, e=e)
 
         self.xGraph = param.lambdas
@@ -351,8 +366,8 @@ class solution_CV:
         plt.ylabel('mean of residual over lambda'), plt.xlabel('lam')
         plt.legend(), plt.title("Selection of lambda with Cross Validation"), plt.show()
 
-
-class solution_SS:
+#Here, the main function used is stability ; from the file stability selection
+class solution_StabSel:
     def __init__(self, matrices, param, formulation):
         t0 = time()
 
@@ -361,6 +376,7 @@ class solution_SS:
         name_formulation = param.formulation.name()
 
         rho = param.formulation.rho
+        rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Compute the theoritical lam if necessary
         if param.lam == 'theoritical':
@@ -374,9 +390,10 @@ class solution_SS:
         param.numerical_method = numerical_method
 
         # Compute the distribution
-        output = stability(matrices, SSmethod=param.method, numerical_method=numerical_method,
-                           lam=lam, hd=param.hd, q=param.q, B=param.B, pourcent_nS=param.percent_nS,
-                           formulation=name_formulation, plot_time=False, seed=param.seed, rho=rho,
+        output = stability(matrices, StabSelmethod=param.method, numerical_method=numerical_method,
+                           lam=lam, q=param.q, B=param.B, percent_nS=param.percent_nS,
+                           formulation=name_formulation, seed=param.seed, rho=rho,
+                           rho_classification=rho_classification,
                            true_lam=param.true_lam, e=e)
 
         if (param.method == 'first'):
@@ -431,7 +448,7 @@ class solution_SS:
             "Solution for Stability Selection with refit"), plt.show()
         return (str(round(self.time, 3)) + "s")
 
-
+#Here, the main function used is Classo ; from the file compact_func
 class solution_LAMfixed:
     def __init__(self, matrices, param, formulation):
         t0 = time()
@@ -441,6 +458,7 @@ class solution_LAMfixed:
         name_formulation = param.formulation.name()
 
         rho = param.formulation.rho
+        rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Compute the theoritical lam if necessary
         if param.lam == 'theoritical':
@@ -454,9 +472,8 @@ class solution_LAMfixed:
 
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         out = Classo(
-            matrices, lam, typ=name_formulation, meth=numerical_method,
-            plot_time=False, plot_sol=False, plot_sigm=False, rho=rho,
-            get_lambdamax=True, true_lam=param.true_lam, e=e)
+            matrices, lam, typ=name_formulation, meth=numerical_method, rho=rho,
+            get_lambdamax=True, true_lam=param.true_lam, e=e, rho_classification=rho_classification)
 
         if param.formulation.concomitant: self.lambdamax, self.beta, self.sigma = out
         else: self.lambdamax, self.beta = out

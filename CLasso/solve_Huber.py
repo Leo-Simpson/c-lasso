@@ -124,9 +124,6 @@ def algo_Huber(pb,lam, compute=True):
     
 
     
-    
-
-    
 '''
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or wuth the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.  
 '''
@@ -137,6 +134,7 @@ def pathalgo_Huber(pb,path,n_active=False):
     BETA,tol = [],pb.tol
     if(pb.type == 'ODE'):
         X,sp_path = solve_huber_path(pb.matrix,path[-1],pb.rho,n_active)
+        # we do a little manipulation to interpolated the value of beta between breaking points, as we know beta is affine between those those points.
         i=0
         sp_path.append(path[-1]),X.append(X[-1])
         for lam in path:
@@ -144,7 +142,8 @@ def pathalgo_Huber(pb,path,n_active=False):
             teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
             BETA.append(X[i]*(1-teta)+X[i+1]*teta)
         return(BETA)
-    
+
+    # Now we are in the case where we have to do warm starts.
     save_init = pb.init   
     pb.regpath = True
     pb.compute_param()
@@ -178,7 +177,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 
 class problem_Huber :
     
-    def __init__(self,data,algo,rho_to_normalise):
+    def __init__(self,data,algo,rho):
         self.N = 500000
         
         if(len(data)==3):self.matrix, self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
@@ -189,29 +188,25 @@ class problem_Huber :
             self.matrix = (A,C,y)
         
         (m,d,k) = self.dim
-        rho = rho_to_normalise * LA.norm(self.matrix[2],np.infty)/np.sqrt(m)
         self.weights = np.ones(d)
         self.init = np.zeros(m), np.zeros(d), np.zeros(d), np.zeros(k)
         self.tol = 1e-6
         self.regpath = False
         self.name = algo + ' Huber'
-        self.type = algo        
+        self.type = algo        # type of algo used
         self.rho = rho
         self.gam = 1.
         self.tau = 0.5         # equation for the convergence of Noproj and LS algorithms : gam + tau < 1
         self.lambdamax = 2*LA.norm(self.matrix[0].T.dot(h_prime(self.matrix[2],rho)),np.infty)
-            
-        
-           
-            
-            
-            
-            
+
+
+    '''
+    this is a method of the class pb that is used to computed the expensive multiplications only once. (espacially usefull for warm start. )
+    '''
     def compute_param(self):
         (A,C,y) = self.matrix
         m,d,k = self.dim
-        self.c = (d/LA.norm(A,2))**2  # parameter for Concomitant problem : the matrix is scaled as c*A^2 
-        
+        self.c = (d/LA.norm(A,2))**2  # parameter for Concomitant problem : the matrix is scaled as c*A^2
 
         self.AtA        =(A.T).dot(A)
         self.Aty        = (A.T).dot(y)
@@ -219,15 +214,6 @@ class problem_Huber :
         self.tauN       = self.tau/self.Cnorm
         self.AtAnorm    = LA.norm(self.AtA,2)
         
-
-
-
-'''
-Functions used in the algorithms, modules needed : 
-import numpy as np
-import numpy.linalg as LA
-from .../class_of_problem import problem
-'''
 
 
 # compute the prox of the function : f(b)= sum (wi * |bi| )

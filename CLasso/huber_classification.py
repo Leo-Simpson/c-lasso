@@ -26,7 +26,7 @@ def solve_huber_cl_path(matrices,lamin,rho,n_active=False):
     lam, LAM, beta, BETA, r, activity, idr, F, number_act = 1., [1.], np.zeros(d), [np.zeros(d)], np.zeros(n), [
         False] * d, [False] * k, [True] * n, 0
 
-    if(rho > 0): print("Problem because of initialization")
+    if(rho > 0): print("Problem because of initialization, rho has to be negative ! ")
 
     # set up the sets activity and idr
     for i in range(d):

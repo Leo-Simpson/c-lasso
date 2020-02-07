@@ -15,7 +15,10 @@ def algo_Concomitant_Huber(pb,lam,e=1.):
     pb_type = pb.type      # 2prox, ODE
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     lamb,rho  = lam * pb.lambdamax, pb.rho
-    regpath = pb.regpath
+
+    # Only alternative to 2prox : one can use the other formulation of the problem which shows that we can augment the data and then simply solve a concomitant problem
+    # (we do that with the method ODE for example becasue it is pretty efficient). Unfortunately we can do that only for fixed lambda and not for any path algorithms
+    # because the augmentation of the data required depends on lambda.
     if pb_type=='ODE' and not regpath:
         matrix_aug = (np.concatenate((A,lamb/(2*rho)*np.eye(m)),axis=1),np.concatenate((C,np.zeros((k,m))),axis=1),y)
         pb_aug = problem_Concomitant(matrix_aug, 'ODE', e=e)
@@ -24,20 +27,21 @@ def algo_Concomitant_Huber(pb,lam,e=1.):
         beta= beta[:d]
         return beta,s
 
-    Anorm   = LA.norm(A,'fro')
+    # Else, we do simply doulgas rachford. Hence, the prox is not so easy to compute because there is a root of polynomial of degree 3 to compute.
+    # We do that in the function prox_phi_2 which use the function prox_phi_i (prox of one componant), and it uses calc_Newton which uses newton's method with good initialization.
+    regpath = pb.regpath
+    if (not regpath): pb.compute_param()
+    proj_sigm, QA, Q1, Q2, Proj, Anorm = pb.proj_sigm, pb.QA, pb.Q1, pb.Q2, pb.Proj, pb.Anorm
     tol     = pb.tol * LA.norm(y) # tolerance rescaled
-    Proj    = proj_c(C,d)   # Proj = I - C^t . (C . C^t )^-1 . C 
-    gamma   = LA.norm(y)*pb.gam / (Anorm**2)
+    gamma = LA.norm(y) * pb.gam / (Anorm ** 2)
     w,zerod = lamb *gamma*pb.weights, np.zeros(d) # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
     mu, c   = pb.mu, pb.c
-    Q1,Q2   = QQ(c,A) 
-    QA,qy   = Q1.dot(A), Q1.dot(y)
     root    = [0.]*len(y)
-    proj_sigm = lambda vect: ([sum(vect)/len(vect)]*len(vect))
     xs,nu,o,xbar,x = pb.init
+
+
     #2prox
     if (pb_type == '2prox'):
-        
         for i in range(pb.N):
             nv_b, nv_s = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x-xbar), (xs+nu)/2
             if (i>0 and LA.norm(b-nv_b)*Anorm +LA.norm(s-nv_s)<2*tol):
@@ -71,6 +75,7 @@ def pathalgo_Concomitant_Huber(pb,path,n_active=False):
 
     save_init = pb.init   
     pb.regpath = True
+    pb.compute_param()
     for lam in path:
         X = algo_Concomitant_Huber(pb,lam)
         BETA.append(X[0]), SIGMA.append(X[2])
@@ -100,7 +105,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 class problem_Concomitant_Huber :
     
     def __init__(self,data,algo,rho,e=1.):
-        self.N = 10000
+        self.N = 500000
         
         (A,C,y), self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
         self.matrix = (A,C,y)
@@ -118,13 +123,22 @@ class problem_Concomitant_Huber :
          
         self.c = (d/LA.norm(A,2))**2  # parameter for Concomitant problem : the matrix is scaled as c*A^2 
         self.gam = np.sqrt(d)
-        sigmax = find_sigmax(y,rho)
+        e = m
+        sigmax = find_sigmax(y,rho,e)
+        #sigmax = LA.norm(y)/np.sqrt(m)
         self.sigmax = sigmax
-        self.lambdamax = 2/sigmax*LA.norm((A.T).dot(h_prime(y,rho*sigmax)),np.infty)
         self.lambdamax = 2 * LA.norm(A.T.dot(y), np.infty) / LA.norm(y) * np.sqrt(e)
+        self.lambdamax = 2*LA.norm((A.T).dot(h_prime(y/sigmax,rho)),np.infty)
         self.init = sigmax*np.ones(m),sigmax*np.ones(m),np.zeros(m), np.zeros(d), np.zeros(d)
-           
 
+    def compute_param(self):
+        (A, C, y) = self.matrix
+        m, d, k = self.dim
+        self.Anorm = LA.norm(A, 'fro')
+        self.Proj = proj_c(C, d)  # Proj = I - C^t . (C . C^t )^-1 . C
+        self.Q1, self.Q2 = QQ(self.c, A)
+        self.QA = self.Q1.dot(A)
+        self.proj_sigm = lambda vect: ([sum(vect)/len(vect)]*len(vect))
         
 
 
@@ -159,8 +173,6 @@ def calc_Newton(a,b,root):
         er = root**3 + a*root-b
     return(root)
 
-
-
     
 def prox_phi_2(sig,u,gamma,warm_start,rho):
     p,q, ws = np.zeros(len(u)), np.zeros(len(u)),  np.zeros(len(u))
@@ -169,6 +181,11 @@ def prox_phi_2(sig,u,gamma,warm_start,rho):
     return(p,q,ws)
 
 
+
+
+
+# Each componant of the prox. Explicit formula were given in the Combettes&Muller paper.
+# It is the prox of the function (u,s) --> (0.5*h_rho(u/sigma) + 0.5)*sigma
 def prox_phi_i(s,u,gamma,root,rho):
     if (u==0.): return(0,0,root)
     frac = gamma*rho/abs(u)
@@ -195,18 +212,19 @@ def h_prime(y,rho):
 
 
 
-
-def find_sigmax(y,rho):
+#useful for computing lambdamax.
+def find_sigmax(y,rho,e):
     m,evol = len(y), True
     F = [True]*m
     if (rho > 1):
         while(evol):
             evol = False
-            t = np.sqrt(m-(m-sum(F))*rho**2)/LA.norm(y[F])
-            cste= rho/t
+            s = LA.norm(y[F])/np.sqrt(e-(m-sum(F))*rho**2)
+            cste= rho*s
             for j in range(m):
                 if (F[j] and y[j]>cste): F[j],evol= False , True
-        return(1/t)
+                elif (not F[j] and not y[j]>cste) : F[j],evol= True , True
+        return(s)
     else:
         print('rho too little ==> sigma is always 0')
 
