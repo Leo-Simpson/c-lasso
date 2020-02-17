@@ -113,11 +113,11 @@ Running time for Stability Selection : 2.15s
 Running time for Fixed LAM           : 'not computed'
 ```
 
-![Ex1.1](figures_example1/Figure1.png)
+![Ex1.1](figures/example1/Figure1.png)
 
-![Ex1.2](figures_example1/Figure2.png)
+![Ex1.2](figures/example1/Figure2.png)
 
-![Ex1.3](figures_example1/Figure3.png)
+![Ex1.3](figures/example1/Figure3.png)
 
 
 Example of different settings (example2) : 
@@ -154,15 +154,15 @@ Running time for Fixed LAM           : 0.065s
 ```
 
 
-![Ex2.1](figures_example2/Figure1.png)
+![Ex2.1](figures/example2/Figure1.png)
 
-![Ex2.2](figures_example2/Figure2.png)
+![Ex2.2](figures/example2/Figure2.png)
 
-![Ex2.3](figures_example2/Figure3.png)
+![Ex2.3](figures/example2/Figure3.png)
 
-![Ex2.4](figures_example2/Figure4.png)
+![Ex2.4](figures/example2/Figure4.png)
 
-![Ex2.5](figures_example2/Figure5.png)
+![Ex2.5](figures/example2/Figure5.png)
 
 
 ## Example on microbiome data
@@ -210,19 +210,19 @@ Running time for Fixed LAM           : 0.065s
 ```
 
 
-![Ex3.1](figures_exampleCOMBO/path.png)
+![Ex3.1](figures/exampleCOMBO/path.png)
 
-![Ex3.2](figures_exampleCOMBO/sigma.png)
+![Ex3.2](figures/exampleCOMBO/sigma.png)
 
-![Ex3.3](figures_exampleCOMBO/distr.png)
+![Ex3.3](figures/exampleCOMBO/distr.png)
 
-![Ex3.4](figures_exampleCOMBO/beta.png)
+![Ex3.4](figures/exampleCOMBO/beta.png)
 
-![Ex3.5](figures_exampleCOMBO/path_huber.png)
+![Ex3.5](figures/exampleCOMBO/path_huber.png)
 
-![Ex3.6](figures_exampleCOMBO/sigma_huber.png)
+![Ex3.6](figures/exampleCOMBO/sigma_huber.png)
 
-![Ex3.7](figures_exampleCOMBO/distr_huber.png)
+![Ex3.7](figures/exampleCOMBO/distr_huber.png)
 
 ![Ex3.8](figures_exampleCOMBO/beta_huber.png)
 
@@ -248,13 +248,13 @@ Running time for Stability Selection : 1.374s
 Running time for Fixed LAM           : 0.024s
 ```
 
-![Ex4.1](figures_examplePH/Path.png)
+![Ex4.1](figures/examplePH/Path.png)
 
-![Ex4.2](figures_examplePH/Sigma.png)
+![Ex4.2](figures/examplePH/Sigma.png)
 
-![Ex4.3](figures_examplePH/Sselection.png)
+![Ex4.3](figures/examplePH/Sselection.png)
 
-![Ex4.4](figures_examplePH/beta.png)
+![Ex4.4](figures/examplePH/beta.png)
 
 
 ## Details on the objects of the package : 

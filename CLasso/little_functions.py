@@ -120,7 +120,7 @@ def proj_c(M,d):
 # which is the same as : sqrt(2/n) * norminv(1-k/p) with k such that :
 # k = norminv(1 - k/p)^4 + 2*norminv(1 - k/p)^2
 # thanks to formula : norminv(1-t) = sqrt(2)erfinv(1-2t) !!
-def theoritical_lam(n,d):
+def theoretical_lam(n,d):
     x=0.
     dx = 0.1
     for i in range(10):

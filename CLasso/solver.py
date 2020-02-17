@@ -2,7 +2,7 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from CLasso.little_functions import rescale, theoritical_lam, min_LS, affichage
+from CLasso.little_functions import rescale, theoretical_lam, min_LS, affichage
 from CLasso.compact_func import Classo, pathlasso
 from CLasso.cross_validation import CV
 from CLasso.stability_selection import stability, selected_param
@@ -138,11 +138,11 @@ class classo_problem:
                         self.percent_nS = 0.5
                         self.lamin = 1e-2  # the lambda where one stop for 'max' method
                         self.hd = False  # if set to True, then the 'max' will stop when it reaches n-k actives parameters
-                        self.lam = 'theoritical'  # can also be a float, for the 'lam' method
+                        self.lam = 'theoretical'  # can also be a float, for the 'lam' method
                         self.true_lam = True
                         self.threshold = 0.7
                         self.threshold_label = 0.4
-                        self.theoritical_lam = 1.0
+                        self.theoretical_lam = 1.0
 
                     def __repr__(self): return ('method = ' + str(self.method)
                                                 + ';  lamin = ' + str(self.lamin)
@@ -161,15 +161,15 @@ class classo_problem:
 
                 class LAMfixedparameters:
                     def __init__(self):
-                        self.lam = 'theoritical'
+                        self.lam = 'theoretical'
                         self.formulation = 'not specified'
                         self.numerical_method = 'choose'
                         self.true_lam = True
-                        self.theoritical_lam = 0.0
+                        self.theoretical_lam = 0.0
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
                     def __repr__(self): return ('lam = ' + str(self.lam)
-                                                + ';  theoritical_lam = ' + str(round(self.theoritical_lam, 4))
+                                                + ';  theoretical_lam = ' + str(round(self.theoretical_lam, 4))
                                                 + ';  numerical_method = ' + str(self.numerical_method))
 
                 ''' End of the definition'''
@@ -216,16 +216,16 @@ class classo_problem:
         # Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
         if self.model_selection.StabSel:
             param = self.model_selection.StabSelparameters
-            param.theoritical_lam = theoritical_lam(int(n * param.percent_nS), d)
-            if(param.true_lam): param.theoritical_lam = param.theoritical_lam*int(n * param.percent_nS)
+            param.theoretical_lam = theoretical_lam(int(n * param.percent_nS), d)
+            if(param.true_lam): param.theoretical_lam = param.theoretical_lam*int(n * param.percent_nS)
 
             solution.StabSel = solution_StabSel(matrices, param, self.formulation)
 
         # Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
         if self.model_selection.LAMfixed:
             param = self.model_selection.LAMfixedparameters
-            param.theoritical_lam = theoritical_lam(n, d)
-            if(param.true_lam): param.theoritical_lam = param.theoritical_lam*n
+            param.theoretical_lam = theoretical_lam(n, d)
+            if(param.true_lam): param.theoretical_lam = param.theoretical_lam*n
             solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation)
 
         self.solution = solution
@@ -382,9 +382,9 @@ class solution_StabSel:
         rho = param.formulation.rho
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
-        # Compute the theoritical lam if necessary
-        if param.lam == 'theoritical':
-            lam = param.theoritical_lam
+        # Compute the theoretical lam if necessary
+        if param.lam == 'theoretical':
+            lam = param.theoretical_lam
         else:
             lam = param.lam
 
@@ -464,9 +464,9 @@ class solution_LAMfixed:
         rho = param.formulation.rho
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
-        # Compute the theoritical lam if necessary
-        if param.lam == 'theoritical':
-            lam = param.theoritical_lam
+        # Compute the theoretical lam if necessary
+        if param.lam == 'theoretical':
+            lam = param.theoretical_lam
         else:
             lam = param.lam
 
