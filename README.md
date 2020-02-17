@@ -1,4 +1,4 @@
-# C-lasso, a Python package for sparse regression with linear equality constraints
+# c-lasso, a Python package for sparse linear regression with linear equality constraints
 
 ## Table of Contents
 
@@ -459,6 +459,7 @@ Those objected will contains all the information about the problem
     - theoritical_lam
   
 
+<<<<<<< HEAD
 ### Type solution :
 #### 4 attributes : 
   - PATH (type : solution_PATH): object with as attributes : 
@@ -502,3 +503,6 @@ Those objected will contains all the information about the problem
     - refit
     - formulation
     - time        
+=======
+#### Type solution :
+>>>>>>> e6075af16e1ae2d3662195cbb3bd71c0641bd1ca
