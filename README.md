@@ -502,5 +502,4 @@ Those objected will contains all the information about the problem
     - selected_param
     - refit
     - formulation
-    - time        
-=======
+    - time
