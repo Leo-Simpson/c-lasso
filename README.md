@@ -504,5 +504,3 @@ Those objected will contains all the information about the problem
     - formulation
     - time        
 =======
-#### Type solution :
->>>>>>> e6075af16e1ae2d3662195cbb3bd71c0641bd1ca
