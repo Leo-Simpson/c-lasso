@@ -459,7 +459,6 @@ Those objected will contains all the information about the problem
     - theoritical_lam
   
 
-<<<<<<< HEAD
 ### Type solution :
 #### 4 attributes : 
   - PATH (type : solution_PATH): object with as attributes : 
