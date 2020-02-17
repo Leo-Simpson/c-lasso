@@ -15,7 +15,7 @@ def algo_Concomitant_Huber(pb,lam,e=1.):
     pb_type = pb.type      # 2prox, ODE
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     lamb,rho  = lam * pb.lambdamax, pb.rho
-
+    regpath = pb.regpath
     # Only alternative to 2prox : one can use the other formulation of the problem which shows that we can augment the data and then simply solve a concomitant problem
     # (we do that with the method ODE for example becasue it is pretty efficient). Unfortunately we can do that only for fixed lambda and not for any path algorithms
     # because the augmentation of the data required depends on lambda.
@@ -29,7 +29,7 @@ def algo_Concomitant_Huber(pb,lam,e=1.):
 
     # Else, we do simply doulgas rachford. Hence, the prox is not so easy to compute because there is a root of polynomial of degree 3 to compute.
     # We do that in the function prox_phi_2 which use the function prox_phi_i (prox of one componant), and it uses calc_Newton which uses newton's method with good initialization.
-    regpath = pb.regpath
+
     if (not regpath): pb.compute_param()
     proj_sigm, QA, Q1, Q2, Proj, Anorm = pb.proj_sigm, pb.QA, pb.Q1, pb.Q2, pb.Proj, pb.Anorm
     tol     = pb.tol * LA.norm(y) # tolerance rescaled
@@ -138,7 +138,9 @@ class problem_Concomitant_Huber :
         self.Proj = proj_c(C, d)  # Proj = I - C^t . (C . C^t )^-1 . C
         self.Q1, self.Q2 = QQ(self.c, A)
         self.QA = self.Q1.dot(A)
-        self.proj_sigm = lambda vect: ([sum(vect)/len(vect)]*len(vect))
+        self.proj_sigm = lambda vect: ([max(0,sum(vect))/len(vect)]*len(vect)) # here,
+                                # compared to the Muller&Combettes paper, there is a projection more on sigma =0,
+                                # for numerical issues...
         
 
 
@@ -167,10 +169,18 @@ def QQ(coef,A): return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*A.dot(A.T
 
 # Compute the real positive root of a polynomial of degree 3 in the form : X^3 + a*X - b with Newton method and a warm start (for Comcomitant problem)
 def calc_Newton(a,b,root):
-    er = -b
-    while (abs(er)>1e-6): 
+    er = root**3 + a*root-b
+    i=0
+    bound = min(np.cbrt(b), b/a)
+    while (abs(er)>1e-6 and i < 20):
+        if(root<0.): root, er =0., -b
+        elif(root>bound):root, er =bound, bound**3 + a*bound-b
         root= root-er/(3*root**2+a)
         er = root**3 + a*root-b
+        i+=1
+    if(i==20):
+        r = np.roots([1.,0.,a,-b])
+        root = np.amax((r[np.isreal(r)]).real)
     return(root)
 
     
@@ -199,7 +209,6 @@ def prox_phi_i(s,u,gamma,root,rho):
     if   (bool1  and bool2 ): return(0.,0.,root)
     elif (bool3 and not bool1): return(0.,u*(1-frac),root) 
     elif (not bool3 and bool4):  return(term,u*(1-frac),root)
-        
     root = calc_Newton(2*s/gamma+1,2*abs(u)/gamma,root)
     return(s+gamma*(root**2-1)/2,u-gamma*root*np.sign(u),root)
 

@@ -73,7 +73,7 @@ class classo_problem:
         self.formulation = classo_formulation()
 
         # define the class model_selection inside the class classo_problem
-        class model_selection:
+        class classo_model_selection:
             def __init__(self):
 
                 # Model selection parameters
@@ -87,15 +87,14 @@ class classo_problem:
                         # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
                         self.n_active = False
-                        delta=2.
-                        nlam = 20
+                        delta= 2.
+                        nlam = 40
                         self.lambdas = np.array([10**(-delta * float(i) / nlam) for i in range(0,nlam) ] )
-                        self.plot_sigma = False
+                        self.plot_sigma = True
 
                     def __repr__(self): return ('Npath = ' + str(len(self.lambdas))
                                                 + '  n_active = ' + str(self.n_active)
                                                 + '  lamin = ' + str(self.lambdas[-1])
-                                                + '  n_lam = ' + str(len(self.lambdas))
                                                 + ';  numerical_method = ' + str(self.numerical_method))
 
                 ''' End of the definition'''
@@ -141,9 +140,9 @@ class classo_problem:
                         self.hd = False  # if set to True, then the 'max' will stop when it reaches n-k actives parameters
                         self.lam = 'theoritical'  # can also be a float, for the 'lam' method
                         self.true_lam = True
-                        self.threshold = 0.8
-                        self.threshold_label = 0.7
-                        self.theoritical_lam = 0.0
+                        self.threshold = 0.7
+                        self.threshold_label = 0.4
+                        self.theoritical_lam = 1.0
 
                     def __repr__(self): return ('method = ' + str(self.method)
                                                 + ';  lamin = ' + str(self.lamin)
@@ -184,7 +183,7 @@ class classo_problem:
                 if self.LAMfixed: string += 'Lambda fixed'
                 return string
 
-        self.model_selection = model_selection()
+        self.model_selection = classo_model_selection()
 
 
     # This method is the way to solve the model selections contained in the object model_selection, with the formulation of 'formulation' and the data.
@@ -305,14 +304,19 @@ class solution_PATH:
         self.formulation = formulation
         self.plot_sigma = param.plot_sigma
         self.method = numerical_method
+        self.save = False
         self.time = time() - t0
 
     def __repr__(self):
         affichage(self.BETAS, self.LAMBDAS, labels=label,
-                  title=self.formulation.name() + ' Path for the method ' + self.method), plt.show()
+                  title=self.formulation.name() + ' Path for the method ' + self.method)
+        if (type(self.save) == str): plt.savefig(self.save + 'Beta-path')
+        plt.show()
         if(type(self.SIGMAS)!=str and self.plot_sigma):
             plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel("sigma/sigMAX"), plt.xlabel("lambda")
-            plt.title('Sigma for Concomitant'), plt.savefig('Sigma for Concomitant' + '.png'), plt.show()
+            plt.title('Sigma for ' + self.formulation.name())
+            if (type(self.save)==str) : plt.savefig(self.save + 'Sigma-path')
+            plt.show()
         return (str(round(self.time, 3)) + "s")
 
 #Here, the main function used is CV ; from the file cross_validation

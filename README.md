@@ -34,19 +34,19 @@ pip install time
 ##  Different type of problem
 #### Least square :             
 
-<img src="https://latex.codecogs.com/gif.latex?\min&space;||&space;Ax-y&space;||^2&space;&plus;&space;\lambda&space;||x||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
 
 #### Huber  :                   
 
-<img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(Ax-y)&space;&plus;&space;\lambda&space;||x||_1"  />
+<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
 #### Concomitant Least square : 
 
-<img src="https://latex.codecogs.com/gif.latex?\min&space;\frac{||&space;Ax-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1"  />
+<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
 #### Concomitant Huber :        
 
-<img src="https://latex.codecogs.com/gif.latex?\min&space;h_{\rho}(\frac{Ax-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||x||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
 
 
 
@@ -79,7 +79,6 @@ the non concomitants problems, which shows that the solution is piecewise-
 affine. For the least square, as the problem can always be reported to a a non
 concomitant problem for another lambda, one can use the whole non-concomitant-
 path computed with the ODE method to then solve the concomitant-path.
-
 
 
 ## Example on random data
@@ -345,3 +344,51 @@ Running time for Fixed LAM           : 0.024s
 ![Ex4.3](figures_examplePH/Sselection.png)
 
 ![Ex4.4](figures_examplePH/beta.png)
+
+
+## Details on the objects of the package : 
+
+#### Type classo_problem : 
+
+Those objected will contains all the information about the problem
+ 
+ __5 main attributes :__
+   - data (type : classo_data): 
+   the matrices X, C, y to solve a problem of type y = X beta + sigma.epsilon under the constraint C.beta = 0
+   <img src="https://latex.codecogs.com/gif.latex?y&space;=&space;X\beta&space;&plus;&space;\sigma \epsilon" /> 
+   under the constraint <img src="https://latex.codecogs.com/gif.latex?C\beta&space;=&space;0" /> 
+    
+     
+   - formulation (type : classo_formulation) : 
+   to know the formulation of the problem, robust ?  ; Jointly estimate sigma (Concomitant) ? , classification ? Default parameter is only concomitant.
+       
+   - model_selection (type : classo_model_selection) : 
+   Path computation ; Cross Validation ; stability selection ; or Lasso problem for a fixed lambda. also contains the parameters of each of those model selection.
+   
+   - solution (type : classo_solution) : 
+   Type that contains the informations about the solution once it is computed. 
+   This attribute exists only if the method solve() has been applied to the object problem.
+   
+   - optional: label (type : list, or numpy array, or boolean False by default) : 
+   gives the labels of each variable, and can be set to False (default value) if no label is given.
+       
+__3 methods :__
+
+   - init : classo_problem(X=X,y=y,C=C, label=False) will create the object, with its default value, with the good data. 
+   If C is not specified, it is set to "zero-sum" which make zero sum contraint. 
+   
+   - repr : this method allows to print this object in a way that it prints the important informations about what we are solving. 
+   
+   - solution : once we used the method .solve() , this componant will be added, with the solutions of the model-selections selected, with respect to the problem formulation selected
+
+
+#### Type data :
+__4 attributes :__ 
+  - rescale (type : boolean) : True if regression has to be done after rescaling the data. Default value : False
+  - X , y , C (type : numpy.array) : matrices representing the data of the problem.
+  
+#### Type formulation :
+
+#### Type model_selection : 
+
+#### Type solution
