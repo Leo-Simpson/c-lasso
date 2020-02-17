@@ -348,16 +348,13 @@ Running time for Fixed LAM           : 0.024s
 
 ## Details on the objects of the package : 
 
-#### Type classo_problem : 
+### Type classo_problem : 
 
 Those objected will contains all the information about the problem
  
- __5 main attributes :__
+ #### 5 main attributes :
    - data (type : classo_data): 
-   the matrices X, C, y to solve a problem of type y = X beta + sigma.epsilon under the constraint C.beta = 0
-   <img src="https://latex.codecogs.com/gif.latex?y&space;=X\beta+\sigma\epsilon" /> 
-   under the constraint <img src="https://latex.codecogs.com/gif.latex?C\beta&space;=&space;0" /> 
-    
+   the matrices X, C, y to solve a problem of type : <img src="https://latex.codecogs.com/gif.latex?y&space;=X\beta+\sigma\epsilon&space;\qquad\txt{st. }\qquad&space;C\beta=0" /> 
      
    - formulation (type : classo_formulation) : 
    to know the formulation of the problem, robust ?  ; Jointly estimate sigma (Concomitant) ? , classification ? Default parameter is only concomitant.
@@ -372,7 +369,7 @@ Those objected will contains all the information about the problem
    - optional: label (type : list, or numpy array, or boolean False by default) : 
    gives the labels of each variable, and can be set to False (default value) if no label is given.
        
-__3 methods :__
+#### 3 methods :
 
    - init : classo_problem(X=X,y=y,C=C, label=False) will create the object, with its default value, with the good data. 
    If C is not specified, it is set to "zero-sum" which make zero sum contraint. 
@@ -382,13 +379,126 @@ __3 methods :__
    - solution : once we used the method .solve() , this componant will be added, with the solutions of the model-selections selected, with respect to the problem formulation selected
 
 
-#### Type data :
-__4 attributes :__ 
+### Type data :
+#### 4 attributes :
   - rescale (type : boolean) : True if regression has to be done after rescaling the data. Default value : False
   - X , y , C (type : numpy.array) : matrices representing the data of the problem.
   
-#### Type formulation :
+### Type formulation :
+#### 6 attributes :
+  - huber (type : boolean) : True if the formulation of the problem should be robust
+  Default value = False
+  
+  - concomitant (type : boolean) : True if the formulation of the problem should be with an M-estimation of sigma.
+  Default value = True
+  
+  - classification (type : boolean) : True if the formulation of the problem should be classification (if yes, then it will not be concomitant)
+  Default value = False
+  
+  - rho (type = float) : Value of rho for robust problem. 
+  Default value = 1.345
+  
+  - rho_classification (type = float) : value of rho for huberized hinge loss function for classification (this parameter has to be negative).
+  Default value = -1.
+  
+  - e (type = float or string)  : value of e in concomitant formulation.
+  If 'n/2' then it becomes n/2 during the method solve(), same for 'n'.
+  Default value : 'n' if huber formulation ; 'n/2' else
 
-#### Type model_selection : 
+### Type model_selection : 
+#### 8 attributes :
+  - PATH (type : boolean): True if path should be computed. 
+  Default Value = False
+  
+  - PATHparameters (type : PATHparameters): 
+  object with as attributes : 
+    - numerical_method ; 
+    - n_active ; lambdas ;
+    - plot_sigma
 
-#### Type solution :
+  
+  - CV (type : boolean):  True if Cross Validation should be computed. 
+  Default Value = False
+  
+  - CVparameters (type : CVparameters): 
+  object with as attributes : 
+    - seed
+    - numerical_method
+    - lambdas
+    - oneSE
+    - Nsubsets
+
+  
+  - StabSel (type : boolean):  True if Stability Selection should be computed. 
+  Default Value = True
+  
+  - StabSelparameters (type : StabSelparameters): 
+  object with as attributes : 
+    - seed
+    - numerical_method
+    - method
+    - B
+    - q
+    - percent_nS
+    - lamin
+    - hd
+    - lam
+    - true_lam
+    - threshold
+    - threshold_label
+    - theoritical_lam
+  
+  - LAMfixed (type : boolean):  True if solution for a fixed lambda should be computed. 
+  Default Value = False
+  
+  - LAMfixedparameters (type : LAMparameters): 
+  object with as attributes : 
+    - numerical_method
+    - lam
+    - true_lam
+    - theoritical_lam
+  
+
+### Type solution :
+#### 4 attributes : 
+  - PATH (type : solution_PATH): object with as attributes : 
+    
+    - BETAS
+    - SIGMAS
+    - LAMBDAS
+    - method
+    - save
+    - formulation
+    - time
+  
+  - CV (type : solution_CV): object with as attributes :
+    - beta
+    - sigma 
+    - xGraph
+    - yGraph
+    - standard_error
+    - index_min
+    - index_1SE
+    - selected_param
+    - refit
+    - formulation
+    - time
+  
+  - StabSel (type : solution_StabSel) : object with as attributes :
+    - distribution
+    - lambdas_path
+    - selected_param
+    - to_label
+    - refit
+    - formulation
+    - time 
+    
+  
+  - LAMfixed (type : solution_LAMfixed) : object with as attributes :
+    - beta
+    - sigma
+    - lambdamax
+    - selected_param
+    - refit
+    - formulation
+    - time        
