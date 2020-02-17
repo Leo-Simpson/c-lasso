@@ -355,7 +355,7 @@ Those objected will contains all the information about the problem
  __5 main attributes :__
    - data (type : classo_data): 
    the matrices X, C, y to solve a problem of type y = X beta + sigma.epsilon under the constraint C.beta = 0
-   <img src="https://latex.codecogs.com/gif.latex?y&space;=&space;X\beta&space;&plus;&space;\sigma \epsilon" /> 
+   <img src="https://latex.codecogs.com/gif.latex?y&space;=X\beta+\sigma\epsilon" /> 
    under the constraint <img src="https://latex.codecogs.com/gif.latex?C\beta&space;=&space;0" /> 
     
      
@@ -391,4 +391,4 @@ __4 attributes :__
 
 #### Type model_selection : 
 
-#### Type solution
+#### Type solution :
