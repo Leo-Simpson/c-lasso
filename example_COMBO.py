@@ -21,24 +21,19 @@ problem = classo_problem(X,y,C, labels=labels)
 
 # Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
 problem.model_selection.LAMfixed                    = True
-
 # Solve the stability selection : (by default, it will use the theoritical lambda)
 problem.model_selection.StabSel                       = True
 problem.model_selection.StabSelparameters.method      = 'lam'
-
 # Solve the entire path
 problem.model_selection.PATH = True
 
+
 problem.solve()
-print(problem)
-print(problem.solution)
-
-
+print(problem, problem.solution)
+#then, solve it for robust formulation
 problem.formulation.huber = True
-# We don't solve the entire path here
 problem.solve()
-print(problem)
-print(problem.solution)
+print(problem, problem.solution)
 
 ''' 
 print(np.linalg.norm(y)/np.sqrt(n/2))

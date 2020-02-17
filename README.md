@@ -167,68 +167,7 @@ Running time for Fixed LAM           : 0.065s
 
 ## Example on microbiome data
 
-Here is now the code of the file "example_COMBO" which uses microbiome data : 
-
-```python
-from CLasso import *
-import numpy as np
-
-X0  = csv_to_mat('data/GeneraCounts.csv',begin=0).astype(float).T
-X_C = csv_to_mat('data/CaloriData.csv',begin=0).astype(float)
-X_F = csv_to_mat('data/FatData.csv',begin=0).astype(float)
-y   = csv_to_mat('data/BMI.csv',begin=0).astype(float)[:,0]
-labels  = csv_to_mat('data/GeneraPhylo.csv').astype(str)[:,-1]
-
-y   = y - np.mean(y) #BMI data (n=96)
-X_C = X_C - np.mean(X_C, axis=0)  #Covariate data (Calorie)
-X_F = X_F - np.mean(X_F, axis=0)  #Covariate data (Fat)
-X0 = clr(X0, 1 / 2)
-
-X      = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis=1) # Joint microbiome and covariate data and offset
-labels = np.concatenate([labels,np.array(['Calorie','Fat','Biais'])])
-C = np.ones((1,len(X[0])))
-C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
-
-problem = classo_problem(X,y,C, labels=labels)
-
-# Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
-problem.model_selection.LAMfixed                    = True
-problem.model_selection.LAMfixedparameters.true_lam = True
-
-# Solve the stability selection : (by default, it will use the theoritical lambda)
-
-problem.formulation.concomitant = True
-
-# Solve the problem for a fixed lambda (by default, it will use the theoretical lambda)
-problem.model_selection.LAMfixed = True
-problem.model_selection.LAMfixedparameters.true_lam = True
-
-
-# Solve the stability selection : (by default, it will use the theoretical lambda)
-
-problem.model_selection.SS                       = True
-problem.model_selection.SSparameters.method      = 'lam'
-problem.model_selection.SSparameters.true_lam    =  True
-problem.model_selection.SSparameters.threshold   = 0.7
-problem.model_selection.SSparameters.threshold_label   = 0.4
-
-# Solve the entire path
-problem.model_selection.PATH = True
-problem.model_selection.PATHparameters.plot_sigma = True
-
-problem.solve()
-print(problem)
-print(problem.solution)
-
-problem.formulation.huber = True
-# We don't solve the entire path here
-problem.model_selection.PATH = False
-problem.solve()
-print(problem)
-print(problem.solution)
-```
-
-Results : 
+Here is now the result of running the file "example_COMBO" which uses microbiome data :  
 ```
 FORMULATION : Concomitant
  
@@ -238,85 +177,57 @@ STABILITY SELECTION PARAMETERS: method = lam;  lamin = 0.01;  lam = theoritical;
  
 LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 19.1709;  numerical_method = ODE
  
-PATH PARAMETERS: Npath = 500  n_active = False  lamin = 0.05  n_lam = 500;  numerical_method = ODE
-
-
+PATH PARAMETERS: Npath = 40  n_active = False  lamin = 0.011220184543019636;  numerical_method = ODE
+ objc[46200]: Class FIFinderSyncExtensionHost is implemented in both /System/Library/PrivateFrameworks/FinderKit.framework/Versions/A/FinderKit (0x7fff96e66b68) and /System/Library/PrivateFrameworks/FileProvider.framework/OverrideBundles/FinderSyncCollaborationFileProviderOverride.bundle/Contents/MacOS/FinderSyncCollaborationFileProviderOverride (0x116315cd8). One of the two will be used. Which one is undefined.
 SELECTED PARAMETERS : 
 27  Clostridium
-56  Acidaminococcus
+SIGMA FOR LAMFIXED  :  8.43571426081596
 SPEEDNESS : 
-Running time for Path computation    : 0.063s
+Running time for Path computation    : 0.057s
 Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 0.877s
-Running time for Fixed LAM           : 0.021s
-
+Running time for Stability Selection : 1.002s
+Running time for Fixed LAM           : 0.028s
+ 
+ 
 FORMULATION : Concomitant_Huber
  
-MODEL SELECTION COMPUTED :  Stability selection, Lambda fixed
+MODEL SELECTION COMPUTED :  Path,  Stability selection, Lambda fixed
  
 STABILITY SELECTION PARAMETERS: method = lam;  lamin = 0.01;  lam = theoritical;  B = 50;  q = 10;  percent_nS = 0.5;  threshold = 0.7;  numerical_method = ODE
  
 LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 19.1709;  numerical_method = ODE
-
-SELECTED PARAMETERS : 
-27  Clostridium
-SIGMA FOR LAMFIXED  :  6.1870642392818755
+ 
+PATH PARAMETERS: Npath = 40  n_active = False  lamin = 0.011220184543019636;  numerical_method = ODE
+ SELECTED PARAMETERS : 
+SIGMA FOR LAMFIXED  :  6.000336772926475
 SPEEDNESS : 
-Running time for Path computation    : 'not computed'
+Running time for Path computation    : 18.517s
 Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 1.755s
-Running time for Fixed LAM           : 0.035s
+Running time for Stability Selection : 3.166s
+Running time for Fixed LAM           : 0.065s
 
 
 ```
 
 
-![Ex3.1](figures_exampleCOMBO/Path.png)
+![Ex3.1](figures_exampleCOMBO/path.png)
 
-![Ex3.2](figures_exampleCOMBO/Sigma.png)
+![Ex3.2](figures_exampleCOMBO/sigma.png)
 
-![Ex3.3](figures_exampleCOMBO/Sselection.png)
+![Ex3.3](figures_exampleCOMBO/distr.png)
 
-![Ex3.4](figures_exampleCOMBO/beta1.png)
+![Ex3.4](figures_exampleCOMBO/beta.png)
 
-![Ex3.5](figures_exampleCOMBO/beta2.png)
+![Ex3.5](figures_exampleCOMBO/path_huber.png)
 
-![Ex3.6](figures_exampleCOMBO/Sselection_huber.png)
+![Ex3.6](figures_exampleCOMBO/sigma_huber.png)
 
-![Ex3.7](figures_exampleCOMBO/beta_huber.png)
+![Ex3.7](figures_exampleCOMBO/distr_huber.png)
 
-
-Here is now the code of the file "example_pH" which uses microbiome data : 
-
-```python
-from CLasso import *
-import numpy as np
-pH = sio.loadmat('Data/pHData.mat')
-tax = sio.loadmat('Data/taxTablepHData.mat')['None'][0]
-X,Y_uncent, header = pH['X'],pH['Y'].T[0] , pH['__header__']
-y = Y_uncent-np.mean(Y_uncent) # Center Y
-problem = classo_problem(X,y) # zero sum is default C
-
-problem.model_selection.SSparameters.seed = 1
-# Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
-problem.model_selection.LAMfixed                    = True
-# Solve the stability selection : (by default, it will use the theoritical lambda)
-problem.model_selection.SS                       = True
-problem.model_selection.SSparameters.method      = 'lam'
-problem.model_selection.SSparameters.threshold   = 0.7
-# Solve the entire path
-problem.model_selection.PATH = True
-problem.model_selection.PATHparameters.plot_sigma = True
+![Ex3.8](figures_exampleCOMBO/beta_huber.png)
 
 
-
-problem.solve()
-print(problem)
-print(problem.solution)
-```
-
-
-Results : 
+Here is now the result of running the file "example_PH" which uses microbiome data : 
 ```
 FORMULATION : Concomitant
  
