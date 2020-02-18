@@ -98,7 +98,7 @@ with (constrained) sparse &beta; vector estimation.
 
 ## Getting started
 
-#### Warm-up example             
+#### Basic example             
 
 We begin with a basic example that shows how to run c-lasso on synthetic data. For convenience, the c-lasso package includes
 the routine ```random_data``` in order to generate a problem instance with normal data.
@@ -178,7 +178,7 @@ The refitted &beta; values on the selected support are also displayed in the nex
 
 #### Advanced example             
 
-In the next, we show how one can easily specify different aspects of the problem 
+In the next example, we show how one can specify different aspects of the problem 
 formulation and model selection strategy.
 
 ```python
@@ -225,7 +225,7 @@ Running time for Fixed LAM           : 0.065s
 ![Ex2.5](figures/example2/Figure5.png)
 
 
-## Example on microbiome data
+## Example on gut microbiome data
 
 Here is now the result of running the file "example_COMBO" which uses microbiome data :  
 ```
@@ -317,7 +317,7 @@ Running time for Fixed LAM           : 0.024s
 ![Ex4.4](figures/examplePH/beta.png)
 
 
-## Details on the objects of the package : 
+## Details on the objects of the package: 
 
 ### Type classo_problem : 
 
@@ -477,37 +477,36 @@ Those objected will contains all the information about the problem
 
 ## Optimization schemes
 
-The different problem formulations require different algorithmic strategies for 
+The available problem formulations [R1-C2] require different algorithmic strategies for 
 efficiently solving the underlying optimization problem. We have implemented four 
-algorithms (which have provable convergence guarantee) 
-that vary in generality and are not necessarily applicable to all problems.
-For each problem type, c-lasso has a default algorithm setting that proved to be the fastest
-in preliminary numerical experiments.
+algorithms (with provable convergence guarantees) that vary in generality and are not 
+necessarily applicable to all problems. For each problem type, c-lasso has a default algorithm 
+setting that proved to be the fastest in our numerical experiments.
 
-### Path algorithms (see, e.g., [1])
-From the KKT conditions, we can derive an simple ODE for the solution of
-the non concomitants problems, which shows that the solution is piecewise-
-affine. For the least square, as the problem can always be reported to a a non
-concomitant problem for another lambda, one can use the whole non-concomitant-
-path computed with the ODE method to then solve the concomitant-path.
+### Path algorithms (Path-Alg) 
+This is the default algorithm for non-concomitant problems [R1,R3,C1,C2]. 
+The algorithm uses the fact that the solution path along &lambda; is piecewise-
+affine (as shown, e.g., in [1]). When Least-Squares is used as objective function,
+we derive a novel efficient procedure that allows to also derive the 
+solution for the concomitant problem [R2] along the path with little extra cost.
 
-### Projected primal-dual splitting method [2]:
+### Projected primal-dual splitting method (P-PDS):
 Standard way to solve a convex minimisation problem with an addition of
-smooth and non-smooth function : Projected Proximal Gradient Descent. This
+smooth and non-smooth function: Projected Proximal Gradient Descent. This
 method only works with the two non concomitants problems. For the huber
 problem, we use the second formulation.
 
-### Projection-free primal-dual splitting method:
+### Projection-free primal-dual splitting method (PF-PDS):
 Similar to the Projected Proximal Gradient Descent, but which does not involve
 a projection, which can be difficult to compute for some matrix C. Only for
 non concomitant problems.
 
-### Douglas-Rachford-type splitting method [4,5]
-Use of Doulgas Rachford splitting algorithm which use the proximal operator of
-both functions. It also solves concomitant problems, but it is usefull even in the
-non concomitant case because it is usually more efficient than forward backward
-splitting method. For the huber problem, we use the second formulation, then
-we change it into a Least square problem of dimension m (m + d) instead of m d.
+### Douglas-Rachford-type splitting method (DR)
+This algorithm is the most general algorithm and can solve all regression problems 
+[R1-R4]. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
+It makes use of the proximity operators of the perspective of the LS objective (see [4,5])
+The Huber problem with concomitant scale [R4] is reformulated as scaled Lasso problem 
+with the mean shift (see [6]) and thus solved in (n + d) dimensions. 
 
 
 
@@ -522,3 +521,7 @@ we change it into a Least square problem of dimension m (m + d) instead of m d.
 * [4] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
 
 * [5] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), arXiv, 2019.
+
+* [6] A. Mishra and C. L. Müller, [Robust regression with compositional covariates](https://arxiv.org/abs/1909.04990), arXiv, 2019.
+
+
