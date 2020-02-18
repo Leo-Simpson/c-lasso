@@ -105,34 +105,43 @@ n,d,d_nonzero,k,sigma =100,100,5,1,0.5
 (X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True)
 ```
 This code snippet generates a problem instance with sparse &beta; in dimension
-d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples.
-The constraint matrix C is the all-ones vector. The noise level is &sigma;=0.5. 
+d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples generated from an i.i.d standard normal
+distribution. The constraint matrix C is the all-ones vector (a d x k matrix). The noise level is &sigma;=0.5. 
 The input ```zerosum=True``` implies C&beta;=0. 
 
-Next we define a c-lasso problem instance:
-
+Next we define a default c-lasso problem instance:
 ```python
 problem = classo_problem(X,y,C) 
 ```
-We can solve the problem instance using
-```python
-problem.solve()
-```
+You can look at the generated problem instance by typing:
 
 ```python
 print(problem)
-print(problem.solution)
 ```
 
-Results : 
-
+This should give you a summary of the form:
 ```
 FORMULATION : Concomitant
  
 MODEL SELECTION COMPUTED :  Stability selection, 
  
 STABILITY SELECTION PARAMETERS: method = first;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.9;  numerical_method = ODE
+```
 
+We can solve the c-lasso problem instance using
+
+```python
+problem.solve()
+```
+
+```python
+print(problem.solution)
+```
+
+Results : 
+
+
+```
 SPEEDNESS : 
 Running time for Cross Validation    : 'not computed'
 Running time for Stability Selection : 2.15s
