@@ -106,8 +106,8 @@ n,d,d_nonzero,k,sigma =100,100,5,1,0.5
 ```
 This code snippet generates a problem instance with sparse &beta; in dimension
 d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples generated from an i.i.d standard normal
-distribution. The constraint matrix C is the all-ones vector (a d x k matrix). The noise level is &sigma;=0.5. 
-The input ```zerosum=True``` implies C&beta;=0. 
+distribution. The dimension of the constraint matrix C is d x k matrix. The noise level is &sigma;=0.5. 
+The input ```zerosum=True``` implies that C is the all-ones vector and C&beta;=0. 
 
 Next we define a default c-lasso problem instance:
 ```python
