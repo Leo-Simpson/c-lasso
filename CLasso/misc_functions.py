@@ -57,7 +57,7 @@ def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification =
         for i in range(len(list_i)):
             sol[list_i[i]]=proj[i]
         break
-    y = X.dot(sol)+np.random.randn(m)*sigma
+    y = X.dot(sol)+np.random.randn(n)*sigma
     if classification : y = np.sign(y)
     return((X,C,y),sol)
 

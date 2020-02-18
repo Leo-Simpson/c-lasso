@@ -6,10 +6,11 @@ problem = classo_problem(X,y,C)
 problem.model_selection.StabSelparameters.method = 'lam'
 problem.formulation.huber=True
 
-'''
+
+
 problem.model_selection.LAMfixedparameters.numerical_method = 'ODE'
 problem.solve()
 print(problem)
 print(problem.solution)
-'''
+
 
