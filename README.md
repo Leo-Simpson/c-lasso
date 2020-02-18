@@ -1,27 +1,48 @@
-# c-lasso, a Python package for sparse linear regression with linear equality constraints
+# c-lasso: a Python package for constrained sparse regression and classification 
+=========
+
+c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
+constraints on the model parameters. The package implements several algorithmic strategies, including path and proximal
+splitting algorithms, that are applicable to different problem formulations, e.g., the constrained Lasso, the constrained
+scaled Lasso, and sparse Huber M-estimation with linear equality constraints. We also include two model selection strategies
+for determining the sparsity of the model parameters: k-fold cross-validation and stability selection.   
+
+This package is intended to fill the gap between popular python tools such as [scikit-learn](https://scikit-learn.org/stable/) which CANNOT solve sparse constrained problems and general-purpose optimization solvers that do not scale well for the particular problems considered here.
+
+Below we show several use cases of the package, including an application of sparse log-contrast
+regression tasks for compositional microbiome data.
+
+The code builds on results from several papers which can be found in the [References](#references).
 
 ## Table of Contents
 
-* [How to use the package](#how-to-use-the-package)
-* [Different type of problem](#different-type-of-problem)
-* [Different methods for solving the problems](#different-methods-for-solving-the-problems)
+* [Installation](#installation)
+* [Regression and classification problems](#regression-and-classification-problems)
+* [Getting started](#getting-started)
 * [Two main functions](#two-main-functions)
-* [Little functions](#little-functions)
-* [Example](#example)
+* [Misc functions](#little-functions)
+* [Log-contrast regression for microbiome data](#example)
+* [Optimization schemes](#optimization-schemes)
+* [References](#references)
 
 
-##  How to use the package
+##  Installation
 
-#### To install the package : 
+c-lasso is available on pip. You can install the package
+in the shell using
+
 ```shell
 pip install c_lasso
 ```
+To use the c-lasso package in Python, type 
 
-#### To import the package :
 ```python
 from classo import *
 ```
-#### To import the required packages  :
+
+The c-lasso package depends on several standard Python packages. 
+To import these packages, use 
+
 ```shell
 pip install numpy
 pip install matplotlib
@@ -30,75 +51,79 @@ pip install pandas
 pip install time
 ```
     
+##  Regression and classification problems
 
-##  Different type of problem
-#### Least square :             
+The c-lasso package can solve four different types of optimization problems: 
+four regression-type and two classification-type problems.
+
+#### [R1] Standard constrained Lasso regression:             
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
 
-#### Huber  :                   
+This is the standard Lasso problem with linear equality constraints on the &beta; vector. 
+The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
+
+#### [R2] Contrained sparse Huber regression:                   
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
-#### Concomitant Least square : 
+This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
+for robust model fitting with l1 and linear equality constraints on the &beta; vector. The parameter &rho;=1.345.
+
+#### [R3] Contrained scaled Lasso regression: 
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
-#### Concomitant Huber :        
+This formulation is similar to [R1] but allows for joint estimation of the (constrained) &beta; vector and 
+the standard deviation &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
+This is the default problem formulation in c-lasso.
+
+#### [R4] Contrained sparse Huber regression with concomitant scale estimation:        
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
 
+This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) &beta; vector and 
+the standard deviation &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
+
+#### [C1] Contrained sparse classification with Square Hinge loss: 
+
+This formulation is similar to [R1] but adapted for classification tasks using the Square Hinge loss
+with (constrained) sparse &beta; vector estimation.
+
+#### [C2] Contrained sparse classification with Huberized Square Hinge loss:        
+
+This formulation is similar to [C1] but uses the Huberized Square Hinge loss for robust classification 
+with (constrained) sparse &beta; vector estimation.
 
 
-## Different methods for solving the problems
+## Getting started
 
-### Four main methods have been implemented for those.
+#### Warm-up example             
 
+We begin with a basic example that shows how to run c-lasso on synthetic data. For convenience, the c-lasso package includes
+the routine ```random_data``` in order to generate a problem instance with normal data.
 
-#### Forward Backward splitting method:
-Standard way to solve a convex minimisation problem with an addition of
-smooth and non-smooth function : Projected Proximal Gradient Descent. This
-method only works with the two non concomitants problems. For the huber
-problem, we use the second formulation.
-
-#### No-proj method
-Similar to the Projected Proximal Gradient Descent, but which does not involve
-a projection, which can be difficult to compute for some matrix C. Only for
-non concomitant problems.
-
-#### Double prox method
-Use of Doulgas Rachford splitting algorithm which use the proximal operator of
-both functions. It also solves concomitant problems, but it is usefull even in the
-non concomitant case because it is usually more efficient than forward backward
-splitting method. For the huber problem, we use the second formulation, then
-we change it into a Least square problem of dimension m (m + d) instead of m d.
-
-#### ODE method  
-From the KKT conditions, we can derive an simple ODE for the solution of
-the non concomitants problems, which shows that the solution is piecewise-
-affine. For the least square, as the problem can always be reported to a a non
-concomitant problem for another lambda, one can use the whole non-concomitant-
-path computed with the ODE method to then solve the concomitant-path.
-
-
-## Example on random data
-
-Here is an example of use of one of the methods  : concomitant algorithm with theoretical lambda, tested on data generated randomly. 
-
-To generate the data :
 ```python
-m,d,d_nonzero,k,sigma =100,100,5,1,0.5
-(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True)
+n,d,d_nonzero,k,sigma =100,100,5,1,0.5
+(X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True)
 ```
-Use of the package with default settings (example1) :
+This code snippet generates a problem instance with sparse &beta; in dimension
+d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples generated from an i.i.d standard normal
+distribution. The dimension of the constraint matrix C is d x k matrix. The noise level is &sigma;=0.5. 
+The input ```zerosum=True``` implies that C is the all-ones vector and C&beta;=0. The n-dimensional outcome vector y
+and the regression vector &beta; is then generated to satisfy the given constraints. 
+
+Next we can define a default c-lasso problem instance with the generated data:
 ```python
 problem = classo_problem(X,y,C) 
-problem.solve()
+```
+You can look at the generated problem instance by typing:
+
+```python
 print(problem)
-print(problem.solution)
 ```
 
-Results : 
+This gives you a summary of the form:
 
 ```
 FORMULATION : Concomitant
@@ -106,21 +131,56 @@ FORMULATION : Concomitant
 MODEL SELECTION COMPUTED :  Stability selection, 
  
 STABILITY SELECTION PARAMETERS: method = first;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.9;  numerical_method = ODE
+```
+As we have not specified any problem, algorithm, or model selection settings, this problem instance
+represents the *default* settings for a c-lasso instance: 
+- The problem is of regression type and uses formulation [R3], i.e. with concomitant scale estimation. 
+- The *default* optimization scheme is the path algorithm (see [Optimization schemes](#optimization-schemes) for further info). 
+- For model selection, stability selection (see [Reference](#references) [4] for details) at a theoretically derived &lambda; value. Stability selection comprises a relatively large number of parameters. For a description of the settings, we refer to the more advanced examples further down.
 
+You can solve the corresponding c-lasso problem instance using
+
+```python
+problem.solve()
+```
+
+After completion, the results of the optimization and model selection routines 
+can be visualized using
+
+```python
+print(problem.solution)
+```
+
+The command shows the running time(s) for the c-lasso problem instance
+
+```
 SPEEDNESS : 
 Running time for Cross Validation    : 'not computed'
 Running time for Stability Selection : 2.15s
 Running time for Fixed LAM           : 'not computed'
 ```
 
+Here, we only used stability selection as *default* model selection strategy. 
+The command also allows you to inspect the computed stability profile for all variables 
+at the theoretical &lambda; 
+
 ![Ex1.1](figures/example1/Figure1.png)
 
+and the entire &lambda; path (as we have used the path algorithm for optimization). We can see that stability selection
+can identify the five true non-zero entries in the &beta; vector
+
 ![Ex1.2](figures/example1/Figure2.png)
+
+The refitted &beta; values on the selected support are also displayed in the next plot
 
 ![Ex1.3](figures/example1/Figure3.png)
 
 
-Example of different settings (example2) : 
+#### Advanced example             
+
+In the next, we show how one can easily specify different aspects of the problem 
+formulation and model selection strategy.
+
 ```python
 problem                                     = classo_problem(X,y,C)
 problem.formulation.huber                   = True
@@ -413,3 +473,52 @@ Those objected will contains all the information about the problem
     - refit
     - formulation
     - time
+
+
+## Optimization schemes
+
+The different problem formulations require different algorithmic strategies for 
+efficiently solving the underlying optimization problem. We have implemented four 
+algorithms (which have provable convergence guarantee) 
+that vary in generality and are not necessarily applicable to all problems.
+For each problem type, c-lasso has a default algorithm setting that proved to be the fastest
+in preliminary numerical experiments.
+
+### Path algorithms (see, e.g., [1])
+From the KKT conditions, we can derive an simple ODE for the solution of
+the non concomitants problems, which shows that the solution is piecewise-
+affine. For the least square, as the problem can always be reported to a a non
+concomitant problem for another lambda, one can use the whole non-concomitant-
+path computed with the ODE method to then solve the concomitant-path.
+
+### Projected primal-dual splitting method [2]:
+Standard way to solve a convex minimisation problem with an addition of
+smooth and non-smooth function : Projected Proximal Gradient Descent. This
+method only works with the two non concomitants problems. For the huber
+problem, we use the second formulation.
+
+### Projection-free primal-dual splitting method:
+Similar to the Projected Proximal Gradient Descent, but which does not involve
+a projection, which can be difficult to compute for some matrix C. Only for
+non concomitant problems.
+
+### Douglas-Rachford-type splitting method [4,5]
+Use of Doulgas Rachford splitting algorithm which use the proximal operator of
+both functions. It also solves concomitant problems, but it is usefull even in the
+non concomitant case because it is usually more efficient than forward backward
+splitting method. For the huber problem, we use the second formulation, then
+we change it into a Least square problem of dimension m (m + d) instead of m d.
+
+
+
+## References 
+
+* [1] B. R. Gaines, J. Kim, and H. Zhou, [Algorithms for Fitting the Constrained Lasso](https://www.tandfonline.com/doi/abs/10.1080/10618600.2018.1473777?journalCode=ucgs20), J. Comput. Graph. Stat., vol. 27, no. 4, pp. 861–871, 2018.
+
+* [2] L. Briceno-Arias, S.L. Rivera, [A Projected Primal–Dual Method for Solving Constrained Monotone Inclusions](https://link.springer.com/article/10.1007/s10957-018-1430-2?shared-article-renderer), J. Optim. Theory Appl., vol 180, Issue 3 March 2019
+
+* [3] 
+
+* [4] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
+
+* [5] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), arXiv, 2019.
