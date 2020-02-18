@@ -50,7 +50,7 @@ pip install pandas
 pip install time
 ```
     
-##  Problem formulations
+##  Problem formulations for regression and classification
 
 The c-lasso package can solve four different types of optimization problems, four regression-type
 and two classification-type problems.
