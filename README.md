@@ -19,14 +19,12 @@ References
 
 * [4] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), arXiv, 2019.
 
-
-## Installation ##
-
 ## Table of Contents
 
-* [Getting started](#how-to-use-the-package)
-* [Problem types](#different-type-of-problem)
-* [Optimization schemes](#different-methods-for-solving-the-problems)
+* [Installation](#how-to-use-the-package)
+* [Problem types](#problem-types)
+* [Optimization schemes](#optimization-schemes)
+* [Getting started](#getting-started)
 * [Two main functions](#two-main-functions)
 * [Misc functions](#little-functions)
 * [Example](#example)
@@ -52,8 +50,7 @@ pip install pandas
 pip install time
 ```
     
-
-##  Different type of problem
+##  Problem types
 #### Least square :             
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
@@ -72,7 +69,7 @@ pip install time
 
 
 
-## Different methods for solving the problems
+## Optimization schemes
 
 ### Four main methods have been implemented for those.
 
@@ -103,7 +100,7 @@ concomitant problem for another lambda, one can use the whole non-concomitant-
 path computed with the ODE method to then solve the concomitant-path.
 
 
-## Example on random data
+## Getting started
 
 Here is an example of use of one of the methods  : concomitant algorithm with theoretical lambda, tested on data generated randomly. 
 
