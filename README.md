@@ -131,9 +131,10 @@ MODEL SELECTION COMPUTED :  Stability selection,
 STABILITY SELECTION PARAMETERS: method = first;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.9;  numerical_method = ODE
 ```
 As we have not specified any problem, algorithm, or model selection settings, this problem instance
-represents the *default* settings for a c-lasso instance. It assumes the problem to be of regression type and
-solves formulation [R3]. For model selection, stability selection (see [Reference](#references) [4] for details)
-at a theoretically derived &lambda; value. 
+represents the *default* settings for a c-lasso instance: 
+- The problem is of regression type and uses formulation [R3], i.e. with concomitant scale estimation. 
+- The *default* optimization scheme is the path algorithm (see [Optimization schemes](#optimization-schemes) for further info). 
+- For model selection, stability selection (see [Reference](#references) [4] for details) at a theoretically derived &lambda; value. 
 
 You can solve the corresponding c-lasso problem instance using
 
