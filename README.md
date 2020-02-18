@@ -13,7 +13,7 @@ The code builds on results from several papers which can be found in the [refere
 
 ## Table of Contents
 
-* [Installation](#how-to-use-the-package)
+* [Installation](#installation)
 * [Problem types](#problem-types)
 * [Optimization schemes](#optimization-schemes)
 * [Getting started](#getting-started)
@@ -35,7 +35,8 @@ To import the classo package, use
 ```python
 from classo import *
 ```
-classo depends on several packages. To import these packages, use 
+The classo package depends on several standard packages. 
+To import these packages, use 
 
 ```shell
 pip install numpy
@@ -46,6 +47,7 @@ pip install time
 ```
     
 ##  Problem types
+
 #### Least square :             
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
