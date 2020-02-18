@@ -76,7 +76,7 @@ class classo_problem:
         class classo_model_selection:
             def __init__(self):
 
-                # Model selection parameters
+                # Model selection variables
                 ''' PATH PARAMETERS'''
                 self.PATH = False
 
@@ -137,7 +137,7 @@ class classo_problem:
                         self.q = 10
                         self.percent_nS = 0.5
                         self.lamin = 1e-2  # the lambda where one stop for 'max' method
-                        self.hd = False  # if set to True, then the 'max' will stop when it reaches n-k actives parameters
+                        self.hd = False  # if set to True, then the 'max' will stop when it reaches n-k actives variables
                         self.lam = 'theoretical'  # can also be a float, for the 'lam' method
                         self.true_lam = True
                         self.threshold = 0.7
@@ -423,11 +423,11 @@ class solution_StabSel:
         Dunselected = np.zeros(len(D))
         Dselected[selected] = D[selected]
         Dunselected[unselected] = D[unselected]
-        plt.bar(range(len(Dselected)), Dselected, color='r', label='selected parameters')
-        plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected parameters')
+        plt.bar(range(len(Dselected)), Dselected, color='r', label='selected variables')
+        plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected variables')
         if (type(label) != bool): plt.xticks(self.to_label, label[self.to_label], rotation=30)
         plt.legend(), plt.title("Distribution of Stability Selection"), plt.show()
-        print("SELECTED PARAMETERS : ")
+        print("SELECTED VARIABLES : ")
         if (type(label) != bool):
             for i in range(len(D)):
                 if (selected[i]): print(i, label[i])
@@ -440,11 +440,11 @@ class solution_StabSel:
             N = len(lambdas)
             for i in range(len(selected)):
                 if selected[i]:
-                    plt.plot(lambdas, [Dpath[j][i] for j in range(N)], 'r', label='selected parameters')
+                    plt.plot(lambdas, [Dpath[j][i] for j in range(N)], 'r', label='selected variables')
                 else:
-                    plt.plot(lambdas, [Dpath[j][i] for j in range(N)], 'b', label='unselected parameters')
-            p1, p2 = mpatches.Patch(color='red', label='selected parameters'), mpatches.Patch(color='blue',
-                                                                                              label='unselected parameters')
+                    plt.plot(lambdas, [Dpath[j][i] for j in range(N)], 'b', label='unselected variables')
+            p1, p2 = mpatches.Patch(color='red', label='selected variables'), mpatches.Patch(color='blue',
+                                                                                              label='unselected variables')
             plt.legend(handles=[p1, p2])
             plt.title("Distribution of probability of apparence as a function of lambda"), plt.show()
 

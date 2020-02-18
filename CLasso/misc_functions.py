@@ -23,7 +23,7 @@ def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification =
 
     Args:
         n (int): Number of sample, dimension of y
-        d (int): Number of parameters, dimension of sol
+        d (int): Number of variables, dimension of sol
         d_nonzero (int): Number of non null componant of sol
         k (int) : Number of constraints, number of rows of C
         sigma (float) : size of standard error
@@ -120,7 +120,7 @@ def rescale(matrices):
     ''' Function that rescale the matrix and returns its scale
 
     Substract the mean of y, then divides by its norm. Also divide each colomn of X by its norm.
-    This will change the solution, not only by scaling it, because then the L1 norm will affect every component equally (and not only the parameters with big size)
+    This will change the solution, not only by scaling it, because then the L1 norm will affect every component equally (and not only the variables with big size)
 
     Args:
         matrices (tuple) : tuple of three numpy.array matrices corresponding to (X,C,y)
@@ -159,7 +159,7 @@ def proj_c(M,d):
 
 
 def theoretical_lam(n,d):
-    ''' Theoritical lambda as a function of the dimension of the problem
+    ''' Theoretical lambda as a function of the dimension of the problem
 
     This function returns :
     4/sqrt(n) * erfinv(1 - 2*x) where x is the solution of x = 4/d ( erfinv(1-2x)**4 + erfinv(1-2x)**2 )
@@ -168,13 +168,12 @@ def theoretical_lam(n,d):
 
     Args:
         n (int) : number of sample
-        d (int)  : number of parameters
+        d (int)  : number of variables
 
     Returns:
-        float : theoritical lambda
+        float : theoretical lambda
 
     '''
-
     x=0.
     dx = 0.1
     for i in range(10):
@@ -249,7 +248,7 @@ def verify(obj,beta,sigma):
 
 
 def plot_influence(labels,l_influence):
-    print("influent parameters  : \n \n")
+    print("influent variables  : \n \n")
     for beta in l_influence:
         string=''
         for colo in range(1,7):
