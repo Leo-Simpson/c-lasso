@@ -59,8 +59,8 @@ four regression-type and two classification-type problems.
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
 
-This is the default regression problem in c-lasso. The objective function combines Least-Squares for 
-model fitting with l1 and linear equality constraints on the &beta; vector.   
+This is the standard Lasso problem with linear equality constraints on the &beta; vector. 
+The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
 
 ### [R2] Contrained sparse Huber regression:                   
 
@@ -73,31 +73,45 @@ for robust model fitting with l1 and linear equality constraints on the &beta; v
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
-This formulation is similar to [R1] but allows joint estimation of the (constrained) &beta; vector and 
-the standard deviation &sigma; in a concomitant fashion (see References(#references) [4,5] for further info).
+This formulation is similar to [R1] but allows for joint estimation of the (constrained) &beta; vector and 
+the standard deviation &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
+This is the default problem formulation in c-lasso.
 
 ### [R4] Contrained sparse Huber regression with concomitant scale estimation:        
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
 
 This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) &beta; vector and 
-the standard deviation &sigma; in a concomitant fashion (see References(#references) [4,5] for further info).
+the standard deviation &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
 
-### [C1] Contrained sparse classification with Square Hinge loss:        
+### [C1] Contrained sparse classification with Square Hinge loss: 
+
+This formulation is similar to [R1] but adapted for classification tasks using the Square Hinge loss
+with (constrained) sparse &beta; vector estimation.
 
 ### [C2] Contrained sparse classification with Huberized Square Hinge loss:        
 
+This formulation is similar to [C1] but uses the Huberized Square Hinge loss for robust classification 
+with (constrained) sparse &beta; vector estimation.
 
 
 ## Getting started
 
-Here is an example of use of one of the methods  : concomitant algorithm with theoretical lambda, tested on data generated randomly. 
+We begin with a basic example that shows how to run c-lasso on synthetic data. 
 
-To generate the data :
+For convenience, the c-lasso package includes the routine ```random_data``` 
+in order to generate a problem instance with normal data.
+
+This code snippet generates a problem instance with sparse &beta; in dimension
+d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples.
+The constraint matrix C is the all-ones vector. The noise level is &sigma;=0.5. 
+The input ```zerosum=True``` implies C&beta;=0. 
+
 ```python
-m,d,d_nonzero,k,sigma =100,100,5,1,0.5
-(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True)
+n,d,d_nonzero,k,sigma =100,100,5,1,0.5
+(X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True)
 ```
+
 Use of the package with default settings (example1) :
 ```python
 problem = classo_problem(X,y,C) 
