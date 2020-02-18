@@ -2,7 +2,7 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from CLasso.little_functions import rescale, theoretical_lam, min_LS, affichage
+from CLasso.misc_functions import rescale, theoretical_lam, min_LS, affichage
 from CLasso.compact_func import Classo, pathlasso
 from CLasso.cross_validation import CV
 from CLasso.stability_selection import stability, selected_param
@@ -32,7 +32,7 @@ class classo_data:
 class classo_problem:
     global label #label will stay global, it is more easy because there is plenty of part of the code where it is used
 
-    def __init__(self, X=np.zeros((2, 2)), y=np.zeros(2), C='zero-sum', labels=False):  # zero sum constraint by default, but it can be any matrix
+    def __init__(self, X, y, C='zero-sum', labels=False):  # zero sum constraint by default, but it can be any matrix
         global label
         label = labels
         self.label = label
@@ -365,8 +365,8 @@ class solution_CV:
             if (self.yGraph[j] < mse_max): break
 
         plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data')
-        plt.plot(self.xGraph[i_min], self.yGraph[i_min], 'k+', label='lam that minimize MSE')
-        plt.plot(self.xGraph[i_1SE], self.yGraph[i_1SE], 'r+', label='lam with 1SE')
+        plt.axvline(x=self.xGraph[i_min], color='k', label='lam with min MSE')
+        plt.axvline(x=self.xGraph[i_1SE],color='r',label='lam with 1SE')
         plt.ylabel('mean of residual over lambda'), plt.xlabel('lam')
         plt.legend(), plt.title("Selection of lambda with Cross Validation"), plt.show()
 

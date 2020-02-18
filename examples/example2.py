@@ -7,10 +7,10 @@ problem                                     = classo_problem(X,y,C)
 problem.formulation.huber                   = True
 problem.formulation.concomitant             = False
 problem.model_selection.CV                  = True
-problem.model_selection.SS                  = True
+problem.model_selection.StabSel              = True
 problem.model_selection.LAMfixed            = True
 problem.model_selection.PATH                = True
-problem.model_selection.SSparameters.method = 'max'
+problem.model_selection.StabSelparameters.method = 'max'
 
 problem.solve()
 print(problem)
