@@ -9,7 +9,7 @@ constraints on the model parameters. The forward model is assumed to be:
 Here, y and X are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). C is a general constraint matrix. The vector &beta; comprises the unknown coefficients and &sigma; an 
 unknown scale.
 
-The package handles several different estimators for inferring &beta; and &sigma; including 
+The package handles several different estimators for inferring &beta; (and &sigma;), including 
 the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimation with linear equality constraints.
 Several different algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve 
 the underlying convex optimization problems.
