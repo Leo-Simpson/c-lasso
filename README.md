@@ -18,11 +18,11 @@ The code builds on results from several papers which can be found in the [refere
 
 * [Installation](#installation)
 * [Problem formulations](#problem-formulations)
-* [Optimization schemes](#optimization-schemes)
 * [Getting started](#getting-started)
 * [Two main functions](#two-main-functions)
 * [Misc functions](#little-functions)
-* [Example](#example)
+* [Log-contrast regression for microbiome data](#example)
+* [Optimization schemes](#optimization-schemes)
 * [References](#references)
 
 
@@ -52,55 +52,27 @@ pip install time
     
 ##  Problem formulations
 
-The c-lasso package can solve four different types of 
+The c-lasso package can solve four different types of optimization problems 
 
-#### Least square :             
+### [A] Standard constrained Lasso problem:             
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
 
-#### Huber  :                   
+### [B] Contrained sparse Huber problem:                   
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
-#### Concomitant Least square : 
+### [C] Contrained scaled Lasso problem: 
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
-#### Concomitant Huber :        
+### [D] Contrained sparse Huber problem with concomitant scale estimation:        
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
 
 
 
-## Optimization schemes
 
-### Four main methods have been implemented for those.
-
-
-#### Forward Backward splitting method:
-Standard way to solve a convex minimisation problem with an addition of
-smooth and non-smooth function : Projected Proximal Gradient Descent. This
-method only works with the two non concomitants problems. For the huber
-problem, we use the second formulation.
-
-#### No-proj method
-Similar to the Projected Proximal Gradient Descent, but which does not involve
-a projection, which can be difficult to compute for some matrix C. Only for
-non concomitant problems.
-
-#### Double prox method
-Use of Doulgas Rachford splitting algorithm which use the proximal operator of
-both functions. It also solves concomitant problems, but it is usefull even in the
-non concomitant case because it is usually more efficient than forward backward
-splitting method. For the huber problem, we use the second formulation, then
-we change it into a Least square problem of dimension m (m + d) instead of m d.
-
-#### ODE method  
-From the KKT conditions, we can derive an simple ODE for the solution of
-the non concomitants problems, which shows that the solution is piecewise-
-affine. For the least square, as the problem can always be reported to a a non
-concomitant problem for another lambda, one can use the whole non-concomitant-
-path computed with the ODE method to then solve the concomitant-path.
 
 
 ## Getting started
@@ -437,6 +409,41 @@ Those objected will contains all the information about the problem
     - time
 
 
+## Optimization schemes
+
+The different problem formulations require different algorithmic strategies for 
+efficiently solving the underlying optimization problem. We have implemented four 
+algorithms (which have provable convergence guarantee) 
+that vary in generality and are not necessarily applicable to all problems.
+For each problem type, c-lasso has a default algorithm setting that proved to be the fastest
+in preliminary numerical experiments.
+
+### Path algorithms (see, e.g., [1])
+From the KKT conditions, we can derive an simple ODE for the solution of
+the non concomitants problems, which shows that the solution is piecewise-
+affine. For the least square, as the problem can always be reported to a a non
+concomitant problem for another lambda, one can use the whole non-concomitant-
+path computed with the ODE method to then solve the concomitant-path.
+
+### Projected primal-dual splitting method [2]:
+Standard way to solve a convex minimisation problem with an addition of
+smooth and non-smooth function : Projected Proximal Gradient Descent. This
+method only works with the two non concomitants problems. For the huber
+problem, we use the second formulation.
+
+### Projection-free primal-dual splitting method:
+Similar to the Projected Proximal Gradient Descent, but which does not involve
+a projection, which can be difficult to compute for some matrix C. Only for
+non concomitant problems.
+
+### Douglas-Rachford-type splitting method [4,5]
+Use of Doulgas Rachford splitting algorithm which use the proximal operator of
+both functions. It also solves concomitant problems, but it is usefull even in the
+non concomitant case because it is usually more efficient than forward backward
+splitting method. For the huber problem, we use the second formulation, then
+we change it into a Least square problem of dimension m (m + d) instead of m d.
+
+
 
 ## References 
 
@@ -444,6 +451,8 @@ Those objected will contains all the information about the problem
 
 * [2] L. Briceno-Arias, S.L. Rivera, [A Projected Primal–Dual Method for Solving Constrained Monotone Inclusions](https://link.springer.com/article/10.1007/s10957-018-1430-2?shared-article-renderer), J. Optim. Theory Appl., vol 180, Issue 3 March 2019
 
-* [3] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
+* [3] 
 
-* [4] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), arXiv, 2019.
+* [4] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
+
+* [5] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), arXiv, 2019.
