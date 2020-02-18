@@ -162,12 +162,9 @@ def theoretical_lam(n,d):
     ''' Theoritical lambda as a function of the dimension of the problem
 
     This function returns :
-    4/sqrt(n) * erfinv(1 - 2*x) where x is the solution of :
-    x = 4/d ( erfinv(1-2x)**4 + erfinv(1-2x)**2 )
-
+    4/sqrt(n) * erfinv(1 - 2*x) where x is the solution of x = 4/d ( erfinv(1-2x)**4 + erfinv(1-2x)**2 )
     Which is the same (thanks to formula : norminv(1-t) = sqrt(2)erfinv(1-2t) ) as :
-     sqrt(2/n) * norminv(1-k/p) with k such that :
-    k = norminv(1 - k/p)^4 + 2*norminv(1 - k/p)^2
+     sqrt(2/n) * norminv(1-k/p) with k is the solution of  k = norminv(1 - k/p)^4 + 2*norminv(1 - k/p)^2
 
     Args:
         n (int) : number of sample
@@ -175,6 +172,7 @@ def theoretical_lam(n,d):
 
     Returns:
         float : theoritical lambda
+
     '''
 
     x=0.
