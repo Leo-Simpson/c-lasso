@@ -56,21 +56,21 @@ pip install time
 The c-lasso package can solve four different types of optimization problems: 
 four regression-type and two classification-type problems.
 
-### [R1] Standard constrained Lasso regression:             
+#### [R1] Standard constrained Lasso regression:             
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
 
 This is the standard Lasso problem with linear equality constraints on the &beta; vector. 
 The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
 
-### [R2] Contrained sparse Huber regression:                   
+#### [R2] Contrained sparse Huber regression:                   
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
 for robust model fitting with l1 and linear equality constraints on the &beta; vector. The parameter &rho;=1.345.
 
-### [R3] Contrained scaled Lasso regression: 
+#### [R3] Contrained scaled Lasso regression: 
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
@@ -78,25 +78,27 @@ This formulation is similar to [R1] but allows for joint estimation of the (cons
 the standard deviation &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
 This is the default problem formulation in c-lasso.
 
-### [R4] Contrained sparse Huber regression with concomitant scale estimation:        
+#### [R4] Contrained sparse Huber regression with concomitant scale estimation:        
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
 
 This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) &beta; vector and 
 the standard deviation &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
 
-### [C1] Contrained sparse classification with Square Hinge loss: 
+#### [C1] Contrained sparse classification with Square Hinge loss: 
 
 This formulation is similar to [R1] but adapted for classification tasks using the Square Hinge loss
 with (constrained) sparse &beta; vector estimation.
 
-### [C2] Contrained sparse classification with Huberized Square Hinge loss:        
+#### [C2] Contrained sparse classification with Huberized Square Hinge loss:        
 
 This formulation is similar to [C1] but uses the Huberized Square Hinge loss for robust classification 
 with (constrained) sparse &beta; vector estimation.
 
 
 ## Getting started
+
+#### Warm-up example             
 
 We begin with a basic example that shows how to run c-lasso on synthetic data. For convenience, the c-lasso package includes
 the routine ```random_data``` in order to generate a problem instance with normal data.
@@ -134,7 +136,7 @@ As we have not specified any problem, algorithm, or model selection settings, th
 represents the *default* settings for a c-lasso instance: 
 - The problem is of regression type and uses formulation [R3], i.e. with concomitant scale estimation. 
 - The *default* optimization scheme is the path algorithm (see [Optimization schemes](#optimization-schemes) for further info). 
-- For model selection, stability selection (see [Reference](#references) [4] for details) at a theoretically derived &lambda; value. 
+- For model selection, stability selection (see [Reference](#references) [4] for details) at a theoretically derived &lambda; value. Stability selection comprises a relatively large number of parameters. For a description of the settings, we refer to the more advanced examples further down.
 
 You can solve the corresponding c-lasso problem instance using
 
@@ -164,14 +166,21 @@ at the theoretical &lambda;
 
 ![Ex1.1](figures/example1/Figure1.png)
 
-and the entire &lambda; path (as we have used the path algorithm for optimization). 
+and the entire &lambda; path (as we have used the path algorithm for optimization). We can see that stability selection
+can identify the five true non-zero entries in the &beta; vector
 
 ![Ex1.2](figures/example1/Figure2.png)
+
+The refitted &beta; values on the selected support are also displayed in the next plot
 
 ![Ex1.3](figures/example1/Figure3.png)
 
 
-Example of different settings (example2) : 
+#### Advanced example             
+
+In the next, we show how one can easily specify different aspects of the problem 
+formulation and model selection strategy.
+
 ```python
 problem                                     = classo_problem(X,y,C)
 problem.formulation.huber                   = True
