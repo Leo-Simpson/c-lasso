@@ -2,7 +2,13 @@
 =========
 
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
-constraints on the model parameters. The package implements several algorithmic strategies, including path and proximal
+constraints on the model parameters. The forward model is assumed to be 
+
+<img src="https://latex.codecogs.com/gif.latex?Y&space;=X\beta&space;+\sigma&space;\epsilon&space;\qquad\txt{s.t.}\qquad&space;C\beta=0" /> 
+
+Here, Y can be continuous (for regression) or binary labels (for classification) and C is a general constraint matrix.
+
+The package implements several algorithmic strategies, including path and proximal
 splitting algorithms, that are applicable to different problem formulations, e.g., the constrained Lasso, the constrained
 scaled Lasso, and sparse Huber M-estimation with linear equality constraints. We also include two model selection strategies
 for determining the sparsity of the model parameters: k-fold cross-validation and stability selection.   
