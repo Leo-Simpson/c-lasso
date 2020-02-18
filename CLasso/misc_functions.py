@@ -32,8 +32,8 @@ def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification =
         classification (bool) : if True, then it returns sign(y) instead of y
 
     Returns:
-        tuple : tuple of three numpy.array that corresponds to the data :  (X,C,y)
-        numpy.array : array corresponding to sol which is the real solution of the problem y = Xbeta + noise s.t. beta sparse and Cbeta = 0
+        tuple : tuple of three ndarray that corresponds to the data :  (X,C,y)
+        ndarray : array corresponding to sol which is the real solution of the problem y = Xbeta + noise s.t. beta sparse and Cbeta = 0
     '''
     if (type(seed) == int): np.random.seed(seed)
     else : np.random.seed()
@@ -103,7 +103,7 @@ def denorm(B,lna,ly): return(np.array([ly*B[j]/(np.sqrt(len(B))*lna[j]) for j in
 
 
 def csv_to_mat(file,begin = 1, header=None):
-    ''' Function to read a csv file and to create an numpy.array with this
+    ''' Function to read a csv file and to create an ndarray with this
 
     Args:
         file (str): Name of csv file
@@ -111,7 +111,7 @@ def csv_to_mat(file,begin = 1, header=None):
         header (None or int): Same parameter as in the function :func:`pandas.read_csv`
 
     Returns:
-        numpy.array : matrix of the csv file
+        ndarray : matrix of the csv file
     '''
     tab1=pd.read_csv(file,header=header)
     return(np.array(tab1)[:,begin:])
@@ -123,7 +123,7 @@ def rescale(matrices):
     This will change the solution, not only by scaling it, because then the L1 norm will affect every component equally (and not only the variables with big size)
 
     Args:
-        matrices (tuple) : tuple of three numpy.array matrices corresponding to (X,C,y)
+        matrices (tuple) : tuple of three ndarray matrices corresponding to (X,C,y)
 
     Returns:
         tuple : tuple of the three corresponding matrices after normalization
@@ -161,10 +161,10 @@ def proj_c(M,d):
 def theoretical_lam(n,d):
     ''' Theoretical lambda as a function of the dimension of the problem
 
-    This function returns :
+    This function returns : $\sqrt{2}$
     4/sqrt(n) * erfinv(1 - 2*x) where x is the solution of x = 4/d ( erfinv(1-2x)**4 + erfinv(1-2x)**2 )
     Which is the same (thanks to formula : norminv(1-t) = sqrt(2)erfinv(1-2t) ) as :
-     sqrt(2/n) * norminv(1-k/p) with k is the solution of  k = norminv(1 - k/p)^4 + 2*norminv(1 - k/p)^2
+    sqrt(2/n) * norminv(1-k/p) with k is the solution of  k = norminv(1 - k/p)^4 + 2*norminv(1 - k/p)^2
 
     Args:
         n (int) : number of sample
@@ -203,11 +203,11 @@ def clr(array, coef=0.5):
     Set all negaitve or null entry to a constant coef. Then compute the log of each component. Then substract the mean of each colomn on each colomn.
 
     Args:
-        array (numpy.array) : matrix nxd
+        array (ndarray) : matrix nxd
         coef (float)  : Value to replace the zero values
 
     Returns:
-        numpy.array : clr transformed matrix nxd
+        ndarray : clr transformed matrix nxd
 
     '''
     M = np.copy(array)
@@ -217,13 +217,13 @@ def clr(array, coef=0.5):
     return(M - np.mean(M, axis=0))
 
 def mat_to_np(file):
-    ''' Function to read a mat file and to create an numpy.array with this
+    ''' Function to read a mat file and to create an ndarray with this
 
     Args:
         file (str): Name of mat file
 
     Returns:
-         numpy.array : matrix of the mat file
+         ndarray : matrix of the mat file
     '''
     arrays = {}
     f = h5py.File(file)
