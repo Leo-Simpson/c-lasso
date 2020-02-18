@@ -97,25 +97,29 @@ with (constrained) sparse &beta; vector estimation.
 
 ## Getting started
 
-We begin with a basic example that shows how to run c-lasso on synthetic data. 
-
-For convenience, the c-lasso package includes the routine ```random_data``` 
-in order to generate a problem instance with normal data.
-
-This code snippet generates a problem instance with sparse &beta; in dimension
-d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples.
-The constraint matrix C is the all-ones vector. The noise level is &sigma;=0.5. 
-The input ```zerosum=True``` implies C&beta;=0. 
+We begin with a basic example that shows how to run c-lasso on synthetic data. For convenience, the c-lasso package includes
+the routine ```random_data``` in order to generate a problem instance with normal data.
 
 ```python
 n,d,d_nonzero,k,sigma =100,100,5,1,0.5
 (X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True)
 ```
+This code snippet generates a problem instance with sparse &beta; in dimension
+d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples.
+The constraint matrix C is the all-ones vector. The noise level is &sigma;=0.5. 
+The input ```zerosum=True``` implies C&beta;=0. 
 
-Use of the package with default settings (example1) :
+Next we define a c-lasso problem instance:
+
 ```python
 problem = classo_problem(X,y,C) 
+```
+We can solve the problem instance using
+```python
 problem.solve()
+```
+
+```python
 print(problem)
 print(problem.solution)
 ```
