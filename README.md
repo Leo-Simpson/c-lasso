@@ -1,4 +1,4 @@
-# c-lasso: a Python package for constraint sparse regression and classification 
+# c-lasso: a Python package for constrained sparse regression and classification 
 =========
 
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
@@ -7,12 +7,12 @@ splitting algorithms, that are applicable to different problem formulations, e.g
 scaled Lasso, and sparse Huber M-estimation with linear equality constraints. We also include two model selection strategies
 for determining the sparsity of the model parameters: k-fold cross-validation and stability selection.   
 
-This package is intended to fill the gap between popular python tools such as [scikit-learn](https://scikit-learn.org/stable/) which CANNOT solve sparse constraint problems and general-purpose optimization solvers that do not scale well for the particular problems, considered here.
+This package is intended to fill the gap between popular python tools such as [scikit-learn](https://scikit-learn.org/stable/) which CANNOT solve sparse constrained problems and general-purpose optimization solvers that do not scale well for the particular problems considered here.
 
 Below we show several use cases of the package, including an application of sparse log-contrast
 regression tasks for compositional microbiome data.
 
-The code builds on results from several papers which can be found in the [references](#references).
+The code builds on results from several papers which can be found in the [References](#references).
 
 ## Table of Contents
 
@@ -54,24 +54,21 @@ pip install time
 
 The c-lasso package can solve four different types of optimization problems 
 
-### [A] Standard constrained Lasso problem:             
+### [P1] Standard constrained Lasso problem:             
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
 
-### [B] Contrained sparse Huber problem:                   
+### [P2] Contrained sparse Huber problem:                   
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
-### [C] Contrained scaled Lasso problem: 
+### [P3] Contrained scaled Lasso problem: 
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
-### [D] Contrained sparse Huber problem with concomitant scale estimation:        
+### [P4] Contrained sparse Huber problem with concomitant scale estimation:        
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
-
-
-
 
 
 
