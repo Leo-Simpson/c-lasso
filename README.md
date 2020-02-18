@@ -145,7 +145,7 @@ As we have not specified any problem, algorithm, or model selection settings, th
 represents the *default* settings for a c-lasso instance: 
 - The problem is of regression type and uses formulation [R3], i.e. with concomitant scale estimation. 
 - The *default* optimization scheme is the path algorithm (see [Optimization schemes](#optimization-schemes) for further info). 
-- For model selection, stability selection (see [Reference](#references) [4] for details) at a theoretically derived &lambda; value. Stability selection comprises a relatively large number of parameters. For a description of the settings, we refer to the more advanced examples further down.
+- For model selection, stability selection at a theoretically derived &lambda; value is used (see [Reference](#references) [4] for details). Stability selection comprises a relatively large number of parameters. For a description of the settings, we refer to the more advanced examples below and the API.
 
 You can solve the corresponding c-lasso problem instance using
 
