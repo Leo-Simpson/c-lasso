@@ -28,7 +28,8 @@ The code builds on results from several papers which can be found in the [Refere
 
 ##  Installation
 
-c-lasso is available on pip. You can install the package using
+c-lasso is available on pip. You can install the package
+in the shell using
 
 ```shell
 pip install c_lasso
@@ -39,7 +40,7 @@ To use the c-lasso package in Python, type
 from classo import *
 ```
 
-The c-lasso package depends on several standard packages. 
+The c-lasso package depends on several standard Python packages. 
 To import these packages, use 
 
 ```shell
@@ -107,9 +108,10 @@ n,d,d_nonzero,k,sigma =100,100,5,1,0.5
 This code snippet generates a problem instance with sparse &beta; in dimension
 d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples generated from an i.i.d standard normal
 distribution. The dimension of the constraint matrix C is d x k matrix. The noise level is &sigma;=0.5. 
-The input ```zerosum=True``` implies that C is the all-ones vector and C&beta;=0. 
+The input ```zerosum=True``` implies that C is the all-ones vector and C&beta;=0. The n-dimensional outcome vector y
+and the regression vector &beta; is then generated to satisfy the given constraints. 
 
-Next we define a default c-lasso problem instance:
+Next we can define a default c-lasso problem instance with the generated data:
 ```python
 problem = classo_problem(X,y,C) 
 ```
@@ -119,7 +121,8 @@ You can look at the generated problem instance by typing:
 print(problem)
 ```
 
-This should give you a summary of the form:
+This gives you a summary of the form:
+
 ```
 FORMULATION : Concomitant
  
@@ -127,18 +130,22 @@ MODEL SELECTION COMPUTED :  Stability selection,
  
 STABILITY SELECTION PARAMETERS: method = first;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.9;  numerical_method = ODE
 ```
+As we have not specified any problem, algorithm, or model selection settings, this problem instance
+represents the *default* settings for a c-lasso instance. It assumes the problem to be of regression type and
+solves formulation [R3]. For model selection, stability selection (see [Reference](#references) [4] for details)
+at a theoretically derived &lambda; value. 
 
-We can solve the c-lasso problem instance using
+You can solve the corresponding c-lasso problem instance using
 
 ```python
 problem.solve()
 ```
 
+After completion, the results of the optimization and model selection  
+
 ```python
 print(problem.solution)
 ```
-
-Results : 
 
 
 ```
