@@ -83,7 +83,7 @@ This is the default problem formulation in c-lasso.
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
 
 This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) &beta; vector and 
-the standard deviation &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
+the scale &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
 
 #### [C1] Contrained sparse classification with Square Hinge loss: 
 
