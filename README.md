@@ -4,10 +4,12 @@
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
 constraints on the model parameters. The package implements several algorithmic strategies, including path and proximal
 splitting algorithms, that are applicable to different estimation models, including Huber’s perspective M-estimation model
-and the scaled Lasso with linear equality constraints. We showcase the usefulness of the package with an 
-application to log-contrast regression and classification tasks for compositional data in microbiome research.
+and the scaled Lasso with linear equality constraints. 
 
-The code builds on results from several papers which can be found in the references below.
+We give several use cases of the packages the usefulness of the package, including an application of sparse log-contrast
+regression tasks for compositional microbiome data.
+
+The code builds on results from several papers which can be found in the [references](#references).
 
 ## Table of Contents
 
