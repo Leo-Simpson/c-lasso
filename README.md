@@ -7,17 +7,7 @@ splitting algorithms, that are applicable to different estimation models, includ
 and the scaled Lasso with linear equality constraints. We showcase the usefulness of the package with an 
 application to log-contrast regression and classification tasks for compositional data in microbiome research.
 
-The code builds on results from several papers which can be found in the references below 
-
-References 
-
-* [1] B. R. Gaines, J. Kim, and H. Zhou, [Algorithms for Fitting the Constrained Lasso](https://www.tandfonline.com/doi/abs/10.1080/10618600.2018.1473777?journalCode=ucgs20), J. Comput. Graph. Stat., vol. 27, no. 4, pp. 861–871, 2018.
-
-* [2] L. Briceno-Arias, S.L. Rivera, [A Projected Primal–Dual Method for Solving Constrained Monotone Inclusions](https://link.springer.com/article/10.1007/s10957-018-1430-2?shared-article-renderer), J. Optim. Theory Appl., vol 180, Issue 3 March 2019
-
-* [3] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
-
-* [4] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), arXiv, 2019.
+The code builds on results from several papers which can be found in the references below.
 
 ## Table of Contents
 
@@ -28,6 +18,7 @@ References
 * [Two main functions](#two-main-functions)
 * [Misc functions](#little-functions)
 * [Example](#example)
+* [References] #references
 
 
 ##  How to use the package
@@ -432,3 +423,15 @@ Those objected will contains all the information about the problem
     - refit
     - formulation
     - time
+
+
+
+## References 
+
+* [1] B. R. Gaines, J. Kim, and H. Zhou, [Algorithms for Fitting the Constrained Lasso](https://www.tandfonline.com/doi/abs/10.1080/10618600.2018.1473777?journalCode=ucgs20), J. Comput. Graph. Stat., vol. 27, no. 4, pp. 861–871, 2018.
+
+* [2] L. Briceno-Arias, S.L. Rivera, [A Projected Primal–Dual Method for Solving Constrained Monotone Inclusions](https://link.springer.com/article/10.1007/s10957-018-1430-2?shared-article-renderer), J. Optim. Theory Appl., vol 180, Issue 3 March 2019
+
+* [3] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
+
+* [4] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), arXiv, 2019.
