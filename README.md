@@ -52,23 +52,28 @@ pip install time
     
 ##  Problem formulations
 
-The c-lasso package can solve four different types of optimization problems 
+The c-lasso package can solve four different types of optimization problems, four regression-type
+and two classification-type problems.
 
-### [P1] Standard constrained Lasso problem:             
+### [R1] Standard constrained Lasso regression:             
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
 
-### [P2] Contrained sparse Huber problem:                   
+### [R2] Contrained sparse Huber regression:                   
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
-### [P3] Contrained scaled Lasso problem: 
+### [R3] Contrained scaled Lasso regression: 
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
-### [P4] Contrained sparse Huber problem with concomitant scale estimation:        
+### [R4] Contrained sparse Huber regression with concomitant scale estimation:        
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
+
+### [C1] Contrained sparse classification with Square Hinge loss:        
+
+### [C2] Contrained sparse classification with Huberized Square Hinge loss:        
 
 
 
