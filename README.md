@@ -19,9 +19,9 @@ The code builds on results from several papers which can be found in the [Refere
 * [Installation](#installation)
 * [Regression and classification problems](#regression-and-classification-problems)
 * [Getting started](#getting-started)
+* [Log-contrast regression for microbiome data](#log-contrast-regression-for-microbiome-data)
 * [Two main functions](#two-main-functions)
 * [Misc functions](#little-functions)
-* [Log-contrast regression for microbiome data](#example)
 * [Optimization schemes](#optimization-schemes)
 * [References](#references)
 
@@ -225,7 +225,7 @@ Running time for Fixed LAM           : 0.065s
 ![Ex2.5](figures/example2/Figure5.png)
 
 
-## Example on gut microbiome data
+## Log-contrast regression for microbiome data
 
 Here is now the result of running the file "example_COMBO" which uses microbiome data :  
 ```
