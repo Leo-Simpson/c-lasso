@@ -18,7 +18,7 @@ The code builds on results from several papers which can be found in the referen
 * [Two main functions](#two-main-functions)
 * [Misc functions](#little-functions)
 * [Example](#example)
-* [References] #references
+* [References](#references)
 
 
 ##  How to use the package
