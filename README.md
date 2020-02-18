@@ -1,4 +1,4 @@
-# c-lasso, a Python package for constraint sparse regression and classification 
+# c-lasso: a Python package for constraint sparse regression and classification 
 =========
 
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
@@ -23,18 +23,20 @@ The code builds on results from several papers which can be found in the [refere
 * [References](#references)
 
 
-##  How to use the package
+##  Installation
 
-#### To install the package : 
+c-lasso is available on pip. You can install the package using
+
 ```shell
 pip install c_lasso
 ```
+To import the classo package, use 
 
-#### To import the package :
 ```python
 from classo import *
 ```
-#### To import the required packages  :
+classo depends on several packages. To import these packages, use 
+
 ```shell
 pip install numpy
 pip install matplotlib
