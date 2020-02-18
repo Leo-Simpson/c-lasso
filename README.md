@@ -142,12 +142,14 @@ You can solve the corresponding c-lasso problem instance using
 problem.solve()
 ```
 
-After completion, the results of the optimization and model selection  
+After completion, the results of the optimization and model selection routines 
+can be visualized using
 
 ```python
 print(problem.solution)
 ```
 
+The command shows the running time(s) for the c-lasso problem instance
 
 ```
 SPEEDNESS : 
@@ -156,7 +158,13 @@ Running time for Stability Selection : 2.15s
 Running time for Fixed LAM           : 'not computed'
 ```
 
+Here, we only used stability selection as *default* model selection strategy. 
+The command also allows you to inspect the computed stability profile for all variables 
+at the theoretical &lambda; 
+
 ![Ex1.1](figures/example1/Figure1.png)
+
+and the entire &lambda; path (as we have used the path algorithm for optimization). 
 
 ![Ex1.2](figures/example1/Figure2.png)
 
