@@ -17,7 +17,7 @@ The code builds on results from several papers which can be found in the [Refere
 ## Table of Contents
 
 * [Installation](#installation)
-* [Problem formulations](#problem-formulations)
+* [Regression and classification problems](#regression-and-classification-problems)
 * [Getting started](#getting-started)
 * [Two main functions](#two-main-functions)
 * [Misc functions](#little-functions)
@@ -50,26 +50,38 @@ pip install pandas
 pip install time
 ```
     
-##  Problem formulations for regression and classification
+##  Regression and classification problems
 
-The c-lasso package can solve four different types of optimization problems, four regression-type
-and two classification-type problems.
+The c-lasso package can solve four different types of optimization problems: 
+four regression-type and two classification-type problems.
 
 ### [R1] Standard constrained Lasso regression:             
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
 
+This is the default regression problem in c-lasso. The objective function combines Least-Squares for 
+model fitting with l1 and linear equality constraints on the &beta; vector.   
+
 ### [R2] Contrained sparse Huber regression:                   
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1"  />
+
+This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
+for robust model fitting with l1 and linear equality constraints on the &beta; vector. The parameter &rho;=1.345.
 
 ### [R3] Contrained scaled Lasso regression: 
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1"  />
 
+This formulation is similar to [R1] but allows joint estimation of the (constrained) &beta; vector and 
+the standard deviation &sigma; in a concomitant fashion (see References(#references) [4,5] for further info).
+
 ### [R4] Contrained sparse Huber regression with concomitant scale estimation:        
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
+
+This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) &beta; vector and 
+the standard deviation &sigma; in a concomitant fashion (see References(#references) [4,5] for further info).
 
 ### [C1] Contrained sparse classification with Square Hinge loss:        
 
