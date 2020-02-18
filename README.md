@@ -325,7 +325,7 @@ Those objected will contains all the information about the problem
  
  #### 5 main attributes :
    - data (type : classo_data): 
-   the matrices X, C, y to solve a problem of type : <img src="https://latex.codecogs.com/gif.latex?y&space;=X\beta&space;+\sigma&space;\epsilon&space;\qquad\txt{st.}\qquad&space;C\beta=0" /> 
+   the matrices X, C, y to solve a problem of type : <img src="https://latex.codecogs.com/gif.latex?y&space;=X\beta&space;+\sigma&space;\epsilon&space;\qquad\txt{s.t.}\qquad&space;C\beta=0" /> 
      
    - formulation (type : classo_formulation) : 
    to know the formulation of the problem, robust ?  ; Jointly estimate sigma (Concomitant) ? , classification ? Default parameter is only concomitant.
