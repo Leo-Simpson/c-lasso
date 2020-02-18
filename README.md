@@ -3,10 +3,13 @@
 
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
 constraints on the model parameters. The package implements several algorithmic strategies, including path and proximal
-splitting algorithms, that are applicable to different estimation models, including Huber’s perspective M-estimation model
-and the scaled Lasso with linear equality constraints. 
+splitting algorithms, that are applicable to different problem formulations, e.g., the constrained Lasso, the constrained
+scaled Lasso, and sparse Huber M-estimation with linear equality constraints. We also include two model selection strategies
+for determining the sparsity of the model parameters: k-fold cross-validation and stability selection   
 
-We give several use cases of the packages the usefulness of the package, including an application of sparse log-contrast
+This package is intended to fill the gap between popular python tools such as [scikit-learn](https://scikit-learn.org/stable/) which CANNOT solve sparse constraint problems and general-purpose optimization solvers that do not scale well for the particular problems, considered here.
+
+Below we show several use cases of the package, including an application of sparse log-contrast
 regression tasks for compositional microbiome data.
 
 The code builds on results from several papers which can be found in the [references](#references).
@@ -14,7 +17,7 @@ The code builds on results from several papers which can be found in the [refere
 ## Table of Contents
 
 * [Installation](#installation)
-* [Problem types](#problem-types)
+* [Problem formulations](#problem-formulations)
 * [Optimization schemes](#optimization-schemes)
 * [Getting started](#getting-started)
 * [Two main functions](#two-main-functions)
@@ -30,12 +33,13 @@ c-lasso is available on pip. You can install the package using
 ```shell
 pip install c_lasso
 ```
-To import the classo package, use 
+To use the c-lasso package in Python, type 
 
 ```python
 from classo import *
 ```
-The classo package depends on several standard packages. 
+
+The c-lasso package depends on several standard packages. 
 To import these packages, use 
 
 ```shell
@@ -46,7 +50,9 @@ pip install pandas
 pip install time
 ```
     
-##  Problem types
+##  Problem formulations
+
+The c-lasso package can solve four different types of 
 
 #### Least square :             
 
