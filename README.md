@@ -67,21 +67,21 @@ four regression-type and two classification-type problems.
 
 #### [R1] Standard constrained Lasso regression:             
 
-<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0" />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0" />
 
 This is the standard Lasso problem with linear equality constraints on the &beta; vector. 
 The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
 
 #### [R2] Contrained sparse Huber regression:                   
 
-<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0"  />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0"  />
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
 for robust model fitting with l1 and linear equality constraints on the &beta; vector. The parameter &rho;=1.345.
 
 #### [R3] Contrained scaled Lasso regression: 
 
-<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d,&space;\sigma>0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0"  />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d,&space;\sigma>0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0"  />
 
 This formulation is similar to [R1] but allows for joint estimation of the (constrained) &beta; vector and 
 the standard deviation &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
@@ -89,14 +89,14 @@ This is the default problem formulation in c-lasso.
 
 #### [R4] Contrained sparse Huber regression with concomitant scale estimation:        
 
-<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d,&space;\sigma>0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0" />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d,&space;\sigma>0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0" />
 
 This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) &beta; vector and 
 the scale &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
 
 #### [C1] Contrained sparse classification with Square Hinge loss: 
 
-<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;l(y^TX\beta)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0" />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;l(y^TX\beta)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0" />
 where l is defined as :
 <img src="https://latex.codecogs.com/gif.latex?l(r)=\max(1-r,0)^2" />
 
@@ -105,7 +105,7 @@ with (constrained) sparse &beta; vector estimation.
 
 #### [C2] Contrained sparse classification with Huberized Square Hinge loss:        
 
-<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;l_{\rho}(y^TX\beta)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0" />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;l_{\rho}(y^TX\beta)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0" />
 where l is defined as :
 <img src="https://latex.codecogs.com/gif.latex?l_{\rho}(r)&space;=&space;\begin{cases}&space;(1-r)^2&space;&\mbox{if&space;}&space;\rho&space;\leq&space;r&space;\leq&space;1&space;\\&space;(1-\rho)(1&plus;\rho-2r)&space;&\mbox{if&space;}&space;r&space;\leq&space;\rho&space;\\&space;0&space;&\mbox{if&space;}&space;r&space;\geq&space;1&space;\end{cases}" title="l_{\rho}(r) = \begin{cases} (1-r)^2 &\mbox{if } \rho \leq r \leq 1 \\ (1-\rho)(1+\rho-2r) &\mbox{if } r \leq \rho \\ 0 &\mbox{if } r \geq 1 \end{cases}" />
 
