@@ -67,21 +67,21 @@ four regression-type and two classification-type problems.
 
 #### [R1] Standard constrained Lasso regression:             
 
-<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0" />
 
 This is the standard Lasso problem with linear equality constraints on the &beta; vector. 
 The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
 
 #### [R2] Contrained sparse Huber regression:                   
 
-<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1"  />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0"  />
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
 for robust model fitting with l1 and linear equality constraints on the &beta; vector. The parameter &rho;=1.345.
 
 #### [R3] Contrained scaled Lasso regression: 
 
-<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1"  />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d,&space;\sigma>0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0"  />
 
 This formulation is similar to [R1] but allows for joint estimation of the (constrained) &beta; vector and 
 the standard deviation &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
@@ -89,7 +89,7 @@ This is the default problem formulation in c-lasso.
 
 #### [R4] Contrained sparse Huber regression with concomitant scale estimation:        
 
-<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d,&space;\sigma>0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0" />
 
 This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) &beta; vector and 
 the scale &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
@@ -332,164 +332,6 @@ Running time for Fixed LAM           : 0.024s
 ![Ex4.3](figures/examplePH/Sselection.png)
 
 ![Ex4.4](figures/examplePH/beta.png)
-
-
-## Details on the objects of the package: 
-
-### Type classo_problem : 
-
-Those objected will contains all the information about the problem
-
-#### 5 main attributes :
-- data (type : classo_data): 
-the matrices X, C, y to solve a problem of type : <img src="https://latex.codecogs.com/gif.latex?y&space;=X\beta&space;+\sigma&space;\epsilon&space;\qquad\txt{s.t.}\qquad&space;C\beta=0" /> 
-
-- formulation (type : classo_formulation) : 
-to know the formulation of the problem, robust ?  ; Jointly estimate sigma (Concomitant) ? , classification ? Default parameter is only concomitant.
-
-- model_selection (type : classo_model_selection) : 
-Path computation ; Cross Validation ; stability selection ; or Lasso problem for a fixed lambda. also contains the parameters of each of those model selection.
-
-- solution (type : classo_solution) : 
-Type that contains the informations about the solution once it is computed. 
-This attribute exists only if the method solve() has been applied to the object problem.
-
-- optional: label (type : list, or numpy array, or boolean False by default) : 
-gives the labels of each variable, and can be set to False (default value) if no label is given.
-
-#### 3 methods :
-
-- init : classo_problem(X=X,y=y,C=C, label=False) will create the object, with its default value, with the good data. 
-If C is not specified, it is set to "zero-sum" which make zero sum contraint. 
-
-- repr : this method allows to print this object in a way that it prints the important informations about what we are solving. 
-
-- solution : once we used the method .solve() , this componant will be added, with the solutions of the model-selections selected, with respect to the problem formulation selected
-
-
-### Type data :
-#### 4 attributes :
-- rescale (type : boolean) : True if regression has to be done after rescaling the data. Default value : False
-- X , y , C (type : numpy.array) : matrices representing the data of the problem.
-
-### Type formulation :
-#### 6 attributes :
-- huber (type : boolean) : True if the formulation of the problem should be robust
-Default value = False
-
-- concomitant (type : boolean) : True if the formulation of the problem should be with an M-estimation of sigma.
-Default value = True
-
-- classification (type : boolean) : True if the formulation of the problem should be classification (if yes, then it will not be concomitant)
-Default value = False
-
-- rho (type = float) : Value of rho for robust problem. 
-Default value = 1.345
-
-- rho_classification (type = float) : value of rho for huberized hinge loss function for classification (this parameter has to be negative).
-Default value = -1.
-
-- e (type = float or string)  : value of e in concomitant formulation.
-If 'n/2' then it becomes n/2 during the method solve(), same for 'n'.
-Default value : 'n' if huber formulation ; 'n/2' else
-
-### Type model_selection : 
-#### 8 attributes :
-- PATH (type : boolean): True if path should be computed. 
-Default Value = False
-
-- PATHparameters (type : PATHparameters): 
-object with as attributes : 
-- numerical_method ; 
-- n_active ; lambdas ;
-- plot_sigma
-
-
-- CV (type : boolean):  True if Cross Validation should be computed. 
-Default Value = False
-
-- CVparameters (type : CVparameters): 
-object with as attributes : 
-- seed
-- numerical_method
-- lambdas
-- oneSE
-- Nsubsets
-
-
-- StabSel (type : boolean):  True if Stability Selection should be computed. 
-Default Value = True
-
-- StabSelparameters (type : StabSelparameters): 
-object with as attributes : 
-- seed
-- numerical_method
-- method
-- B
-- q
-- percent_nS
-- lamin
-- hd
-- lam
-- true_lam
-- threshold
-- threshold_label
-- theoritical_lam
-
-- LAMfixed (type : boolean):  True if solution for a fixed lambda should be computed. 
-Default Value = False
-
-- LAMfixedparameters (type : LAMparameters): 
-object with as attributes : 
-- numerical_method
-- lam
-- true_lam
-- theoritical_lam
-
-
-### Type solution :
-#### 4 attributes : 
-- PATH (type : solution_PATH): object with as attributes : 
-
-- BETAS
-- SIGMAS
-- LAMBDAS
-- method
-- save
-- formulation
-- time
-
-- CV (type : solution_CV): object with as attributes :
-- beta
-- sigma 
-- xGraph
-- yGraph
-- standard_error
-- index_min
-- index_1SE
-- selected_param
-- refit
-- formulation
-- time
-
-- StabSel (type : solution_StabSel) : object with as attributes :
-- distribution
-- lambdas_path
-- selected_param
-- to_label
-- refit
-- formulation
-- time 
-
-
-- LAMfixed (type : solution_LAMfixed) : object with as attributes :
-- beta
-- sigma
-- lambdamax
-- selected_param
-- refit
-- formulation
-- time
 
 
 ## Optimization schemes
