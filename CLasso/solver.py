@@ -694,7 +694,7 @@ class solution_LAMfixed:
 
     def __repr__(self):
         plt.bar(range(len(self.refit)), self.refit), plt.title("Solution for a fixed lambda with refit")
-        if(type(self.save)==str): plt.savefig(save)
+        if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
         if(self.formulation.concomitant) : print("SIGMA FOR LAMFIXED  : ", self.sigma )
         return (str(round(self.time, 3)) + "s")
