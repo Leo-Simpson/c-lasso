@@ -27,9 +27,9 @@ def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification =
         d_nonzero (int): Number of non null componant of sol
         k (int) : Number of constraints, number of rows of C
         sigma (float) : size of standard error
-        zerosum (bool, optional) : If True, then C is the all-one matrix with 1 row, independently of k
-        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False: pseudo-random vectors
-        classification (bool, optional) : if True, then it returns sign(y) instead of y
+        zerosum (bool) : If True, then C is the all-one matrix with 1 row, independently of k
+        seed (bool or int) : Seed for random values, for an equal seed, the result will be the same. If set to False: pseudo-random vectors
+        classification (bool) : if True, then it returns sign(y) instead of y
 
     Returns:
         tuple : tuple of three ndarray that corresponds to the data :  (X,C,y)
@@ -107,8 +107,8 @@ def csv_to_mat(file,begin = 1, header=None):
 
     Args:
         file (str): Name of csv file
-        begin (int, optional): First colomn where it should read the matrix
-        header (None or int, optional): Same parameter as in the function :func:`pandas.read_csv`
+        begin (int): First colomn where it should read the matrix
+        header (None or int): Same parameter as in the function :func:`pandas.read_csv`
 
     Returns:
         ndarray : matrix of the csv file
@@ -161,13 +161,10 @@ def proj_c(M,d):
 def theoretical_lam(n,d):
     ''' Theoretical lambda as a function of the dimension of the problem
 
-    This function returns (with :math:`\phi = erf`) :
-
-    :math:`4/ \sqrt{n}  \phi^{-1}(1 - 2x)` such that  :math:`x = 4/d ( \phi^{-1}(1-2x)4 + \phi^{-1}(1-2x)^2 )`
-
-    Which is the same (thanks to formula : :math:`norm^{-1}(1-t) = \sqrt{2}\phi^{-1}(1-2t)` ) as :
-
-    :math:`\sqrt{2/n} * norm^{-1}(1-k/p)` such that  :math:`k = norm^{-1}(1 - k/p)^4 + 2norm^{-1}(1 - k/p)^2`
+    This function returns : $\sqrt{2}$
+    4/sqrt(n) * erfinv(1 - 2*x) where x is the solution of x = 4/d ( erfinv(1-2x)**4 + erfinv(1-2x)**2 )
+    Which is the same (thanks to formula : norminv(1-t) = sqrt(2)erfinv(1-2t) ) as :
+    sqrt(2/n) * norminv(1-k/p) with k is the solution of  k = norminv(1 - k/p)^4 + 2*norminv(1 - k/p)^2
 
     Args:
         n (int) : number of sample
@@ -207,7 +204,7 @@ def clr(array, coef=0.5):
 
     Args:
         array (ndarray) : matrix nxd
-        coef (float, optional)  : Value to replace the zero values
+        coef (float)  : Value to replace the zero values
 
     Returns:
         ndarray : clr transformed matrix nxd

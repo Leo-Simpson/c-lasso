@@ -23,334 +23,172 @@ The method __repr__ allows to print this object in a way that it prints the impo
 The class of 'model selection' is defined inside the class 'problem' because we will never use it outside the class. 
 '''
 
-
 class classo_data:
-    ''' Class containing the data of the problem
-
-    Args:
-        X (ndarray): Matrix representing the data of the problem
-        y (ndarray): Vector representing the output of the problem
-        C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
-        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem
-
-    Attributes:
-        X (ndarray): Matrix representing the data of the problem
-        y (ndarray): Vector representing the output of the problem
-        C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
-        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem
-
-    '''
-    def __init__(self, X, y, C, rescale=False):
-        self.rescale = rescale  # booleen to know if we rescale the matrices
+    def __init__(self, X, y, C):
+        self.rescale = False  # booleen to know if we rescale the matrices
         self.X,self.y,self.C = y = X, y,C
         if type(C) == str: self.C = np.ones((1, len(X[0])))
 
-class classo_formulation:
-    ''' Class containing the data of the problem
-
-    Attributes:
-        huber (bool) : True if the formulation of the problem should be robust
-            Default value = False
-
-        concomitant (bool) : True if the formulation of the problem should be with an M-estimation of sigma.
-            Default value = True
-
-        classification (bool) : True if the formulation of the problem should be classification (if yes, then it will not be concomitant)
-            Default value = False
-
-        rho (float) : Value of rho for robust problem.
-            Default value = 1.345
-
-        rho_classification (float) : value of rho for huberized hinge loss function for classification (this parameter has to be negative).
-            Default value = -1.
-
-        e (float or string)  : value of e in concomitant formulation.
-            If 'n/2' then it becomes n/2 during the method solve(), same for 'n'.
-            Default value : 'n' if huber formulation ; 'n/2' else
-
-
-    '''
-    def __init__(self):
-        self.huber = False
-        self.concomitant = True
-        self.classification = False
-        self.rho = 1.345
-        self.rho_classification = -1.
-        self.e = 'not specified'
-
-    def name(self):
-        if self.huber:
-            if self.classification:
-                return ('Huber_Classification')
-            else:
-                if self.concomitant:
-                    return ('Concomitant_Huber')
-                else:
-                    return ('Huber')
-        else:
-            if self.classification:
-                return ('Classification')
-            else:
-                if self.concomitant:
-                    return ('Concomitant')
-                else:
-                    return ('LS')
-
-    def __repr__(self):
-        return (self.name())
-
-class classo_model_selection:
-    ''' Class containing the data of the problem
-
-    Attributes:
-        PATH (bool): True if path should be computed.
-            Default Value = False
-
-        PATHparameters (PATHparameters): object parameters to compute the lasso-path.
-
-
-        CV (bool):  True if Cross Validation should be computed.
-            Default Value = False
-
-        CVparameters (CVparameters):  object parameters to compute the cross-validation.
-
-
-        StabSel (boolean):  True if Stability Selection should be computed.
-            Default Value = True
-
-        StabSelparameters (StabSelparameters):  object parameters to compute the stability selection.
-
-        LAMfixed (boolean):  True if solution for a fixed lambda should be computed.
-            Default Value = False
-
-        LAMfixedparameters (LAMparameters):  object parameters to compute the lasso for a fixed lambda
-
-    '''
-    def __init__(self):
-
-        # Model selection variables
-
-        self.PATH = False
-        self.PATHparameters = PATHparameters()
-
-        self.CV = False
-        self.CVparameters = CVparameters()
-
-        self.StabSel = True            # Only model selection that is used by default
-        self.StabSelparameters = StabSelparameters()
-
-        self.LAMfixed = False
-        self.LAMfixedparameters = LAMfixedparameters()
-
-    def __repr__(self):
-        string = ''
-        if self.PATH: string += 'Path,  '
-        if self.CV: string += 'Cross Validation,  '
-        if self.StabSel: string += 'Stability selection, '
-        if self.LAMfixed: string += 'Lambda fixed'
-        return string
-
-class PATHparameters:
-    '''object parameters to compute the lasso-path.
-
-    Attributes:
-        numerical_method (str) : name of the numerical method that is used, can be : 'here!'
-            Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
-
-        n_active (int or bool): if it is an integer, then the algo stop computing the path when n_active variables are actives. then the solution does not change from this point.
-            Dafault value : False
-
-        lambdas (numpy.ndarray) : list of lambdas for computinf lasso-path for cross validation on lambda.
-            Default value : np.array([10**(-delta * float(i) / nlam) for i in range(0,nlam) ] ) with delta=2. and nlam = 40
-
-        plot_sigma :
-    '''
-    def __init__(self):
-        self.formulation = 'not specified'
-        self.numerical_method = 'choose'
-        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
-        self.n_active = False
-        delta= 2.
-        nlam = 40
-        self.lambdas = np.array([10**(-delta * float(i) / nlam) for i in range(0,nlam) ] )
-        self.plot_sigma = True
-
-    def __repr__(self): return ('Npath = ' + str(len(self.lambdas))
-                                + '  n_active = ' + str(self.n_active)
-                                + '  lamin = ' + str(self.lambdas[-1])
-                                + ';  numerical_method = ' + str(self.numerical_method))
-class CVparameters:
-    '''object parameters to compute the cross-validation.
-
-    Attributes:
-        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random vectors
-            Default value : None
-
-        numerical_method (str) : name of the numerical method that is used, can be : 'here!'
-            Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
-
-        lambdas (numpy.ndarray) : list of lambdas for computinf lasso-path for cross validation on lambda.
-            Default value : np.linspace(1., 1e-3, 500)
-
-        oneSE (bool) : if set to True, the selected lambda if computed with method 'one-standard-error'
-            Default value : True
-
-        Nsubsets (int): number of subset in the cross validation method
-            Dafault value : 5
-
-    '''
-    def __init__(self):
-        self.seed = None
-        self.formulation = 'not specified'
-        self.numerical_method = 'choose'
-        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
-
-        self.Nsubset = 5  # Number of subsets used
-        self.lambdas = np.linspace(1., 1e-3, 500)
-        self.oneSE = True
-
-    def __repr__(self): return ('Nsubset = ' + str(self.Nsubset)
-                                + '  lamin = ' + str(self.lambdas[-1])
-                                + '  n_lam = ' + str(len(self.lambdas))
-                                + ';  numerical_method = ' + str(self.numerical_method))
-class StabSelparameters:
-    '''object parameters to compute the stability selection.
-
-    Attributes:
-
-        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random vectors
-            Default value : None
-
-        numerical_method (str) : name of the numerical method that is used, can be : 'here!'
-            Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
-
-        lam (float or str) : (only used if :obj:`method` = 'lam') lam for which the lasso should be computed.
-            Default value : 'theoretical' which mean it will be equal to :obj:`theoretical_lam` once it is computed
-
-        true_lam (bool) : (only used if :obj:`method` = 'lam') True if the lambda given is the real lambda, False if it lambda/lambdamax which is between 0 and 1.
-            If True and lam = 'theoretical' , then it will takes the  value n*theoretical_lam.
-            Default value : True
-
-
-        theoretical_lam (float) : (only used if :obj:`method` = 'lam') Theoretical lam.
-            Default value : 0.0 (once it is not computed yet, it is computed thanks to the function :func:`theoretical_lam` used in :meth:`classo_problem.solve`)
-
-
-        method (str) : 'first', 'lam' or 'max' depending on the type of stability selection we do.
-            Default value : 'first'
-
-        B (int) : number of subsample considered.
-            Default value : 50
-
-        q (int) : number of selected variable per subsample.
-            Default value : 10
-
-        percent_nS (float) : size of subsample relatively to the total amount of sample
-            Default value : 0.5
-
-        lamin (float) : lamin when computing the lasso-path for method 'max'
-            Default value : 1e-2
-
-        hd (bool) : if set to True, then the 'max' will stop when it reaches n-k actives variables
-            Default value : False
-
-        threshold (float) : threhold for stability selection
-            Default value : 0.7
-
-        threshold_label (float) : threshold to know when the label should be plot on the graph.
-            Default value : 0.4
-
-    '''
-    def __init__(self):
-        self.seed = None
-        self.formulation = 'not specified'
-        self.numerical_method = 'choose'
-        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
-
-        self.method = 'first'  # Can be 'first' ; 'max' or 'lam'
-        self.B = 50
-        self.q = 10
-        self.percent_nS = 0.5
-        self.lamin = 1e-2  # the lambda where one stop for 'max' method
-        self.hd = False  # if set to True, then the 'max' will stop when it reaches n-k actives variables
-        self.lam = 'theoretical'  # can also be a float, for the 'lam' method
-        self.true_lam = True
-        self.threshold = 0.7
-        self.threshold_label = 0.4
-        self.theoretical_lam = 0.0
-
-    def __repr__(self): return ('method = ' + str(self.method)
-                                + ';  lamin = ' + str(self.lamin)
-                                + ';  lam = ' + str(self.lam)
-                                + ';  B = ' + str(self.B)
-                                + ';  q = ' + str(self.q)
-                                + ';  percent_nS = ' + str(self.percent_nS)
-                                + ';  threshold = ' + str(self.threshold)
-                                + ';  numerical_method = ' + str(self.numerical_method))
-class LAMfixedparameters:
-            '''object parameters to compute the lasso for a fixed lambda
-
-            Attributes:
-                numerical_method (str) : name of the numerical method that is used, can be : 'here!'
-                    Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
-
-                lam (float or str) : lam for which the lasso should be computed.
-                    Default value : 'theoretical' which mean it will be equal to :obj:`theoretical_lam` once it is computed
-
-                true_lam (bool) : True if the lambda given is the real lambda, False if it lambda/lambdamax which is between 0 and 1.
-                    If True and lam = 'theoretical' , then it will takes the  value n*theoretical_lam.
-                    Default value : True
-
-
-                theoretical_lam (float) : Theoretical lam
-                    Default value : 0.0 (once it is not computed yet, it is computed thanks to the function :func:`theoretical_lam` used in :meth:`classo_problem.solve`)
-            '''
-            def __init__(self):
-                self.lam = 'theoretical'
-                self.formulation = 'not specified'
-                self.numerical_method = 'choose'
-                self.true_lam = True
-                self.theoretical_lam = 0.0
-                # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
-
-            def __repr__(self): return ('lam = ' + str(self.lam)
-                                        + ';  theoretical_lam = ' + str(round(self.theoretical_lam, 4))
-                                        + ';  numerical_method = ' + str(self.numerical_method))
-
 class classo_problem:
-    ''' Class that contains all the information about the problem
+    global label #label will stay global, it is more easy because there is plenty of part of the code where it is used
 
-    Args:
-        X (ndarray): Matrix representing the data of the problem
-        y (ndarray): Vector representing the output of the problem
-        C (str or ndarray, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
-               Default value to 'zero-sum'
-        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem.
-               Default value is 'False'
-
-    Attributes:
-        label (list or bool) : list of the labels of each variable. If set to False then there is no label
-        data (classo_data) :  object containing the data of the problem.
-        formulation (classo_formulation) : object containing the info about the formulation of the minimization problem we solve.
-        model_selection (classo_model_selection) : object giving the parameters we need to do variable selection.
-        solution (classo_solution) : object giving caracteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
-
-    '''
     def __init__(self, X, y, C='zero-sum', labels=False):  # zero sum constraint by default, but it can be any matrix
         global label
         label = labels
         self.label = label
+
         self.data = classo_data(X, y, C)
+
+        # define the class formulation of the problem inside the class classo_problem
+        class classo_formulation:
+            def __init__(self):
+                self.huber = False
+                self.concomitant = True
+                self.classification = False
+                self.rho = 1.345
+                self.rho_classification = -1.
+                self.e = 'not specified'
+
+            def name(self):
+                if self.huber:
+                    if self.classification:
+                        return ('Huber_Classification')
+                    else:
+                        if self.concomitant:
+                            return ('Concomitant_Huber')
+                        else:
+                            return ('Huber')
+                else:
+                    if self.classification:
+                        return ('Classification')
+                    else:
+                        if self.concomitant:
+                            return ('Concomitant')
+                        else:
+                            return ('LS')
+
+            def __repr__(self):
+                return (self.name())
+
         self.formulation = classo_formulation()
+
+        # define the class model_selection inside the class classo_problem
+        class classo_model_selection:
+            def __init__(self):
+
+                # Model selection variables
+                ''' PATH PARAMETERS'''
+                self.PATH = False
+
+                class PATHparameters:
+                    def __init__(self):
+                        self.formulation = 'not specified'
+                        self.numerical_method = 'choose'
+                        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
+
+                        self.n_active = False
+                        delta= 2.
+                        nlam = 40
+                        self.lambdas = np.array([10**(-delta * float(i) / nlam) for i in range(0,nlam) ] )
+                        self.plot_sigma = True
+
+                    def __repr__(self): return ('Npath = ' + str(len(self.lambdas))
+                                                + '  n_active = ' + str(self.n_active)
+                                                + '  lamin = ' + str(self.lambdas[-1])
+                                                + ';  numerical_method = ' + str(self.numerical_method))
+
+                ''' End of the definition'''
+                self.PATHparameters = PATHparameters()
+
+                ''' CROSS VALIDATION PARAMETERS'''
+                self.CV = False
+
+                class CVparameters:
+                    def __init__(self):
+                        self.seed = None
+                        self.formulation = 'not specified'
+                        self.numerical_method = 'choose'
+                        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
+
+                        self.Nsubset = 5  # Number of subsets used
+                        self.lambdas = np.linspace(1., 1e-3, 500)
+                        self.oneSE = True
+
+                    def __repr__(self): return ('Nsubset = ' + str(self.Nsubset)
+                                                + '  lamin = ' + str(self.lambdas[-1])
+                                                + '  n_lam = ' + str(len(self.lambdas))
+                                                + ';  numerical_method = ' + str(self.numerical_method))
+
+                ''' End of the definition'''
+                self.CVparameters = CVparameters()
+
+                ''' STABILITY SELECTION PARAMETERS'''
+                self.StabSel = True            # Only model selection that is used by default
+
+                class StabSelparameters:
+                    def __init__(self):
+                        self.seed = None
+                        self.formulation = 'not specified'
+                        self.numerical_method = 'choose'
+                        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
+
+                        self.method = 'first'  # Can be 'first' ; 'max' or 'lam'
+                        self.B = 50
+                        self.q = 10
+                        self.percent_nS = 0.5
+                        self.lamin = 1e-2  # the lambda where one stop for 'max' method
+                        self.hd = False  # if set to True, then the 'max' will stop when it reaches n-k actives variables
+                        self.lam = 'theoretical'  # can also be a float, for the 'lam' method
+                        self.true_lam = True
+                        self.threshold = 0.7
+                        self.threshold_label = 0.4
+                        self.theoretical_lam = 1.0
+
+                    def __repr__(self): return ('method = ' + str(self.method)
+                                                + ';  lamin = ' + str(self.lamin)
+                                                + ';  lam = ' + str(self.lam)
+                                                + ';  B = ' + str(self.B)
+                                                + ';  q = ' + str(self.q)
+                                                + ';  percent_nS = ' + str(self.percent_nS)
+                                                + ';  threshold = ' + str(self.threshold)
+                                                + ';  numerical_method = ' + str(self.numerical_method))
+
+                ''' End of the definition'''
+                self.StabSelparameters = StabSelparameters()
+
+                ''' PROBLEM AT A FIXED LAMBDA PARAMETERS'''
+                self.LAMfixed = False
+
+                class LAMfixedparameters:
+                    def __init__(self):
+                        self.lam = 'theoretical'
+                        self.formulation = 'not specified'
+                        self.numerical_method = 'choose'
+                        self.true_lam = True
+                        self.theoretical_lam = 0.0
+                        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
+
+                    def __repr__(self): return ('lam = ' + str(self.lam)
+                                                + ';  theoretical_lam = ' + str(round(self.theoretical_lam, 4))
+                                                + ';  numerical_method = ' + str(self.numerical_method))
+
+                ''' End of the definition'''
+                self.LAMfixedparameters = LAMfixedparameters()
+
+            def __repr__(self):
+                string = ''
+                if self.PATH: string += 'Path,  '
+                if self.CV: string += 'Cross Validation,  '
+                if self.StabSel: string += 'Stability selection, '
+                if self.LAMfixed: string += 'Lambda fixed'
+                return string
+
         self.model_selection = classo_model_selection()
-        self.solution = classo_solution()
 
 
     # This method is the way to solve the model selections contained in the object model_selection, with the formulation of 'formulation' and the data.
     def solve(self):
-        ''' Method that solve every model required in the attributes of the problem and update the attribute :obj:`problem.solution` with the characteristics of the solution.
-        '''
+
         data = self.data
         matrices = (data.X, data.C, data.y)
         solution = classo_solution()
@@ -424,17 +262,6 @@ Each class solution_... has its own method __repr__ that plot some graphs and/or
 
 '''
 class classo_solution:
-    ''' Class giving characteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
-
-
-    Attributes:
-        PATH (solution_PATH): Solution components of the model PATH
-        CV (solution_CV):  Solution components of the model CV
-        StabelSel (solution_StabSel): Solution components of the model StabSel
-        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
-
-    '''
     def __init__(self):
         self.PATH = 'not computed' #this will be filled with an object of the class 'solution_PATH' when the method solve() will be used.
         self.CV = 'not computed'  # will be an object of the class 'solution_PATH'
@@ -442,7 +269,7 @@ class classo_solution:
         self.LAMfixed = 'not computed'
 
     def __repr__(self):
-        return ("Running time : " + '\n'
+        return ("SPEEDNESS : " + '\n'
                                  'Running time for Path computation    : ' + self.PATH.__repr__() + '\n'
                 + 'Running time for Cross Validation    : ' + self.CV.__repr__() + '\n'
                 + 'Running time for Stability Selection : ' + self.StabSel.__repr__() + '\n'
@@ -452,17 +279,6 @@ class classo_solution:
 
 #Here, the main function used is pathlasso ; from the file compact_func
 class solution_PATH:
-    ''' Class giving characteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
-
-
-    Attributes:
-        PATH (solution_PATH): Solution components of the model PATH
-        CV (solution_CV):  Solution components of the model CV
-        StabelSel (solution_StabSel): Solution components of the model StabSel
-        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
-
-    '''
     def __init__(self, matrices, param, formulation):
         t0 = time()
 
@@ -505,17 +321,6 @@ class solution_PATH:
 
 #Here, the main function used is CV ; from the file cross_validation
 class solution_CV:
-    ''' Class giving characteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
-
-
-    Attributes:
-        PATH (solution_PATH): Solution components of the model PATH
-        CV (solution_CV):  Solution components of the model CV
-        StabelSel (solution_StabSel): Solution components of the model StabSel
-        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
-
-    '''
     def __init__(self, matrices, param, formulation):
         t0 = time()
 
@@ -567,17 +372,6 @@ class solution_CV:
 
 #Here, the main function used is stability ; from the file stability selection
 class solution_StabSel:
-    ''' Class giving characteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
-
-
-    Attributes:
-        PATH (solution_PATH): Solution components of the model PATH
-        CV (solution_CV):  Solution components of the model CV
-        StabelSel (solution_StabSel): Solution components of the model StabSel
-        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
-
-    '''
     def __init__(self, matrices, param, formulation):
         t0 = time()
 
@@ -595,7 +389,7 @@ class solution_StabSel:
             lam = param.lam
 
         # Algorithmic method choosing
-        numerical_method = choose_numerical_method(param.numerical_method, 'StabSel', param.formulation,
+        numerical_method = choose_numerical_method(param.numerical_method, 'SS', param.formulation,
                                                    SSmethod=param.method, lam=lam)
         param.numerical_method = numerical_method
 
@@ -615,7 +409,7 @@ class solution_StabSel:
         self.distribution_path = distribution_path
         self.lambdas_path = lambdas
         self.selected_param,self.to_label = selected_param(self.distribution, param.threshold,param.threshold_label)
-        self.threshold = param.threshold
+
         self.refit = min_LS(matrices, self.selected_param)
         self.time = time() - t0
 
@@ -652,7 +446,6 @@ class solution_StabSel:
             p1, p2 = mpatches.Patch(color='red', label='selected variables'), mpatches.Patch(color='blue',
                                                                                               label='unselected variables')
             plt.legend(handles=[p1, p2])
-            plt.axhline(y=self.threshold,color='g')
             plt.title("Distribution of probability of apparence as a function of lambda"), plt.show()
 
         plt.bar(range(len(self.refit)), self.refit), plt.title(
@@ -661,17 +454,6 @@ class solution_StabSel:
 
 #Here, the main function used is Classo ; from the file compact_func
 class solution_LAMfixed:
-    ''' Class giving characteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
-
-
-    Attributes:
-        PATH (solution_PATH): Solution components of the model PATH
-        CV (solution_CV):  Solution components of the model CV
-        StabelSel (solution_StabSel): Solution components of the model StabSel
-        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
-
-    '''
     def __init__(self, matrices, param, formulation):
         t0 = time()
         self.formulation = formulation
@@ -709,71 +491,14 @@ class solution_LAMfixed:
         return (str(round(self.time, 3)) + "s")
 
 
-'''
-    PATH (type : solution_PATH): object with as attributes :
-        BETAS
-        SIGMAS
-        LAMBDAS
-        method
-        save
-        formulation
-        time
-
-    CV (type : solution_CV): object with as attributes :
-        beta
-        sigma
-        xGraph
-        yGraph
-        standard_error
-        index_min
-        index_1SE
-        selected_param
-        refit
-        formulation
-        time
-
-    StabSel (type : solution_StabSel) : object with as attributes :
-        distribution
-        lambdas_path
-        selected_param
-        to_label
-        refit
-        formulation
-        time
-
-    LAMfixed (type : solution_LAMfixed) : object with as attributes :
-        beta
-        sigma
-        lambdamax
-        selected_param
-        refit
-        formulation
-        time
-'''
+''' Annex function in order to choose the right numerical method, if the one gave is invalid'''
 
 
-
-
-
-def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=None):
-    ''' Annex function in order to choose the right numerical method, if the given one is invalid
-
-    Args:
-        method (str) :
-        model (str) :
-        formulation (classo_formulation) :
-        StabSelmethod (str, optional) :
-        lam (float, optional) :
-
-    Returns :
-        str : method that should be used.
-
-    '''
-
+def choose_numerical_method(method, model, formulation, SSmethod=None, lam=None):
     if (formulation.classification): return ('ODE')
 
     # cases where we use classo at a fixed lambda    
-    elif (model == 'LAM') or (model == 'StabSel' and StabSelmethod == 'lam'):
+    elif (model == 'LAM') or (model == 'SS' and SSmethod == 'lam'):
 
         if formulation.concomitant:
             if not method in ['ODE', '2prox']:
