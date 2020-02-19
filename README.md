@@ -71,19 +71,20 @@ pip install time
 ##  Different type of problem
 #### Least square :             
 
-<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\arg&space;\min_{\beta \in R^d}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0" />
 
 #### Huber  :                   
 
-<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1"  />
+<img src="https://latex.codecogs.com/gif.latex?\arg&space;\min_{\beta \in R^d}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0"  />
 
 #### Concomitant Least square : 
 
-<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1"  />
+<img src="https://latex.codecogs.com/gif.latex?\arg&space;\min_{\beta \in R^d,&space;\sigma>0}&space;\frac{||&space;X\beta-y&space;||^2}{\sigma}&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0"  />
 
 #### Concomitant Huber :        
 
-<img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
+<img src="https://latex.codecogs.com/gif.latex?\arg&space;\min_{\beta \in R^d,&space;\sigma>0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0" />
+
 
 
 --------
@@ -357,7 +358,7 @@ This algorithm is the most general algorithm and can solve all regression proble
 It makes use of the proximity operators of the perspective of the LS objective (see [4,5])
 The Huber problem with concomitant scale [R4] is reformulated as scaled Lasso problem 
 with the mean shift (see [6]) and thus solved in (n + d) dimensions. 
-
+ 
 
 
 ## References 
