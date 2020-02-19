@@ -363,7 +363,7 @@ This method can solve problem [R1]. For the Huber problem [R3],
 P-PDS can solve the mean-shift formulation of the problem (see [6]).
 
 ### Projection-free primal-dual splitting method (PF-PDS):
-This algorithm is derived from [3] and also belongs to the class of 
+This algorithm is a special case of an algorithm proposed in [3] (Eq.4.5) and also belongs to the class of 
 proximal splitting algorithms. The algorithm does not require projection operators 
 which may be beneficial when C has a more complex structure. In the absence of a linear constraint, 
 the method reduces to the Forward-Backward-Forward scheme. This method can solve problem [R1]. 
@@ -382,9 +382,9 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 
 * [1] B. R. Gaines, J. Kim, and H. Zhou, [Algorithms for Fitting the Constrained Lasso](https://www.tandfonline.com/doi/abs/10.1080/10618600.2018.1473777?journalCode=ucgs20), J. Comput. Graph. Stat., vol. 27, no. 4, pp. 861–871, 2018.
 
-* [2] L. Briceno-Arias, S.L. Rivera, [A Projected Primal–Dual Method for Solving Constrained Monotone Inclusions](https://link.springer.com/article/10.1007/s10957-018-1430-2?shared-article-renderer), J. Optim. Theory Appl., vol 180, Issue 3 March 2019
+* [2] L. Briceno-Arias, S.L. Rivera, [A Projected Primal–Dual Method for Solving Constrained Monotone Inclusions](https://link.springer.com/article/10.1007/s10957-018-1430-2?shared-article-renderer), J. Optim. Theory Appl., vol. 180, Issue 3, March 2019.
 
-* [3] P. L. Combettes and J.C. Pesquet, [Primal-Dual Splitting Algorithm for Solving Inclusions with Mixtures of Composite, Lipschitzian, and Parallel-Sum Type Monotone Operators](https://arxiv.org/pdf/1107.0081.pdf), Set-Valued and Variational Analysis, vol 20, pp 307--330 2012
+* [3] P. L. Combettes and J.C. Pesquet, [Primal-Dual Splitting Algorithm for Solving Inclusions with Mixtures of Composite, Lipschitzian, and Parallel-Sum Type Monotone Operators](https://arxiv.org/pdf/1107.0081.pdf), Set-Valued and Variational Analysis, vol. 20, pp 307--330, 2012.
 
 * [4] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
 
