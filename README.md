@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # c-lasso, a Python package for sparse linear regression with linear equality constraints
 
 ## Table of Contents
@@ -9,44 +8,6 @@
 * [Two main functions](#two-main-functions)
 * [Little functions](#little-functions)
 * [Example](#example)
-=======
-# c-lasso: a Python package for constrained sparse regression and classification 
-=========
-
-c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
-constraints on the model parameters. The forward model is assumed to be: 
-
-<img src="https://latex.codecogs.com/gif.latex?y&space;=X\beta&space;+\sigma&space;\epsilon&space;\qquad\txt{s.t.}\qquad&space;C\beta=0" /> 
-
-Here, y and X are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). C is a general constraint matrix. The vector &beta; comprises the unknown coefficients and &sigma; an 
-unknown scale.
-
-The package handles several different estimators for inferring &beta; (and &sigma;), including 
-the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimation with linear equality constraints.
-Several different algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve 
-the underlying convex optimization problems.
-
-We also include two model selection strategies for determining the sparsity of the model parameters: k-fold cross-validation and stability selection.   
-
-This package is intended to fill the gap between popular python tools such as [scikit-learn](https://scikit-learn.org/stable/) which CANNOT solve sparse constrained problems and general-purpose optimization solvers that do not scale well for the considered problems.
-
-Below we show several use cases of the package, including an application of sparse log-contrast
-regression tasks for compositional microbiome data.
-
-The code builds on results from several papers which can be found in the [References](#references).
-
-## Table of Contents
-
-* [Installation](#installation)
-* [Regression and classification problems](#regression-and-classification-problems)
-* [Getting started](#getting-started)
-* [Log-contrast regression for microbiome data](#log-contrast-regression-for-microbiome-data)
-* [Two main functions](#two-main-functions)
-* [Misc functions](#little-functions)
-* [Optimization schemes](#optimization-schemes)
-* [References](#references)
-
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
 
 
 ##  How to use the package
@@ -87,11 +48,6 @@ pip install time
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
 
-<<<<<<< HEAD
-=======
-This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) &beta; vector and 
-the scale &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
 
 
 ## Different methods for solving the problems
@@ -125,11 +81,7 @@ concomitant problem for another lambda, one can use the whole non-concomitant-
 path computed with the ODE method to then solve the concomitant-path.
 
 
-<<<<<<< HEAD
 ## Example on random data
-=======
-#### Basic example             
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
 
 Here is an example of use of one of the methods  : concomitant algorithm with theoretical lambda, tested on data generated randomly. 
 
@@ -154,21 +106,6 @@ FORMULATION : Concomitant
 MODEL SELECTION COMPUTED :  Stability selection, 
  
 STABILITY SELECTION PARAMETERS: method = first;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.9;  numerical_method = ODE
-<<<<<<< HEAD
-=======
-```
-As we have not specified any problem, algorithm, or model selection settings, this problem instance
-represents the *default* settings for a c-lasso instance: 
-- The problem is of regression type and uses formulation [R3], i.e. with concomitant scale estimation. 
-- The *default* optimization scheme is the path algorithm (see [Optimization schemes](#optimization-schemes) for further info). 
-- For model selection, stability selection at a theoretically derived &lambda; value is used (see [Reference](#references) [4] for details). Stability selection comprises a relatively large number of parameters. For a description of the settings, we refer to the more advanced examples below and the API.
-
-You can solve the corresponding c-lasso problem instance using
-
-```python
-problem.solve()
-```
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
 
 SPEEDNESS : 
 Running time for Cross Validation    : 'not computed'
@@ -183,15 +120,7 @@ Running time for Fixed LAM           : 'not computed'
 ![Ex1.3](figures/example1/Figure3.png)
 
 
-<<<<<<< HEAD
 Example of different settings (example2) : 
-=======
-#### Advanced example             
-
-In the next example, we show how one can specify different aspects of the problem 
-formulation and model selection strategy.
-
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
 ```python
 problem                                     = classo_problem(X,y,C)
 problem.formulation.huber                   = True
@@ -236,7 +165,7 @@ Running time for Fixed LAM           : 0.065s
 ![Ex2.5](figures/example2/Figure5.png)
 
 
-## Log-contrast regression for microbiome data
+## Example on microbiome data
 
 Here is now the result of running the file "example_COMBO" which uses microbiome data :  
 ```
@@ -328,7 +257,7 @@ Running time for Fixed LAM           : 0.024s
 ![Ex4.4](figures/examplePH/beta.png)
 
 
-## Details on the objects of the package: 
+## Details on the objects of the package : 
 
 ### Type classo_problem : 
 
@@ -336,7 +265,7 @@ Those objected will contains all the information about the problem
  
  #### 5 main attributes :
    - data (type : classo_data): 
-   the matrices X, C, y to solve a problem of type : <img src="https://latex.codecogs.com/gif.latex?y&space;=X\beta&space;+\sigma&space;\epsilon&space;\qquad\txt{s.t.}\qquad&space;C\beta=0" /> 
+   the matrices X, C, y to solve a problem of type : <img src="https://latex.codecogs.com/gif.latex?y&space;=X\beta&space;+\sigma&space;\epsilon&space;\qquad\txt{st.}\qquad&space;C\beta=0" /> 
      
    - formulation (type : classo_formulation) : 
    to know the formulation of the problem, robust ?  ; Jointly estimate sigma (Concomitant) ? , classification ? Default parameter is only concomitant.
@@ -484,58 +413,3 @@ Those objected will contains all the information about the problem
     - refit
     - formulation
     - time
-<<<<<<< HEAD
-=======
-
-
-## Optimization schemes
-
-The available problem formulations [R1-C2] require different algorithmic strategies for 
-efficiently solving the underlying optimization problem. We have implemented four 
-algorithms (with provable convergence guarantees) that vary in generality and are not 
-necessarily applicable to all problems. For each problem type, c-lasso has a default algorithm 
-setting that proved to be the fastest in our numerical experiments.
-
-### Path algorithms (Path-Alg) 
-This is the default algorithm for non-concomitant problems [R1,R3,C1,C2]. 
-The algorithm uses the fact that the solution path along &lambda; is piecewise-
-affine (as shown, e.g., in [1]). When Least-Squares is used as objective function,
-we derive a novel efficient procedure that allows to also derive the 
-solution for the concomitant problem [R2] along the path with little extra cost.
-
-### Projected primal-dual splitting method (P-PDS):
-Standard way to solve a convex minimisation problem with an addition of
-smooth and non-smooth function: Projected Proximal Gradient Descent. This
-method only works with the two non concomitants problems. For the huber
-problem, we use the second formulation.
-
-### Projection-free primal-dual splitting method (PF-PDS):
-Similar to the Projected Proximal Gradient Descent, but which does not involve
-a projection, which can be difficult to compute for some matrix C. Only for
-non concomitant problems.
-
-### Douglas-Rachford-type splitting method (DR)
-This algorithm is the most general algorithm and can solve all regression problems 
-[R1-R4]. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
-It makes use of the proximity operators of the perspective of the LS objective (see [4,5])
-The Huber problem with concomitant scale [R4] is reformulated as scaled Lasso problem 
-with the mean shift (see [6]) and thus solved in (n + d) dimensions. 
-
-
-
-## References 
-
-* [1] B. R. Gaines, J. Kim, and H. Zhou, [Algorithms for Fitting the Constrained Lasso](https://www.tandfonline.com/doi/abs/10.1080/10618600.2018.1473777?journalCode=ucgs20), J. Comput. Graph. Stat., vol. 27, no. 4, pp. 861–871, 2018.
-
-* [2] L. Briceno-Arias, S.L. Rivera, [A Projected Primal–Dual Method for Solving Constrained Monotone Inclusions](https://link.springer.com/article/10.1007/s10957-018-1430-2?shared-article-renderer), J. Optim. Theory Appl., vol 180, Issue 3 March 2019
-
-* [3] 
-
-* [4] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
-
-* [5] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), arXiv, 2019.
-
-* [6] A. Mishra and C. L. Müller, [Robust regression with compositional covariates](https://arxiv.org/abs/1909.04990), arXiv, 2019.
-
-
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
