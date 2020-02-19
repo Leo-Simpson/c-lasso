@@ -126,7 +126,7 @@ path computed with the ODE method to then solve the concomitant-path.
 
 
 ## Example on random data
-=======
+
 #### Basic example             
 
 
@@ -166,7 +166,7 @@ You can solve the corresponding c-lasso problem instance using
 problem.solve()
 ```
 
-``
+```
 SPEEDNESS : 
 Running time for Cross Validation    : 'not computed'
 Running time for Stability Selection : 2.15s
