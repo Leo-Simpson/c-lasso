@@ -96,10 +96,18 @@ the scale &sigma; in a concomitant fashion (see [References](#references) [4,5] 
 
 #### [C1] Contrained sparse classification with Square Hinge loss: 
 
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;l(y^TX\beta)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0" />
+where l is defined as :
+<img src="https://latex.codecogs.com/gif.latex?l(r)=\max(1-r,0)^2" />
+
 This formulation is similar to [R1] but adapted for classification tasks using the Square Hinge loss
 with (constrained) sparse &beta; vector estimation.
 
 #### [C2] Contrained sparse classification with Huberized Square Hinge loss:        
+
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;l_{\rho}(y^TX\beta)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;C\beta=0" />
+where l is defined as :
+<img src="https://latex.codecogs.com/gif.latex?l_{\rho}(r)&space;=&space;\begin{cases}&space;(1-r)^2&space;&\mbox{if&space;}&space;\rho&space;\leq&space;r&space;\leq&space;1&space;\\&space;(1-\rho)(1&plus;\rho-2r)&space;&\mbox{if&space;}&space;r&space;\leq&space;\rho&space;\\&space;0&space;&\mbox{if&space;}&space;r&space;\geq&space;1&space;\end{cases}" title="l_{\rho}(r) = \begin{cases} (1-r)^2 &\mbox{if } \rho \leq r \leq 1 \\ (1-\rho)(1+\rho-2r) &\mbox{if } r \leq \rho \\ 0 &\mbox{if } r \geq 1 \end{cases}" />
 
 This formulation is similar to [C1] but uses the Huberized Square Hinge loss for robust classification 
 with (constrained) sparse &beta; vector estimation.
