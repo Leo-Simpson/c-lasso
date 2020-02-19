@@ -62,8 +62,8 @@ pip install time
 
 ##  Regression and classification problems
 
-The c-lasso package can solve four different types of optimization problems: 
-four regression-type and two classification-type problems.
+The c-lasso package can solve six different types of estimation problems: 
+four regression-type and two classification-type formulations.
 
 #### [R1] Standard constrained Lasso regression:             
 
@@ -117,8 +117,8 @@ with (constrained) sparse &beta; vector estimation.
 
 #### Basic example             
 
-We begin with a basic example that shows how to run c-lasso on synthetic data. For convenience, the c-lasso package includes
-the routine ```random_data``` in order to generate a problem instance with normal data.
+We begin with a basic example that shows how to run c-lasso on synthetic data. The c-lasso package includes
+the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
 
 ```python
 n,d,d_nonzero,k,sigma =100,100,5,1,0.5
@@ -245,6 +245,10 @@ Running time for Fixed LAM           : 0.065s
 
 ## Log-contrast regression for microbiome data
 
+
+
+#### BMI prediction using the COMBO dataset 
+
 Here is now the result of running the file "example_COMBO" which uses microbiome data :  
 ```
 FORMULATION : Concomitant
@@ -347,19 +351,23 @@ setting that proved to be the fastest in our numerical experiments.
 This is the default algorithm for non-concomitant problems [R1,R3,C1,C2]. 
 The algorithm uses the fact that the solution path along &lambda; is piecewise-
 affine (as shown, e.g., in [1]). When Least-Squares is used as objective function,
-we derive a novel efficient procedure that allows to also derive the 
-solution for the concomitant problem [R2] along the path with little extra cost.
+we derive a novel efficient procedure that allows us to also derive the 
+solution for the concomitant problem [R2] along the path with little extra computational overhead.
 
 ### Projected primal-dual splitting method (P-PDS):
-Standard way to solve a convex minimisation problem with an addition of
-smooth and non-smooth function: Projected Proximal Gradient Descent. This
-method only works with the two non concomitants problems. For the huber
-problem, we use the second formulation.
+This algorithm is derived from [2] and belongs to the class of 
+proximal splitting algorithms. It extends the classical Forward-Backward (FB) 
+(aka proximal gradient descent) algorithm to handle an additional linear equality constraint
+via projection. In the absence of a linear constraint, the method reduces to FB.
+This method can solve problem [R1]. For the Huber problem [R3], 
+P-PDS can solve the mean-shift formulation of the problem (see [6]).
 
 ### Projection-free primal-dual splitting method (PF-PDS):
-Similar to the Projected Proximal Gradient Descent, but which does not involve
-a projection, which can be difficult to compute for some matrix C. Only for
-non concomitant problems.
+This algorithm is derived from [3] and also belongs to the class of 
+proximal splitting algorithms. The algorithm does not require projection operators 
+which may be beneficial when C has a more complex structure. In the absence of a linear constraint, 
+the method reduces to the Forward-Backward-Forward scheme. This method can solve problem [R1]. 
+For the Huber problem [R3], PF-PDS can solve the mean-shift formulation of the problem (see [6]).
 
 ### Douglas-Rachford-type splitting method (DR)
 This algorithm is the most general algorithm and can solve all regression problems 
@@ -376,7 +384,7 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 
 * [2] L. Briceno-Arias, S.L. Rivera, [A Projected Primal–Dual Method for Solving Constrained Monotone Inclusions](https://link.springer.com/article/10.1007/s10957-018-1430-2?shared-article-renderer), J. Optim. Theory Appl., vol 180, Issue 3 March 2019
 
-* [3] 
+* [3] P. L. Combettes and J.C. Pesquet, [Primal-Dual Splitting Algorithm for Solving Inclusions with Mixtures of Composite, Lipschitzian, and Parallel-Sum Type Monotone Operators](https://arxiv.org/pdf/1107.0081.pdf), Set-Valued and Variational Analysis, vol 20, pp 307--330 2012
 
 * [4] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
 
