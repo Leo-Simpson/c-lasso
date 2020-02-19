@@ -181,16 +181,17 @@ Here, we only used stability selection as *default* model selection strategy.
 The command also allows you to inspect the computed stability profile for all variables 
 at the theoretical &lambda; 
 
-![Ex1.1](figures/example1/Figure1.png)
+![1.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/example1/StabSel.png)
 
 and the entire &lambda; path (as we have used the path algorithm for optimization). We can see that stability selection
 can identify the five true non-zero entries in the &beta; vector
 
-![Ex1.2](figures/example1/Figure2.png)
+![StabSel-path](https://github.com/Leo-Simpson/Figures/blob/master/example1/StabSel-path.png)
+
 
 The refitted &beta; values on the selected support are also displayed in the next plot
 
-![Ex1.3](figures/example1/Figure3.png)
+![beta](https://github.com/Leo-Simpson/Figures/blob/master/example1/beta.png)
 
 
 #### Advanced example             
@@ -231,15 +232,9 @@ Running time for Fixed LAM           : 0.065s
 ```
 
 
-![Ex2.1](figures/example2/Figure1.png)
+![2.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/example2/StabSel.png)
 
-![Ex2.2](figures/example2/Figure2.png)
-
-![Ex2.3](figures/example2/Figure3.png)
-
-![Ex2.4](figures/example2/Figure4.png)
-
-![Ex2.5](figures/example2/Figure5.png)
+![2.StabSel-path](https://github.com/Leo-Simpson/Figures/blob/master/example2/StabSel-path.png)
 
 
 ## Log-contrast regression for microbiome data
