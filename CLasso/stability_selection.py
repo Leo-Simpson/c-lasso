@@ -22,7 +22,7 @@ There is three different stability selection methods implemented here : 'first' 
 
 
 
-def stability(matrix,StabSelmethod = 'first',numerical_method = "ODE",
+def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg",
               lam = 0.1, q = 10 ,B = 50, percent_nS = 0.5 ,
               formulation = 'LS', seed = 1, rho=1.345,
               rho_classification=-1.,

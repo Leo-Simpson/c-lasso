@@ -12,16 +12,16 @@ The first function compute a solution of a Lasso problem for a given lambda. The
 
 
 def algo_Concomitant_Huber(pb,lam,e=1.):
-    pb_type = pb.type      # 2prox, ODE
+    pb_type = pb.type      # can be 'Path-Alg' or 'DR'
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     lamb,rho  = lam * pb.lambdamax, pb.rho
     regpath = pb.regpath
     # Only alternative to 2prox : one can use the other formulation of the problem which shows that we can augment the data and then simply solve a concomitant problem
     # (we do that with the method ODE for example becasue it is pretty efficient). Unfortunately we can do that only for fixed lambda and not for any path algorithms
     # because the augmentation of the data required depends on lambda.
-    if pb_type=='ODE' and not regpath:
+    if pb_type=='Path-Alg' and not regpath:
         matrix_aug = (np.concatenate((A,lamb/(2*rho)*np.eye(m)),axis=1),np.concatenate((C,np.zeros((k,m))),axis=1),y)
-        pb_aug = problem_Concomitant(matrix_aug, 'ODE', e=e)
+        pb_aug = problem_Concomitant(matrix_aug, 'Path-Alg', e=e)
         beta,s = algo_Concomitant(pb_aug, lamb / pb_aug.lambdamax)
         s = s / np.sqrt(e)
         beta= beta[:d]
@@ -41,7 +41,7 @@ def algo_Concomitant_Huber(pb,lam,e=1.):
 
 
     #2prox
-    if (pb_type == '2prox'):
+    if (pb_type == 'DR'):
         for i in range(pb.N):
             nv_b, nv_s = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x-xbar), (xs+nu)/2
             if (i>0 and LA.norm(b-nv_b)*Anorm +LA.norm(s-nv_s)<2*tol):

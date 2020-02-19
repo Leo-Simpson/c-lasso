@@ -8,20 +8,6 @@ from CLasso.cross_validation import CV
 from CLasso.stability_selection import stability, selected_param
 import matplotlib.patches as mpatches
 
-'''
-We build a class called classo_problem, that will contains all the information about the problem, settled in other objects : 
-       - data : the matrices X, C, y to solve a problem of type y = X beta + sigma.epsilon under the constraint C.beta = 0
-        
-       - problem formulation : to know the formulation of the problem, robust ?  ; Jointly estimate sigma (Concomitant) ? , classification ? Default parameter is only concomitant
-       
-       - model selection : Path computation ; Cross Validation ; stability selection ; or Lasso problem for a fixed lambda. also contains the parameters of each of those model selection
-       
-       - solution : once we used the method .solve() , this componant will be added, with the solutions of the model-selections selected, with respect to the problem formulation selected
-
-The method __repr__ allows to print this object in a way that it prints the important informations about what we are solving. 
-
-The class of 'model selection' is defined inside the class 'problem' because we will never use it outside the class. 
-'''
 
 
 class classo_data:
@@ -154,7 +140,8 @@ class PATHparameters:
     '''object parameters to compute the lasso-path.
 
     Attributes:
-        numerical_method (str) : name of the numerical method that is used, can be : 'here!'
+        numerical_method (str) : name of the numerical method that is used, it can be :
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
             Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
         n_active (int or bool): if it is an integer, then the algo stop computing the path when n_active variables are actives. then the solution does not change from this point.
@@ -168,7 +155,6 @@ class PATHparameters:
     def __init__(self):
         self.formulation = 'not specified'
         self.numerical_method = 'choose'
-        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
         self.n_active = False
         delta= 2.
         nlam = 40
@@ -186,7 +172,8 @@ class CVparameters:
         seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random vectors
             Default value : None
 
-        numerical_method (str) : name of the numerical method that is used, can be : 'here!'
+        numerical_method (str) : name of the numerical method that is used, can be :
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
             Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
         lambdas (numpy.ndarray) : list of lambdas for computinf lasso-path for cross validation on lambda.
@@ -203,7 +190,6 @@ class CVparameters:
         self.seed = None
         self.formulation = 'not specified'
         self.numerical_method = 'choose'
-        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
         self.Nsubset = 5  # Number of subsets used
         self.lambdas = np.linspace(1., 1e-3, 500)
@@ -221,7 +207,8 @@ class StabSelparameters:
         seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random vectors
             Default value : None
 
-        numerical_method (str) : name of the numerical method that is used, can be : 'here!'
+        numerical_method (str) : name of the numerical method that is used, can be :
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
             Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
         lam (float or str) : (only used if :obj:`method` = 'lam') lam for which the lasso should be computed.
@@ -265,7 +252,6 @@ class StabSelparameters:
         self.seed = None
         self.formulation = 'not specified'
         self.numerical_method = 'choose'
-        # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
         self.method = 'first'  # Can be 'first' ; 'max' or 'lam'
         self.B = 50
@@ -291,7 +277,8 @@ class LAMfixedparameters:
             '''object parameters to compute the lasso for a fixed lambda
 
             Attributes:
-                numerical_method (str) : name of the numerical method that is used, can be : 'here!'
+                numerical_method (str) : name of the numerical method that is used, can be :
+                    'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
                     Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
                 lam (float or str) : lam for which the lasso should be computed.
@@ -311,7 +298,6 @@ class LAMfixedparameters:
                 self.numerical_method = 'choose'
                 self.true_lam = True
                 self.theoretical_lam = 0.0
-                # can be : '2prox' ; 'ODE' ; 'Noproj' ; 'FB' ; and any other will make the algorithm decide
 
             def __repr__(self): return ('lam = ' + str(self.lam)
                                         + ';  theoretical_lam = ' + str(round(self.theoretical_lam, 4))
@@ -411,18 +397,6 @@ class classo_problem:
                 )
 
 
-
-'''
-Here is now the class of the object 'solution' that will be filled when the method solve() will be used. 
-It does not contain much for now, but it has always four attributes : PATH ; CV ; StabSel ; LAMfixed . 
-
-It corresponds to the 4 model selections implemented here. Default parameter is that we only compute StabSel with its own default parameters
-
-It also has a metho __repr__ which gives the final plot of the solution is the respectives plots of each model selection + the running time for each.
-
-Each class solution_... has its own method __repr__ that plot some graphs and/or write something. 
-
-'''
 class classo_solution:
     ''' Class giving characteristics of the solution of the model_selection that is asked.
                                       Before using the method solve() , its componant are empty/null.
@@ -596,7 +570,7 @@ class solution_StabSel:
 
         # Algorithmic method choosing
         numerical_method = choose_numerical_method(param.numerical_method, 'StabSel', param.formulation,
-                                                   SSmethod=param.method, lam=lam)
+                                                   StabSelmethod=param.method, lam=lam)
         param.numerical_method = numerical_method
 
         # Compute the distribution
@@ -631,6 +605,7 @@ class solution_StabSel:
         Dunselected[unselected] = D[unselected]
         plt.bar(range(len(Dselected)), Dselected, color='r', label='selected variables')
         plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected variables')
+        plt.axhline(y=self.threshold, color='g',label='threshold')
         if (type(label) != bool): plt.xticks(self.to_label, label[self.to_label], rotation=30)
         plt.legend(), plt.title("Distribution of Stability Selection"), plt.show()
         print("SELECTED VARIABLES : ")
@@ -770,36 +745,36 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
 
     '''
 
-    if (formulation.classification): return ('ODE')
+    if (formulation.classification): return ('Path-Alg')
 
     # cases where we use classo at a fixed lambda    
     elif (model == 'LAM') or (model == 'StabSel' and StabSelmethod == 'lam'):
 
         if formulation.concomitant:
-            if not method in ['ODE', '2prox']:
+            if not method in ['Path-Alg', 'DR']:
                 if (lam > 0.05):
-                    return 'ODE'
+                    return 'Path-Alg'
                 else:
-                    return '2prox'
+                    return 'DR'
 
         else:
-            if not method in ['ODE', '2prox', 'FB', 'Noproj']:
+            if not method in ['Path-Alg', 'DR', 'P-PDS', 'PF-PDS']:
                 if (lam > 0.1):
-                    return 'ODE'
+                    return 'Path-Alg'
                 else:
-                    return '2prox'
+                    return 'DR'
 
 
 
     # cases where we use pathlasso
     else:
         if formulation.classification:
-            if not method in ['ODE', '2prox', 'FB']: return 'ODE'
+            if not method in ['Path-Alg', 'DR', 'P-PDS']: return 'Path-Alg'
 
         elif formulation.concomitant:
-            if not method in ['ODE', '2prox']: return 'ODE'
+            if not method in ['Path-Alg', 'DR']: return 'Path-Alg'
 
         else:
-            if not method in ['ODE', '2prox', 'FB', 'Noproj']: return 'ODE'
+            if not method in ['Path-Alg', 'DR', 'P-PDS', 'PF-PDS']: return 'Path-Alg'
 
     return method

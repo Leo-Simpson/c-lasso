@@ -13,16 +13,16 @@ The first function compute a solution of a Lasso problem for a given lambda. The
 
 
 def algo_Concomitant(pb,lam):
-    pb_type = pb.type                          # ODE, 2prox
+    pb_type = pb.type     # can be 'Path-Alg' or 'DR'
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     sigmax = LA.norm(y)*np.sqrt(2)
-    #ODE
+    #Path algorithm
     # here we compute the path algo until our lambda, and just take the last beta
 
     # here we use our path algorithm for concomitant problem, and then only takes the last beta.
     # Actually, the function solve_path has the argument concomitant= 'fix_lam' so it means it will directly stop when it has to.
     # Then we only have to finc the solution between the last beta computed and the one before.
-    if(pb_type == 'ODE'):
+    if(pb_type == 'Path-Alg'):
         (beta1,beta2), (s1,s2), (r1,r2) = solve_path((A,C,y),lam,concomitant = 'fix_lam')
         dr,ds = r1-r2,s1-s2
         teta  = root_2(LA.norm(dr)**2-ds**2 ,np.vdot(dr,r2)-s2*ds,LA.norm(r2)**2-s2**2)
@@ -44,7 +44,7 @@ def algo_Concomitant(pb,lam):
     xs,nu,o,xbar,x= pb.init
 
     #2prox
-    if (pb_type == '2prox' ):
+    if (pb_type == 'DR' ):
         for i in range(pb.N):
             nv_b, nv_s = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x-xbar), (xs+nu)/2
             if (i>0 and LA.norm(b-nv_b)+LA.norm(s-nv_s)/Anorm <2*tol):
@@ -72,7 +72,7 @@ def pathalgo_Concomitant(pb,path,n_active=False,e=1.):
     n,d,k  = pb.dim
     BETA,SIGMA,tol = [],[],pb.tol
 
-    if(pb.type=='ODE'):
+    if(pb.type=='Path-Alg'):
         y=pb.matrix[2]
         sigmax= LA.norm(y)
         X,LAM,R = solve_path(pb.matrix,path[-1],concomitant = 'path',n_active=n_active)

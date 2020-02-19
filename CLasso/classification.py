@@ -4,7 +4,7 @@ import numpy.linalg as LA
 
 
 '''
-Main function that solve the Least square problem for all lambda using the ODE, which is describe in the paper : "Algorithms for Fitting the Constrained Lasso"
+Main function that solve the Least square problem for all lambda using the Path-Algo, which is describe in the paper : "Algorithms for Fitting the Constrained Lasso"
 
 In all the code, capital letter variable are lists that contains the small variable 
 

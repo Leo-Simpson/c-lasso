@@ -15,12 +15,11 @@ The parameters are lam (lambda/lambdamax, in [0,1]) and pb, which has to be a 'p
 
 
 def algo_LS(pb,lam):
-    
-    pb_type = pb.type   # can be : ODE, cvx, Noproj, FB or 2prox
+    pb_type = pb.type  # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
     # ODE
     # here we compute the path algo until our lambda, and just take the last beta
-    if(pb_type == 'ODE'):
+    if(pb_type == 'Path-Alg'):
         BETA = solve_path(pb.matrix, lam)[0]
         return(BETA[-1])
     
@@ -49,7 +48,7 @@ def algo_LS(pb,lam):
 
     # NO PROJ
     
-    if (pb_type == 'Noproj'):     # y1 --> S ; p1 --> p . ; p2 --> y2
+    if (pb_type == 'PF-PDS'):     # y1 --> S ; p1 --> p . ; p2 --> y2
         (x,v) = pb.init
         for i in range(pb.N):    
             
@@ -75,7 +74,7 @@ def algo_LS(pb,lam):
 
     #FORARD BACKWARD
     
-    if (pb_type=='FB'):
+    if (pb_type=='P-PDS'):
         xbar,x,v = pb.init
         for i in range(pb.N):                   
             grad = (AtA.dot(x)-Aty)
@@ -102,7 +101,7 @@ def algo_LS(pb,lam):
     w                 = w /(2*lam)
     mu,ls, c, root    = pb.mu,[], pb.c, 0.
      # 2 PROX  
-    if (pb_type=='2prox'):
+    if (pb_type=='DR'):
         
         Q1,Q2  = QQ(2*gamma/(mu-1),A)
         QA,qy = Q1.dot(A), Q1.dot(y)
@@ -126,30 +125,7 @@ def algo_LS(pb,lam):
         print('NO CONVERGENCE')
         return(b)  
  
-    
-#     if (pb_type=='2prox_old'):
-#         Q1,Q2  = QQ(c,A) 
-#         QA,qy = Q1.dot(A), Q1.dot(y)
-        
-#         qo,xbar,x = pb.init 
-#         proxLS = 1/(1+2*gamma/c)
-        
-#         QA_mult = QA*(2*mu*proxLS-mu)
-#         qy_mult = qy*(mu-mu*proxLS)
-        
-#         for i in range(pb.N):
-#             nv_b = x-QA.dot(x)+qo - Q2.dot(x-xbar)
-#             if (i%2==1 and LA.norm(b-nv_b)<tol): 
-#                 if (regpath):return(b,(qo,xbar,x)) 
-#                 else :       return(b)          
-#             b = nv_b
-             
-#             qo = qo*(1-mu*proxLS)+QA_mult.dot(b)+qy_mult
-            
-#             xbar,x = xbar+mu*(prox(2*b-xbar,w,zerod)-b) ,  x+mu*(Proj.dot(2*b-x)-b)
-    
-#         print('NO CONVERGENCE')
-#         return(b)  
+
     
 '''
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or with the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.
@@ -158,7 +134,7 @@ This function compute the the solution for a given path of lam : by calling the 
 def pathalgo_LS(pb,path,n_active=False,return_sp_path=False):
     n = pb.dim[0]
     BETA,tol = [],pb.tol
-    if(pb.type == 'ODE'):
+    if(pb.type == 'Path-Alg'):
         beta,sp_path = solve_path(pb.matrix,path[-1],n_active=n_active)
         if (return_sp_path): return(beta,sp_path) # in the method ODE, we only compute the solution for breaking points. We can stop here if return_sp_path=True
         else : # else, we do a little manipulation to interpolated the value of beta between those points, as we know beta is affine between those breaking points.
@@ -217,8 +193,8 @@ class problem_LS :
         
         (m,d,k) = self.dim
         
-        if(algo=='FB') : self.init = np.zeros(d), np.zeros(d), np.zeros(k)
-        elif (algo=='Noproj')         : self.init = np.zeros(d), np.zeros(k)
+        if(algo=='P-PDS') : self.init = np.zeros(d), np.zeros(d), np.zeros(k)
+        elif (algo=='PF-PDS')         : self.init = np.zeros(d), np.zeros(k)
         else                        : self.init = np.zeros(d), np.zeros(d), np.zeros(d)
         self.tol = 1e-6 
          
@@ -230,8 +206,8 @@ class problem_LS :
         self.Aty= (self.matrix[0].T).dot(self.matrix[2])
         self.lambdamax = 2*LA.norm(self.Aty,np.infty)
         self.gam = 1.
-        self.tau = 0.5         # equation for the convergence of Noproj and LS algorithms : gam + tau < 1
-        if (algo in ['2prox_old','2prox']): self.gam = self.dim[1]
+        self.tau = 0.5         # equation for the convergence of 'PF-PDS' and LS algorithms : gam + tau < 1
+        if (algo =='DR'): self.gam = self.dim[1]
 
 
     #this is a method of the class pb that is used to computed the expensive multiplications only once. (espacially usefull for warm start. )

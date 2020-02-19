@@ -12,25 +12,25 @@ from CLasso.huber_classification import solve_huber_cl_path, pathalgo_huber_cl, 
 Classo and pathlasso are the main functions, they can call every algorithm acording to the method and formulation required
 '''
 
+# can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
-
-def Classo(matrix,lam,typ = 'LS', meth='2prox', rho = 1.345, get_lambdamax = False, true_lam=False, e=1., rho_classification=-1.):
+def Classo(matrix,lam,typ = 'LS', meth='DR', rho = 1.345, get_lambdamax = False, true_lam=False, e=1., rho_classification=-1.):
     if(typ=='Concomitant'):
-        if not meth in ['ODE','2prox']: meth='2prox'
+        if not meth in ['Path-Alg', 'DR']: meth='DR'
         pb = problem_Concomitant(matrix,meth,e=e)
         if (true_lam): beta,s = algo_Concomitant(pb,lam/pb.lambdamax)
         else : beta, s = algo_Concomitant(pb, lam)
         s = s/np.sqrt(e)
 
     elif(typ=='Concomitant_Huber'):
-        if not meth in ['ODE','2prox']: meth='2prox'
+        if not meth in ['Path-Alg', 'DR']: meth='DR'
         pb  = problem_Concomitant_Huber(matrix,meth,rho,e=e)
         if (true_lam): beta,s = algo_Concomitant_Huber(pb,lam/pb.lambdamax,e=e)
         else : beta, s = algo_Concomitant_Huber(pb, lam,e=e)
 
 
     elif(typ=='Huber'):
-        if not meth in ['ODE','2prox','FB','Noproj','cvx']: meth = 'ODE'
+        if not meth in ['Path-Alg', 'P-PDS' , 'PF-PDS' , 'DR']: meth = 'ODE'
         pb = problem_Huber(matrix,meth,rho)
         if (true_lam): beta = algo_Huber(pb,lam/pb.lambdamax)
         else : beta = algo_Huber(pb, lam)
@@ -47,7 +47,7 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox', rho = 1.345, get_lambdamax = Fal
 
 
     else: # LS
-        if not meth in ['ODE','2prox','FB','Noproj','cvx']: meth='2prox'
+        if not meth in ['Path-Alg', 'P-PDS' , 'PF-PDS' , 'DR']: meth='DR'
         pb = problem_LS(matrix,meth)
         if (true_lam) : beta = algo_LS(pb,lam/pb.lambdamax)
         else : beta = algo_LS(pb,lam)
@@ -59,7 +59,7 @@ def Classo(matrix,lam,typ = 'LS', meth='2prox', rho = 1.345, get_lambdamax = Fal
     else              : return(beta)
 
 
-def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE',rho = 1.345, true_lam = False, e= 1.,return_sigm= False,rho_classification=-1):
+def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='Path-Alg',rho = 1.345, true_lam = False, e= 1.,return_sigm= False,rho_classification=-1):
     if (type(lambdas)!= bool):
         if (lambdas[0]<lambdas[-1]): lambdas = [lambdas[i] for i in range(len(lambdas)-1,-1,-1)]  # reverse the list if needed
     else: lambdas = np.linspace(1.,lamin,100)
@@ -78,7 +78,7 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='ODE'
         S=np.array(S)/np.sqrt(e)
 
     elif(typ=='Concomitant_Huber'):
-        meth='2prox'
+        meth='DR'
         pb = problem_Concomitant_Huber(matrix,meth,rho)
         lambdamax = pb.lambdamax
         #if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]

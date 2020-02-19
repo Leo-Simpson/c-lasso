@@ -14,7 +14,7 @@ The first function compute a solution of a Lasso problem for a given lambda. The
 
 def algo_Huber(pb,lam, compute=True):
     
-    pb_type = pb.type   # ODE, FB, cvx
+    pb_type = pb.type    # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
     
     
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix        
@@ -24,18 +24,18 @@ def algo_Huber(pb,lam, compute=True):
     #ODE
     # here we compute the path algo until our lambda, and just take the last beta
     
-    if(pb_type == 'ODE'):                         
+    if(pb_type == 'Path-Alg'):
         beta = solve_huber_path((A,C,y), lam,rho)[0]
         return(beta[-1])
 
     # 2 prox :
     regpath = pb.regpath
     r = lamb / (2 * rho)
-    if (pb_type == '2prox'):
+    if (pb_type == 'DR'):
         Ahuber = np.concatenate((A, r * np.eye(len(A))), axis=1)
         Chuber = np.concatenate((C, np.zeros((len(C), len(y)))), axis=1)
         matrices_huber = (Ahuber, Chuber, y)
-        prob = problem_LS(matrices_huber, '2prox')
+        prob = problem_LS(matrices_huber, 'DR')
         prob.regpath = regpath
         if (len(pb.init) == 3): prob.init = pb.init
         if not (regpath): return (algo_LS(prob, lamb / prob.lambdamax)[:d])
@@ -65,7 +65,7 @@ def algo_Huber(pb,lam, compute=True):
     # vectors usefull to compute the prox of f(b)= sum(wi |bi|)
     
     #FORWARD BACKWARD
-    if (pb_type=='FB'):
+    if (pb_type=='P-PDS'):
         
         for i in range(pb.N):                        
             grad = (AtA.dot(x)-Aty)                  
@@ -90,7 +90,7 @@ def algo_Huber(pb,lam, compute=True):
         
     # NO PROJ
     
-    if (pb_type == 'Noproj'):     # y1 --> S ; p1 --> p . ; p2 --> y2
+    if (pb_type == 'PF-PDS'):     # y1 --> S ; p1 --> p . ; p2 --> y2
         for i in range(pb.N):    
             grad = (AtA.dot(x)-Aty)
             
@@ -132,7 +132,7 @@ This function compute the the solution for a given path of lam : by calling the 
 def pathalgo_Huber(pb,path,n_active=False):
     n = pb.dim[0]
     BETA,tol = [],pb.tol
-    if(pb.type == 'ODE'):
+    if(pb.type == 'Path-Alg'):
         X,sp_path = solve_huber_path(pb.matrix,path[-1],pb.rho,n_active)
         # we do a little manipulation to interpolated the value of beta between breaking points, as we know beta is affine between those those points.
         i=0
