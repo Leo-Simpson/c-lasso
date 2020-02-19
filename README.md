@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # c-lasso, a Python package for sparse linear regression with linear equality constraints
 
 ## Table of Contents
@@ -9,9 +8,9 @@
 * [Two main functions](#two-main-functions)
 * [Little functions](#little-functions)
 * [Example](#example)
-=======
+
 # c-lasso: a Python package for constrained sparse regression and classification 
-=========
+
 
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
 constraints on the model parameters. The forward model is assumed to be: 
@@ -46,7 +45,6 @@ The code builds on results from several papers which can be found in the [Refere
 * [Optimization schemes](#optimization-schemes)
 * [References](#references)
 
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
 
 
 ##  How to use the package
@@ -87,11 +85,12 @@ pip install time
 
 <img src="https://latex.codecogs.com/gif.latex?\min_{C\beta=0}&space;h_{\rho}(\frac{X\beta-y}{\sigma}&space;)&space;&plus;&space;n\sigma&space;&plus;&space;\lambda&space;||\beta||_1" />
 
-<<<<<<< HEAD
-=======
+
+--------
+
 This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) &beta; vector and 
 the scale &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
+
 
 
 ## Different methods for solving the problems
@@ -125,11 +124,11 @@ concomitant problem for another lambda, one can use the whole non-concomitant-
 path computed with the ODE method to then solve the concomitant-path.
 
 
-<<<<<<< HEAD
+
 ## Example on random data
 =======
 #### Basic example             
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
+
 
 Here is an example of use of one of the methods  : concomitant algorithm with theoretical lambda, tested on data generated randomly. 
 
@@ -154,8 +153,6 @@ FORMULATION : Concomitant
 MODEL SELECTION COMPUTED :  Stability selection, 
  
 STABILITY SELECTION PARAMETERS: method = first;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.9;  numerical_method = ODE
-<<<<<<< HEAD
-=======
 ```
 As we have not specified any problem, algorithm, or model selection settings, this problem instance
 represents the *default* settings for a c-lasso instance: 
@@ -168,8 +165,8 @@ You can solve the corresponding c-lasso problem instance using
 ```python
 problem.solve()
 ```
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
 
+``
 SPEEDNESS : 
 Running time for Cross Validation    : 'not computed'
 Running time for Stability Selection : 2.15s
@@ -191,7 +188,7 @@ Example of different settings (example2) :
 In the next example, we show how one can specify different aspects of the problem 
 formulation and model selection strategy.
 
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
+
 ```python
 problem                                     = classo_problem(X,y,C)
 problem.formulation.huber                   = True
@@ -378,4 +375,3 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 * [6] A. Mishra and C. L. Müller, [Robust regression with compositional covariates](https://arxiv.org/abs/1909.04990), arXiv, 2019.
 
 
->>>>>>> 2f55453ce9e0d2ddf637fb1ff17ea7191ef1fe8a
