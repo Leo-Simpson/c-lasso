@@ -182,7 +182,7 @@ Running time for Fixed LAM           : 'not computed'
 
 
 ## Example of different settings (example2) : 
-=======
+
 #### Advanced example             
 
 In the next example, we show how one can specify different aspects of the problem 
@@ -357,6 +357,8 @@ It makes use of the proximity operators of the perspective of the LS objective (
 The Huber problem with concomitant scale [R4] is reformulated as scaled Lasso problem 
 with the mean shift (see [6]) and thus solved in (n + d) dimensions. 
 
+
+:math:`n^2`
 
 
 ## References 
