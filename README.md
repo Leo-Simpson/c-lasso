@@ -180,7 +180,7 @@ Running time for Fixed LAM           : 'not computed'
 ![Ex1.3](figures/example1/Figure3.png)
 
 
-<<<<<<< HEAD
+
 Example of different settings (example2) : 
 =======
 #### Advanced example             
@@ -246,7 +246,6 @@ STABILITY SELECTION PARAMETERS: method = lam;  lamin = 0.01;  lam = theoritical;
 LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 19.1709;  numerical_method = ODE
  
 PATH PARAMETERS: Npath = 40  n_active = False  lamin = 0.011220184543019636;  numerical_method = ODE
- objc[46200]: Class FIFinderSyncExtensionHost is implemented in both /System/Library/PrivateFrameworks/FinderKit.framework/Versions/A/FinderKit (0x7fff96e66b68) and /System/Library/PrivateFrameworks/FileProvider.framework/OverrideBundles/FinderSyncCollaborationFileProviderOverride.bundle/Contents/MacOS/FinderSyncCollaborationFileProviderOverride (0x116315cd8). One of the two will be used. Which one is undefined.
 SELECTED PARAMETERS : 
 27  Clostridium
 SIGMA FOR LAMFIXED  :  8.43571426081596
