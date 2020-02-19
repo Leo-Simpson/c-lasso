@@ -236,6 +236,8 @@ Running time for Fixed LAM           : 0.065s
 
 ![2.StabSel-path](https://github.com/Leo-Simpson/Figures/blob/master/example2/StabSel-path.png)
 
+![2.beta](https://github.com/Leo-Simpson/Figures/blob/master/example2/beta.png)
+
 
 ## Log-contrast regression for microbiome data
 
