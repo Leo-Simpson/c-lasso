@@ -9,7 +9,6 @@ from CLasso.stability_selection import stability, selected_param
 import matplotlib.patches as mpatches
 
 
-
 class classo_data:
     ''' Class containing the data of the problem
 
@@ -523,12 +522,15 @@ class solution_CV:
         self.selected_param = abs(self.beta) > 1e-3  # boolean array, false iff beta_i =0
         self.refit = min_LS(matrices, self.selected_param)
         self.time = time() - t0
+        self.save=False
 
     def __repr__(self):
-        plt.bar(range(len(self.refit)), self.refit), plt.title("Cross Validation refit"), plt.show()
+        plt.bar(range(len(self.refit)), self.refit), plt.title("Cross Validation refit")
+        if(type(self.save)==str): plt.savefig(self.save)
+        plt.show()
         return (str(round(self.time, 3)) + "s")
 
-    def graphic(self, mse_max=1.):
+    def graphic(self, mse_max=1.,save=False):
         i_min, i_1SE = self.index_min, self.index_1SE
         for j in range(len(self.xGraph)):
             if (self.yGraph[j] < mse_max): break
@@ -537,7 +539,9 @@ class solution_CV:
         plt.axvline(x=self.xGraph[i_min], color='k', label='lam with min MSE')
         plt.axvline(x=self.xGraph[i_1SE],color='r',label='lam with 1SE')
         plt.ylabel('mean of residual over lambda'), plt.xlabel('lam')
-        plt.legend(), plt.title("Selection of lambda with Cross Validation"), plt.show()
+        plt.legend(), plt.title("Selection of lambda with Cross Validation")
+        if(type(save)==str) : plt.savefig(save)
+        plt.show()
 
 #Here, the main function used is stability ; from the file stability selection
 class solution_StabSel:
@@ -591,6 +595,9 @@ class solution_StabSel:
         self.selected_param,self.to_label = selected_param(self.distribution, param.threshold,param.threshold_label)
         self.threshold = param.threshold
         self.refit = min_LS(matrices, self.selected_param)
+        self.save1 = False
+        self.save2 = False
+        self.save3 = False
         self.time = time() - t0
 
     def __repr__(self):
@@ -607,7 +614,9 @@ class solution_StabSel:
         plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected variables')
         plt.axhline(y=self.threshold, color='g',label='threshold')
         if (type(label) != bool): plt.xticks(self.to_label, label[self.to_label], rotation=30)
-        plt.legend(), plt.title("Distribution of Stability Selection"), plt.show()
+        plt.legend(), plt.title("Distribution of Stability Selection")
+        if (type(self.save1) == str): plt.savefig(self.save1)
+        plt.show()
         print("SELECTED VARIABLES : ")
         if (type(label) != bool):
             for i in range(len(D)):
@@ -628,10 +637,14 @@ class solution_StabSel:
                                                                                               label='unselected variables')
             plt.legend(handles=[p1, p2])
             plt.axhline(y=self.threshold,color='g')
-            plt.title("Distribution of probability of apparence as a function of lambda"), plt.show()
+            plt.title("Distribution of probability of apparence as a function of lambda")
+            if (type(self.save2)==str):plt.savefig(self.save2)
+            plt.show()
 
-        plt.bar(range(len(self.refit)), self.refit), plt.title(
-            "Solution for Stability Selection with refit"), plt.show()
+        plt.bar(range(len(self.refit)), self.refit)
+        plt.title("Solution for Stability Selection with refit")
+        if (type(self.save3) == str): plt.savefig(self.save3)
+        plt.show()
         return (str(round(self.time, 3)) + "s")
 
 #Here, the main function used is Classo ; from the file compact_func
@@ -677,9 +690,12 @@ class solution_LAMfixed:
         self.selected_param = abs(self.beta) > 1e-3
         self.refit = min_LS(matrices, self.selected_param)
         self.time = time() - t0
+        self.save = False
 
     def __repr__(self):
-        plt.bar(range(len(self.refit)), self.refit), plt.title("Solution for a fixed lambda with refit"), plt.show()
+        plt.bar(range(len(self.refit)), self.refit), plt.title("Solution for a fixed lambda with refit")
+        if(type(self.save)==str): plt.savefig(save)
+        plt.show()
         if(self.formulation.concomitant) : print("SIGMA FOR LAMFIXED  : ", self.sigma )
         return (str(round(self.time, 3)) + "s")
 

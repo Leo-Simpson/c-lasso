@@ -1,62 +1,25 @@
 N=10000
 import numpy as np
 import numpy.linalg as LA
+from CLasso.general_path_alg import pathalgo_general, solve_path
 
 
 '''
 Main function that solve the Least square problem for all lambda using the Path-Algo, which is describe in the paper : "Algorithms for Fitting the Constrained Lasso"
 '''
 
-
-
 def solve_huber_cl_path(matrices,lamin,rho,n_active=False):
-    global number_act, idr, Xt, activity, beta, s, lam, M, y, r, F
+    return (solve_path(matrices, lamin, up, n_active, rho))
 
-    (A, C, y) = matrices
-    n, d, k = len(A), len(A[0]), len(C)
-    s = 2 * A.T.dot(y)
-    lambdamax = LA.norm(s, np.inf)
-    s = s / lambdamax
-    lam, LAM = 1., [1.]
-    # activity saves which vareiable are actives
-    # idr saves the independant rows of the matrix C resctricted to the actives parameters
-    # number_act is the number of active parameter
-    # activity[i] = True iff s[i]= +- 1
-    # F is the set where r<1 and if huber, then it is the set where rho<r<1
-    lam, LAM, beta, BETA, r, activity, idr, F, number_act = 1., [1.], np.zeros(d), [np.zeros(d)], np.zeros(n), [
-        False] * d, [False] * k, [True] * n, 0
+def pathalgo_huber_cl(matrix, path, rho, n_active=False):
+    return(pathalgo_general(matrix,path,up,n_active,rho=rho))
 
-    if(rho > 0): print("Problem because of initialization, rho has to be negative ! ")
-
-    # set up the sets activity and idr
-    for i in range(d):
-        if (s[i] == 1. or s[i] == -1.):
-            activity[i] = True
-            number_act += 1
-            if (k > 0):
-                to_ad = next_idr1(idr, C[:, activity])
-                if (type(to_ad) == int): idr[to_ad] = True
-
-    AtA = A[F].T.dot(A[F])
-    if (k == 0):
-        M = 2 * AtA
-    else:
-        M = np.concatenate((np.concatenate((2 * AtA, C.T), axis=1), np.concatenate((C, np.zeros((k, k))), axis=1)),
-                           axis=0)
-    Xt = LA.inv(M[activity + idr, :][:, activity + idr])  # initialise Xt
-
-    for i in range(N):
-        up(lambdamax, lamin, A, rho)
-        BETA.append(beta), LAM.append(lam)
-        if ((type(n_active) == int and number_act >= n_active) or lam == lamin): return (BETA, LAM)
-
-    print('no conv')
-    return (BETA, LAM)
 
 
 # function that search the next lambda where something happen, and update the solution Beta
-def up(lambdamax, lamin, A, rho):
-    global number_act, idr, Xt, activity, F, beta, s, lam, M, r, y
+def up(param):
+    lambdamax, lamin, A, y, rho = param.lambdamax, param.lamin, param.A, param.y, param.rho
+    number_act, idr, Xt, activity, F, beta, s, lam, M, r = param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r
 
     d = len(activity)
     L = [lam] * d
@@ -120,6 +83,7 @@ def up(lambdamax, lamin, A, rho):
                         to_ad = next_idr1(idr, M[d:, :][:, :d][:, activity])
                         if (type(to_ad) == int): idr[to_ad] = True
                 Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+    param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = number_act, idr, Xt, activity, F, beta, s, lam, M, r
 
 
 # Compute the derivatives of the solution Beta and the derivative of lambda*subgradient thanks to the ODE

@@ -1,65 +1,22 @@
 N=10000
 import numpy as np
 import numpy.linalg as LA
+from CLasso.general_path_alg import pathalgo_general, solve_path
 
+def solve_cl_path(matrices,lamin, n_active):
+    return (solve_path(matrices,lamin,up, n_active,0))
 
-'''
-Main function that solve the Least square problem for all lambda using the Path-Algo, which is describe in the paper : "Algorithms for Fitting the Constrained Lasso"
-
-In all the code, capital letter variable are lists that contains the small variable 
-
-'''
-
-
-
-
-def solve_cl_path(matrices,lamin,n_active=False):
-    global number_act,idr,Xt,activity,beta,s,lam, M, y, r, F
-
-    (A,C,y)   = matrices
-    n,d,k       = len(A),len(A[0]),len(C)
-    s= 2*A.T.dot(y)
-    lambdamax = LA.norm(s,np.inf)
-    s = s/lambdamax
-    lam, LAM =1., [1.]
-    # activity saves which vareiable are actives
-    # idr saves the independant rows of the matrix C resctricted to the actives parameters
-    # number_act is the number of active parameter
-    # activity[i] = True iff s[i]= +- 1
-    # F is the set where r<1 and if huber, then it is the set where rho<r<1
-    lam, LAM, beta, BETA, r, activity, idr, F, number_act = 1., [1.], np.zeros(d), [np.zeros(d)], np.zeros(n), [False] * d, [False] * k, [True] * n, 0
-
-    # set up the sets activity and idr    
-    for i in range(d):
-        if (s[i]==1. or s[i]==-1.): 
-            activity[i] = True
-            number_act +=1
-            if(k>0):
-                to_ad = next_idr1(idr,C[:,activity])
-                if(type(to_ad)==int): idr[to_ad] = True
-
-    AtA = A[F].T.dot(A[F])
-    if (k == 0):
-        M = 2 * AtA
-    else:
-        M = np.concatenate((np.concatenate((2 * AtA, C.T), axis=1), np.concatenate((C, np.zeros((k, k))), axis=1)),
-                           axis=0)
-    Xt = LA.inv(M[activity+idr,:] [:,activity+idr])    # initialise Xt
-    
-    
-    for i in range(N) :
-        up(lambdamax,lamin,A)
-        BETA.append(beta), LAM.append(lam)
-        if ((type(n_active)==int and number_act>= n_active) or lam == lamin): return(BETA,LAM)
-            
-    print('no conv')
-    return(BETA,LAM)
+def pathalgo_cl(matrix,path,n_active=False):
+    return(pathalgo_general(matrix,path,up,n_active))
 
 
 
 #function that search the next lambda where something happen, and update the solution Beta
-def up(lambdamax,lamin,A):
-    global number_act,idr,Xt,activity,F,beta,s, lam, M,r, y
+def up(param):
+    lambdamax,lamin,A, y  = param.lambdamax,param.lamin,param.A, param.y
+    number_act,idr,Xt,activity,F,beta,s, lam, M,r =\
+        param.number_act,param.idr,param.Xt,param.activity,param.F,param.beta,param.s, param.lam, param.M,param.r
+
 
     d = len(activity)
     L = [lam] * d
@@ -113,6 +70,9 @@ def up(lambdamax,lamin,A):
                         to_ad = next_idr1(idr, M[d:, :][:, :d][:, activity])
                         if (type(to_ad) == int): idr[to_ad] = True
                 Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+
+        param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = \
+        number_act, idr, Xt, activity, F, beta, s, lam, M, r
 
 
 
@@ -169,22 +129,3 @@ def next_inv(Xt,B,al,ligne):
     col2 = np.concatenate((b2.T,-alpha*B[:,ligne:],b4), axis = 0)
     col = np.concatenate((-alpha*B[0,:ligne],[alpha],-alpha*B[0,ligne:]), axis = 0)
     return(np.concatenate((col1,np.array([col]).T,col2), axis = 1))
-
-
-
-    
-
-# Fonction to interpolate the solution path between the breaking points
-def pathalgo_cl(matrix,path,n_active=False):
-    BETA, i = [], 0
-    X,sp_path = solve_cl_path(matrix,path[-1],n_active)
-    sp_path.append(path[-1]),X.append(X[-1])
-    for lam in path:
-        while (lam<sp_path[i+1]): i+=1
-        teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
-        BETA.append(X[i]*(1-teta)+X[i+1]*teta)
-    return(BETA)
-
-
-
-    

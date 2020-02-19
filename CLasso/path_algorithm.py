@@ -1,7 +1,7 @@
 N=100000
 import numpy as np
 import numpy.linalg as LA
-
+from CLasso.general_path_alg import parameters_for_update
 
 '''
 Main function that solve the Least square problem for all lambda using the Path-Algo, which is describe in the paper : "Algorithms for Fitting the Constrained Lasso"
@@ -14,68 +14,37 @@ In all the code, capital letter variable are lists that contains the small varia
 
 
 def solve_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no'):
-    global number_act,idr,Xt,activity,beta,s,lam
-    
-    
-    (A,C,y)   = matrices
-    n,d,k       = len(A),len(A[0]),len(C)
-    AtA       = A.T.dot(A)
-    s         = 2*A.T.dot(y)
-    lambdamax = LA.norm(s,np.inf)
-    s = s/lambdamax
-    lam, LAM =1., [1.]
-    
-    # activity saves which vareiable are actives
-    # idr saves the independant rows of the matrix C resctricted to the actives parameters
-    # number_act is the number of active parameter
-    # activity[i] = True iff s[i]= +- 1
-    lam,LAM,beta,BETA,activity,idr,number_act = 1.,[1.],np.zeros(d),[np.zeros(d)],[False]*d,[False]*k,0
-    
-    if  (concomitant=='no')  : lamin                          = stop
-    
-    else: 
-        
-        # to compute r = (A beta - y)/||y|| more efficientely :
-        A_over_NORMy, y_over_NORMy = A/ (LA.norm(y))  , y / (LA.norm(y))
-        
-        # we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
-        
-        reduclam = 2.
+
+    (A, C, y) = matrices
+    n, d, k = len(A), len(A[0]), len(C)
+
+    if  (concomitant=='no')  : lamin  = stop
+    else:
+        # to compute r = (A beta - y)/||y|| more efficientely ; and we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
+        A_over_NORMy, y_over_NORMy, reduclam = A/ (LA.norm(y))  , y / (LA.norm(y)), 2.
         if(concomitant=='path'): lamin,R = 0,[-y_over_NORMy]
-        else                     : lamin,beta_old,reduclam_old,r_old = 0,beta,1.,-y_over_NORMy
-    
-    # set up the sets activity and idr    
-    for i in range(d):
-        if (s[i]==1. or s[i]==-1.): 
-            activity[i] = True
-            number_act +=1
-            if(k>0):
-                to_ad = next_idr1(idr,C[:,activity])
-                if(type(to_ad)==int): idr[to_ad] = True
-    
-    if (k==0): M = 2*AtA
-    else : M  = np.concatenate((np.concatenate((2*AtA,C.T),axis=1),np.concatenate(( C,np.zeros((k, k)) ),axis=1)), axis=0)
-    Xt = LA.inv(M[activity+idr,:] [:,activity+idr])    # initialise Xt
-    
-    
+        else                   : lamin,beta_old,reduclam_old,r_old = 0,np.zeros(d),1.,-y_over_NORMy
+
+    param = parameters_for_update(matrices, lamin, 0)
+    BETA, LAM = [param.beta], [param.lam]
+
     for i in range(N) :
         
-        up(lambdamax,lamin,M,C)
-        BETA.append(beta), LAM.append(lam)
+        up(param)
+        BETA.append(param.beta), LAM.append(param.lam)
         
         if not (concomitant=='no'):
-            r = A_over_NORMy.dot(beta)-y_over_NORMy
-            if (stop != 0) : reduclam = lam/stop
-
+            param.r = A_over_NORMy.dot(param.beta)-y_over_NORMy
+            if (stop != 0) : reduclam = param.lam/stop
             if(concomitant=='path'): 
-                R.append(r)
-                if reduclam <= LA.norm(r) or (number_act >= n-k) or (type(n_active)==int and number_act>= n_active) : return(BETA,LAM,R)
+                R.append(param.r)
+                if (reduclam <= LA.norm(param.r)) or (param.number_act >= n-k) or (type(n_active)==int and param.number_act>= n_active) : return(BETA,LAM,R)
             else : 
                 if reduclam <= LA.norm(r): return((beta_old,beta),(reduclam_old,reduclam),(r_old,r))               
                 beta_old,reduclam_old,r_old = beta,reduclam,r
             
-        elif ((type(n_active)==int and number_act>= n_active) or lam == lamin): 
-            if(return_lmax):    return(BETA,LAM,lambdamax)
+        elif ((type(n_active)==int and number_act>= param.n_active) or param.lam == lamin):
+            if(return_lmax):    return(BETA,LAM,param.lambdamax)
             else:               return(BETA,LAM)
             
     print('no conv')
@@ -84,8 +53,9 @@ def solve_path(matrices,stop,n_active=False,return_lmax=False, concomitant = 'no
 
 
 #function that search the next lambda where something happen, and update the solution Beta
-def up(lambdamax,lamin,M,C):
-    global number_act,idr,Xt,activity,beta,s,lam
+def up(param):
+    lambdamax, lamin, M, C = param.lambdamax, param.lamin, param.M, param.C
+    number_act, idr, Xt, activity, beta, s, lam = param.number_act, param.idr, param.Xt, param.activity, param.beta, param.s, param.lam
     
     d=len(activity)
     L = [lam]*d
@@ -125,6 +95,7 @@ def up(lambdamax,lamin,M,C):
     if not (lam==dlamb): s = E + lam/(lam-dlamb) * (s-E)
     lam -= dlamb
 
+    param.number_act, param.idr, param.Xt, param.activity, param.beta, param.s, param.lam = number_act, idr, Xt, activity, beta, s, lam
 
 
 # Compute the derivatives of the solution Beta and the derivative of lambda*subgradient thanks to the ODE

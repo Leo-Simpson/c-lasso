@@ -1,6 +1,7 @@
 N=10000
 import numpy as np
 import numpy.linalg as LA
+from CLasso.general_path_alg import solve_path
 
 
 '''
@@ -9,50 +10,15 @@ Main function that solve the Least square problem for all lambda using the Path-
 
 
 
-def solve_huber_path(matrices,lamin,rho,n_active=False,return_lmax=False):
-    global number_act,idr,Xt,activity,F,beta,s, lam, M,r
-    
-    (A,C,y)   = matrices
-    m,d,k       = len(A),len(A[0]),len(C)
-
-    lam,LAM,beta,BETA,r,activity,idr,F,number_act = 1.,[1.],np.zeros(d),[np.zeros(d)],-y,[False]*d,[False]*k,[True]*m,0
-
-    for j in range(m):
-        if (abs(y[j])>rho): F[j]=False    
-      
-    s         = 2*A.T.dot(h_prime(y,rho))
-    lambdamax = LA.norm(s,np.inf)
-    s = s/lambdamax        
-    AtA = A[F].T.dot(A[F])
-    if (k==0): M = 2*AtA
-    else : M  = np.concatenate((np.concatenate((2*AtA,C.T),axis=1),np.concatenate(( C,np.zeros((k, k)) ),axis=1)), axis=0)    
-        
-    
-    for i in range(d):
-        if (s[i]==1. or s[i]==-1.): 
-            activity[i] = True
-            number_act +=1
-            if(k>0): 
-                to_ad = next_idr1(idr,C[:,activity])
-                if(type(to_ad)==int): idr[to_ad] = True
-    
-    Xt = LA.inv(M[activity+idr,:] [:,activity+idr])    # initialise Xt
-    for i in range(N) :
-        
-        up(lambdamax,lamin,A,rho)
-        BETA.append(beta), LAM.append(lam)
-        if ((type(n_active)==int and number_act>= n_active) or lam == lamin): 
-            if(return_lmax):    return(BETA,LAM,lambdamax)
-            else:               return(BETA,LAM)
-            
-    print('no conv')
-    if(return_lmax):    return(BETA,LAM,lambdamax)
-    else:               return(BETA,LAM)
+def solve_huber_path(matrices,lamin,rho,n_active=False):
+    return(solve_path(matrices,lamin,up, n_active,rho))
 
 #function that search the next lambda where something happen, and update the solution Beta
-def up(lambdamax,lamin,A,rho):
-    global number_act,idr,Xt,activity,F,beta,s,lam,M,r
-    
+def up(param):
+    lambdamax, lamin, A, y, C, rho = param.lambdamax, param.lamin, param.A, param.y, param.C, param.rho
+    number_act, idr, Xt, activity, F, beta, s, lam, M, r = param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r
+    m, d, k = len(A), len(A[0]), len(C)
+
     d=len(activity)
     L = [lam]*d
     D,E = direction(activity,s,M[:len(activity),:][:,:len(activity)],M[d:,:][:,:d],Xt,idr,number_act)  
@@ -99,15 +65,12 @@ def up(lambdamax,lamin,A,rho):
                         to_ad = next_idr2(idr,M[d:,:][:,:d][:,activity])
                         if(type(to_ad)==int): idr[to_ad] = False
                 else:
-                    #x = M[:,activity+idr][i]
-                    #al = M[i,i]-np.vdot(x,Xt.dot(x))
-                    #if (abs(al)<1e-10): break
                     activity[i],number_act = True, number_act+1
                     if(len(M)>d): 
                         to_ad = next_idr1(idr,M[d:,:][:,:d][:,activity])
                         if(type(to_ad)==int): idr[to_ad] = True
-                Xt  = LA.inv(M[activity+idr,:] [:,activity+idr]) 
-
+                Xt  = LA.inv(M[activity+idr,:] [:,activity+idr])
+    param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = number_act, idr, Xt, activity, F, beta, s, lam, M, r
 
 # Compute the derivatives of the solution Beta and the derivative of lambda*subgradient thanks to the ODE
 def direction(activity,s,Mat,C,Xt,idr,number_act):
