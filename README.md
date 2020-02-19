@@ -181,7 +181,7 @@ Running time for Fixed LAM           : 'not computed'
 
 
 
-Example of different settings (example2) : 
+## Example of different settings (example2) : 
 =======
 #### Advanced example             
 
