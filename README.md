@@ -103,13 +103,7 @@ This formulation is similar to [C1] but uses the Huberized Square Hinge loss for
 with (constrained) sparse &beta; vector estimation.
 
 
-<<<<<<< HEAD
 ## Getting started
-=======
-## Example on random data
-
-#### Basic example             
->>>>>>> 3e9472c95d880f8d8bc37ba8b1b7c385744411ee
 
 #### Warm-up example             
 
@@ -157,7 +151,6 @@ You can solve the corresponding c-lasso problem instance using
 problem.solve()
 ```
 
-<<<<<<< HEAD
 After completion, the results of the optimization and model selection routines 
 can be visualized using
 
@@ -167,8 +160,6 @@ print(problem.solution)
 
 The command shows the running time(s) for the c-lasso problem instance
 
-=======
->>>>>>> 3e9472c95d880f8d8bc37ba8b1b7c385744411ee
 ```
 SPEEDNESS : 
 Running time for Cross Validation    : 'not computed'
@@ -192,12 +183,6 @@ The refitted &beta; values on the selected support are also displayed in the nex
 ![Ex1.3](figures/example1/Figure3.png)
 
 
-<<<<<<< HEAD
-=======
-
-## Example of different settings (example2) : 
-
->>>>>>> 3e9472c95d880f8d8bc37ba8b1b7c385744411ee
 #### Advanced example             
 
 In the next, we show how one can easily specify different aspects of the problem 
@@ -260,6 +245,7 @@ STABILITY SELECTION PARAMETERS: method = lam;  lamin = 0.01;  lam = theoritical;
 LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 19.1709;  numerical_method = ODE
  
 PATH PARAMETERS: Npath = 40  n_active = False  lamin = 0.011220184543019636;  numerical_method = ODE
+ objc[46200]: Class FIFinderSyncExtensionHost is implemented in both /System/Library/PrivateFrameworks/FinderKit.framework/Versions/A/FinderKit (0x7fff96e66b68) and /System/Library/PrivateFrameworks/FileProvider.framework/OverrideBundles/FinderSyncCollaborationFileProviderOverride.bundle/Contents/MacOS/FinderSyncCollaborationFileProviderOverride (0x116315cd8). One of the two will be used. Which one is undefined.
 SELECTED PARAMETERS : 
 27  Clostridium
 SIGMA FOR LAMFIXED  :  8.43571426081596
