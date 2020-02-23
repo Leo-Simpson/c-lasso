@@ -17,8 +17,6 @@ def solve_huber_path(matrices,lamin,rho,n_active=False):
 def up(param):
     lambdamax, lamin, A, y, C, rho = param.lambdamax, param.lamin, param.A, param.y, param.C, param.rho
     number_act, idr, Xt, activity, F, beta, s, lam, M, r = param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r
-    m, d, k = len(A), len(A[0]), len(C)
-
     d=len(activity)
     L = [lam]*d
     D,E = direction(activity,s,M[:len(activity),:][:,:len(activity)],M[d:,:][:,:d],Xt,idr,number_act)  
@@ -47,10 +45,8 @@ def up(param):
             else:  dl = dlamb      
         if(dl<dlamb): 
             huber_up,j_switch,dlamb=True,j,dl
-    
     beta,s,r,lam = beta + lambdamax*D * dlamb,E + lam /(lam-dlamb) * (s-E),r+ADl*dlamb,lam-dlamb
-    
-    
+
     if(huber_up):
         F[j_switch] = not F[j_switch]
         M[:d,:][:,:d] = 2*A[F].T.dot(A[F])
@@ -70,6 +66,7 @@ def up(param):
                         to_ad = next_idr1(idr,M[d:,:][:,:d][:,activity])
                         if(type(to_ad)==int): idr[to_ad] = True
                 Xt  = LA.inv(M[activity+idr,:] [:,activity+idr])
+
     param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = number_act, idr, Xt, activity, F, beta, s, lam, M, r
 
 # Compute the derivatives of the solution Beta and the derivative of lambda*subgradient thanks to the ODE

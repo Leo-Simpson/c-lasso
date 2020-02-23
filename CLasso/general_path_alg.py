@@ -33,11 +33,11 @@ class parameters_for_update:
         self.idr         = [False] * k
         self.activity    = [False] * d
         self.beta        = np.zeros(d)
-        s                = 2*self.A.T.dot(self.y)
+        s                = 2*self.A.T.dot(h_prime(self.y,rho))
         self.lambdamax   = LA.norm(s, np.inf)
         self.s           = s/self.lambdamax
         self.lam         = 1.
-        self.r           = np.zeros(n)
+        self.r           = -self.y
         self.F           = [True] * n
         if (rho!=0):
             for j in range(n):
@@ -56,7 +56,6 @@ class parameters_for_update:
         else    :  self.M  = np.concatenate((np.concatenate((2 * AtA, self.C.T), axis=1), np.concatenate((self.C, np.zeros((k, k))), axis=1)),axis=0)
 
         self.Xt          = LA.inv(self.M[self.activity + self.idr, :][:, self.activity + self.idr])
-
 
 
 
@@ -103,5 +102,10 @@ def pathalgo_general(matrix,path,up,n_active=False,rho=0):
     return(BETA)
 
 
-
+# Compute the derivative of the huber function, particulary useful for the computing of lambdamax
+def h_prime(y,rho):
+    if (rho==0): return(y)
+    m = len(y)
+    lrho = rho*np.ones(m)
+    return(np.maximum(lrho,-y)+ np.minimum(y-lrho,0))
     

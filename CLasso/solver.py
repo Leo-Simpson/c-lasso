@@ -425,15 +425,18 @@ class classo_solution:
 
 #Here, the main function used is pathlasso ; from the file compact_func
 class solution_PATH:
-    ''' Class giving characteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
+    ''' Class giving characteristics of the lasso-path computed,
+    which also contains a method _repr_ that plot the graphic of this lasso-path
 
 
     Attributes:
-        PATH (solution_PATH): Solution components of the model PATH
-        CV (solution_CV):  Solution components of the model CV
-        StabelSel (solution_StabSel): Solution components of the model StabSel
-        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
+        BETAS
+        SIGMAS
+        LAMBDAS
+        method
+        save
+        formulation
+        time
 
     '''
     def __init__(self, matrices, param, formulation):
@@ -478,15 +481,23 @@ class solution_PATH:
 
 #Here, the main function used is CV ; from the file cross_validation
 class solution_CV:
-    ''' Class giving characteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
+    ''' Class giving characteristics of the cross validation computed,
+    which also contains a method _repr_() that plot the selected parameters and the solution of the not-sparse problem on the selected variables set
+    It also contains a method gaphic(self, mse_max=1.,save=False) that computes the curve of validation error as a function of lambda
 
 
     Attributes:
-        PATH (solution_PATH): Solution components of the model PATH
-        CV (solution_CV):  Solution components of the model CV
-        StabelSel (solution_StabSel): Solution components of the model StabSel
-        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
+        beta
+        sigma
+        xGraph
+        yGraph
+        standard_error
+        index_min
+        index_1SE
+        selected_param
+        refit
+        formulation
+        time
 
     '''
     def __init__(self, matrices, param, formulation):
@@ -545,15 +556,20 @@ class solution_CV:
 
 #Here, the main function used is stability ; from the file stability selection
 class solution_StabSel:
-    ''' Class giving characteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
+    ''' Class giving characteristics of the stability selection computed,
+    which also contains a method _repr_() that plot the selected parameters,
+    the solution of the not-sparse problem on the selected variables set, the stability plot with the evolution of it with lambda if the used method is 'first'
+
 
 
     Attributes:
-        PATH (solution_PATH): Solution components of the model PATH
-        CV (solution_CV):  Solution components of the model CV
-        StabelSel (solution_StabSel): Solution components of the model StabSel
-        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
+        distribution
+        lambdas_path
+        selected_param
+        to_label
+        refit
+        formulation
+        time
 
     '''
     def __init__(self, matrices, param, formulation):
@@ -649,15 +665,18 @@ class solution_StabSel:
 
 #Here, the main function used is Classo ; from the file compact_func
 class solution_LAMfixed:
-    ''' Class giving characteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
+    ''' Class giving characteristics of the lasso computed
+    which also contains a method _repr_() that plot this solution.
 
 
     Attributes:
-        PATH (solution_PATH): Solution components of the model PATH
-        CV (solution_CV):  Solution components of the model CV
-        StabelSel (solution_StabSel): Solution components of the model StabSel
-        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
+        beta
+        sigma
+        lambdamax
+        selected_param
+        refit
+        formulation
+        time
 
     '''
     def __init__(self, matrices, param, formulation):
@@ -700,47 +719,6 @@ class solution_LAMfixed:
         return (str(round(self.time, 3)) + "s")
 
 
-'''
-    PATH (type : solution_PATH): object with as attributes :
-        BETAS
-        SIGMAS
-        LAMBDAS
-        method
-        save
-        formulation
-        time
-
-    CV (type : solution_CV): object with as attributes :
-        beta
-        sigma
-        xGraph
-        yGraph
-        standard_error
-        index_min
-        index_1SE
-        selected_param
-        refit
-        formulation
-        time
-
-    StabSel (type : solution_StabSel) : object with as attributes :
-        distribution
-        lambdas_path
-        selected_param
-        to_label
-        refit
-        formulation
-        time
-
-    LAMfixed (type : solution_LAMfixed) : object with as attributes :
-        beta
-        sigma
-        lambdamax
-        selected_param
-        refit
-        formulation
-        time
-'''
 
 
 
