@@ -1,4 +1,4 @@
-from CLasso.path_algorithm_huber import solve_huber_path
+from CLasso.path_alg import solve_huber_path
 import numpy as np
 import numpy.linalg as LA
 from CLasso.solve_LS import problem_LS, algo_LS

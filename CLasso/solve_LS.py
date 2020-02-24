@@ -1,4 +1,4 @@
-from CLasso.path_algorithm import solve_path
+from CLasso.path_alg import solve_path_LS
 import numpy as np
 import numpy.linalg as LA
     
@@ -20,7 +20,7 @@ def algo_LS(pb,lam):
     # ODE
     # here we compute the path algo until our lambda, and just take the last beta
     if(pb_type == 'Path-Alg'):
-        BETA = solve_path(pb.matrix, lam)[0]
+        BETA = solve_path_LS(pb.matrix, lam)[0]
         return(BETA[-1])
     
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix            
@@ -135,7 +135,7 @@ def pathalgo_LS(pb,path,n_active=False,return_sp_path=False):
     n = pb.dim[0]
     BETA,tol = [],pb.tol
     if(pb.type == 'Path-Alg'):
-        beta,sp_path = solve_path(pb.matrix,path[-1],n_active=n_active)
+        beta,sp_path = solve_path_LS(pb.matrix,path[-1],n_active=n_active)
         if (return_sp_path): return(beta,sp_path) # in the method ODE, we only compute the solution for breaking points. We can stop here if return_sp_path=True
         else : # else, we do a little manipulation to interpolated the value of beta between those points, as we know beta is affine between those breaking points.
             sp_path.append(path[-1]),beta.append(beta[-1])

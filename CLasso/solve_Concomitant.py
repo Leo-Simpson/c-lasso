@@ -1,4 +1,4 @@
-from CLasso.path_algorithm import solve_path
+from CLasso.path_alg import solve_path_Conc
 import numpy as np
 import numpy.linalg as LA
     
@@ -20,10 +20,10 @@ def algo_Concomitant(pb,lam):
     # here we compute the path algo until our lambda, and just take the last beta
 
     # here we use our path algorithm for concomitant problem, and then only takes the last beta.
-    # Actually, the function solve_path has the argument concomitant= 'fix_lam' so it means it will directly stop when it has to.
+    # Actually, the function solve_path_Conc has the argument concomitant= 'fix_lam' so it means it will directly stop when it has to.
     # Then we only have to finc the solution between the last beta computed and the one before.
     if(pb_type == 'Path-Alg'):
-        (beta1,beta2), (s1,s2), (r1,r2) = solve_path((A,C,y),lam,concomitant = 'fix_lam')
+        (beta1,beta2), (s1,s2), (r1,r2) = solve_path_Conc((A,C,y),lam,concomitant = 'fix_lam')
         dr,ds = r1-r2,s1-s2
         teta  = root_2(LA.norm(dr)**2-ds**2 ,np.vdot(dr,r2)-s2*ds,LA.norm(r2)**2-s2**2)
         sigma = (s1    *teta + s2    *(1-teta) )*sigmax
@@ -75,7 +75,7 @@ def pathalgo_Concomitant(pb,path,n_active=False,e=1.):
     if(pb.type=='Path-Alg'):
         y=pb.matrix[2]
         sigmax= LA.norm(y)
-        X,LAM,R = solve_path(pb.matrix,path[-1],concomitant = 'path',n_active=n_active)
+        X,LAM,R = solve_path_Conc(pb.matrix,path[-1],concomitant = 'path',n_active=n_active)
         LAM.append(path[-1]),X.append(X[-1]),R.append(R[-1])
         beta2,l2,r2,j = X[0],path[0]+0.1,-y/LA.norm(y),0
         for lam in path: 

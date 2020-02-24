@@ -5,8 +5,7 @@ from CLasso.solve_LS import problem_LS, algo_LS, pathalgo_LS
 from CLasso.solve_Huber import problem_Huber, algo_Huber, pathalgo_Huber
 from CLasso.solve_Concomitant import problem_Concomitant, algo_Concomitant, pathalgo_Concomitant
 from CLasso.solve_Concomitant_Huber import problem_Concomitant_Huber, algo_Concomitant_Huber, pathalgo_Concomitant_Huber
-from CLasso.classification import solve_cl_path, pathalgo_cl
-from CLasso.huber_classification import solve_huber_cl_path, pathalgo_huber_cl, h_lambdamax
+from CLasso.path_alg import solve_cl_path, pathalgo_cl, solve_huber_cl_path, pathalgo_huber_cl, h_lambdamax
 
 '''
 Classo and pathlasso are the main functions, they can call every algorithm acording to the method and formulation required

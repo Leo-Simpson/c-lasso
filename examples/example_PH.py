@@ -1,3 +1,4 @@
+path = '/Users/lsimpson/Documents/GitHub/Figures/examplePH/'
 from CLasso import *
 import numpy as np
 from copy import deepcopy as dc
@@ -15,11 +16,11 @@ problem.model_selection.StabSel = False
 problem.model_selection.PATH = True
 problem.model_selection.PATHparameters.plot_sigma = True
 problem.solve()
-problem.solution.PATH.save = 'figures_examplePH/Concomitant '
+problem.solution.PATH.save = path+'Concomitant '
 problem1 = dc(problem)
 problem.formulation.huber = True
 problem.solve()
-problem.solution.save = 'figures_examplePH/Concomitant Huber '
+problem.solution.save = path+'Concomitant Huber '
 problem2 = dc(problem)
 
 print(problem1, problem1.solution)
