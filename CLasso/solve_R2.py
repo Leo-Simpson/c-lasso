@@ -1,7 +1,7 @@
-from CLasso.path_alg import solve_huber_path
+from CLasso.path_alg import solve_path
 import numpy as np
 import numpy.linalg as LA
-from CLasso.solve_LS import problem_LS, algo_LS
+from CLasso.solve_R1 import problem_R1, Classo_R1
     
 '''    
 Problem    :   min h_rho(Ab - y) + lambda ||b||1 with C.b= 0 <=>   min ||Ab - y - r*o||^2 + lambda ||b,o||1 with C.b= 0, o in R^m
@@ -12,7 +12,7 @@ The first function compute a solution of a Lasso problem for a given lambda. The
 '''    
 
 
-def algo_Huber(pb,lam, compute=True):
+def Classo_R2(pb,lam, compute=True):
     
     pb_type = pb.type    # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
     
@@ -25,7 +25,7 @@ def algo_Huber(pb,lam, compute=True):
     # here we compute the path algo until our lambda, and just take the last beta
     
     if(pb_type == 'Path-Alg'):
-        beta = solve_huber_path((A,C,y), lam,rho)[0]
+        beta = solve_path((A,C,y), lam,False,rho,'huber')[0]
         return(beta[-1])
 
     # 2 prox :
@@ -35,11 +35,11 @@ def algo_Huber(pb,lam, compute=True):
         Ahuber = np.concatenate((A, r * np.eye(len(A))), axis=1)
         Chuber = np.concatenate((C, np.zeros((len(C), len(y)))), axis=1)
         matrices_huber = (Ahuber, Chuber, y)
-        prob = problem_LS(matrices_huber, 'DR')
+        prob = problem_R1(matrices_huber, 'DR')
         prob.regpath = regpath
         if (len(pb.init) == 3): prob.init = pb.init
-        if not (regpath): return (algo_LS(prob, lamb / prob.lambdamax)[:d])
-        x, warm_start = algo_LS(prob, lamb / prob.lambdamax)
+        if not (regpath): return (Classo_R1(prob, lamb / prob.lambdamax)[:d])
+        x, warm_start = Classo_R1(prob, lamb / prob.lambdamax)
         return (x[:d], warm_start)
 
 
@@ -129,11 +129,11 @@ This function compute the the solution for a given path of lam : by calling the 
 '''
     
     
-def pathalgo_Huber(pb,path,n_active=False):
+def pathlasso_R2(pb,path,n_active=False):
     n = pb.dim[0]
     BETA,tol = [],pb.tol
     if(pb.type == 'Path-Alg'):
-        X,sp_path = solve_huber_path(pb.matrix,path[-1],pb.rho,n_active)
+        X,sp_path = solve_path(pb.matrix,path[-1],n_active,pb.rho, 'huber')
         # we do a little manipulation to interpolated the value of beta between breaking points, as we know beta is affine between those those points.
         i=0
         sp_path.append(path[-1]),X.append(X[-1])
@@ -150,7 +150,7 @@ def pathalgo_Huber(pb,path,n_active=False):
     if (type(n_active)==int) : n_act = n_active
     else : n_act = n
     for lam in path:
-        X = algo_Huber(pb,lam,compute=False)  
+        X = Classo_R2(pb,lam,compute=False)
         BETA.append(X[0])
         pb.init = X[1]
         if(sum([ (abs(X[0][i])>1e-2) for i in range(len(X[0])) ])>=n_act):
@@ -175,7 +175,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 '''
 
 
-class problem_Huber :
+class problem_R2 :
     
     def __init__(self,data,algo,rho):
         self.N = 500000

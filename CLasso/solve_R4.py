@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.linalg as LA
-from CLasso.solve_Concomitant import problem_Concomitant, algo_Concomitant
+from CLasso.solve_R3 import problem_R3, Classo_R3
     
 '''    
 Problem    :   min h_rho((Ab - y)/sigma)sigma + simga + lambda ||b||1 with C.b= 0, sigma>0 
@@ -11,7 +11,7 @@ The first function compute a solution of a Lasso problem for a given lambda. The
 '''    
 
 
-def algo_Concomitant_Huber(pb,lam,e=1.):
+def Classo_R4(pb,lam,e=1.):
     pb_type = pb.type      # can be 'Path-Alg' or 'DR'
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     lamb,rho  = lam * pb.lambdamax, pb.rho
@@ -21,8 +21,8 @@ def algo_Concomitant_Huber(pb,lam,e=1.):
     # because the augmentation of the data required depends on lambda.
     if pb_type=='Path-Alg' and not regpath:
         matrix_aug = (np.concatenate((A,lamb/(2*rho)*np.eye(m)),axis=1),np.concatenate((C,np.zeros((k,m))),axis=1),y)
-        pb_aug = problem_Concomitant(matrix_aug, 'Path-Alg', e=e)
-        beta,s = algo_Concomitant(pb_aug, lamb / pb_aug.lambdamax)
+        pb_aug = problem_R3(matrix_aug, 'Path-Alg', e=e)
+        beta,s = Classo_R3(pb_aug, lamb / pb_aug.lambdamax)
         s = s / np.sqrt(e)
         beta= beta[:d]
         return beta,s
@@ -69,7 +69,7 @@ def algo_Concomitant_Huber(pb,lam,e=1.):
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or wuth the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.  
 '''
     
-def pathalgo_Concomitant_Huber(pb,path,n_active=False):
+def pathlasso_R4(pb,path,n_active=False):
     n = pb.dim[0]
     BETA,SIGMA,tol = [],[],pb.tol
 
@@ -77,7 +77,7 @@ def pathalgo_Concomitant_Huber(pb,path,n_active=False):
     pb.regpath = True
     pb.compute_param()
     for lam in path:
-        X = algo_Concomitant_Huber(pb,lam)
+        X = Classo_R4(pb,lam)
         BETA.append(X[0]), SIGMA.append(X[2])
         pb.init = X[1]
         if (type(n_active)==int) : n_act = n_active
@@ -102,7 +102,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 '''
 
 
-class problem_Concomitant_Huber :
+class problem_R4 :
     
     def __init__(self,data,algo,rho,e=1.):
         self.N = 500000

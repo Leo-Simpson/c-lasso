@@ -40,9 +40,12 @@ class parameters_for_update:
         self.lam         = 1.
         self.r           = -self.y
         self.F           = [True] * n
-        if (rho!=0):
+        if (rho>0):
             for j in range(n):
                 if( abs(self.y[j]) > self.rho ): self.F[j] = False
+        elif (rho<0):
+            for j in range(n):
+                if( self.y[j] < self.rho ): self.F[j] = False
         AtA = self.A[self.F].T.dot(self.A[self.F])
         for i in range(d):
             if (self.s[i] == 1. or self.s[i] == -1.):
@@ -71,98 +74,36 @@ def solve_path(matrices, lamin, n_active, rho,typ):
     print('no conv')
     return (BETA, LAM)
 
-def solve_path_LS(matrices, stop, n_active=False, return_lmax=False, concomitant='no'):
+def solve_path_Conc(matrices, stop, n_active=False, lassopath=True):
     (A, C, y) = matrices
     n, d, k = len(A), len(A[0]), len(C)
-
-    if (concomitant == 'no'):
-        lamin = stop
+    # to compute r = (A beta - y)/||y|| more efficientely ; and we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
+    A_over_NORMy, y_over_NORMy, reduclam = A / (LA.norm(y)), y / (LA.norm(y)), 2.
+    if (lassopath):
+        lamin, R = 0, [-y_over_NORMy]
     else:
-        # to compute r = (A beta - y)/||y|| more efficientely ; and we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
-        A_over_NORMy, y_over_NORMy, reduclam = A / (LA.norm(y)), y / (LA.norm(y)), 2.
-        if (concomitant == 'path'):
-            lamin, R = 0, [-y_over_NORMy]
-        else:
-            lamin, beta_old, reduclam_old, r_old = 0, np.zeros(d), 1., -y_over_NORMy
-
-    param = parameters_for_update(matrices, lamin, 0,"LS")
-    BETA, LAM = [param.beta], [param.lam]
-
-    for i in range(N):
-
-        up(param)
-        BETA.append(param.beta), LAM.append(param.lam)
-
-        if not (concomitant == 'no'):
-            param.r = A_over_NORMy.dot(param.beta) - y_over_NORMy
-            if (stop != 0): reduclam = param.lam / stop
-            if (concomitant == 'path'):
-                R.append(param.r)
-                if (reduclam <= LA.norm(param.r)) or (param.number_act >= n - k) or (
-                        type(n_active) == int and param.number_act >= n_active): return (BETA, LAM, R)
-            else:
-                if reduclam <= LA.norm(r): return ((beta_old, beta), (reduclam_old, reduclam), (r_old, r))
-                beta_old, reduclam_old, r_old = beta, reduclam, r
-
-        elif ((type(n_active) == int and number_act >= param.n_active) or param.lam == lamin):
-            if (return_lmax):
-                return (BETA, LAM, param.lambdamax)
-            else:
-                return (BETA, LAM)
-
-    print('no conv')
-    return (BETA, LAM)
-# Two same functions for now !!
-def solve_path_Conc(matrices, stop, n_active=False, return_lmax=False, concomitant='no'):
-    (A, C, y) = matrices
-    n, d, k = len(A), len(A[0]), len(C)
-
-    if (concomitant == 'no'):
-        lamin = stop
-    else:
-        # to compute r = (A beta - y)/||y|| more efficientely ; and we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
-        A_over_NORMy, y_over_NORMy, reduclam = A / (LA.norm(y)), y / (LA.norm(y)), 2.
-        if (concomitant == 'path'):
-            lamin, R = 0, [-y_over_NORMy]
-        else:
-            lamin, beta_old, reduclam_old, r_old = 0, np.zeros(d), 1., -y_over_NORMy
+        lamin, beta_old, reduclam_old, r_old = 0, np.zeros(d), 1., -y_over_NORMy
 
     param = parameters_for_update(matrices, lamin, 0, "Conc")
     BETA, LAM = [param.beta], [param.lam]
 
     for i in range(N):
 
-        up_Conc(param)
+        up(param)
         BETA.append(param.beta), LAM.append(param.lam)
-
-        if not (concomitant == 'no'):
-            param.r = A_over_NORMy.dot(param.beta) - y_over_NORMy
-            if (stop != 0): reduclam = param.lam / stop
-            if (concomitant == 'path'):
-                R.append(param.r)
-                if (reduclam <= LA.norm(param.r)) or (param.number_act >= n - k) or (
-                        type(n_active) == int and param.number_act >= n_active): return (BETA, LAM, R)
-            else:
-                if reduclam <= LA.norm(param.r): return ((beta_old, param.beta), (reduclam_old, reduclam), (r_old, param.r))
-                beta_old, reduclam_old, r_old = param.beta, reduclam, param.r
-
-        elif ((type(n_active) == int and number_act >= param.n_active) or param.lam == lamin):
-            if (return_lmax):
-                return (BETA, LAM, param.lambdamax)
-            else:
-                return (BETA, LAM)
+        param.r = A_over_NORMy.dot(param.beta) - y_over_NORMy
+        if (stop != 0): reduclam = param.lam / stop
+        if (lassopath):
+            R.append(param.r)
+            if (reduclam <= LA.norm(param.r)) or (param.number_act >= n - k) or (
+                    type(n_active) == int and param.number_act >= n_active): return (BETA, LAM, R)
+        else:
+            if reduclam <= LA.norm(param.r): return ((beta_old, param.beta), (reduclam_old, reduclam), (r_old, param.r))
+            beta_old, reduclam_old, r_old = param.beta, reduclam, param.r
 
     print('no conv')
     return (BETA, LAM)
 
-def solve_huber_path(matrices,lamin,rho,n_active=False):
-    return(solve_path(matrices,lamin, n_active,rho, 'huber'))
-
-def solve_cl_path(matrices,lamin, n_active):
-    return (solve_path(matrices,lamin,up, n_active,0, 'cl'))
-
-def solve_huber_cl_path(matrices,lamin,rho,n_active=False):
-    return (solve_path(matrices, lamin, up, n_active, rho, 'huber_cl'))
 
 
 
@@ -188,10 +129,8 @@ def pathalgo_cl(matrix,path,n_active=False):
 
 def up(param):
     formulation = param.formulation
-    if (formulation=='LS'):
+    if (formulation in ['LS','Conc']  ):
         return (up_LS(param))
-    elif (formulation=='Conc'):
-        return(up_Conc(param))
     elif (formulation == 'huber'):
         return (up_huber(param))
     elif (formulation == 'cl'):
@@ -244,53 +183,6 @@ def up_LS(param):
     lam -= dlamb
 
     param.number_act, param.idr, param.Xt, param.activity, param.beta, param.s, param.lam = number_act, idr, Xt, activity, beta, s, lam
-
-
-def up_Conc(param):
-    lambdamax, lamin, M, C = param.lambdamax, param.lamin, param.M, param.C
-    number_act, idr, Xt, activity, beta, s, lam = param.number_act, param.idr, param.Xt, param.activity, param.beta, param.s, param.lam
-
-    d = len(activity)
-    L = [lam] * d
-    D, E = direction(activity, s, M[:len(activity), :][:, :len(activity)], M[d:, :][:, :d], Xt, idr, number_act)
-    for i in range(d):
-        bi, di, e, s0 = beta[i], D[i], E[i], s[i]
-        if (activity[i]):
-            if (abs(bi * di) > 1e-10 and bi * di < 0):
-                L[i] = -bi / (di * lambdamax)
-        else:
-            if (abs(e - s0) < 1e-10): continue
-            if (e > s0):
-                dl = (1 + s0) / (1 + e)
-            else:
-                dl = (1 - s0) / (1 - e)
-            L[i] = dl * lam
-    dlamb = min(min(L), lam - lamin)
-    # Update matrix inverse, list of rows in C and activity
-    for i in range(d):
-        if (L[i] < dlamb + 1e-10):
-            if (activity[i]):
-                activity[i], number_act = False, number_act - 1
-                if (len(M) > d):
-                    to_ad = next_idr2(idr, C[:, activity])
-                    if (type(to_ad) == int): idr[to_ad] = False
-            else:
-                x = M[:, activity + idr][i]
-                al = M[i, i] - np.vdot(x, Xt.dot(x))
-                if (abs(al) < 1e-10): break
-                activity[i], number_act = True, number_act + 1
-                if (len(M) > d):
-                    to_ad = next_idr1(idr, C[:, activity])
-                    if (type(to_ad) == int): idr[to_ad] = True
-
-            Xt = LA.inv(M[activity + idr, :][:, activity + idr])
-
-    beta = beta + lambdamax * D * dlamb
-    if not (lam == dlamb): s = E + lam / (lam - dlamb) * (s - E)
-    lam -= dlamb
-
-    param.number_act, param.idr, param.Xt, param.activity, param.beta, param.s, param.lam = number_act, idr, Xt, activity, beta, s, lam
-
 
 def up_huber(param):
     lambdamax, lamin, A, y, C, rho = param.lambdamax, param.lamin, param.A, param.y, param.C, param.rho
@@ -351,12 +243,10 @@ def up_huber(param):
 
     param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = number_act, idr, Xt, activity, F, beta, s, lam, M, r
 
-
 def up_cl(param):
     lambdamax,lamin,A, y  = param.lambdamax,param.lamin,param.A, param.y
     number_act,idr,Xt,activity,F,beta,s, lam, M,r =\
         param.number_act,param.idr,param.Xt,param.activity,param.F,param.beta,param.s, param.lam, param.M,param.r
-
 
     d = len(activity)
     L = [lam] * d
@@ -411,14 +301,12 @@ def up_cl(param):
                         if (type(to_ad) == int): idr[to_ad] = True
                 Xt = LA.inv(M[activity + idr, :][:, activity + idr])
 
-        param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = \
+    param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = \
         number_act, idr, Xt, activity, F, beta, s, lam, M, r
-
 
 def up_huber_cl(param):
     lambdamax, lamin, A, y, rho = param.lambdamax, param.lamin, param.A, param.y, param.rho
     number_act, idr, Xt, activity, F, beta, s, lam, M, r = param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r
-
     d = len(activity)
     L = [lam] * d
     D, E = direction(activity, s, M[:len(activity), :][:, :len(activity)], M[d:, :][:, :d], Xt, idr, number_act)
@@ -444,14 +332,13 @@ def up_huber_cl(param):
         #     find if there is a  0< dlhuber < dlamb such that F[j] and r[j]+yADl[j]*dl < rho
         # or  find if there is a  0< dlhuber < dlamb such that not F[j] r[j]+yADl[j]*dl > rho
 
-        #if (abs(r[j] - 1) < 1e-4): continue
 
         if (yADl[j] != 0.):
             dlmax      = (1 - r[j]) / yADl[j]
             dlhuber = (rho - r[j]) / yADl[j]
         else: dlmax,dlhuber = dlamb+1,dlamb+1
-        if(dlmax<0):     dlmax   = dlamb+1
-        if(dlhuber < 0): dlhuber = dlamb+1
+        if(dlmax<=0.):     dlmax   = dlamb+1
+        if(dlhuber <= 0.): dlhuber = dlamb+1
 
         dl = min ( dlhuber , dlmax)
 
@@ -480,6 +367,7 @@ def up_huber_cl(param):
                     if (len(M) > d):
                         to_ad = next_idr1(idr, M[d:, :][:, :d][:, activity])
                         if (type(to_ad) == int): idr[to_ad] = True
+
                 Xt = LA.inv(M[activity + idr, :][:, activity + idr])
     param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = number_act, idr, Xt, activity, F, beta, s, lam, M, r
 

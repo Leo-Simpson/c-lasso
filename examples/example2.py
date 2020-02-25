@@ -5,7 +5,7 @@ m,d,d_nonzero,k,sigma =100,100,5,1,0.5
 
 problem                                     = classo_problem(X,y,C)
 problem.formulation.huber                   = False
-problem.formulation.concomitant             = True
+problem.formulation.concomitant             = False
 problem.model_selection.CV                  = True
 problem.model_selection.LAMfixed            = True
 problem.model_selection.PATH                = True

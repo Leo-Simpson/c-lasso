@@ -12,7 +12,7 @@ The first function compute a solution of a Lasso problem for a given lambda. The
 
 
 
-def algo_Concomitant(pb,lam):
+def Classo_R3(pb,lam):
     pb_type = pb.type     # can be 'Path-Alg' or 'DR'
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     sigmax = LA.norm(y)*np.sqrt(2)
@@ -23,7 +23,7 @@ def algo_Concomitant(pb,lam):
     # Actually, the function solve_path_Conc has the argument concomitant= 'fix_lam' so it means it will directly stop when it has to.
     # Then we only have to finc the solution between the last beta computed and the one before.
     if(pb_type == 'Path-Alg'):
-        (beta1,beta2), (s1,s2), (r1,r2) = solve_path_Conc((A,C,y),lam,concomitant = 'fix_lam')
+        (beta1,beta2), (s1,s2), (r1,r2) = solve_path_Conc((A,C,y),lam,lassopath=False)
         dr,ds = r1-r2,s1-s2
         teta  = root_2(LA.norm(dr)**2-ds**2 ,np.vdot(dr,r2)-s2*ds,LA.norm(r2)**2-s2**2)
         sigma = (s1    *teta + s2    *(1-teta) )*sigmax
@@ -68,14 +68,14 @@ def algo_Concomitant(pb,lam):
 '''
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or wuth the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.  
 '''
-def pathalgo_Concomitant(pb,path,n_active=False,e=1.):
+def pathlasso_R3(pb,path,n_active=False,e=1.):
     n,d,k  = pb.dim
     BETA,SIGMA,tol = [],[],pb.tol
 
     if(pb.type=='Path-Alg'):
         y=pb.matrix[2]
         sigmax= LA.norm(y)
-        X,LAM,R = solve_path_Conc(pb.matrix,path[-1],concomitant = 'path',n_active=n_active)
+        X,LAM,R = solve_path_Conc(pb.matrix,path[-1],n_active=n_active)
         LAM.append(path[-1]),X.append(X[-1]),R.append(R[-1])
         beta2,l2,r2,j = X[0],path[0]+0.1,-y/LA.norm(y),0
         for lam in path: 
@@ -83,8 +83,6 @@ def pathalgo_Concomitant(pb,path,n_active=False,e=1.):
             while (LA.norm(r2)<l2/lam) and (j < len(LAM)): beta1,l1,r1,beta2,l2,r2,j = beta2,l2,r2,X[j],LAM[j],R[j],j+1
             s1,s2 = l1/lam,l2/lam
             dr,ds = r1-r2,s1-s2
-            
-            
             teta  = root_2(LA.norm(dr)**2-ds**2 ,np.vdot(dr,r2)-s2*ds,LA.norm(r2)**2-s2**2)
             SIGMA.append((s1*teta + s2*(1-teta))*sigmax)
             BETA.append(beta1 *teta + beta2 *(1-teta))
@@ -94,7 +92,7 @@ def pathalgo_Concomitant(pb,path,n_active=False,e=1.):
     pb.regpath = True
     pb.compute_param()
     for lam in path:
-        X = algo_Concomitant(pb,lam)
+        X = Classo_R3(pb,lam)
         BETA.append(X[0])
         SIGMA.append(X[-1])
         pb.init = X[1]
@@ -113,7 +111,7 @@ def pathalgo_Concomitant(pb,path,n_active=False,e=1.):
 '''
 Class of problem : we define a type, which will contain as keys, all the parameters we need for a given problem.
 '''
-class problem_Concomitant :
+class problem_R3 :
     
     def __init__(self,data,algo,e=1.):
         self.N = 500000

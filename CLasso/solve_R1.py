@@ -1,4 +1,4 @@
-from CLasso.path_alg import solve_path_LS
+from CLasso.path_alg import solve_path
 import numpy as np
 import numpy.linalg as LA
     
@@ -14,13 +14,13 @@ The parameters are lam (lambda/lambdamax, in [0,1]) and pb, which has to be a 'p
 
 
 
-def algo_LS(pb,lam):
+def Classo_R1(pb,lam):
     pb_type = pb.type  # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
     # ODE
     # here we compute the path algo until our lambda, and just take the last beta
     if(pb_type == 'Path-Alg'):
-        BETA = solve_path_LS(pb.matrix, lam)[0]
+        BETA = solve_path(pb.matrix, lam, False, 0, 'LS')[0]
         return(BETA[-1])
     
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix            
@@ -131,11 +131,11 @@ def algo_LS(pb,lam):
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or with the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.
 '''
     
-def pathalgo_LS(pb,path,n_active=False,return_sp_path=False):
+def pathlasso_R1(pb,path,n_active=False,return_sp_path=False):
     n = pb.dim[0]
     BETA,tol = [],pb.tol
     if(pb.type == 'Path-Alg'):
-        beta,sp_path = solve_path_LS(pb.matrix,path[-1],n_active=n_active)
+        beta,sp_path = solve_path(pb.matrix,path[-1],n_active, 0, 'LS')
         if (return_sp_path): return(beta,sp_path) # in the method ODE, we only compute the solution for breaking points. We can stop here if return_sp_path=True
         else : # else, we do a little manipulation to interpolated the value of beta between those points, as we know beta is affine between those breaking points.
             sp_path.append(path[-1]),beta.append(beta[-1])
@@ -152,7 +152,7 @@ def pathalgo_LS(pb,path,n_active=False,return_sp_path=False):
     pb.regpath = True
     pb.compute_param()
     for lam in path:
-        X = algo_LS(pb,lam)
+        X = Classo_R1(pb,lam)
         BETA.append(X[0])
         pb.init = X[1]
         if (type(n_active)==int) : n_act = n_active
@@ -179,7 +179,7 @@ Class of problem : we define a type, which will contain as attributes all the pa
 '''
 
 
-class problem_LS :
+class problem_R1 :
     
     def __init__(self,data,algo):
         self.N = 500000
