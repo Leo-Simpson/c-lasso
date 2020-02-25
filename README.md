@@ -377,6 +377,10 @@ The Huber problem with concomitant scale [R4] is reformulated as scaled Lasso pr
 with the mean shift (see [6]) and thus solved in (n + d) dimensions. 
 
 
+## Structure of the code
+
+![Structure](https://github.com/Leo-Simpson/Figures/blob/master/classo_structure.png)
+
 
 ## References 
 
