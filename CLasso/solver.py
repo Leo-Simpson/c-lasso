@@ -430,13 +430,13 @@ class solution_PATH:
 
 
     Attributes:
-        BETAS
-        SIGMAS
-        LAMBDAS
-        method
-        save
-        formulation
-        time
+        BETAS (numpy.ndarray) : array of size Npath x d with the solution beta for each lambda on each row
+        SIGMAS (numpy.ndarray) : array of size Npath with the solution sigma for each lambda when the formulation of the problem is R2 or R4
+        LAMBDAS (numpy.ndarray) : array of size Npath with the lambdas (real lambdas, not divided by lambda_max) for which the solution is computed
+        method (str) : name of the numerical method that has been used. It can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
+        save (bool or str) : if it is a str, then it gives the name of the file where the graphics has been/will be saved (after using print(solution) )
+        formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
+        time (float) : running time of this action
 
     '''
     def __init__(self, matrices, param, formulation):
@@ -487,17 +487,19 @@ class solution_CV:
 
 
     Attributes:
-        beta
-        sigma
-        xGraph
-        yGraph
-        standard_error
-        index_min
-        index_1SE
-        selected_param
-        refit
-        formulation
-        time
+        xGraph (numpy.ndarray) : array of size Nlambdas of the lambdas / lambda_max
+        yGraph (numpy.ndarray) : array of size Nlambdas of the average validation residual (over the K subsets)
+        standard_error (numpy.ndarray) : array of size Nlambdas of the standard error of the validation residual (over the K subsets)
+        index_min (int) : index on xGraph of the selected lambda without 1-standard-error method
+        index_1SE (int) : index on xGraph of the selected lambda with 1-standard-error method
+        lambda_min (float) : selected lambda without 1-standard-error method
+        lambda_oneSE (float) : selected lambda with 1-standard-error method
+        beta (numpy.ndarray) : solution beta of classo at lambda_oneSE
+        sigma (float) : solution sigma of classo at lambda_oneSE when formulation is 'R2' or 'R4'
+        selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected
+        refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
+        formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
+        time (float) : running time of this action
 
     '''
     def __init__(self, matrices, param, formulation):
@@ -524,6 +526,8 @@ class solution_CV:
                                                                                    oneSE=param.oneSE, e=e)
 
         self.xGraph = param.lambdas
+        self.lambda_oneSE = param.lambdas[self.index_oneSE]
+        self.lambda_min = param.lambdas[self.index_min]
 
         if param.formulation.concomitant:
             self.beta, self.sigma = out
@@ -563,13 +567,16 @@ class solution_StabSel:
 
 
     Attributes:
-        distribution
-        lambdas_path
-        selected_param
-        to_label
-        refit
-        formulation
-        time
+        distribution (array) : d array of stability rations.
+        lambdas_path (array or string) : for 'first' method : N_lambdas array of the lambdas used. Other cases : 'not used'
+        distribution_path (array or string) : for 'first' method :  N_lambdas x d array with stability ratios as a function of lambda. Other cases : 'not computed'
+        threshold (float) : threshold for StabSel, ie for a variable i, stability ratio that is needed to get selected
+        save1,save2,save3 (bool or string) : if a string is given, the corresponding graph will be saved with the given name of the file (save1 is for stability plot ; save2 for path-stability plot; and save3 for refit beta-solution)
+        selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected
+        to_label (list of int) : list that indicates the index of the True-componants of selected_param (useful to find the right label in _repr_() method)
+        refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
+        formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
+        time (float) : running time of this action
 
     '''
     def __init__(self, matrices, param, formulation):
@@ -670,13 +677,15 @@ class solution_LAMfixed:
 
 
     Attributes:
-        beta
-        sigma
-        lambdamax
-        selected_param
-        refit
-        formulation
-        time
+        lambdamax (float) : lambda maximum for which the solution is non-null
+        true_lam (bool) : if False, it means that the problem had been computed for lambda*lambdamax (so lambda should be between 0 and 1)
+        lambda (float) : lambda for which the problem is solved
+        beta (numpy.ndarray) : solution beta of classo
+        sigma (float) : solution sigma of classo when formulation is 'R2' or 'R4'
+        selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected (which is the case when the i-th component solution of the classo is non-null)
+        refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
+        formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
+        time (float) : running time of this action
 
     '''
     def __init__(self, matrices, param, formulation):
@@ -691,18 +700,19 @@ class solution_LAMfixed:
         e = param.formulation.e
         # Compute the theoretical lam if necessary
         if param.lam == 'theoretical':
-            lam = param.theoretical_lam
+            self.lam = param.theoretical_lam
         else:
-            lam = param.lam
+            self.lam = param.lam
 
         # Algorithmic method choosing
         numerical_method = choose_numerical_method(param.numerical_method, 'LAM', param.formulation, lam=lam)
         param.numerical_method = numerical_method
+        self.true_lam = param.true_lam
 
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         out = Classo(
-            matrices, lam, typ=name_formulation, meth=numerical_method, rho=rho,
-            get_lambdamax=True, true_lam=param.true_lam, e=e, rho_classification=rho_classification)
+            matrices, self.lam, typ=name_formulation, meth=numerical_method, rho=rho,
+            get_lambdamax=True, true_lam=self.true_lam, e=e, rho_classification=rho_classification)
 
         if param.formulation.concomitant: self.lambdamax, self.beta, self.sigma = out
         else: self.lambdamax, self.beta = out
