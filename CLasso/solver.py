@@ -730,10 +730,6 @@ class solution_LAMfixed:
 
 
 
-
-
-
-
 def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=None):
     ''' Annex function in order to choose the right numerical method, if the given one is invalid
 
