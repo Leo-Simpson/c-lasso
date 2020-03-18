@@ -144,10 +144,22 @@ This gives you a summary of the form:
 
 ```
 FORMULATION : Concomitant
-
+ 
 MODEL SELECTION COMPUTED :  Stability selection, 
+ 
+STABILITY SELECTION PARAMETERS: method = first;  lamin = 0.01;  lam = theoretical;  B = 50;  q = 10;  percent_nS = 0.5;  threshold = 0.7;  numerical_method = Path-Alg
 
-STABILITY SELECTION PARAMETERS: method = first;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.9;  numerical_method = ODE
+SELECTED VARIABLES : 
+16
+44
+65
+90
+93
+Running time : 
+Running time for Path computation    : 'not computed'
+Running time for Cross Validation    : 'not computed'
+Running time for Stability Selection : 5.831s
+Running time for Fixed LAM           : 'not computed'
 ```
 As we have not specified any problem, algorithm, or model selection settings, this problem instance
 represents the *default* settings for a c-lasso instance: 
