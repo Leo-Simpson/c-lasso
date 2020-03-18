@@ -64,22 +64,18 @@ class classo_formulation:
         self.e = 'not specified'
 
     def name(self):
+        if self.classification:
+            if self.huber:
+                return "C2"
+            else : return "C1"
+        if self.concomitant:
+            if self.huber:
+                return "R4"
+            else : return "R3"
         if self.huber:
-            if self.classification:
-                return ('Huber_Classification')
-            else:
-                if self.concomitant:
-                    return ('Concomitant_Huber')
-                else:
-                    return ('Huber')
-        else:
-            if self.classification:
-                return ('Classification')
-            else:
-                if self.concomitant:
-                    return ('Concomitant')
-                else:
-                    return ('LS')
+            return "R2"
+        else : return "R1"
+
 
     def __repr__(self):
         return (self.name())
@@ -160,10 +156,10 @@ class PATHparameters:
         self.lambdas = np.array([10**(-delta * float(i) / nlam) for i in range(0,nlam) ] )
         self.plot_sigma = True
 
-    def __repr__(self): return ('Npath = ' + str(len(self.lambdas))
-                                + '  n_active = ' + str(self.n_active)
-                                + '  lamin = ' + str(self.lambdas[-1])
-                                + ';  numerical_method = ' + str(self.numerical_method))
+    def __repr__(self): return (  '\n     Npath = ' + str(len(self.lambdas))
+                                + '\n     n_active = ' + str(self.n_active)
+                                + '\n     lamin = ' + str(self.lambdas[-1])
+                                + '\n     numerical_method = ' + str(self.numerical_method))
 class CVparameters:
     '''object parameters to compute the cross-validation.
 
@@ -194,10 +190,10 @@ class CVparameters:
         self.lambdas = np.linspace(1., 1e-3, 500)
         self.oneSE = True
 
-    def __repr__(self): return ('Nsubset = ' + str(self.Nsubset)
-                                + '  lamin = ' + str(self.lambdas[-1])
-                                + '  n_lam = ' + str(len(self.lambdas))
-                                + ';  numerical_method = ' + str(self.numerical_method))
+    def __repr__(self): return (  '\n     Nsubset = ' + str(self.Nsubset)
+                                + '\n     lamin = ' + str(self.lambdas[-1])
+                                + '\n     n_lam = ' + str(len(self.lambdas))
+                                + '\n     numerical_method = ' + str(self.numerical_method))
 class StabSelparameters:
     '''object parameters to compute the stability selection.
 
@@ -264,14 +260,14 @@ class StabSelparameters:
         self.threshold_label = 0.4
         self.theoretical_lam = 0.0
 
-    def __repr__(self): return ('method = ' + str(self.method)
-                                + ';  lamin = ' + str(self.lamin)
-                                + ';  lam = ' + str(self.lam)
-                                + ';  B = ' + str(self.B)
-                                + ';  q = ' + str(self.q)
-                                + ';  percent_nS = ' + str(self.percent_nS)
-                                + ';  threshold = ' + str(self.threshold)
-                                + ';  numerical_method = ' + str(self.numerical_method))
+    def __repr__(self): return (  '\n     method = ' + str(self.method)
+                                + '\n     lamin = ' + str(self.lamin)
+                                + '\n     lam = ' + str(self.lam)
+                                + '\n     B = ' + str(self.B)
+                                + '\n     q = ' + str(self.q)
+                                + '\n     percent_nS = ' + str(self.percent_nS)
+                                + '\n     threshold = ' + str(self.threshold)
+                                + '\n     numerical_method = ' + str(self.numerical_method))
 class LAMfixedparameters:
             '''object parameters to compute the lasso for a fixed lambda
 
@@ -298,9 +294,9 @@ class LAMfixedparameters:
                 self.true_lam = True
                 self.theoretical_lam = 0.0
 
-            def __repr__(self): return ('lam = ' + str(self.lam)
-                                        + ';  theoretical_lam = ' + str(round(self.theoretical_lam, 4))
-                                        + ';  numerical_method = ' + str(self.numerical_method))
+            def __repr__(self): return (  '\n     lam = ' + str(self.lam)
+                                        + '\n     theoretical_lam = ' + str(round(self.theoretical_lam, 4))
+                                        + '\n     numerical_method = ' + str(self.numerical_method))
 
 class classo_problem:
     ''' Class that contains all the information about the problem
@@ -526,7 +522,7 @@ class solution_CV:
                                                                                    oneSE=param.oneSE, e=e)
 
         self.xGraph = param.lambdas
-        self.lambda_oneSE = param.lambdas[self.index_oneSE]
+        self.lambda_1SE = param.lambdas[self.index_1SE]
         self.lambda_min = param.lambdas[self.index_min]
 
         if param.formulation.concomitant:
@@ -705,7 +701,7 @@ class solution_LAMfixed:
             self.lam = param.lam
 
         # Algorithmic method choosing
-        numerical_method = choose_numerical_method(param.numerical_method, 'LAM', param.formulation, lam=lam)
+        numerical_method = choose_numerical_method(param.numerical_method, 'LAM', param.formulation, lam=self.lam)
         param.numerical_method = numerical_method
         self.true_lam = param.true_lam
 

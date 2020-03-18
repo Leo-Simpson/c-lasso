@@ -13,33 +13,33 @@ Classo and pathlasso are the main functions, they can call every algorithm acord
 
 # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
-def Classo(matrix,lam,typ = 'LS', meth='DR', rho = 1.345, get_lambdamax = False, true_lam=False, e=1., rho_classification=-1.):
-    if(typ=='Concomitant'):
+def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False, true_lam=False, e=1., rho_classification=-1.):
+    if(typ=='R3'):
         if not meth in ['Path-Alg', 'DR']: meth='DR'
         pb = problem_R3(matrix,meth,e=e)
         if (true_lam): beta,s = Classo_R3(pb,lam/pb.lambdamax)
         else : beta, s = Classo_R3(pb, lam)
         s = s/np.sqrt(e)
 
-    elif(typ=='Concomitant_Huber'):
+    elif(typ=='R4'):
         if not meth in ['Path-Alg', 'DR']: meth='DR'
         pb  = problem_R4(matrix,meth,rho,e=e)
         if (true_lam): beta,s = Classo_R4(pb,lam/pb.lambdamax,e=e)
         else : beta, s = Classo_R4(pb, lam,e=e)
 
 
-    elif(typ=='Huber'):
+    elif(typ=='R2'):
         if not meth in ['Path-Alg', 'P-PDS' , 'PF-PDS' , 'DR']: meth = 'ODE'
         pb = problem_Huber(matrix,meth,rho)
         if (true_lam): beta = Classo_R2(pb,lam/pb.lambdamax)
         else : beta = Classo_R2(pb, lam)
 
-    elif (typ == 'Huber_Classification'):
+    elif (typ == 'C2'):
         if (true_lam):  BETA = solve_path(matrix, lamin, False, rho_classification, 'huber_cl')[0] #TO DO HERE !!!!!!!!!
         else :    BETA = solve_path(matrix, lamin, False, rho_classification, 'huber_cl')[0]
         beta = BETA[0]
 
-    elif (typ == 'Classification'):
+    elif (typ == 'C1'):
         if(true_lam) : BETA = solve_path(matrix,lamin, False,0, 'cl')[0] # TO DO HERE !!!!!!!!
         else : BETA = solve_path(matrix,lamin, False,0, 'cl')[0]
         beta = BETA[0]
@@ -51,7 +51,7 @@ def Classo(matrix,lam,typ = 'LS', meth='DR', rho = 1.345, get_lambdamax = False,
         if (true_lam) : beta = Classo_R1(pb,lam/pb.lambdamax)
         else : beta = Classo_R1(pb,lam)
 
-    if (typ  in ['Concomitant','Concomitant_Huber']): 
+    if (typ  in ['R3','R4']):
         if (get_lambdamax): return(pb.lambdamax,beta,s)
         else              : return(beta,s)
     if (get_lambdamax): return(pb.lambdamax,beta)
@@ -63,32 +63,32 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='Path
         if (lambdas[0]<lambdas[-1]): lambdas = [lambdas[i] for i in range(len(lambdas)-1,-1,-1)]  # reverse the list if needed
     else: lambdas = np.linspace(1.,lamin,100)
 
-    if(typ=='Huber'):
+    if(typ=='R2'):
         pb = problem_R2(matrix,meth,rho)
         lambdamax = pb.lambdamax
         #if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         BETA  = pathlasso_R2(pb,lambdas,n_active=n_active)
 
-    elif(typ=='Concomitant'):
+    elif(typ=='R3'):
         pb = problem_R3(matrix,meth,e=e)
         lambdamax = pb.lambdamax
         #if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         BETA,S = pathlasso_R3(pb,lambdas,n_active=n_active)
         S=np.array(S)/np.sqrt(e)
 
-    elif(typ=='Concomitant_Huber'):
+    elif(typ=='R4'):
         meth='DR'
         pb = problem_R4(matrix,meth,rho)
         lambdamax = pb.lambdamax
         #if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         BETA,S = pathlasso_R4(pb,lambdas,n_active=n_active)
         
-    elif(typ == 'Huber_Classification'):
+    elif(typ == 'C2'):
         lambdamax = h_lambdamax(matrix[0],matrix[2],rho)
         #if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         BETA = pathalgo_general(matrix, lambdas, 'huber_cl', n_active=n_active, rho=rho_classification)
 
-    elif (typ == 'Classification'):
+    elif (typ == 'C1'):
         lambdamax = 2*LA.norm((matrix[0].T).dot(matrix[2]),np.infty)
         #if (true_lam): lambdas = [lamb / lambdamax for lamb in lambdas]
         BETA = pathalgo_general(matrix, lambdas, 'cl', n_active=n_active)
@@ -100,7 +100,7 @@ def pathlasso(matrix,lambdas=False,n_active=False,lamin=1e-2,typ='LS',meth='Path
         BETA = pathlasso_R1(pb,lambdas,n_active=n_active)
 
     real_path = [lam*lambdamax for lam in lambdas]
-    if(typ in ['Concomitant','Concomitant_Huber'] and return_sigm): return(BETA,real_path,S)
+    if(typ in ['R3','R4'] and return_sigm): return(BETA,real_path,S)
     return(BETA,real_path)
  
     
