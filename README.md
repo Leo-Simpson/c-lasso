@@ -4,7 +4,7 @@
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
 constraints on the model parameters. The forward model is assumed to be: 
 
-[img[https://latex.codecogs.com/gif.latex?y=X\beta+\sigma\epsilon\qquad\text{s.t.}\qquad C\beta=0]]
+<img src="https://latex.codecogs.com/gif.latex?y=X\beta&plus;\sigma\epsilon\qquad\text{s.t.}\qquad&space;C\beta=0" />
 
 Here, y and X are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). C is a general constraint matrix. The vector &beta; comprises the unknown coefficients and &sigma; an 
 unknown scale.
