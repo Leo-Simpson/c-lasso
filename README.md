@@ -18,8 +18,8 @@ We also include two model selection strategies for determining the sparsity of t
 
 This package is intended to fill the gap between popular python tools such as [scikit-learn](https://scikit-learn.org/stable/) which CANNOT solve sparse constrained problems and general-purpose optimization solvers that do not scale well for the considered problems.
 
-Below we show several use cases of the package, including an application of sparse log-contrast
-regression tasks for compositional microbiome data.
+Below we show several use cases of the package, including an application of sparse *log-contrast*
+regression tasks for *compositional* microbiome data.
 
 The code builds on results from several papers which can be found in the [References](#references).
 
