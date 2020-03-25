@@ -657,9 +657,9 @@ class solution_StabSel:
                     plt.plot(lambdas, [Dpath[j][i] for j in range(N)], 'b', label='unselected variables')
             p1, p2 = mpatches.Patch(color='red', label='selected variables'), mpatches.Patch(color='blue',
                                                                                               label='unselected variables')
-            plt.legend(handles=[p1, p2])
+            plt.legend(handles=[p1, p2], loc=1)
             plt.axhline(y=self.threshold,color='g')
-            plt.xlabel(StabSel_path["xlabel"]), plt.ylabel(StabSel_path["ylabel"]), plt.title(StabSel_path["title"]), plt.legend()
+            plt.xlabel(StabSel_path["xlabel"]), plt.ylabel(StabSel_path["ylabel"]), plt.title(StabSel_path["title"])
             if (type(self.save2)==str):plt.savefig(self.save2)
             plt.show()
 
@@ -780,35 +780,35 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
 
 
 CV_beta             = {
-                            "title"  : "Refitted coefficients after CV model selection" ,
-                            "xlabel" : "Coefficient index $i$" ,
-                            "ylabel" : "Coefficients $\beta_i$ "}
+                            "title"  : r"Refitted coefficients after CV model selection" ,
+                            "xlabel" : r"Coefficient index $i$" ,
+                            "ylabel" : r"Coefficients $\beta_i$ "}
 CV_graph            = {
-                            "title"  : " " ,
-                            "xlabel" : "$\lambda$" ,
-                            "ylabel" : "Mean-Squared Error (MSE) "}
+                            "title"  : r" " ,
+                            "xlabel" : r"$\lambda$" ,
+                            "ylabel" : r"Mean-Squared Error (MSE) "}
 LAM_beta            = {
-                            "title"  : "Coefficients at theoretical $\lambda$ = " ,
-                            "xlabel" : "Coefficient index $i$" ,
-                            "ylabel" : "Coefficients $\beta_i$ "}
+                            "title"  : r"Coefficients at theoretical $\lambda$ = " ,
+                            "xlabel" : r"Coefficient index $i$" ,
+                            "ylabel" : r"Coefficients $\beta_i$ "}
 PATH_beta_path      = {
-                            "title"  : "Coefficients across $lambda$-path using " ,
-                            "xlabel" : "$\lambda$" ,
-                            "ylabel" : "Coefficients $\beta_i$ "}
+                            "title"  : r"Coefficients across $\lambda$-path using " ,
+                            "xlabel" : r"$\lambda$" ,
+                            "ylabel" : r"Coefficients $\beta_i$ "}
 PATH_sigma_path     = {
-                            "title"  : "Scale estimate across $lambda$-path using " ,
-                            "xlabel" : "$\lambda$" ,
-                            "ylabel" : "Scale $\sigma$ "}
+                            "title"  : r"Scale estimate across $\lambda$-path using " ,
+                            "xlabel" : r"$\lambda$" ,
+                            "ylabel" : r"Scale $\sigma$ "}
 StabSel_graph       = {
-                            "title"  : "Stability selection profile of type " ,
-                            "xlabel" : "Coefficient index $i$" ,
-                            "ylabel" : "Selection probability "}
+                            "title"  : r"Stability selection profile of type " ,
+                            "xlabel" : r"Coefficient index $i$" ,
+                            "ylabel" : r"Selection probability "}
 StabSel_path        = {
-                            "title"  : "Stability selection profile across $\lambda$-path using " ,
-                            "xlabel" : "Coefficient index $i$" ,
-                            "ylabel" : "Coefficients $\beta_i$ "}
+                            "title"  : r"Stability selection profile across $\lambda$-path using " ,
+                            "xlabel" : r"Coefficient index $i$" ,
+                            "ylabel" : r"Coefficients $\beta_i$ "}
 StabSel_beta        = {
-                            "title"  : "Refitted coefficients after stability selection" ,
-                            "xlabel" : "Coefficient index $i$" ,
-                            "ylabel" : "Coefficients $\beta_i$ "}
+                            "title"  : r"Refitted coefficients after stability selection" ,
+                            "xlabel" : r"Coefficient index $i$" ,
+                            "ylabel" : r"Coefficients $\beta_i$ "}
 
