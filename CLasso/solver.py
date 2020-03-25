@@ -465,7 +465,7 @@ class solution_PATH:
 
     def __repr__(self):
         affichage(self.BETAS, self.LAMBDAS, labels=label,
-                  title=PATH_beta_path["title"] + self.method,xlabel=PATH_beta_path["xlabel"],ylabel=PATH_beta_path["ylabel"])
+                  title=PATH_beta_path["title"] + self.formulation.name(),xlabel=PATH_beta_path["xlabel"],ylabel=PATH_beta_path["ylabel"])
         if (type(self.save) == str): plt.savefig(self.save + 'Beta-path')
         plt.show()
         if(type(self.SIGMAS)!=str and self.plot_sigma):
@@ -620,7 +620,7 @@ class solution_StabSel:
         self.time = time() - t0
 
         self.method = param.method
-        self.numerical_method = param.numerical_method
+        self.formulation = name_formulation
 
     def __repr__(self):
 
@@ -636,7 +636,7 @@ class solution_StabSel:
         plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected variables')
         plt.axhline(y=self.threshold, color='g',label='threshold')
         if (type(label) != bool): plt.xticks(self.to_label, label[self.to_label], rotation=30)
-        plt.xlabel(StabSel_graph["xlabel"]), plt.ylabel(StabSel_graph["ylabel"]), plt.title(StabSel_graph["title"] + self.method + " using " + self.numerical_method), plt.legend()
+        plt.xlabel(StabSel_graph["xlabel"]), plt.ylabel(StabSel_graph["ylabel"]), plt.title(StabSel_graph["title"] + self.method + " using " + self.formulation), plt.legend()
         if (type(self.save1) == str): plt.savefig(self.save1)
         plt.show()
         print("SELECTED VARIABLES : ")
@@ -659,7 +659,7 @@ class solution_StabSel:
                                                                                               label='unselected variables')
             plt.legend(handles=[p1, p2], loc=1)
             plt.axhline(y=self.threshold,color='g')
-            plt.xlabel(StabSel_path["xlabel"]), plt.ylabel(StabSel_path["ylabel"]), plt.title(StabSel_path["title"])
+            plt.xlabel(StabSel_path["xlabel"]), plt.ylabel(StabSel_path["ylabel"]), plt.title(StabSel_path["title"] +  self.method + " using " + self.formulation)
             if (type(self.save2)==str):plt.savefig(self.save2)
             plt.show()
 
@@ -785,7 +785,7 @@ CV_beta             = {
                             "ylabel" : r"Coefficients $\beta_i$ "}
 CV_graph            = {
                             "title"  : r" " ,
-                            "xlabel" : r"$\lambda$" ,
+                            "xlabel" : r"$\lambda / \lambda_{max}$" ,
                             "ylabel" : r"Mean-Squared Error (MSE) "}
 LAM_beta            = {
                             "title"  : r"Coefficients at theoretical $\lambda$ = " ,
