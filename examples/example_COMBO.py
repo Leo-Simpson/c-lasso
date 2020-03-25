@@ -13,11 +13,11 @@ X_F = X_F - np.mean(X_F, axis=0)  #Covariate data (Fat)
 X0 = clr(X0, 1 / 2).T
 
 X      = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis=1) # Joint microbiome and covariate data and offset
-labels = np.concatenate([labels,np.array(['Calorie','Fat','Biais'])])
+label = np.concatenate([labels,np.array(['Calorie','Fat','Biais'])])
 C = np.ones((1,len(X[0])))
 C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
 
-problem = classo_problem(X,y,C, labels=labels)
+problem = classo_problem(X,y,C, label=label)
 
 # Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
 problem.model_selection.LAMfixed                    = True

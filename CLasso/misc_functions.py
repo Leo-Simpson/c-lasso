@@ -70,15 +70,14 @@ def plot_betai(labels,l_index,path,BETAS):
     j=0
     for i in range(len(BETAS[0])) :
         if(j<len(l_index) and i==l_index[j]):
-            leg = 'index = '+str(i)
-            if not (type(labels)==bool): leg+='  '+ str(labels[i])
+            if not (type(labels)==bool): leg = 'Coefficient '+str(labels[i])
+            else : leg = 'Coefficient '+str(i)
             plt.plot(path,BETAS[:,i],label=leg,color=colo[j])
             j+=1
         else:
             plt.plot(path, BETAS[:, i], color=colo[i+j])
 
-def affichage(LISTE_BETA, path, title=' ', labels=False, pix=False, xlabel=" ", ylabel=" "):
-    naffichage = 10
+def affichage(LISTE_BETA, path, title=' ', labels=False, pix=False, xlabel=" ", ylabel=" ", naffichage=10):
     BETAS = np.array(LISTE_BETA)
     l_index = influence(BETAS, naffichage)
     plt.figure(figsize=(10, 3), dpi=80)

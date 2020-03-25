@@ -125,10 +125,10 @@ class classo_model_selection:
 
     def __repr__(self):
         string = ''
-        if self.PATH: string += 'Path,  '
-        if self.CV: string += 'Cross Validation,  '
-        if self.StabSel: string += 'Stability selection, '
-        if self.LAMfixed: string += 'Lambda fixed'
+        if self.PATH: string +=     '\n     Path'
+        if self.CV: string +=       '\n     Cross Validation'
+        if self.StabSel: string +=  '\n     Stability selection'
+        if self.LAMfixed: string += '\n     Lambda fixed'
         return string
 
 class PATHparameters:
@@ -145,7 +145,10 @@ class PATHparameters:
         lambdas (numpy.ndarray) : list of lambdas for computinf lasso-path for cross validation on lambda.
             Default value : np.array([10**(-delta * float(i) / nlam) for i in range(0,nlam) ] ) with delta=2. and nlam = 40
 
-        plot_sigma :
+        plot_sigma (bool) : if True then the print method of the solution will also show sigma if it is computed (formulation R3 or R4)
+            Default value : True
+
+        label (numpy.ndarray of str) : labels on each coefficients
     '''
     def __init__(self):
         self.formulation = 'not specified'
@@ -318,10 +321,9 @@ class classo_problem:
                                       Before using the method solve() , its componant are empty/null.
 
     '''
-    def __init__(self, X, y, C='zero-sum', labels=False):  # zero sum constraint by default, but it can be any matrix
-        global label
-        label = labels
-        self.label = label
+    def __init__(self, X, y, C='zero-sum', label=False):  # zero sum constraint by default, but it can be any matrix
+        if (type(label)==bool): self.label = np.array([str(i) for i in range(len(X[0]))])
+        else : self.label = label
         self.data = classo_data(X, y, C)
         self.formulation = classo_formulation()
         self.model_selection = classo_model_selection()
@@ -350,11 +352,11 @@ class classo_problem:
 
         # Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
         if self.model_selection.PATH:
-            solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation)
+            solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, self.label)
 
         # Compute the cross validation thanks to the class solution_CV which contains directely the computation in the initialisation
         if self.model_selection.CV:
-            solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation)
+            solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation, self.label)
 
         # Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
         if self.model_selection.StabSel:
@@ -362,14 +364,14 @@ class classo_problem:
             param.theoretical_lam = theoretical_lam(int(n * param.percent_nS), d)
             if(param.true_lam): param.theoretical_lam = param.theoretical_lam*int(n * param.percent_nS)
 
-            solution.StabSel = solution_StabSel(matrices, param, self.formulation)
+            solution.StabSel = solution_StabSel(matrices, param, self.formulation, self.label)
 
         # Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
         if self.model_selection.LAMfixed:
             param = self.model_selection.LAMfixedparameters
             param.theoretical_lam = theoretical_lam(n, d)
             if(param.true_lam): param.theoretical_lam = param.theoretical_lam*n
-            solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation)
+            solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, self.label)
 
         self.solution = solution
 
@@ -385,9 +387,9 @@ class classo_problem:
         if (self.model_selection.PATH):
             print_parameters += '\n \nPATH PARAMETERS: ' + self.model_selection.PATHparameters.__repr__()
 
-        return (' \n \nFORMULATION : ' + self.formulation.__repr__()
+        return (' \n \nFORMULATION: ' + self.formulation.__repr__()
                 + '\n \n' +
-                'MODEL SELECTION COMPUTED :  ' + self.model_selection.__repr__()
+                'MODEL SELECTION COMPUTED:  ' + self.model_selection.__repr__()
                 + print_parameters + '\n'
                 )
 
@@ -435,7 +437,7 @@ class solution_PATH:
         time (float) : running time of this action
 
     '''
-    def __init__(self, matrices, param, formulation):
+    def __init__(self, matrices, param, formulation, label):
         t0 = time()
 
         # Formulation choosing
@@ -461,10 +463,11 @@ class solution_PATH:
         self.plot_sigma = param.plot_sigma
         self.method = numerical_method
         self.save = False
+        self.label = label
         self.time = time() - t0
 
     def __repr__(self):
-        affichage(self.BETAS, self.LAMBDAS, labels=label,
+        affichage(self.BETAS, self.LAMBDAS, labels=self.label, naffichage=5,
                   title=PATH_beta_path["title"] + self.formulation.name(),xlabel=PATH_beta_path["xlabel"],ylabel=PATH_beta_path["ylabel"])
         if (type(self.save) == str): plt.savefig(self.save + 'Beta-path')
         plt.show()
@@ -498,7 +501,7 @@ class solution_CV:
         time (float) : running time of this action
 
     '''
-    def __init__(self, matrices, param, formulation):
+    def __init__(self, matrices, param, formulation, label):
         t0 = time()
 
         # Formulation choosing
@@ -534,9 +537,11 @@ class solution_CV:
         self.refit = min_LS(matrices, self.selected_param)
         self.time = time() - t0
         self.save=False
+        self.label = label
 
     def __repr__(self):
         plt.bar(range(len(self.refit)), self.refit), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
+        plt.xticks(np.where(self.selected_param)[0],self.label[self.selected_param], rotation=30)
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
         return (str(round(self.time, 3)) + "s")
@@ -547,8 +552,8 @@ class solution_CV:
             if (self.yGraph[j] < mse_max): break
 
         plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data')
-        plt.axvline(x=self.xGraph[i_min], color='k', label='lam with min MSE')
-        plt.axvline(x=self.xGraph[i_1SE],color='r',label='lam with 1SE')
+        plt.axvline(x=self.xGraph[i_min], color='k', label=r'$\lambda$ (min MSE)')
+        plt.axvline(x=self.xGraph[i_1SE],color='r',label=r'$\lambda$ (1SE) ')
         plt.title(CV_graph["title"]), plt.xlabel(CV_graph["xlabel"]),plt.ylabel(CV_graph["ylabel"])
         plt.legend()
         if(type(save)==str) : plt.savefig(save)
@@ -575,7 +580,7 @@ class solution_StabSel:
         time (float) : running time of this action
 
     '''
-    def __init__(self, matrices, param, formulation):
+    def __init__(self, matrices, param, formulation, label):
         t0 = time()
 
         # Formulation choosing
@@ -617,54 +622,48 @@ class solution_StabSel:
         self.save1 = False
         self.save2 = False
         self.save3 = False
-        self.time = time() - t0
-
         self.method = param.method
         self.formulation = name_formulation
+        self.label = label
+        self.time = time() - t0
+
 
     def __repr__(self):
 
-        D = self.distribution
-        Dpath = self.distribution_path
-        selected = self.selected_param
+        D, Dpath, selected = self.distribution, self.distribution_path, self.selected_param
         unselected = [not i for i in selected]
-        Dselected = np.zeros(len(D))
-        Dunselected = np.zeros(len(D))
-        Dselected[selected] = D[selected]
-        Dunselected[unselected] = D[unselected]
-        plt.bar(range(len(Dselected)), Dselected, color='r', label='selected variables')
-        plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected variables')
-        plt.axhline(y=self.threshold, color='g',label='threshold')
-        if (type(label) != bool): plt.xticks(self.to_label, label[self.to_label], rotation=30)
+        Dselected, Dunselected  = np.zeros(len(D)), np.zeros(len(D))
+        Dselected[selected], Dunselected[unselected] = D[selected], D[unselected]
+        plt.bar(range(len(Dselected)), Dselected, color='r', label='selected coefficients')
+        plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected coefficients')
+        plt.axhline(y=self.threshold, color='g',label='Threshold : thresh = '+ str(self.threshold))
+        plt.xticks(self.to_label, self.label[self.to_label], rotation=30)
         plt.xlabel(StabSel_graph["xlabel"]), plt.ylabel(StabSel_graph["ylabel"]), plt.title(StabSel_graph["title"] + self.method + " using " + self.formulation), plt.legend()
         if (type(self.save1) == str): plt.savefig(self.save1)
         plt.show()
         print("SELECTED VARIABLES : ")
-        if (type(label) != bool):
-            for i in range(len(D)):
-                if (selected[i]): print(i, label[i])
-        else:
-            for i in range(len(D)):
-                if (selected[i]): print(i)
+        for i in np.where(selected)[0] :
+            print(self.label[i])
 
         if (type(Dpath) != str):
             lambdas = self.lambdas_path
             N = len(lambdas)
             for i in range(len(selected)):
-                if selected[i]:
-                    plt.plot(lambdas, [Dpath[j][i] for j in range(N)], 'r', label='selected variables')
-                else:
-                    plt.plot(lambdas, [Dpath[j][i] for j in range(N)], 'b', label='unselected variables')
-            p1, p2 = mpatches.Patch(color='red', label='selected variables'), mpatches.Patch(color='blue',
-                                                                                              label='unselected variables')
-            plt.legend(handles=[p1, p2], loc=1)
+                if selected[i]: c='r'
+                else :          c='b'
+                plt.plot(lambdas, [Dpath[j][i] for j in range(N)], c)
+            p1 = mpatches.Patch(color='red', label='selected coefficients')
+            p2 = mpatches.Patch(color='blue',label='unselected coefficients')
+            p3 = mpatches.Patch(color='green',label='Threshold : thresh = '+ str(self.threshold))
+            plt.legend(handles=[p1, p2, p3], loc=1)
             plt.axhline(y=self.threshold,color='g')
             plt.xlabel(StabSel_path["xlabel"]), plt.ylabel(StabSel_path["ylabel"]), plt.title(StabSel_path["title"] +  self.method + " using " + self.formulation)
             if (type(self.save2)==str):plt.savefig(self.save2)
             plt.show()
 
         plt.bar(range(len(self.refit)), self.refit)
-        plt.xlabel(StabSel_beta["xlabel"]), plt.ylabel(StabSel_beta["ylabel"]), plt.title(StabSel_beta["title"]), plt.legend()
+        plt.xlabel(StabSel_beta["xlabel"]), plt.ylabel(StabSel_beta["ylabel"]), plt.title(StabSel_beta["title"])
+        plt.xticks(np.where(self.selected_param)[0],self.label[self.selected_param], rotation=30)
         if (type(self.save3) == str): plt.savefig(self.save3)
         plt.show()
         return (str(round(self.time, 3)) + "s")
@@ -687,7 +686,7 @@ class solution_LAMfixed:
         time (float) : running time of this action
 
     '''
-    def __init__(self, matrices, param, formulation):
+    def __init__(self, matrices, param, formulation, label):
         t0 = time()
         self.formulation = formulation
         # Formulation choosing
@@ -715,17 +714,24 @@ class solution_LAMfixed:
 
         if param.formulation.concomitant: self.lambdamax, self.beta, self.sigma = out
         else: self.lambdamax, self.beta = out
-        self.selected_param = abs(self.beta) > 1e-3
+        avg_beta = np.mean(abs(self.beta))
+        self.selected_param = abs(self.beta) > avg_beta
         self.refit = min_LS(matrices, self.selected_param)
+        self.label = label
         self.time = time() - t0
         self.save = False
 
     def __repr__(self):
         plt.bar(range(len(self.beta)), self.beta), plt.title(LAM_beta["title"] + str(round(self.lam,3) ) ), plt.xlabel(LAM_beta["xlabel"]),plt.ylabel(LAM_beta["ylabel"])
+        plt.xticks(np.where(self.selected_param)[0],self.label[self.selected_param], rotation=30)
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
         if(self.formulation.concomitant) : print("SIGMA FOR LAMFIXED  : ", self.sigma )
         return (str(round(self.time, 3)) + "s")
+
+
+
+
 
 
 
