@@ -4,7 +4,7 @@
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
 constraints on the model parameters. The forward model is assumed to be: 
 
-<img src="https://latex.codecogs.com/gif.latex?y&space;=X\beta&space;+\sigma&space;\epsilon&space;\qquad\txt{s.t.}\qquad&space;C\beta=0" /> 
+<img src="https://latex.codecogs.com/gif.latex?y=X\beta&plus;\sigma\epsilon\qquad\text{s.t.}\qquad&space;C\beta=0" title="y=X\beta+\sigma\epsilon\qquad\text{s.t.}\qquad C\beta=0" />
 
 Here, y and X are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). C is a general constraint matrix. The vector &beta; comprises the unknown coefficients and &sigma; an 
 unknown scale.
@@ -18,8 +18,8 @@ We also include two model selection strategies for determining the sparsity of t
 
 This package is intended to fill the gap between popular python tools such as [scikit-learn](https://scikit-learn.org/stable/) which CANNOT solve sparse constrained problems and general-purpose optimization solvers that do not scale well for the considered problems.
 
-Below we show several use cases of the package, including an application of sparse log-contrast
-regression tasks for compositional microbiome data.
+Below we show several use cases of the package, including an application of sparse *log-contrast*
+regression tasks for *compositional* microbiome data.
 
 The code builds on results from several papers which can be found in the [References](#references).
 
