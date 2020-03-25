@@ -465,12 +465,12 @@ class solution_PATH:
 
     def __repr__(self):
         affichage(self.BETAS, self.LAMBDAS, labels=label,
-                  title=self.formulation.name() + ' Path for the method ' + self.method)
+                  title=PATH_beta_path["title"] + self.method,xlabel=PATH_beta_path["xlabel"],ylabel=PATH_beta_path["ylabel"])
         if (type(self.save) == str): plt.savefig(self.save + 'Beta-path')
         plt.show()
         if(type(self.SIGMAS)!=str and self.plot_sigma):
-            plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel("sigma/sigMAX"), plt.xlabel("lambda")
-            plt.title('Sigma for ' + self.formulation.name())
+            plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel(PATH_sigma_path["ylabel"]), plt.xlabel(PATH_sigma_path["xlabel"])
+            plt.title(PATH_sigma_path["title"] + self.formulation.name())
             if (type(self.save)==str) : plt.savefig(self.save + 'Sigma-path')
             plt.show()
         return (str(round(self.time, 3)) + "s")
@@ -536,7 +536,7 @@ class solution_CV:
         self.save=False
 
     def __repr__(self):
-        plt.bar(range(len(self.refit)), self.refit), plt.title("Cross Validation refit")
+        plt.bar(range(len(self.refit)), self.refit), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
         return (str(round(self.time, 3)) + "s")
@@ -549,8 +549,8 @@ class solution_CV:
         plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data')
         plt.axvline(x=self.xGraph[i_min], color='k', label='lam with min MSE')
         plt.axvline(x=self.xGraph[i_1SE],color='r',label='lam with 1SE')
-        plt.ylabel('mean of residual over lambda'), plt.xlabel('lam')
-        plt.legend(), plt.title("Selection of lambda with Cross Validation")
+        plt.title(CV_graph["title"]), plt.xlabel(CV_graph["xlabel"]),plt.ylabel(CV_graph["ylabel"])
+        plt.legend()
         if(type(save)==str) : plt.savefig(save)
         plt.show()
 
@@ -619,6 +619,9 @@ class solution_StabSel:
         self.save3 = False
         self.time = time() - t0
 
+        self.method = param.method
+        self.numerical_method = param.numerical_method
+
     def __repr__(self):
 
         D = self.distribution
@@ -633,7 +636,7 @@ class solution_StabSel:
         plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected variables')
         plt.axhline(y=self.threshold, color='g',label='threshold')
         if (type(label) != bool): plt.xticks(self.to_label, label[self.to_label], rotation=30)
-        plt.legend(), plt.title("Distribution of Stability Selection")
+        plt.xlabel(StabSel_graph["xlabel"]), plt.ylabel(StabSel_graph["ylabel"]), plt.title(StabSel_graph["title"] + self.method + " using " + self.numerical_method), plt.legend()
         if (type(self.save1) == str): plt.savefig(self.save1)
         plt.show()
         print("SELECTED VARIABLES : ")
@@ -656,12 +659,12 @@ class solution_StabSel:
                                                                                               label='unselected variables')
             plt.legend(handles=[p1, p2])
             plt.axhline(y=self.threshold,color='g')
-            plt.title("Distribution of probability of apparence as a function of lambda")
+            plt.xlabel(StabSel_path["xlabel"]), plt.ylabel(StabSel_path["ylabel"]), plt.title(StabSel_path["title"]), plt.legend()
             if (type(self.save2)==str):plt.savefig(self.save2)
             plt.show()
 
         plt.bar(range(len(self.refit)), self.refit)
-        plt.title("Solution for Stability Selection with refit")
+        plt.xlabel(StabSel_beta["xlabel"]), plt.ylabel(StabSel_beta["ylabel"]), plt.title(StabSel_beta["title"]), plt.legend()
         if (type(self.save3) == str): plt.savefig(self.save3)
         plt.show()
         return (str(round(self.time, 3)) + "s")
@@ -718,7 +721,7 @@ class solution_LAMfixed:
         self.save = False
 
     def __repr__(self):
-        plt.bar(range(len(self.refit)), self.refit), plt.title("Solution for a fixed lambda with refit")
+        plt.bar(range(len(self.beta)), self.beta), plt.title(LAM_beta["title"] + str(round(self.lam,3) ) ), plt.xlabel(LAM_beta["xlabel"]),plt.ylabel(LAM_beta["ylabel"])
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
         if(self.formulation.concomitant) : print("SIGMA FOR LAMFIXED  : ", self.sigma )
@@ -774,3 +777,38 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
             if not method in ['Path-Alg', 'DR', 'P-PDS', 'PF-PDS']: return 'Path-Alg'
 
     return method
+
+
+CV_beta             = {
+                            "title"  : "Refitted coefficients after CV model selection" ,
+                            "xlabel" : "Coefficient index $i$" ,
+                            "ylabel" : "Coefficients $\beta_i$ "}
+CV_graph            = {
+                            "title"  : " " ,
+                            "xlabel" : "$\lambda$" ,
+                            "ylabel" : "Mean-Squared Error (MSE) "}
+LAM_beta            = {
+                            "title"  : "Coefficients at theoretical $\lambda$ = " ,
+                            "xlabel" : "Coefficient index $i$" ,
+                            "ylabel" : "Coefficients $\beta_i$ "}
+PATH_beta_path      = {
+                            "title"  : "Coefficients across $lambda$-path using " ,
+                            "xlabel" : "$\lambda$" ,
+                            "ylabel" : "Coefficients $\beta_i$ "}
+PATH_sigma_path     = {
+                            "title"  : "Scale estimate across $lambda$-path using " ,
+                            "xlabel" : "$\lambda$" ,
+                            "ylabel" : "Scale $\sigma$ "}
+StabSel_graph       = {
+                            "title"  : "Stability selection profile of type " ,
+                            "xlabel" : "Coefficient index $i$" ,
+                            "ylabel" : "Selection probability "}
+StabSel_path        = {
+                            "title"  : "Stability selection profile across $\lambda$-path using " ,
+                            "xlabel" : "Coefficient index $i$" ,
+                            "ylabel" : "Coefficients $\beta_i$ "}
+StabSel_beta        = {
+                            "title"  : "Refitted coefficients after stability selection" ,
+                            "xlabel" : "Coefficient index $i$" ,
+                            "ylabel" : "Coefficients $\beta_i$ "}
+

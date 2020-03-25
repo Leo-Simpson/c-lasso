@@ -77,7 +77,7 @@ def plot_betai(labels,l_index,path,BETAS):
         else:
             plt.plot(path, BETAS[:, i], color=colo[i+j])
 
-def affichage(LISTE_BETA, path, title=' ', labels=False, pix=False):
+def affichage(LISTE_BETA, path, title=' ', labels=False, pix=False, xlabel=" ", ylabel=" "):
     naffichage = 10
     BETAS = np.array(LISTE_BETA)
     l_index = influence(BETAS, naffichage)
@@ -85,7 +85,7 @@ def affichage(LISTE_BETA, path, title=' ', labels=False, pix=False):
     if (pix == 'path'): plt.plot(path, [0] * len(path), 'r+')
     plot_betai(labels, l_index, path, BETAS)
     plt.title(title), plt.legend(loc=4, borderaxespad=0.)
-    plt.xlabel("lambda"), plt.ylabel("Betai")
+    plt.xlabel(xlabel), plt.ylabel(ylabel)
     if (type(pix) == bool and pix == True):
         plt.matshow([[(abs(LISTE_BETA[i][j]) > 1e-2) for i in range(len(LISTE_BETA))] for j in
                      range(len(LISTE_BETA[0]))]),plt.show()
