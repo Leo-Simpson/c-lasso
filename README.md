@@ -143,10 +143,9 @@ print(problem)
 This gives you a summary of the form:
 
 ```
-<<<<<<< HEAD
 FORMULATION : R3
  
-MODEL SELECTION COMPUTED :  Stability selection, 
+MODEL SELECTION COMPUTED :  Stability selection
  
 STABILITY SELECTION PARAMETERS: 
      method = first
@@ -157,7 +156,7 @@ STABILITY SELECTION PARAMETERS:
      percent_nS = 0.5
      threshold = 0.7
      numerical_method = Path-Alg
-=======
+
 FORMULATION : Concomitant
  
 MODEL SELECTION COMPUTED :  Stability selection, 
@@ -175,7 +174,6 @@ Running time for Path computation    : 'not computed'
 Running time for Cross Validation    : 'not computed'
 Running time for Stability Selection : 5.831s
 Running time for Fixed LAM           : 'not computed'
->>>>>>> db7b98858e83ff34e07d10ad0ecd8a07fc975d32
 ```
 As we have not specified any problem, algorithm, or model selection settings, this problem instance
 represents the *default* settings for a c-lasso instance: 
