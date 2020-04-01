@@ -1,4 +1,4 @@
-N=10000
+N=100000
 import numpy as np
 import numpy.linalg as LA
 
@@ -102,7 +102,7 @@ def solve_path_Conc(matrices, stop, n_active=False, lassopath=True):
             beta_old, reduclam_old, r_old = param.beta, reduclam, param.r
 
     print('no conv')
-    return (BETA, LAM)
+    return (BETA, LAM,R)
 
 
 

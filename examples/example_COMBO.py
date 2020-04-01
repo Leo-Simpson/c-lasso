@@ -1,3 +1,4 @@
+path = '/Users/lsimpson/Desktop/GitHub/Figures/exampleCOMBO/'
 from CLasso import *
 import numpy as np
 
@@ -27,19 +28,21 @@ problem.model_selection.StabSelparameters.method      = 'lam'
 # Solve the entire path
 problem.model_selection.PATH = True
 
-
 problem.solve()
+
+problem.solution.PATH.save = path+'R3_'
+problem.solution.StabSel.save1 = path+'R3_StabSel'
+problem.solution.StabSel.save3 = path+'R3_StabSel-beta'
 print(problem, problem.solution)
+
+
+
 #then, solve it for robust formulation
 problem.formulation.huber = True
 problem.solve()
+
+problem.solution.PATH.save = path+'R4_'
+problem.solution.StabSel.save1 = path+'R4_StabSel'
+problem.solution.StabSel.save3 = path+'R4_StabSel-beta'
 print(problem, problem.solution)
 
-''' 
-print(np.linalg.norm(y)/np.sqrt(n/2))
-
-BETAS = np.array(problem.solution.PATH.BETAS)
-SIGMAS= np.array(problem.solution.PATH.SIGMAS)
-print( np.all(  np.isclose(np.linalg.norm(BETAS.dot(X.T)-y,axis=1), SIGMAS * np.sqrt(n/2)  )  )   )
-
-'''

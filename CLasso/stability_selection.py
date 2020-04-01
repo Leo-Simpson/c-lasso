@@ -60,7 +60,7 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg",
             submatrix = build_submatrix(matrix,subset)
             regress = Classo(submatrix,lam,typ = formulation,
                              meth=numerical_method, rho = rho, rho_classification=rho_classification, e=e, true_lam = true_lam)
-            if (formulation  in ['Concomitant','Concomitant_Huber']): beta =regress[0]
+            if (type(regress)==tuple): beta =regress[0]
             else : beta = regress
             qbiggest = biggest_indexes(abs(beta),q)
             for i in qbiggest:

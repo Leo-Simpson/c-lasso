@@ -233,35 +233,74 @@ In the next example, we show how one can specify different aspects of the proble
 formulation and model selection strategy.
 
 ```python
+from CLasso import *
+m,d,d_nonzero,k,sigma =100,100,5,1,0.5
+(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True, seed = 4 )
 problem                                     = classo_problem(X,y,C)
-problem.formulation.huber                   = True
-problem.formulation.concomitant             = False
+problem.formulation.huber                   = False
+problem.formulation.concomitant             = True
 problem.model_selection.CV                  = True
 problem.model_selection.LAMfixed            = True
-problem.model_selection.SSparameters.method = 'max'
+problem.model_selection.PATH                = True
+problem.model_selection.StabSelparameters.method = 'max'
+
 problem.solve()
 print(problem)
+
 print(problem.solution)
 
-problem.solution.CV.graphic(mse_max = 1.)
+problem.solution.CV.graphic(mse_max = 1.,save=path+'CV-graph')
 ```
 
 Results : 
 ```
-FORMULATION : Huber
+FORMULATION: R3
+ 
+MODEL SELECTION COMPUTED:  
+     Path
+     Cross Validation
+     Stability selection
+     Lambda fixed
+ 
+CROSS VALIDATION PARAMETERS: 
+     Nsubset = 5
+     lamin = 0.001
+     n_lam = 500
+     numerical_method = Path-Alg
+ 
+STABILITY SELECTION PARAMETERS: 
+     method = max
+     lamin = 0.01
+     lam = theoretical
+     B = 50
+     q = 10
+     percent_nS = 0.5
+     threshold = 0.7
+     numerical_method = Path-Alg
+ 
+LAMBDA FIXED PARAMETERS: 
+     lam = theoretical
+     theoretical_lam = 19.9396
+     numerical_method = Path-Alg
+ 
+PATH PARAMETERS: 
+     Npath = 40
+     n_active = False
+     lamin = 0.011220184543019636
+     numerical_method = Path-Alg
 
-MODEL SELECTION COMPUTED :  Cross Validation,  Stability selection, Lambda fixed
-
-CROSS VALIDATION PARAMETERS: Nsubset = 5  lamin = 0.001  n_lam = 500;  numerical_method = ODE
-
-STABILITY SELECTION PARAMETERS: method = max;  lamin = 0.01;  B = 50;  q = 10;  pourcent_nS = 0.5;  threshold = 0.9;  numerical_method = ODE
-
-LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 0.3988;  numerical_method = ODE
-
-SPEEDNESS : 
-Running time for Cross Validation    : 1.013s
-Running time for Stability Selection : 2.281s
-Running time for Fixed LAM           : 0.065s
+SELECTED VARIABLES : 
+16
+44
+65
+90
+93
+SIGMA FOR LAMFIXED  :  0.8447319814672424
+Running time : 
+Running time for Path computation    : 0.247s
+Running time for Cross Validation    : 0.835s
+Running time for Stability Selection : 5.995s
+Running time for Fixed LAM           : 0.047s
 ```
 
 
@@ -284,62 +323,96 @@ Running time for Fixed LAM           : 0.065s
 
 Here is now the result of running the file "example_COMBO" which uses microbiome data :  
 ```
-FORMULATION : Concomitant
-
-MODEL SELECTION COMPUTED :  Path,  Stability selection, Lambda fixed
-
-STABILITY SELECTION PARAMETERS: method = lam;  lamin = 0.01;  lam = theoritical;  B = 50;  q = 10;  percent_nS = 0.5;  threshold = 0.7;  numerical_method = ODE
-
-LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 19.1709;  numerical_method = ODE
-
-PATH PARAMETERS: Npath = 40  n_active = False  lamin = 0.011220184543019636;  numerical_method = ODE
-objc[46200]: Class FIFinderSyncExtensionHost is implemented in both /System/Library/PrivateFrameworks/FinderKit.framework/Versions/A/FinderKit (0x7fff96e66b68) and /System/Library/PrivateFrameworks/FileProvider.framework/OverrideBundles/FinderSyncCollaborationFileProviderOverride.bundle/Contents/MacOS/FinderSyncCollaborationFileProviderOverride (0x116315cd8). One of the two will be used. Which one is undefined.
-SELECTED PARAMETERS : 
-27  Clostridium
+FORMULATION: R3
+ 
+MODEL SELECTION COMPUTED:  
+     Path
+     Stability selection
+     Lambda fixed
+ 
+STABILITY SELECTION PARAMETERS: 
+     method = lam
+     lamin = 0.01
+     lam = theoretical
+     B = 50
+     q = 10
+     percent_nS = 0.5
+     threshold = 0.7
+     numerical_method = Path-Alg
+ 
+LAMBDA FIXED PARAMETERS: 
+     lam = theoretical
+     theoretical_lam = 19.1709
+     numerical_method = Path-Alg
+ 
+PATH PARAMETERS: 
+     Npath = 40
+     n_active = False
+     lamin = 0.011220184543019636
+     numerical_method = Path-Alg
+ SELECTED VARIABLES : 
+ Clostridium
+ Acidaminococcus
 SIGMA FOR LAMFIXED  :  8.43571426081596
-SPEEDNESS : 
-Running time for Path computation    : 0.057s
+Running time : 
+Running time for Path computation    : 0.072s
 Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 1.002s
-Running time for Fixed LAM           : 0.028s
-
-
-FORMULATION : Concomitant_Huber
-
-MODEL SELECTION COMPUTED :  Path,  Stability selection, Lambda fixed
-
-STABILITY SELECTION PARAMETERS: method = lam;  lamin = 0.01;  lam = theoritical;  B = 50;  q = 10;  percent_nS = 0.5;  threshold = 0.7;  numerical_method = ODE
-
-LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 19.1709;  numerical_method = ODE
-
-PATH PARAMETERS: Npath = 40  n_active = False  lamin = 0.011220184543019636;  numerical_method = ODE
-SELECTED PARAMETERS : 
+Running time for Stability Selection : 0.627s
+Running time for Fixed LAM           : 0.013s
+ 
+ 
+FORMULATION: R4
+ 
+MODEL SELECTION COMPUTED:  
+     Path
+     Stability selection
+     Lambda fixed
+ 
+STABILITY SELECTION PARAMETERS: 
+     method = lam
+     lamin = 0.01
+     lam = theoretical
+     B = 50
+     q = 10
+     percent_nS = 0.5
+     threshold = 0.7
+     numerical_method = Path-Alg
+ 
+LAMBDA FIXED PARAMETERS: 
+     lam = theoretical
+     theoretical_lam = 19.1709
+     numerical_method = Path-Alg
+ 
+PATH PARAMETERS: 
+     Npath = 40
+     n_active = False
+     lamin = 0.011220184543019636
+     numerical_method = Path-Alg
+ SELECTED VARIABLES : 
 SIGMA FOR LAMFIXED  :  6.000336772926475
-SPEEDNESS : 
-Running time for Path computation    : 18.517s
+Running time : 
+Running time for Path computation    : 19.064s
 Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 3.166s
-Running time for Fixed LAM           : 0.065s
-
-
+Running time for Stability Selection : 3.133s
+Running time for Fixed LAM           : 0.03s
 ```
 
 
-![Ex3.1](figures/exampleCOMBO/path.png)
+![Ex3.1](figures/exampleCOMBO/R3_Beta-path.png)
 
-![Ex3.2](figures/exampleCOMBO/sigma.png)
+![Ex3.2](figures/exampleCOMBO/R3_Sigma-path.png)
 
-![Ex3.3](figures/exampleCOMBO/distr.png)
+![Ex3.3](figures/exampleCOMBO/R3_StabSel-beta.png)
 
-![Ex3.4](figures/exampleCOMBO/beta.png)
+![Ex3.4](figures/exampleCOMBO/R3_StabSel.png)
 
-![Ex3.5](figures/exampleCOMBO/path_huber.png)
+![Ex3.5](figures/exampleCOMBO/R4_Beta-path.png)
 
-![Ex3.6](figures/exampleCOMBO/sigma_huber.png)
+![Ex3.6](figures/exampleCOMBO/R4_Sigma-path.png)
 
-![Ex3.7](figures/exampleCOMBO/distr_huber.png)
+![Ex3.7](figures/exampleCOMBO/R4_StabSel-beta.png)
 
-![Ex3.8](figures_exampleCOMBO/beta_huber.png)
+![Ex3.8](figures/exampleCOMBO/R4_StabSel.png)
 
 
 Here is now the result of running the file "example_PH" which uses microbiome data : 
@@ -363,14 +436,21 @@ Running time for Stability Selection : 1.374s
 Running time for Fixed LAM           : 0.024s
 ```
 
-![Ex4.1](figures/examplePH/Path.png)
+![Ex3.1](figures/examplePH/R3_Beta-path.png)
 
-![Ex4.2](figures/examplePH/Sigma.png)
+![Ex3.2](figures/examplePH/R3_Sigma-path.png)
 
-![Ex4.3](figures/examplePH/Sselection.png)
+![Ex3.3](figures/examplePH/R3_StabSel-beta.png)
 
-![Ex4.4](figures/examplePH/beta.png)
+![Ex3.4](figures/examplePH/R3_StabSel.png)
 
+![Ex3.5](figures/examplePH/R4_Beta-path.png)
+
+![Ex3.6](figures/examplePH/R4_Sigma-path.png)
+
+![Ex3.7](figures/examplePH/R4_StabSel-beta.png)
+
+![Ex3.8](figures/examplePH/R4_StabSel.png)
 
 ## Optimization schemes
 
