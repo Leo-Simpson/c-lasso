@@ -74,7 +74,7 @@ The objective function combines Least-Squares for model fitting with l1 penalty 
 
 #### [R2] Contrained sparse Huber regression:                   
 
-<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;h_{\rho}(X\beta-y)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0"  />
+<img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;h_{\rho}(X\beta-y&space;)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0" />
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
 for robust model fitting with l1 and linear equality constraints on the &beta; vector. The parameter &rho;=1.345.
@@ -224,7 +224,7 @@ can identify the five true non-zero entries in the &beta; vector
 
 The refitted &beta; values on the selected support are also displayed in the next plot
 
-![beta](https://github.com/Leo-Simpson/Figures/blob/master/example1/beta.png)
+![beta](https://github.com/Leo-Simpson/Figures/blob/master/example1/StabSel-beta.png)
 
 
 #### Advanced example             
@@ -436,21 +436,21 @@ Running time for Stability Selection : 1.374s
 Running time for Fixed LAM           : 0.024s
 ```
 
-![Ex3.1](figures/examplePH/R3_Beta-path.png)
+![Ex4.1](figures/examplePH/R3_Beta-path.png)
 
-![Ex3.2](figures/examplePH/R3_Sigma-path.png)
+![Ex4.2](figures/examplePH/R3_Sigma-path.png)
 
-![Ex3.3](figures/examplePH/R3_StabSel-beta.png)
+![Ex4.3](figures/examplePH/R3_StabSel-beta.png)
 
-![Ex3.4](figures/examplePH/R3_StabSel.png)
+![Ex4.4](figures/examplePH/R3_StabSel.png)
 
-![Ex3.5](figures/examplePH/R4_Beta-path.png)
+![Ex4.5](figures/examplePH/R4_Beta-path.png)
 
-![Ex3.6](figures/examplePH/R4_Sigma-path.png)
+![Ex4.6](figures/examplePH/R4_Sigma-path.png)
 
-![Ex3.7](figures/examplePH/R4_StabSel-beta.png)
+![Ex4.7](figures/examplePH/R4_StabSel-beta.png)
 
-![Ex3.8](figures/examplePH/R4_StabSel.png)
+![Ex4.8](figures/examplePH/R4_StabSel.png)
 
 ## Optimization schemes
 

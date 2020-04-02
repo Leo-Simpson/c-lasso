@@ -551,7 +551,7 @@ class solution_CV:
         for j in range(len(self.xGraph)):
             if (self.yGraph[j] < mse_max): break
 
-        plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data')
+        plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = 10 )
         plt.axvline(x=self.xGraph[i_min], color='k', label=r'$\lambda$ (min MSE)')
         plt.axvline(x=self.xGraph[i_1SE],color='r',label=r'$\lambda$ (1SE) ')
         plt.title(CV_graph["title"]), plt.xlabel(CV_graph["xlabel"]),plt.ylabel(CV_graph["ylabel"])
