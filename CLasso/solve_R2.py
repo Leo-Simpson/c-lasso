@@ -1,7 +1,7 @@
-from CLasso.path_alg import solve_path
+from .path_alg import solve_path
 import numpy as np
 import numpy.linalg as LA
-from CLasso.solve_R1 import problem_R1, Classo_R1
+from .solve_R1 import problem_R1, Classo_R1
     
 '''    
 Problem    :   min h_rho(Ab - y) + lambda ||b||1 with C.b= 0 <=>   min ||Ab - y - r*o||^2 + lambda ||b,o||1 with C.b= 0, o in R^m

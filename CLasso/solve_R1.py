@@ -1,4 +1,4 @@
-from CLasso.path_alg import solve_path
+from .path_alg import solve_path
 import numpy as np
 import numpy.linalg as LA
     

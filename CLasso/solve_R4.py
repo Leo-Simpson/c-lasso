@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.linalg as LA
-from CLasso.solve_R3 import problem_R3, Classo_R3
+from .solve_R3 import problem_R3, Classo_R3
     
 '''    
 Problem    :   min h_rho((Ab - y)/sigma)sigma + simga + lambda ||b||1 with C.b= 0, sigma>0 

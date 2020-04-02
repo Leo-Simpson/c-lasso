@@ -2,10 +2,10 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from CLasso.misc_functions import rescale, theoretical_lam, min_LS, affichage
-from CLasso.compact_func import Classo, pathlasso
-from CLasso.cross_validation import CV
-from CLasso.stability_selection import stability, selected_param
+from .misc_functions import rescale, theoretical_lam, min_LS, affichage
+from .compact_func import Classo, pathlasso
+from .cross_validation import CV
+from .stability_selection import stability, selected_param
 import matplotlib.patches as mpatches
 
 

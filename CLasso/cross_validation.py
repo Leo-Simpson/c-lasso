@@ -1,8 +1,7 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import numpy.random as rd
 import numpy.linalg as LA
-from CLasso.compact_func import Classo,pathlasso
+from .compact_func import Classo,pathlasso
 n_lam = 200
 
 def compute_1SE(mse_max,MSE,i): 

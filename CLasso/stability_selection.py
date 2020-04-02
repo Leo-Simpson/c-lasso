@@ -1,7 +1,6 @@
 import numpy as np
 import numpy.random as rd
-import numpy.linalg as LA
-from CLasso.compact_func import Classo,pathlasso
+from .compact_func import Classo,pathlasso
 n_lam = 100
 
 '''
