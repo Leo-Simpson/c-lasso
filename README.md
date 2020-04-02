@@ -398,21 +398,21 @@ Running time for Fixed LAM           : 0.03s
 ```
 
 
-![Ex3.1](figures/exampleCOMBO/R3-Beta-path.png)
+![Ex3.1](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-Beta-path.png)
 
-![Ex3.2](figures/exampleCOMBO/R3-Sigma-path.png)
+![Ex3.2](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-Sigma-path.png)
 
-![Ex3.3](figures/exampleCOMBO/R3-StabSel-beta.png)
+![Ex3.3](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-StabSel-beta.png)
 
-![Ex3.4](figures/exampleCOMBO/R3-StabSel.png)
+![Ex3.4](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-StabSel.png)
 
-![Ex3.5](figures/exampleCOMBO/R4-Beta-path.png)
+![Ex3.5](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R4-Beta-path.png)
 
-![Ex3.6](figures/exampleCOMBO/R4-Sigma-path.png)
+![Ex3.6](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R4-Sigma-path.png)
 
-![Ex3.7](figures/exampleCOMBO/R4-StabSel-beta.png)
+![Ex3.7](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R4-StabSel-beta.png)
 
-![Ex3.8](figures/exampleCOMBO/R4-StabSel.png)
+![Ex3.8](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R4-StabSel.png)
 
 
 Here is now the result of running the file "example_PH" which uses microbiome data : 
@@ -436,21 +436,21 @@ Running time for Stability Selection : 1.374s
 Running time for Fixed LAM           : 0.024s
 ```
 
-![Ex4.1](figures/examplePH/R3-Beta-path.png)
+![Ex4.1](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-Beta-path.png)
 
-![Ex4.2](figures/examplePH/R3-Sigma-path.png)
+![Ex4.2](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-Sigma-path.png)
 
-![Ex4.3](figures/examplePH/R3-StabSel-beta.png)
+![Ex4.3](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-StabSel-beta.png)
 
-![Ex4.4](figures/examplePH/R3-StabSel.png)
+![Ex4.4](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-StabSel.png)
 
-![Ex4.5](figures/examplePH/R4-Beta-path.png)
+![Ex4.5](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R4-Beta-path.png)
 
-![Ex4.6](figures/examplePH/R4-Sigma-path.png)
+![Ex4.6](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R4-Sigma-path.png)
 
-![Ex4.7](figures/examplePH/R4-StabSel-beta.png)
+![Ex4.7](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R4-StabSel-beta.png)
 
-![Ex4.8](figures/examplePH/R4-StabSel.png)
+![Ex4.8](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R4-StabSel.png)
 
 ## Optimization schemes
 
