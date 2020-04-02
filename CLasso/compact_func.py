@@ -1,11 +1,11 @@
 import numpy as np
 import numpy.linalg as LA
 
-from CLasso.solve_R1 import problem_R1, Classo_R1, pathlasso_R1
-from CLasso.solve_R2 import problem_R2, Classo_R2, pathlasso_R2
-from CLasso.solve_R3 import problem_R3, Classo_R3, pathlasso_R3
-from CLasso.solve_R4 import problem_R4, Classo_R4, pathlasso_R4
-from CLasso.path_alg import solve_path, pathalgo_general, h_lambdamax
+from .solve_R1 import problem_R1, Classo_R1, pathlasso_R1
+from .solve_R2 import problem_R2, Classo_R2, pathlasso_R2
+from .solve_R3 import problem_R3, Classo_R3, pathlasso_R3
+from .solve_R4 import problem_R4, Classo_R4, pathlasso_R4
+from .path_alg import solve_path, pathalgo_general, h_lambdamax
 
 '''
 Classo and pathlasso are the main functions, they can call every algorithm acording to the method and formulation required
