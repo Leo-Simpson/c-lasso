@@ -139,8 +139,8 @@ class PATHparameters:
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
             Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
-        n_active (int or bool): if it is an integer, then the algo stop computing the path when n_active variables are actives. then the solution does not change from this point.
-            Dafault value : False
+        n_active (int): if it is higher than 0, then the algo stop computing the path when n_active variables are actives. then the solution does not change from this point.
+            Dafault value : 0
 
         lambdas (numpy.ndarray) : list of lambdas for computinf lasso-path for cross validation on lambda.
             Default value : np.array([10**(-delta * float(i) / nlam) for i in range(0,nlam) ] ) with delta=2. and nlam = 40
@@ -154,9 +154,9 @@ class PATHparameters:
         self.formulation = 'not specified'
         self.numerical_method = 'choose'
         self.n_active = False
-        delta= 2.
+        lamin= 1e-2
         nlam = 40
-        self.lambdas = np.array([10**(-delta * float(i) / nlam) for i in range(0,nlam) ] )
+        self.lambdas = np.array([10**(np.log10(lamin) * float(i) / nlam) for i in range(0,nlam) ] )
         self.plot_sigma = True
 
     def __repr__(self): return (  '\n     Npath = ' + str(len(self.lambdas))
