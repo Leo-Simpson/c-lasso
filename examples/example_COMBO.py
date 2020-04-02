@@ -30,9 +30,9 @@ problem.model_selection.PATH = True
 
 problem.solve()
 
-problem.solution.PATH.save = path+'R3_'
-problem.solution.StabSel.save1 = path+'R3_StabSel'
-problem.solution.StabSel.save3 = path+'R3_StabSel-beta'
+problem.solution.PATH.save = path+'R3-'
+problem.solution.StabSel.save1 = path+'R3-StabSel'
+problem.solution.StabSel.save3 = path+'R3-StabSel-beta'
 print(problem, problem.solution)
 
 
@@ -41,8 +41,8 @@ print(problem, problem.solution)
 problem.formulation.huber = True
 problem.solve()
 
-problem.solution.PATH.save = path+'R4_'
-problem.solution.StabSel.save1 = path+'R4_StabSel'
-problem.solution.StabSel.save3 = path+'R4_StabSel-beta'
+problem.solution.PATH.save = path+'R4-'
+problem.solution.StabSel.save1 = path+'R4-StabSel'
+problem.solution.StabSel.save3 = path+'R4-StabSel-beta'
 print(problem, problem.solution)
 
