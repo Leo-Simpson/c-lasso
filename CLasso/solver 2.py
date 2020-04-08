@@ -180,7 +180,7 @@ class CVparameters:
         oneSE (bool) : if set to True, the selected lambda if computed with method 'one-standard-error'
             Default value : True
 
-        Nsubset (int): number of subset in the cross validation method
+        Nsubsets (int): number of subset in the cross validation method
             Dafault value : 5
 
     '''
