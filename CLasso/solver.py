@@ -321,10 +321,10 @@ class classo_problem:
                                       Before using the method solve() , its componant are empty/null.
 
     '''
-    def __init__(self, X, y, C='zero-sum', label=False):  # zero sum constraint by default, but it can be any matrix
+    def __init__(self, X, y, C='zero-sum', label=False, rescale=False):  # zero sum constraint by default, but it can be any matrix
         if (type(label)==bool): self.label = np.array([str(i) for i in range(len(X[0]))])
         else : self.label = label
-        self.data = classo_data(X, y, C)
+        self.data = classo_data(X, y, C, rescale=rescale)
         self.formulation = classo_formulation()
         self.model_selection = classo_model_selection()
         self.solution = classo_solution()

@@ -30,7 +30,7 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
 
     elif(typ=='R2'):
         if not meth in ['Path-Alg', 'P-PDS' , 'PF-PDS' , 'DR']: meth = 'ODE'
-        pb = problem_Huber(matrix,meth,rho)
+        pb = problem_R2(matrix,meth,rho)
         if (true_lam): beta = Classo_R2(pb,lam/pb.lambdamax)
         else : beta = Classo_R2(pb, lam)
 

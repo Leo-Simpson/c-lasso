@@ -66,10 +66,11 @@ class parameters_for_update:
 def solve_path(matrices, lamin, n_active, rho,typ):
     param = parameters_for_update(matrices, lamin, rho,typ)
     BETA, LAM = [param.beta], [param.lam]
+    if param.lam < lamin : return BETA,LAM
     for i in range(N):
-        up(param)
+        no = up(param)
         BETA.append(param.beta), LAM.append(param.lam)
-        if ((type(n_active) == int and param.number_act >= n_active) or param.lam == lamin): return (BETA, LAM)
+        if (type(n_active) == int and param.number_act >= n_active) or param.lam == lamin or no is not None : return (BETA, LAM)
 
     print('no conv')
     return (BETA, LAM)
@@ -86,7 +87,6 @@ def solve_path_Conc(matrices, stop, n_active=False, lassopath=True):
 
     param = parameters_for_update(matrices, lamin, 0, "Conc")
     BETA, LAM = [param.beta], [param.lam]
-
     for i in range(N):
 
         up(param)
@@ -224,7 +224,6 @@ def up_huber(param):
     if (huber_up):
         F[j_switch] = not F[j_switch]
         M[:d, :][:, :d] = 2 * A[F].T.dot(A[F])
-        Xt = LA.inv(M[activity + idr, :][:, activity + idr])
     else:
         # Update matrix inverse, list of rows in C and activity
         for i in range(d):
@@ -239,8 +238,10 @@ def up_huber(param):
                     if (len(M) > d):
                         to_ad = next_idr1(idr, M[d:, :][:, :d][:, activity])
                         if (type(to_ad) == int): idr[to_ad] = True
-                Xt = LA.inv(M[activity + idr, :][:, activity + idr])
-
+    try : Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+    except LA.LinAlgError :
+        print("matrix is not invertible, can't do a path algorithm... (huber case)")
+        return False
     param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = number_act, idr, Xt, activity, F, beta, s, lam, M, r
 
 def up_cl(param):
