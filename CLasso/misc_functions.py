@@ -61,6 +61,31 @@ def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification =
     if classification : y = np.sign(y)
     return((X,C,y),sol)
 
+
+def check_size(X,y,C):
+    samples = min(len(y),len(X))
+    X2,y2 = X[:samples] , y[:samples]
+    if len(y)   >samples   : print("More outputs than features ! ")
+    elif len(X) > samples  : print("More features than outputs !")
+
+    if C is None : C2 = np.ones((1, len(X[0])))
+    else : 
+        k, d = len(C), len(X[0])
+        if len(C[0])==d : C2 = C
+        elif len(C)>d : 
+            print("Too many colomns in constraint matrix !")
+            C2 = C[:,:d]
+        else : 
+            print("Too few colomns in constraint matrix !")
+            C2 = np.zeros((k,d))
+            C2[:,:len(C)] = C
+    return X2,y2,C2
+
+
+
+
+
+
 def influence(BETAS,ntop):
     means = np.mean(abs(BETAS),axis=0)
     top = np.argpartition(means, -ntop)[-ntop:]
@@ -232,6 +257,41 @@ def mat_to_np(file):
     for k,v in f.items():
         arrays[k]=np.array(v)
     return arrays
+
+
+def to_zarr(obj,name,root, first=True):
+
+    if type(obj)==dict:
+        if first : 
+            zz = root 
+        else : 
+            zz = root.create_group(name)
+
+        for key,value in obj.items() :
+            to_zarr(value,key,zz,first=False) 
+            
+    elif type(obj) in [np.ndarray,np.float64]:
+         root.create_dataset(name,data=obj,shape=obj.shape)
+
+    elif type(obj)==np.int64 :
+         root.attrs[name] = int(obj)
+
+    elif type(obj)== list : 
+        to_zarr(np.array(obj),name,root,first=False)
+    
+    elif obj is None or type(obj) in [str,bool,float,int]:
+        root.attrs[name] = obj
+
+    else :
+        to_zarr(obj.__dict__,name,root,first=first)
+
+
+
+
+
+
+
+
 
 
 '''

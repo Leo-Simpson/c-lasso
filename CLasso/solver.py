@@ -2,7 +2,7 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .misc_functions import rescale, theoretical_lam, min_LS, affichage
+from .misc_functions import rescale, theoretical_lam, min_LS, affichage, check_size
 from .compact_func import Classo, pathlasso
 from .cross_validation import CV
 from .stability_selection import stability, selected_param
@@ -25,10 +25,11 @@ class classo_data:
         rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem
 
     '''
+
     def __init__(self, X, y, C, rescale=False):
         self.rescale = rescale  # booleen to know if we rescale the matrices
-        self.X,self.y,self.C = y = X, y,C
-        if type(C) == str: self.C = np.ones((1, len(X[0])))
+        self.X,self.y,self.C = check_size(X,y,C)
+        
 
 class classo_formulation:
     ''' Class containing the data of the problem
@@ -321,7 +322,7 @@ class classo_problem:
                                       Before using the method solve() , its componant are empty/null.
 
     '''
-    def __init__(self, X, y, C='zero-sum', label=False, rescale=False):  # zero sum constraint by default, but it can be any matrix
+    def __init__(self, X, y, C=None, label=False, rescale=False):  # zero sum constraint by default, but it can be any matrix
         if (type(label)==bool): self.label = np.array([str(i) for i in range(len(X[0]))])
         else : self.label = label
         self.data = classo_data(X, y, C, rescale=rescale)
