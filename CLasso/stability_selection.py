@@ -76,7 +76,7 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg",
             subset = build_subset(n,nS)
             submatrix = build_submatrix(matrix,subset)
             # compute the path until n_active = q, and only take the last Beta
-            BETA = pathlasso(submatrix,n_active=False,lamin=1e-2,
+            BETA = pathlasso(submatrix,n_active=0,lamin=1e-2,
                              typ=formulation,meth = numerical_method,
                              rho = rho, rho_classification=rho_classification, e=e )[0]
             betamax = np.amax( abs(np.array(BETA)), axis = 0 )
@@ -117,10 +117,10 @@ def non_nul_indices(array):
 
 # for a certain threshold, it returns the features that should be selected
 def selected_param(distribution,threshold,threshold_label):
-    selected, to_label  = [False]*len(distribution), []
+    selected, to_label  = [False]*len(distribution), [False]*len(distribution)
     for i in range(len(distribution)):
         if (distribution[i] > threshold): selected[i]=True
-        if (distribution[i] > threshold_label): to_label.append(i)
+        if (distribution[i] > threshold_label): to_label[i]=True
     return(selected, to_label)
 
 

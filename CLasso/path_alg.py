@@ -1,4 +1,4 @@
-N=100000
+N=10000
 import numpy as np
 import numpy.linalg as LA
 
@@ -40,6 +40,7 @@ class parameters_for_update:
         self.lam         = 1.
         self.r           = -self.y
         self.F           = [True] * n
+        self.eps_L2      = 1e-3
         if (rho>0):
             for j in range(n):
                 if( abs(self.y[j]) > self.rho ): self.F[j] = False
@@ -59,7 +60,11 @@ class parameters_for_update:
         if(k==0):  self.M = 2 * AtA
         else    :  self.M  = np.concatenate((np.concatenate((2 * AtA, self.C.T), axis=1), np.concatenate((self.C, np.zeros((k, k))), axis=1)),axis=0)
 
-        self.Xt          = LA.inv(self.M[self.activity + self.idr, :][:, self.activity + self.idr])
+
+        try : 
+            self.Xt = LA.inv(self.M[self.activity + self.idr, :][:, self.activity + self.idr])
+        except LA.LinAlgError :
+            self.Xt = LA.inv( self.M[self.activity + self.idr, :][:, self.activity + self.idr] + np.diag([self.eps_L2]*sum(self.activity) + [0]*sum(self.idr) )   )
 
 
 # iteration of the function up to solve the path at each breaking points.
@@ -68,9 +73,10 @@ def solve_path(matrices, lamin, n_active, rho,typ):
     BETA, LAM = [param.beta], [param.lam]
     if param.lam < lamin : return BETA,LAM
     for i in range(N):
-        no = up(param)
+        up(param)
         BETA.append(param.beta), LAM.append(param.lam)
-        if (type(n_active) == int and param.number_act >= n_active) or param.lam == lamin or no is not None : return (BETA, LAM)
+        if (n_active > 0  and param.number_act >= n_active) or param.lam == lamin : 
+            return (BETA, LAM)
 
     print('no conv')
     return (BETA, LAM)
@@ -96,7 +102,7 @@ def solve_path_Conc(matrices, stop, n_active=False, lassopath=True):
         if (lassopath):
             R.append(param.r)
             if (reduclam <= LA.norm(param.r)) or (param.number_act >= n - k) or (
-                    type(n_active) == int and param.number_act >= n_active): return (BETA, LAM, R)
+                    n_active > 0 and param.number_act >= n_active): return (BETA, LAM, R)
         else:
             if reduclam <= LA.norm(param.r): return ((beta_old, param.beta), (reduclam_old, reduclam), (r_old, param.r))
             beta_old, reduclam_old, r_old = param.beta, reduclam, param.r
@@ -125,22 +131,21 @@ def pathalgo_cl(matrix,path,n_active=False):
     return(pathalgo_general(matrix,path,'cl',n_active))
 
 
-
-
 def up(param):
     formulation = param.formulation
     if (formulation in ['LS','Conc']  ):
-        return (up_LS(param))
+        up_LS(param)
     elif (formulation == 'huber'):
-        return (up_huber(param))
+        up_huber(param)
     elif (formulation == 'cl'):
-        return (up_cl(param))
+        up_cl(param)
     elif (formulation == 'huber_cl'):
-        return (up_huber_cl(param))
+        up_huber_cl(param)
+
 
 # function that search the next lambda where something happen, and update the solution Beta
 def up_LS(param):
-    lambdamax, lamin, M, C = param.lambdamax, param.lamin, param.M, param.C
+    lambdamax, lamin, M, C, eps_L2 = param.lambdamax, param.lamin, param.M, param.C, param.eps_L2
     number_act, idr, Xt, activity, beta, s, lam = param.number_act, param.idr, param.Xt, param.activity, param.beta, param.s, param.lam
 
     d = len(activity)
@@ -168,15 +173,20 @@ def up_LS(param):
                     to_ad = next_idr2(idr, C[:, activity])
                     if (type(to_ad) == int): idr[to_ad] = False
             else:
-                x = M[:, activity + idr][i]
-                al = M[i, i] - np.vdot(x, Xt.dot(x))
-                if (abs(al) < 1e-10): break
+                #x = M[:, activity + idr][i]
+                #al = M[i, i] - np.vdot(x, Xt.dot(x))
+                #if (abs(al) < 1e-10): break
                 activity[i], number_act = True, number_act + 1
                 if (len(M) > d):
                     to_ad = next_idr1(idr, C[:, activity])
                     if (type(to_ad) == int): idr[to_ad] = True
-
-            Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+        
+            
+    try : 
+        Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+    except LA.LinAlgError :
+        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*sum(activity) + [0]*sum(idr) )   )
+            
 
     beta = beta + lambdamax * D * dlamb
     if not (lam == dlamb): s = E + lam / (lam - dlamb) * (s - E)
@@ -184,8 +194,10 @@ def up_LS(param):
 
     param.number_act, param.idr, param.Xt, param.activity, param.beta, param.s, param.lam = number_act, idr, Xt, activity, beta, s, lam
 
+
+
 def up_huber(param):
-    lambdamax, lamin, A, y, C, rho = param.lambdamax, param.lamin, param.A, param.y, param.C, param.rho
+    lambdamax, lamin, A, y, C, rho, eps_L2 = param.lambdamax, param.lamin, param.A, param.y, param.C, param.rho, param.eps_L2
     number_act, idr, Xt, activity, F, beta, s, lam, M, r = param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r
     d = len(activity)
     L = [lam] * d
@@ -238,14 +250,17 @@ def up_huber(param):
                     if (len(M) > d):
                         to_ad = next_idr1(idr, M[d:, :][:, :d][:, activity])
                         if (type(to_ad) == int): idr[to_ad] = True
-    try : Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+
+    try : 
+        Xt = LA.inv(M[activity + idr, :][:, activity + idr])
     except LA.LinAlgError :
-        print("matrix is not invertible, can't do a path algorithm... (huber case)")
-        return False
+        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*sum(activity) + [0]*sum(idr) )   )
+
+
     param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = number_act, idr, Xt, activity, F, beta, s, lam, M, r
 
 def up_cl(param):
-    lambdamax,lamin,A, y  = param.lambdamax,param.lamin,param.A, param.y
+    lambdamax,lamin,A, y, eps_L2  = param.lambdamax,param.lamin,param.A, param.y, param.eps_L2
     number_act,idr,Xt,activity,F,beta,s, lam, M,r =\
         param.number_act,param.idr,param.Xt,param.activity,param.F,param.beta,param.s, param.lam, param.M,param.r
 
@@ -282,7 +297,6 @@ def up_cl(param):
     if (max_up):
         F[j_switch] = not F[j_switch]
         M[:d, :][:, :d] = 2 * A[F].T.dot(A[F])
-        Xt = LA.inv(M[activity + idr, :][:, activity + idr])
     else:
         # Update matrix inverse, list of rows in C and activity
         for i in range(d):
@@ -300,13 +314,16 @@ def up_cl(param):
                     if (len(M) > d):
                         to_ad = next_idr1(idr, M[d:, :][:, :d][:, activity])
                         if (type(to_ad) == int): idr[to_ad] = True
-                Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+    try : 
+        Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+    except LA.LinAlgError :
+        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*sum(activity) + [0]*sum(idr) )   )
 
     param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = \
         number_act, idr, Xt, activity, F, beta, s, lam, M, r
 
 def up_huber_cl(param):
-    lambdamax, lamin, A, y, rho = param.lambdamax, param.lamin, param.A, param.y, param.rho
+    lambdamax, lamin, A, y, rho, eps_L2 = param.lambdamax, param.lamin, param.A, param.y, param.rho, param.eps_L2
     number_act, idr, Xt, activity, F, beta, s, lam, M, r = param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r
     d = len(activity)
     L = [lam] * d
@@ -350,7 +367,7 @@ def up_huber_cl(param):
     if (max_up):
         F[j_switch] = not F[j_switch]
         M[:d, :][:, :d] = 2 * A[F].T.dot(A[F])
-        Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+
     else:
         # Update matrix inverse, list of rows in C and activity
         for i in range(d):
@@ -369,8 +386,20 @@ def up_huber_cl(param):
                         to_ad = next_idr1(idr, M[d:, :][:, :d][:, activity])
                         if (type(to_ad) == int): idr[to_ad] = True
 
-                Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+    try : 
+        Xt = LA.inv(M[activity + idr, :][:, activity + idr])
+    except LA.LinAlgError :
+        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*sum(activity) + [0]*sum(idr) )   )
+
     param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = number_act, idr, Xt, activity, F, beta, s, lam, M, r
+
+
+
+
+
+
+
+
 
 
 
@@ -442,6 +471,7 @@ def h_prime(y,rho):
     m = len(y)
     lrho = rho*np.ones(m)
     return(np.maximum(lrho,-y)+ np.minimum(y-lrho,0))
+
 
 
 

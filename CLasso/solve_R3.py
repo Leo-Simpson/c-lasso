@@ -178,7 +178,9 @@ def calc_Newton(a,b,root):
         er = root**3 + a*root-b
     return(root)
 
-def QQ(coef,A): return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*A.dot(A.T))),LA.inv(2*np.eye(A.shape[1])+coef*(A.T).dot(A)))    
+def QQ(coef,A): 
+    # compute QQ = coef A^t (2.I.+coef A A^t )^-1 , (2.I.+coef A^t A)^-1 
+    return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*A.dot(A.T))),LA.inv(2*np.eye(A.shape[1])+coef*(A.T).dot(A)))    
 
 # Return the cost function of some Beta for a given Lasso problem : L_LS = ||y-Ab||2^2  + lambda* ||b||1
 def L_LS(pb,lam,sol): return(LA.norm( pb.matrix[0].dot(sol) - pb.matrix[2] )**2 + lam*pb.lambdamax * LA.norm(sol,1))

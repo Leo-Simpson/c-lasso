@@ -68,13 +68,13 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg
     if(typ=='R2'):
         pb = problem_R2(matrix,meth,rho)
         lambdamax = pb.lambdamax
-        #if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
+        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         BETA  = pathlasso_R2(pb,lambdas,n_active=Nactive)
 
     elif(typ=='R3'):
         pb = problem_R3(matrix,meth,e=e)
         lambdamax = pb.lambdamax
-        #if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
+        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         BETA,S = pathlasso_R3(pb,lambdas,n_active=Nactive)
         S=np.array(S)/np.sqrt(e)
 
@@ -82,23 +82,23 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg
         meth='DR'
         pb = problem_R4(matrix,meth,rho)
         lambdamax = pb.lambdamax
-        #if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
+        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         BETA,S = pathlasso_R4(pb,lambdas,n_active=Nactive)
         
     elif(typ == 'C2'):
         lambdamax = h_lambdamax(matrix[0],matrix[2],rho)
-        #if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
+        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         BETA = pathalgo_general(matrix, lambdas, 'huber_cl', n_active=Nactive, rho=rho_classification)
 
     elif (typ == 'C1'):
         lambdamax = 2*LA.norm((matrix[0].T).dot(matrix[2]),np.infty)
-        #if (true_lam): lambdas = [lamb / lambdamax for lamb in lambdas]
+        if (true_lam): lambdas = [lamb / lambdamax for lamb in lambdas]
         BETA = pathalgo_general(matrix, lambdas, 'cl', n_active=Nactive)
 
     else:
         pb = problem_R1(matrix,meth)
         lambdamax = pb.lambdamax
-        #if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
+        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         BETA = pathlasso_R1(pb,lambdas,n_active=n_active)
 
     real_path = [lam*lambdamax for lam in lambdas]

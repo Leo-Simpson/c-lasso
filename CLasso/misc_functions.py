@@ -12,133 +12,10 @@ import pandas as pd
 import h5py
 from scipy.special import erfinv
 
-def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification = False):
-    ''' Generation of random matrices as data such that y = X.sol + sigma. noise
+'''functions required in solver : 
+rescale, theoretical_lam, min_LS, affichage, check_size, tree_to_matrix 
+'''
 
-    The data X is generated as a normal matrix
-    The vector sol is generated randomly with a random support of size d_nonzero,
-    and componants are projected random intergers between -10  and 10 on the kernel of C restricted to the support
-    The vector y is then generated with X.dot(sol)+ sigma*noise , with noise a normal vector
-
-
-    Args:
-        n (int): Number of sample, dimension of y
-        d (int): Number of variables, dimension of sol
-        d_nonzero (int): Number of non null componant of sol
-        k (int) : Number of constraints, number of rows of C
-        sigma (float) : size of standard error
-        zerosum (bool, optional) : If True, then C is the all-one matrix with 1 row, independently of k
-        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False: pseudo-random vectors
-        classification (bool, optional) : if True, then it returns sign(y) instead of y
-
-    Returns:
-        tuple : tuple of three ndarray that corresponds to the data :  (X,C,y)
-        ndarray : array corresponding to sol which is the real solution of the problem y = Xbeta + noise s.t. beta sparse and Cbeta = 0
-    '''
-    if (type(seed) == int): np.random.seed(seed)
-    else : np.random.seed()
-    X= np.random.randn(n,d)
-    if (zerosum): C,k = np.ones((1,d)),1
-    else :
-        if (k==0):
-            sol, sol_reduc,list_i = np.zeros(d), np.random.randint(-10,11,d_nonzero),np.random.randint(d, size=d_nonzero)
-            sol[list_i]=sol_reduc
-            y = X.dot(sol)+np.random.randn(m)*sigma
-            return((X,np.zeros((0,d)),y),sol)
-        while True :        
-            C = np.random.randint(low=-1,high=1, size=(k, d))
-            if (LA.matrix_rank(C)==k): break
-    while True:
-        sol, sol_reduc = np.zeros(d), np.random.randint(-10,11,d_nonzero)
-        list_i = np.random.randint(d, size=d_nonzero)
-        C_reduc = np.array([C.T[i] for i in list_i]).T
-        if (LA.matrix_rank(C_reduc)<k): continue
-        proj = proj_c(C_reduc,d_nonzero).dot(sol_reduc)
-        for i in range(len(list_i)):
-            sol[list_i[i]]=proj[i]
-        break
-    y = X.dot(sol)+np.random.randn(n)*sigma
-    if classification : y = np.sign(y)
-    return((X,C,y),sol)
-
-
-def check_size(X,y,C):
-    samples = min(len(y),len(X))
-    X2,y2 = X[:samples] , y[:samples]
-    if len(y)   >samples   : print("More outputs than features ! ")
-    elif len(X) > samples  : print("More features than outputs !")
-
-    if C is None : C2 = np.ones((1, len(X[0])))
-    else : 
-        k, d = len(C), len(X[0])
-        if len(C[0])==d : C2 = C
-        elif len(C)>d : 
-            print("Too many colomns in constraint matrix !")
-            C2 = C[:,:d]
-        else : 
-            print("Too few colomns in constraint matrix !")
-            C2 = np.zeros((k,d))
-            C2[:,:len(C)] = C
-    return X2,y2,C2
-
-
-
-
-
-
-def influence(BETAS,ntop):
-    means = np.mean(abs(BETAS),axis=0)
-    top = np.argpartition(means, -ntop)[-ntop:]
-    return(np.sort(top))
-
-def plot_betai(labels,l_index,path,BETAS):
-    j=0
-    for i in range(len(BETAS[0])) :
-        if(j<len(l_index) and i==l_index[j]):
-            if not (type(labels)==bool): leg = 'Coefficient '+str(labels[i])
-            else : leg = 'Coefficient '+str(i)
-            plt.plot(path,BETAS[:,i],label=leg,color=colo[j])
-            j+=1
-        else:
-            plt.plot(path, BETAS[:, i], color=colo[i+j])
-
-def affichage(LISTE_BETA, path, title=' ', labels=False, pix=False, xlabel=" ", ylabel=" ", naffichage=10):
-    BETAS = np.array(LISTE_BETA)
-    l_index = influence(BETAS, naffichage)
-    plt.figure(figsize=(10, 3), dpi=80)
-    if (pix == 'path'): plt.plot(path, [0] * len(path), 'r+')
-    plot_betai(labels, l_index, path, BETAS)
-    plt.title(title), plt.legend(loc=4, borderaxespad=0.)
-    plt.xlabel(xlabel), plt.ylabel(ylabel)
-    if (type(pix) == bool and pix == True):
-        plt.matshow([[(abs(LISTE_BETA[i][j]) > 1e-2) for i in range(len(LISTE_BETA))] for j in
-                     range(len(LISTE_BETA[0]))]),plt.show()
-
-
-def normalize(lb,lna,ly):
-    for j in range(len(lb[0])):
-        lb[:,j] =  lb[:,j]*ly/lna[j]
-    return(lb)     
-
-def denorm(B,lna,ly): return(np.array([ly*B[j]/(np.sqrt(len(B))*lna[j]) for j in range(len(B))]) ) 
-
-
-
-
-
-def csv_to_mat(file,begin = 1, header=None):
-    ''' Function to read a csv file and to create an ndarray with this
-
-    Args:
-        file (str): Name of csv file
-        begin (int, optional): First colomn where it should read the matrix
-        header (None or int, optional): Same parameter as in the function :func:`pandas.read_csv`
-
-    Returns:
-        ndarray : matrix of the csv file
-    '''
-    tab1=pd.read_csv(file,header=header)
-    return(np.array(tab1)[:,begin:])
 
 def rescale(matrices):
     ''' Function that rescale the matrix and returns its scale
@@ -162,25 +39,6 @@ def rescale(matrices):
     yn = np.array([ (y[j]-my)/ly for j in range(len(y)) ])
     Cn = np.array([[C[i,j]*ly/lX[j] for j in range(len(X[0]))] for i in range(len(C))])
     return((Xn,Cn,yn),(lX,ly,my))
-
-
-def hub(r,rho) : 
-    h=0
-    for j in range(len(r)):
-        if(abs(r[j])<rho): h+=r[j]**2
-        elif(r[j]>0)     : h+= (2*r[j]-rho)*rho
-        else             : h+= (-2*r[j]-rho)*rho
-    return(h)
-def L_LS(A,y,lamb,x): return(LA.norm( A.dot(x) - y )**2 + lamb * LA.norm(x,1))
-def L_conc(A,y,lamb,x): return(LA.norm( A.dot(x) - y ) + np.sqrt(2)*lamb * LA.norm(y,1))
-def L_H(A,y,lamb,x,rho): return(hub( A.dot(x) - y , rho) + lamb * LA.norm(x,1))
-
-
-# Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
-def proj_c(M,d):
-    if (LA.matrix_rank(M)==0):  return(np.eye(d))
-    return(np.eye(d)-LA.multi_dot([M.T,np.linalg.inv(M.dot(M.T) ),M]) )
-
 
 def theoretical_lam(n,d):
     ''' Theoretical lambda as a function of the dimension of the problem
@@ -214,8 +72,8 @@ def theoretical_lam(n,d):
         dx = dx/10
     return(2*f/np.sqrt(n))
 
-# function to do LS : return  X (X^t X)^-1  X^t y
 def min_LS(matrices,selected):
+    # function to do LS : return  X (X^t X)^-1  X^t y
     X,C,y = matrices
     Xr, Cr = X[:,selected],C.T[selected]
     proj = np.eye(len(Cr)) - Cr.dot(LA.pinv(Cr))
@@ -223,6 +81,168 @@ def min_LS(matrices,selected):
     beta = np.zeros(len(X[0]))
     beta[selected] = ls
     return(beta)
+
+def affichage(LISTE_BETA, path, title=' ', labels=False, pix=False, xlabel=" ", ylabel=" ", naffichage=10):
+    BETAS = np.array(LISTE_BETA)
+    l_index = influence(BETAS, naffichage)
+    plt.figure(figsize=(10, 3), dpi=80)
+    if (pix == 'path'): plt.plot(path, [0] * len(path), 'r+')
+    plot_betai(labels, l_index, path, BETAS)
+    plt.title(title), plt.legend(loc=4, borderaxespad=0.)
+    plt.xlabel(xlabel), plt.ylabel(ylabel)
+    if (type(pix) == bool and pix == True):
+        plt.matshow([[(abs(LISTE_BETA[i][j]) > 1e-2) for i in range(len(LISTE_BETA))] for j in
+                     range(len(LISTE_BETA[0]))]),plt.show()
+
+def check_size(X,y,C):
+    samples, n_features = min(len(y),len(X)), len(X[0])
+    X2,y2 = X[:samples] , y[:samples]
+    if len(y)   >samples   : print("More outputs than features ! ")
+    elif len(X) > samples  : print("More features than outputs !")
+
+    if C is None : C2 = np.ones((1, n_features ))
+    else : 
+        k = len(C)
+        if len(C[0])==n_features : C2 = C
+        elif len(C)>n_features : 
+            print("Too many colomns in constraint matrix !")
+            C2 = C[:,:n_features]
+        else : 
+            print("Too few colomns in constraint matrix !")
+            C2 = np.zeros((k,n_features))
+            C2[:,:len(C)] = C
+
+    return X2,y2,C2
+
+def tree_to_matrix(tree,label, with_repr = False):
+    # to do here : given a skbio tree and the beta-labels in a given order, return the matrix A and the new labels corresponding
+    dicti = dict()
+    d = len(label)
+    LEAVES = [tip.name for tip in tree.tips()]
+    for i in range(d): 
+        name_leaf = label[i]
+        dicti[name_leaf] = np.zeros(d)
+        dicti[name_leaf][i] = 1
+        if name_leaf in LEAVES :
+            ANCEST = [node.name for node in tree.find(name_leaf).ancestors()]
+            for ancest in ANCEST : 
+                if ancest[-1] != '_' : 
+                    if not ancest in dicti : dicti[ancest] = np.zeros(d)
+                    dicti[ancest][i] = 1
+
+
+    L,label2, tree_repr = [], [], []
+    for node in tree.levelorder():
+        nam = node.name
+        if nam in dicti : 
+            label2.append(nam)
+            L.append(dicti[nam])
+
+    if with_repr : 
+
+        for n,l in tree.to_taxonomy():
+            nam = n.name
+            if nam in label : 
+                tree_repr.append( (nam, l) )
+
+
+    return np.array(L).T , np.array(label2), tree_repr
+
+
+
+'''functions required in init() : 
+random_data, csv_to_mat, mat_to_np, clr, theoretical_lam, to_zarr
+'''
+
+
+def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification = False, exp = False, A = None):
+    ''' Generation of random matrices as data such that y = X.sol + sigma. noise
+
+    The data X is generated as a normal matrix
+    The vector sol is generated randomly with a random support of size d_nonzero,
+    and componants are projected random intergers between -10  and 10 on the kernel of C restricted to the support
+    The vector y is then generated with X.dot(sol)+ sigma*noise , with noise a normal vector
+
+
+    Args:
+        n (int): Number of sample, dimension of y
+        d (int): Number of variables, dimension of sol
+        d_nonzero (int): Number of non null componant of sol
+        k (int) : Number of constraints, number of rows of C
+        sigma (float) : size of standard error
+        zerosum (bool, optional) : If True, then C is the all-one matrix with 1 row, independently of k
+        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False: pseudo-random vectors
+        classification (bool, optional) : if True, then it returns sign(y) instead of y
+        A (numpy.ndarray) : matrix corresponding to a taxa tree, if it is given, then the problem should be y = X.A.g + eps , C.A.g = 0
+
+    Returns:
+        tuple : tuple of three ndarray that corresponds to the data :  (X,C,y)
+        ndarray : array corresponding to sol which is the real solution of the problem y = Xbeta + noise s.t. beta sparse and Cbeta = 0
+    '''
+    if (type(seed) == int): np.random.seed(seed)
+    else : np.random.seed()
+    X= np.random.randn(n,d)
+
+    if A is None: A = np.eye(d)
+    d1= len(A[0])
+
+    sol, sol_reduc,list_i = np.zeros(d1), np.random.randint(-10,11,d_nonzero),np.random.randint(d1, size=d_nonzero)
+    
+    if (zerosum): C,k = np.ones((1,d)),1
+    else :
+        if (k==0):
+            sol[list_i]=sol_reduc
+            y = X.dot(A.dot(sol))+np.random.randn(m)*sigma
+            return((X,np.zeros((0,d1)),y),sol)
+
+        while True :        
+            C = np.random.randint(low=-1,high=1, size=(k, d))
+            if (LA.matrix_rank(C)==k): break
+
+
+    while True:
+        # building a sparse solution such that C.A sol = 0
+        C_reduc = C.dot(A)[:,list_i]
+        if (LA.matrix_rank(C_reduc)<k): 
+            list_i = np.random.randint(d1, size=d_nonzero)
+            continue
+        proj = proj_c(C_reduc,d_nonzero).dot(sol_reduc)
+        sol[list_i]=proj           
+        break
+
+    y = X.dot(A.dot(sol))+np.random.randn(n)*sigma
+    if classification : y = np.sign(y)
+    if exp : return (np.exp(X), C, y), sol
+    return (X,C,y),sol 
+
+def csv_to_mat(file,begin = 1, header=None):
+    ''' Function to read a csv file and to create an ndarray with this
+
+    Args:
+        file (str): Name of csv file
+        begin (int, optional): First colomn where it should read the matrix
+        header (None or int, optional): Same parameter as in the function :func:`pandas.read_csv`
+
+    Returns:
+        ndarray : matrix of the csv file
+    '''
+    tab1=pd.read_csv(file,header=header)
+    return(np.array(tab1)[:,begin:])
+
+def mat_to_np(file):
+    ''' Function to read a mat file and to create an ndarray with this
+
+    Args:
+        file (str): Name of mat file
+
+    Returns:
+         ndarray : matrix of the mat file
+    '''
+    arrays = {}
+    f = h5py.File(file)
+    for k,v in f.items():
+        arrays[k]=np.array(v)
+    return arrays
 
 def clr(array, coef=0.5):
     ''' Centered-Log-Ratio transformation
@@ -243,22 +263,6 @@ def clr(array, coef=0.5):
     M = np.log(M)
     return(M - np.mean(M, axis=0))
 
-def mat_to_np(file):
-    ''' Function to read a mat file and to create an ndarray with this
-
-    Args:
-        file (str): Name of mat file
-
-    Returns:
-         ndarray : matrix of the mat file
-    '''
-    arrays = {}
-    f = h5py.File(file)
-    for k,v in f.items():
-        arrays[k]=np.array(v)
-    return arrays
-
-
 def to_zarr(obj,name,root, first=True):
 
     if type(obj)==dict:
@@ -270,17 +274,22 @@ def to_zarr(obj,name,root, first=True):
         for key,value in obj.items() :
             to_zarr(value,key,zz,first=False) 
             
-    elif type(obj) in [np.ndarray,np.float64]:
+    elif type(obj) == np.ndarray:
          root.create_dataset(name,data=obj,shape=obj.shape)
+
+    elif type(obj)==np.float64 :
+        root.attrs[name] = float(obj)
 
     elif type(obj)==np.int64 :
          root.attrs[name] = int(obj)
-
+         
     elif type(obj)== list : 
-        to_zarr(np.array(obj),name,root,first=False)
+        if name=='tree' : root.attrs[name] = obj
+        else : to_zarr(np.array(obj),name,root,first=False)
     
     elif obj is None or type(obj) in [str,bool,float,int]:
         root.attrs[name] = obj
+
 
     else :
         to_zarr(obj.__dict__,name,root,first=first)
@@ -288,104 +297,46 @@ def to_zarr(obj,name,root, first=True):
 
 
 
-
-
-
-
-
-
 '''
-def verify(obj,beta,sigma):
-    epsilon = 0.01
-    N = 1000
-    booleans = np.array([True]*N)
-    opt = obj(beta,sigma)
-    for i in range(N):
-        beta_prime = beta[:]
-        for j in range(len(beta_prime)):
-            beta_prime[j]+=epsilon*np.random.random()
-        sigma_prime = sigma + epsilon*np.random.random()
-        booleans[i] = (obj(beta_prime,sigma_prime) > opt)
-    return(np.all(booleans))
-
-
-def plot_influence(labels,l_influence):
-    print("influent variables  : \n \n")
-    for beta in l_influence:
-        string=''
-        for colo in range(1,7):
-            string+= str(labels.loc[beta,colo])
-        print(string + '\n')
-
-def support_dist(x,y):
-    s = 0 
-    n = len(x)
-    for k in range(n):
-        x_null, y_null = (abs(x[k])<1e-4), (abs(y[k])<1e-4)
-        if (x_null and not y_null) or (y_null and not x_null): s+=1
-    return(s)
-        
-def compare(L,show,lam):
-    str1 = 'Execution time : \n \n'
-    str2 = '\n Iterations : \n \n'
-    str3 = '\n L2-difference between : \n \n'
-    str4 = '\n For concomitant algorithms : \n \n'
-    for i in range(len(L)) :
-        x,niter,dt = L[i][0][:3]
-        name = L[i][1]
-        if (show=='sep' or show==True):
-            plt.title('lam = '+str(lam))
-            plt.bar(range(len(x)),x,label=name,color=colo[i])
-            plt.legend()
-            if (show=='sep'): plt.show()
-        if (niter != 0):
-            str1+= name+' :'+str(round(dt,5)) + '\n'
-            str2+= name+' :'+str(niter)+ '\n'
-        for j in range (i+1,len(L)): str3+= name + ' and '+L[j][1] +'             : ' + str(round(LA.norm((L[j][0][0]-x)),4)) + '\n'
-    plt.show()
-    printsigma =False
-    for i in range(len(L)) :
-        if (len(L[i][0])==4): 
-            printsigma = True
-            str4+=' Sigma '+L[i][1]+'  :'+str(round(L[i][0][3],3))
- 
-    print(str1)
-    print(str2)
-    if (len(L)>1): print(str3)
-    if (printsigma): print(str4)
-    
-    
-def old_normalize(lb,lna,ly):
-    lbetaprime = []
-    for beta in lb:
-        lbetaprime.append( np.array([ly*beta[j]/(lna[j]) for j in range(len(beta))]) )
-    return(lbetaprime)
-    
-def name(tol,string): return(string+'  tol={:.0e}'.format(float(tol)))   
-
-def aff(M):
-    (m,n)= M.shape
-    for i in range(m):
-        string =  ''
-        for j in range(n):
-            to_ad=str(round(abs(M[i,j]),3))
-            string+=to_ad+' '*(5-len(to_ad))+' |'
-        print(string + '//')   
-        
-def influence_old(sol,top):
-    l_influence = []
-    for j in range(top):
-        maxi = 0.
-        for i in range(len(sol)): 
-            if ( not (i in l_influence) and (abs(sol[i])>=maxi)): maxi,argmaxi = abs(sol[i]), i
-        l_influence.append(argmaxi)
-    return(l_influence)
-    
-    
-def plot_betai_old(labels,l_index,path,BETA):
-    for i in range(len(l_index)) :
-        leg = 'index = '+str(l_index[i])
-        if not (type(labels)==bool): leg+='  '+ str(labels[l_index[i]])
-        if (i>10): plt.plot(path,[BETA[ilam][l_index[i]] for ilam in range(len(path))],color=colo[l_index[i]])
-        else:     plt.plot(path,[BETA[ilam][l_index[i]] for ilam in range(len(path))],label=leg,color=colo[l_index[i]])
+misc of misc functions
 '''
+
+def plot_betai(labels,l_index,path,BETAS):
+    j=0
+    for i in range(len(BETAS[0])) :
+        if(j<len(l_index) and i==l_index[j]):
+            if not (type(labels)==bool): leg = 'Coefficient '+str(labels[i])
+            else : leg = 'Coefficient '+str(i)
+            plt.plot(path,BETAS[:,i],label=leg,color=colo[j])
+            j+=1
+        else:
+            plt.plot(path, BETAS[:, i], color=colo[i+j])
+
+def influence(BETAS,ntop):
+    means = np.mean(abs(BETAS),axis=0)
+    top = np.argpartition(means, -ntop)[-ntop:]
+    return(np.sort(top))
+
+def normalize(lb,lna,ly):
+    for j in range(len(lb[0])):
+        lb[:,j] =  lb[:,j]*ly/lna[j]
+    return(lb)     
+
+def denorm(B,lna,ly): return(np.array([ly*B[j]/(np.sqrt(len(B))*lna[j]) for j in range(len(B))]) ) 
+
+def hub(r,rho) : 
+    h=0
+    for j in range(len(r)):
+        if(abs(r[j])<rho): h+=r[j]**2
+        elif(r[j]>0)     : h+= (2*r[j]-rho)*rho
+        else             : h+= (-2*r[j]-rho)*rho
+    return(h)
+def L_LS(A,y,lamb,x): return(LA.norm( A.dot(x) - y )**2 + lamb * LA.norm(x,1))
+def L_conc(A,y,lamb,x): return(LA.norm( A.dot(x) - y ) + np.sqrt(2)*lamb * LA.norm(y,1))
+def L_H(A,y,lamb,x,rho): return(hub( A.dot(x) - y , rho) + lamb * LA.norm(x,1))
+
+def proj_c(M,d):
+    # Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
+    if (LA.matrix_rank(M)==0):  return(np.eye(d))
+    return(np.eye(d)-LA.multi_dot([M.T,np.linalg.inv(M.dot(M.T) ),M]) )
+

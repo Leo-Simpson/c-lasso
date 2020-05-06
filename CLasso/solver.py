@@ -2,11 +2,104 @@ from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .misc_functions import rescale, theoretical_lam, min_LS, affichage, check_size
+from .misc_functions import rescale, theoretical_lam, min_LS, affichage, check_size, tree_to_matrix
 from .compact_func import Classo, pathlasso
 from .cross_validation import CV
 from .stability_selection import stability, selected_param
 import matplotlib.patches as mpatches
+
+
+class classo_problem:
+    ''' Class that contains all the information about the problem
+        
+        Args:
+        X (ndarray): Matrix representing the data of the problem
+        y (ndarray): Vector representing the output of the problem
+        C (str or ndarray, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
+        Default value to 'zero-sum'
+        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem.
+        Default value is 'False'
+        label (list) : list of the labels of each variable. If None, then label or just int
+        
+        Attributes:
+        data (classo_data) :  object containing the data of the problem.
+        formulation (classo_formulation) : object containing the info about the formulation of the minimization problem we solve.
+        model_selection (classo_model_selection) : object giving the parameters we need to do variable selection.
+        solution (classo_solution) : object giving caracteristics of the solution of the model_selection that is asked.
+        Before using the method solve() , its componant are empty/null.
+        
+        '''
+    def __init__(self, X, y, C=None,Tree = None, label=None, rescale=False):  # zero sum constraint by default, but it can be any matrix
+        self.data = classo_data(X, y, C,Tree=Tree, rescale=rescale, label = label)
+        self.formulation = classo_formulation()
+        self.model_selection = classo_model_selection()
+        self.solution = classo_solution()
+    
+    
+    # This method is the way to solve the model selections contained in the object model_selection, with the formulation of 'formulation' and the data.
+    def solve(self):
+        ''' Method that solve every model required in the attributes of the problem and update the attribute :obj:`problem.solution` with the characteristics of the solution.
+            '''
+        data = self.data
+        matrices = (data.X, data.C, data.y)
+        solution = classo_solution()
+        n, d = len(data.X), len(data.X[0])
+        if (self.formulation.e == 'n/2'): self.formulation.e = n/2  #useful to be able to write e='n/2' as it is in the default parameters
+        elif(self.formulation.e == 'n'): self.formulation.e = n     # same
+        elif(self.formulation.e == 'not specified'):
+            if (self.formulation.huber): self.formulation.e = n
+            else                       : self.formulation.e = n / 2
+        
+        if data.rescale:
+            matrices, data.scaling = rescale(matrices)  # SCALING contains  :
+        # (list of initial norms of A-colomns,
+        #         initial norm of centered y,
+        #          mean of initial y )
+        
+        # Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
+        if self.model_selection.PATH:
+            solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, data.label)
+        
+        # Compute the cross validation thanks to the class solution_CV which contains directely the computation in the initialisation
+        if self.model_selection.CV:
+            solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation, data.label)
+    
+        # Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
+        if self.model_selection.StabSel:
+            param = self.model_selection.StabSelparameters
+            param.theoretical_lam = theoretical_lam(int(n * param.percent_nS), d)
+            if(param.true_lam): param.theoretical_lam = param.theoretical_lam*int(n * param.percent_nS)
+            
+            solution.StabSel = solution_StabSel(matrices, param, self.formulation, data.label)
+        
+        # Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
+        if self.model_selection.LAMfixed:
+            param = self.model_selection.LAMfixedparameters
+            param.theoretical_lam = theoretical_lam(n, d)
+            if(param.true_lam): param.theoretical_lam = param.theoretical_lam*n
+            solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, data.label)
+
+        self.solution = solution
+    
+    def __repr__(self):
+        print_parameters = ''
+        if (self.model_selection.CV):
+            print_parameters += '\n \nCROSS VALIDATION PARAMETERS: ' + self.model_selection.CVparameters.__repr__()
+        if (self.model_selection.StabSel):
+            print_parameters += '\n \nSTABILITY SELECTION PARAMETERS: ' + self.model_selection.StabSelparameters.__repr__()
+        if (self.model_selection.LAMfixed):
+            print_parameters += '\n \nLAMBDA FIXED PARAMETERS: ' + self.model_selection.LAMfixedparameters.__repr__()
+        
+        if (self.model_selection.PATH):
+            print_parameters += '\n \nPATH PARAMETERS: ' + self.model_selection.PATHparameters.__repr__()
+        
+        return (' \n \nFORMULATION: ' + self.formulation.__repr__()
+                + '\n \n' +
+                'MODEL SELECTION COMPUTED:  ' + self.model_selection.__repr__()
+                + print_parameters + '\n'
+                )
+
+
 
 
 class classo_data:
@@ -17,18 +110,33 @@ class classo_data:
         y (ndarray): Vector representing the output of the problem
         C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
         rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem
+        label (list) : list of the labels of each variable. If None, then label or just int
+        Tree (skbio.TreeNode) : taxonomic tree, if set it is not None, then the matrices X and C and the labels will be changed. 
 
     Attributes:
         X (ndarray): Matrix representing the data of the problem
         y (ndarray): Vector representing the output of the problem
         C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
         rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem
+        label (list) : list of the labels of each variable. If None, then label or just int
+        tree (skbio.TreeNode) : taxonomic tree 
 
     '''
 
-    def __init__(self, X, y, C, rescale=False):
+    def __init__(self, X, y, C, Tree=None, rescale=False, label=None):
         self.rescale = rescale  # booleen to know if we rescale the matrices
-        self.X,self.y,self.C = check_size(X,y,C)
+        X1,y1,C1 = check_size(X,y,C)
+
+        if Tree is None : 
+            if (label is None): self.label = np.array([str(i) for i in range(len(X[0]))])
+            else : self.label = np.array(label)
+            self.X,self.y,self.C, self.tree = X1,y1,C1, None
+
+        else : 
+            A, label2, subtree = tree_to_matrix(Tree,label, with_repr=True)
+            self.tree = subtree
+            self.X,self.y,self.C, self.label = X1.dot(A),y1,C1.dot(A), label2
+            
         
 
 class classo_formulation:
@@ -154,10 +262,10 @@ class PATHparameters:
     def __init__(self):
         self.formulation = 'not specified'
         self.numerical_method = 'choose'
-        self.n_active = False
+        self.n_active = 0
         lamin= 1e-2
         nlam = 40
-        self.lambdas = np.array([10**(np.log10(lamin) * float(i) / nlam) for i in range(0,nlam) ] )
+        self.lambdas = np.array([10**(np.log10(lamin) * float(i) / (nlam+1)) for i in range(0,nlam) ] )
         self.plot_sigma = True
 
     def __repr__(self): return (  '\n     Npath = ' + str(len(self.lambdas))
@@ -301,99 +409,6 @@ class LAMfixedparameters:
             def __repr__(self): return (  '\n     lam = ' + str(self.lam)
                                         + '\n     theoretical_lam = ' + str(round(self.theoretical_lam, 4))
                                         + '\n     numerical_method = ' + str(self.numerical_method))
-
-class classo_problem:
-    ''' Class that contains all the information about the problem
-
-    Args:
-        X (ndarray): Matrix representing the data of the problem
-        y (ndarray): Vector representing the output of the problem
-        C (str or ndarray, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
-               Default value to 'zero-sum'
-        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem.
-               Default value is 'False'
-
-    Attributes:
-        label (list or bool) : list of the labels of each variable. If set to False then there is no label
-        data (classo_data) :  object containing the data of the problem.
-        formulation (classo_formulation) : object containing the info about the formulation of the minimization problem we solve.
-        model_selection (classo_model_selection) : object giving the parameters we need to do variable selection.
-        solution (classo_solution) : object giving caracteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
-
-    '''
-    def __init__(self, X, y, C=None, label=False, rescale=False):  # zero sum constraint by default, but it can be any matrix
-        if (type(label)==bool): self.label = np.array([str(i) for i in range(len(X[0]))])
-        else : self.label = label
-        self.data = classo_data(X, y, C, rescale=rescale)
-        self.formulation = classo_formulation()
-        self.model_selection = classo_model_selection()
-        self.solution = classo_solution()
-
-
-    # This method is the way to solve the model selections contained in the object model_selection, with the formulation of 'formulation' and the data.
-    def solve(self):
-        ''' Method that solve every model required in the attributes of the problem and update the attribute :obj:`problem.solution` with the characteristics of the solution.
-        '''
-        data = self.data
-        matrices = (data.X, data.C, data.y)
-        solution = classo_solution()
-        n, d = len(data.X), len(data.X[0])
-        if (self.formulation.e == 'n/2'): self.formulation.e = n/2  #useful to be able to write e='n/2' as it is in the default parameters
-        elif(self.formulation.e == 'n'): self.formulation.e = n     # same
-        elif(self.formulation.e == 'not specified'):
-            if (self.formulation.huber): self.formulation.e = n
-            else                       : self.formulation.e = n / 2
-
-        if data.rescale:
-            matrices, data.scaling = rescale(matrices)  # SCALING contains  :
-            # (list of initial norms of A-colomns,
-            #         initial norm of centered y,
-            #          mean of initial y )
-
-        # Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
-        if self.model_selection.PATH:
-            solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, self.label)
-
-        # Compute the cross validation thanks to the class solution_CV which contains directely the computation in the initialisation
-        if self.model_selection.CV:
-            solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation, self.label)
-
-        # Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
-        if self.model_selection.StabSel:
-            param = self.model_selection.StabSelparameters
-            param.theoretical_lam = theoretical_lam(int(n * param.percent_nS), d)
-            if(param.true_lam): param.theoretical_lam = param.theoretical_lam*int(n * param.percent_nS)
-
-            solution.StabSel = solution_StabSel(matrices, param, self.formulation, self.label)
-
-        # Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
-        if self.model_selection.LAMfixed:
-            param = self.model_selection.LAMfixedparameters
-            param.theoretical_lam = theoretical_lam(n, d)
-            if(param.true_lam): param.theoretical_lam = param.theoretical_lam*n
-            solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, self.label)
-
-        self.solution = solution
-
-    def __repr__(self):
-        print_parameters = ''
-        if (self.model_selection.CV):
-            print_parameters += '\n \nCROSS VALIDATION PARAMETERS: ' + self.model_selection.CVparameters.__repr__()
-        if (self.model_selection.StabSel):
-            print_parameters += '\n \nSTABILITY SELECTION PARAMETERS: ' + self.model_selection.StabSelparameters.__repr__()
-        if (self.model_selection.LAMfixed):
-            print_parameters += '\n \nLAMBDA FIXED PARAMETERS: ' + self.model_selection.LAMfixedparameters.__repr__()
-
-        if (self.model_selection.PATH):
-            print_parameters += '\n \nPATH PARAMETERS: ' + self.model_selection.PATHparameters.__repr__()
-
-        return (' \n \nFORMULATION: ' + self.formulation.__repr__()
-                + '\n \n' +
-                'MODEL SELECTION COMPUTED:  ' + self.model_selection.__repr__()
-                + print_parameters + '\n'
-                )
-
 
 class classo_solution:
     ''' Class giving characteristics of the solution of the model_selection that is asked.
@@ -547,10 +562,11 @@ class solution_CV:
         plt.show()
         return (str(round(self.time, 3)) + "s")
 
-    def graphic(self, mse_max=1.,save=False):
+    def graphic(self, ratio_mse_max=1.,save=False):
         i_min, i_1SE = self.index_min, self.index_1SE
-        for j in range(len(self.xGraph)):
-            if (self.yGraph[j] < mse_max): break
+        mse_max = ratio_mse_max * self.standard_error[i_min]
+        j = 0
+        while(j < i_1SE - 30  and self.yGraph[j] > mse_max) : j+=1
 
         plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = 10 )
         plt.axvline(x=self.xGraph[i_min], color='k', label=r'$\lambda$ (min MSE)')
@@ -575,7 +591,7 @@ class solution_StabSel:
         threshold (float) : threshold for StabSel, ie for a variable i, stability ratio that is needed to get selected
         save1,save2,save3 (bool or string) : if a string is given, the corresponding graph will be saved with the given name of the file (save1 is for stability plot ; save2 for path-stability plot; and save3 for refit beta-solution)
         selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected
-        to_label (list of int) : list that indicates the index of the True-componants of selected_param (useful to find the right label in _repr_() method)
+        to_label (numpy.ndarray) : boolean arrays of size d with True when the name of the variable should be seen on the graph
         refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
         formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
         time (float) : running time of this action
@@ -617,7 +633,7 @@ class solution_StabSel:
         self.distribution = distribution
         self.distribution_path = distribution_path
         self.lambdas_path = lambdas
-        self.selected_param,self.to_label = selected_param(self.distribution, param.threshold,param.threshold_label)
+        self.selected_param, self.to_label = selected_param(self.distribution, param.threshold,param.threshold_label)
         self.threshold = param.threshold
         self.refit = min_LS(matrices, self.selected_param)
         self.save1 = False
@@ -635,13 +651,19 @@ class solution_StabSel:
         unselected = [not i for i in selected]
         Dselected, Dunselected  = np.zeros(len(D)), np.zeros(len(D))
         Dselected[selected], Dunselected[unselected] = D[selected], D[unselected]
+        
         plt.bar(range(len(Dselected)), Dselected, color='r', label='selected coefficients')
         plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected coefficients')
         plt.axhline(y=self.threshold, color='g',label='Threshold : thresh = '+ str(self.threshold))
-        plt.xticks(self.to_label, self.label[self.to_label], rotation=30)
+
+        plt.xticks(ticks = np.where(self.to_label)[0], labels = self.label[self.to_label], rotation=30)
         plt.xlabel(StabSel_graph["xlabel"]), plt.ylabel(StabSel_graph["ylabel"]), plt.title(StabSel_graph["title"] + self.method + " using " + self.formulation), plt.legend()
+
         if (type(self.save1) == str): plt.savefig(self.save1)
+
         plt.show()
+        
+        
         print("SELECTED VARIABLES : ")
         for i in np.where(selected)[0] :
             print(self.label[i])
@@ -812,8 +834,8 @@ StabSel_graph       = {
                             "ylabel" : r"Selection probability "}
 StabSel_path        = {
                             "title"  : r"Stability selection profile across $\lambda$-path using " ,
-                            "xlabel" : r"Coefficient index $i$" ,
-                            "ylabel" : r"Coefficients $\beta_i$ "}
+                            "xlabel" : r"$\lambda$" ,
+                            "ylabel" : r"Selection probability "}
 StabSel_beta        = {
                             "title"  : r"Refitted coefficients after stability selection" ,
                             "xlabel" : r"Coefficient index $i$" ,
