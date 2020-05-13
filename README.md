@@ -29,9 +29,10 @@ The code builds on results from several papers which can be found in the [Refere
 * [Regression and classification problems](#regression-and-classification-problems)
 * [Getting started](#getting-started)
 * [Log-contrast regression for microbiome data](#log-contrast-regression-for-microbiome-data)
-* [Two main functions](#two-main-functions)
-* [Misc functions](#little-functions)
 * [Optimization schemes](#optimization-schemes)
+* [Structure of the code](#structure-of-the-code)
+
+
 * [References](#references)
 
 
