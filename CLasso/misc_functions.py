@@ -119,34 +119,41 @@ def tree_to_matrix(tree,label, with_repr = False):
     dicti = dict()
     d = len(label)
     LEAVES = [tip.name for tip in tree.tips()]
+    order = [] # list that will give the order in which the codes are added in the dicti, such that it will be easy to remove similar nodes
     for i in range(d): 
         name_leaf = label[i]
         dicti[name_leaf] = np.zeros(d)
         dicti[name_leaf][i] = 1
+        order.append(name_leaf)
         if name_leaf in LEAVES :
-            ANCEST = [node.name for node in tree.find(name_leaf).ancestors()]
-            for ancest in ANCEST : 
-                if ancest[-1] != '_' : 
-                    if not ancest in dicti : dicti[ancest] = np.zeros(d)
+            for n in tree.find(name_leaf).ancestors() : 
+                ancest = n.name
+                if ancest[-1] != '_': 
+                    if not ancest in dicti : 
+                        dicti[ancest] = np.zeros(d)
+                        order.append(ancest)
                     dicti[ancest][i] = 1
 
 
     L,label2, tree_repr = [], [], []
-    for node in tree.levelorder():
-        nam = node.name
-        if nam in dicti : 
-            label2.append(nam)
-            L.append(dicti[nam])
 
     if with_repr : 
-
         for n,l in tree.to_taxonomy():
             nam = n.name
             if nam in label : 
                 tree_repr.append( (nam, l) )
 
 
-    return np.array(L).T , np.array(label2), tree_repr
+    for node in tree.levelorder():
+        nam = node.name
+        if nam in dicti and not nam in label2 : 
+            label2.append(nam)
+            L.append(dicti[nam])
+
+    to_keep = remove_same_vect(L , label2,order)
+
+
+    return np.array(L)[to_keep].T, np.array(label2)[to_keep], tree_repr
 
 
 
@@ -340,3 +347,17 @@ def proj_c(M,d):
     if (LA.matrix_rank(M)==0):  return(np.eye(d))
     return(np.eye(d)-LA.multi_dot([M.T,np.linalg.inv(M.dot(M.T) ),M]) )
 
+
+def remove_same_vect(L , label, order): 
+    K = len(L)
+    to_keep = np.array([True]*K)
+    j = label.index(order[0] )
+    col = L[j]
+    for i in range(K-1):
+        new_j = label.index(order[i+1])
+        new_col = L[new_j]
+        if np.array_equal(col,new_col) : 
+            to_keep[new_j]=False
+        else : j, col = new_j, new_col
+
+    return to_keep
