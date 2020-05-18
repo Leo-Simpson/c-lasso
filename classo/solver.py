@@ -44,11 +44,14 @@ class classo_problem:
         matrices = (data.X, data.C, data.y)
         solution = classo_solution()
         n, d = len(data.X), len(data.X[0])
-        if (self.formulation.e == 'n/2'): self.formulation.e = n/2  #useful to be able to write e='n/2' as it is in the default parameters
-        elif(self.formulation.e == 'n'): self.formulation.e = n     # same
-        elif(self.formulation.e == 'not specified'):
-            if (self.formulation.huber): self.formulation.e = n
-            else                       : self.formulation.e = n / 2
+        if self.formulation.classification :
+            self.formulation.concomitant = False
+        else : 
+            if (self.formulation.e == 'n/2'): self.formulation.e = n/2  #useful to be able to write e='n/2' as it is in the default parameters
+            elif(self.formulation.e == 'n'): self.formulation.e = n     # same
+            elif(self.formulation.e == 'not specified'):
+                if (self.formulation.huber): self.formulation.e = n
+                else                       : self.formulation.e = n / 2
         
         if data.rescale:
             matrices, data.scaling = rescale(matrices)  # SCALING contains  :
@@ -137,7 +140,7 @@ class classo_data:
             self.tree = subtree
             self.X,self.y,self.C, self.label = X1.dot(A),y1,C1.dot(A), label2
             
-        
+       
 
 class classo_formulation:
     ''' Class containing the data of the problem

@@ -17,44 +17,50 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
     if(typ=='R3'):
         if not meth in ['Path-Alg', 'DR']: meth='DR'
         pb = problem_R3(matrix,meth,e=e)
-        if (true_lam): beta,s = Classo_R3(pb,lam/pb.lambdamax)
+        lambdamax = pb.lambdamax
+        if (true_lam): beta,s = Classo_R3(pb,lam/lambdamax)
         else : beta, s = Classo_R3(pb, lam)
         s = s/np.sqrt(e)
 
     elif(typ=='R4'):
         if not meth in ['Path-Alg', 'DR']: meth='DR'
         pb  = problem_R4(matrix,meth,rho,e=e)
-        if (true_lam): beta,s = Classo_R4(pb,lam/pb.lambdamax,e=e)
+        lambdamax = pb.lambdamax
+        if (true_lam): beta,s = Classo_R4(pb,lam/lambdamax,e=e)
         else : beta, s = Classo_R4(pb, lam,e=e)
 
 
     elif(typ=='R2'):
         if not meth in ['Path-Alg', 'P-PDS' , 'PF-PDS' , 'DR']: meth = 'ODE'
         pb = problem_R2(matrix,meth,rho)
-        if (true_lam): beta = Classo_R2(pb,lam/pb.lambdamax)
+        lambdamax = pb.lambdamax
+        if (true_lam): beta = Classo_R2(pb,lam/lambdamax)
         else : beta = Classo_R2(pb, lam)
 
     elif (typ == 'C2'):
-        if (true_lam):  BETA = solve_path(matrix, lamin, False, rho_classification, 'huber_cl')[0] #TO DO HERE !!!!!!!!!
-        else :    BETA = solve_path(matrix, lamin, False, rho_classification, 'huber_cl')[0]
-        beta = BETA[0]
+        lambdamax = h_lambdamax(matrix[0],matrix[2],rho)
+        if true_lam : BETA = solve_path(matrix, lam/lambdamax, False, rho_classification, 'huber_cl')[0]
+        else : BETA = solve_path(matrix, lam, False, rho_classification, 'huber_cl',true_lam=true_lam)[0]
+        beta = BETA[-1]
 
     elif (typ == 'C1'):
-        if(true_lam) : BETA = solve_path(matrix,lamin, False,0, 'cl')[0] # TO DO HERE !!!!!!!!
-        else : BETA = solve_path(matrix,lamin, False,0, 'cl')[0]
-        beta = BETA[0]
+        lambdamax = h_lambdamax(matrix[0],matrix[2],0)
+        if (true_lam): BETA = solve_path(matrix,lam/lambdamax, False,0, 'cl')[0]
+        else : BETA = solve_path(matrix,lam, False,0, 'cl')[0]
+        beta = BETA[-1]
 
 
     else: # LS
         if not meth in ['Path-Alg', 'P-PDS' , 'PF-PDS' , 'DR']: meth='DR'
         pb = problem_R1(matrix,meth)
-        if (true_lam) : beta = Classo_R1(pb,lam/pb.lambdamax)
+        lambdamax = pb.lambdamax
+        if (true_lam) : beta = Classo_R1(pb,lam/lambdamax)
         else : beta = Classo_R1(pb,lam)
 
     if (typ  in ['R3','R4']):
-        if (get_lambdamax): return(pb.lambdamax,beta,s)
+        if (get_lambdamax): return(lambdamax,beta,s)
         else              : return(beta,s)
-    if (get_lambdamax): return(pb.lambdamax,beta)
+    if (get_lambdamax): return(lambdamax,beta)
     else              : return(beta)
 
 
@@ -91,7 +97,7 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg
         BETA = pathalgo_general(matrix, lambdas, 'huber_cl', n_active=Nactive, rho=rho_classification)
 
     elif (typ == 'C1'):
-        lambdamax = 2*LA.norm((matrix[0].T).dot(matrix[2]),np.infty)
+        lambdamax = lambdamax = h_lambdamax(matrix[0],matrix[2],0)
         if (true_lam): lambdas = [lamb / lambdamax for lamb in lambdas]
         BETA = pathalgo_general(matrix, lambdas, 'cl', n_active=Nactive)
 
@@ -106,7 +112,6 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg
     return(BETA,real_path)
  
     
-
 
 '''
 # Cost fucntions for the three 'easiest' problems. Useful for test, to compare two solutions slightly different

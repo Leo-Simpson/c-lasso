@@ -36,6 +36,7 @@ class parameters_for_update:
         self.beta        = np.zeros(d)
         s                = 2*self.A.T.dot(h_prime(self.y,rho))
         self.lambdamax   = LA.norm(s, np.inf)
+        self.lamin       = lamin
         self.s           = s/self.lambdamax
         self.lam         = 1.
         self.r           = -self.y
@@ -81,7 +82,7 @@ def solve_path(matrices, lamin, n_active, rho,typ):
     print('no conv')
     return (BETA, LAM)
 
-def solve_path_Conc(matrices, stop, n_active=False, lassopath=True):
+def solve_path_Conc(matrices, stop, n_active=False, lassopath=True,true_lam=False):
     (A, C, y) = matrices
     n, d, k = len(A), len(A[0]), len(C)
     # to compute r = (A beta - y)/||y|| more efficientely ; and we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
@@ -91,7 +92,7 @@ def solve_path_Conc(matrices, stop, n_active=False, lassopath=True):
     else:
         lamin, beta_old, reduclam_old, r_old = 0, np.zeros(d), 1., -y_over_NORMy
 
-    param = parameters_for_update(matrices, lamin, 0, "Conc")
+    param = parameters_for_update(matrices, lamin, 0, "Conc", true_lam)
     BETA, LAM = [param.beta], [param.lam]
     for i in range(N):
 
