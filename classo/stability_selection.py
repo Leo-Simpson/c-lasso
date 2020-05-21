@@ -46,9 +46,9 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg",
             # compute the path until n_active = q.
             BETA = np.array(pathlasso(submatrix,lambdas=lambdas,n_active=q+1,lamin=0,
                              typ=formulation, meth = numerical_method,
-                             rho = rho, rho_classification=rho_classification,e=e )[0])
+                             rho = rho, rho_classification=rho_classification,e=e*percent_nS )[0])
 
-            distr_path = distr_path + (BETA != 0.)
+            distr_path = distr_path + (abs(BETA) >= 1e-1)
         distribution = distr_path[-1]
         return(distribution * 1./B, distr_path * 1./B,lambdas)
     
@@ -58,7 +58,7 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg",
             subset = build_subset(n,nS)
             submatrix = build_submatrix(matrix,subset)
             regress = Classo(submatrix,lam,typ = formulation,
-                             meth=numerical_method, rho = rho, rho_classification=rho_classification, e=e, true_lam = true_lam)
+                             meth=numerical_method, rho = rho, rho_classification=rho_classification, e=e*percent_nS, true_lam = true_lam)
             if (type(regress)==tuple): beta =regress[0]
             else : beta = regress
             qbiggest = biggest_indexes(abs(beta),q)
@@ -78,7 +78,7 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg",
             # compute the path until n_active = q, and only take the last Beta
             BETA = pathlasso(submatrix,n_active=0,lamin=1e-2,
                              typ=formulation,meth = numerical_method,
-                             rho = rho, rho_classification=rho_classification, e=e )[0]
+                             rho = rho, rho_classification=rho_classification, e=e*percent_nS )[0]
             betamax = np.amax( abs(np.array(BETA)), axis = 0 )
             qmax = biggest_indexes(betamax,q)
             for i in qmax:

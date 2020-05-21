@@ -40,7 +40,7 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
     elif (typ == 'C2'):
         lambdamax = h_lambdamax(matrix[0],matrix[2],rho)
         if true_lam : BETA = solve_path(matrix, lam/lambdamax, False, rho_classification, 'huber_cl')[0]
-        else : BETA = solve_path(matrix, lam, False, rho_classification, 'huber_cl',true_lam=true_lam)[0]
+        else : BETA = solve_path(matrix, lam, False, rho_classification, 'huber_cl')[0]
         beta = BETA[-1]
 
     elif (typ == 'C1'):
@@ -86,7 +86,7 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg
 
     elif(typ=='R4'):
         meth='DR'
-        pb = problem_R4(matrix,meth,rho)
+        pb = problem_R4(matrix,meth,rho,e=e)
         lambdamax = pb.lambdamax
         if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
         BETA,S = pathlasso_R4(pb,lambdas,n_active=Nactive)

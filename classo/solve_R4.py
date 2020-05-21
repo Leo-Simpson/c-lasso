@@ -19,7 +19,7 @@ def Classo_R4(pb,lam,e=1.):
     # Only alternative to 2prox : one can use the other formulation of the problem which shows that we can augment the data and then simply solve a concomitant problem
     # (we do that with the method ODE for example becasue it is pretty efficient). Unfortunately we can do that only for fixed lambda and not for any path algorithms
     # because the augmentation of the data required depends on lambda.
-    if pb_type=='Path-Alg' and not regpath:
+    if pb_type=='Path-Alg' :
         matrix_aug = (np.concatenate((A,lamb/(2*rho)*np.eye(m)),axis=1),np.concatenate((C,np.zeros((k,m))),axis=1),y)
         pb_aug = problem_R3(matrix_aug, 'Path-Alg', e=e)
         beta,s = Classo_R3(pb_aug, lamb / pb_aug.lambdamax)
@@ -56,9 +56,11 @@ def Classo_R4(pb,lam,e=1.):
             xs,nu,o,xbar,x = xs+mu*sup[0] ,  nu+mu*sup[1] ,  o+mu*sup[2] ,  xbar+mu*sup[3] ,  x+mu*sup[4]
             if (LA.norm(b)+LA.norm(s)>1e6): 
                 print('DIVERGENCE')
-                return(b,np.sqrt(m)*sum(s)/len(s))
+                if regpath : return(b,'stop',np.sqrt(m)*sum(s)/len(s))
+                else : return(b,np.sqrt(m)*sum(s)/len(s))
         print('NO CONVERGENCE')
-        return(b,sum(s)/len(s))
+        if regpath : return(b,'stop',np.sqrt(m)*sum(s)/len(s))
+        else : return(b,np.sqrt(m)*sum(s)/len(s))
 
     print('none of the cases ! ')        
     
@@ -82,8 +84,11 @@ def pathlasso_R4(pb,path,n_active=False):
         pb.init = X[1]
         if (type(n_active)==int) : n_act = n_active
         else : n_act = n
-        if(sum([ (abs(X[0][i])>1e-1) for i in range(len(X[0])) ])>=n_act):
-                pb.init, BETA, SIGMA = save_init, BETA + [BETA[-1]]*(len(path)-len(BETA)),SIGMA + [SIGMA[-1]]*(len(path)-len(SIGMA))
+        if sum([ (abs(X[0][i])>1e-1) for i in range(len(X[0])) ])>=n_act or type(X[1])==str:
+                pb.init= save_init
+                BETA.extend( [BETA[-1]]*(len(path)-len(BETA)) )
+                SIGMA.extend( [SIGMA[-1]]*(len(path)-len(SIGMA)) )
+                pb.regpath = False
                 return(BETA,SIGMA)
             
     pb.init = save_init
@@ -123,11 +128,10 @@ class problem_R4 :
          
         self.c = (d/LA.norm(A,2))**2  # parameter for Concomitant problem : the matrix is scaled as c*A^2 
         self.gam = np.sqrt(d)
-        e = m
+
         sigmax = find_sigmax(y,rho,e)
         #sigmax = LA.norm(y)/np.sqrt(m)
         self.sigmax = sigmax
-        self.lambdamax = 2 * LA.norm(A.T.dot(y), np.infty) / LA.norm(y) * np.sqrt(e)
         self.lambdamax = 2*LA.norm((A.T).dot(h_prime(y/sigmax,rho)),np.infty)
         self.init = sigmax*np.ones(m),sigmax*np.ones(m),np.zeros(m), np.zeros(d), np.zeros(d)
 

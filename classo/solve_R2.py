@@ -19,6 +19,8 @@ def Classo_R2(pb,lam, compute=True):
     
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix        
     lamb, rho = lam * pb.lambdamax,  pb.rho
+
+    
     
     
     #ODE
@@ -32,16 +34,14 @@ def Classo_R2(pb,lam, compute=True):
     regpath = pb.regpath
     r = lamb / (2 * rho)
     if (pb_type == 'DR'):
-        Ahuber = np.concatenate((A, r * np.eye(len(A))), axis=1)
-        Chuber = np.concatenate((C, np.zeros((len(C), len(y)))), axis=1)
-        matrices_huber = (Ahuber, Chuber, y)
-        prob = problem_R1(matrices_huber, 'DR')
-        prob.regpath = regpath
-        if (len(pb.init) == 3): prob.init = pb.init
-        if not (regpath): return (Classo_R1(prob, lamb / prob.lambdamax)[:d])
-        x, warm_start = Classo_R1(prob, lamb / prob.lambdamax)
-        return (x[:d], warm_start)
-
+        if compute : 
+            pb.init_R1(r=r)
+            return Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)[:d]
+        else : 
+            pb.add_r(r=r)
+            if len(pb.init)==3:pb.prob_R1.init = pb.init
+            x, warm_start = Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)
+            return (x[:d], warm_start)
 
     tol = pb.tol * LA.norm(y)/LA.norm(A,'fro')  # tolerance rescaled
     
@@ -147,15 +147,16 @@ def pathlasso_R2(pb,path,n_active=False):
     save_init = pb.init   
     pb.regpath = True
     pb.compute_param()
+    pb.init_R1()
     if (type(n_active)==int) : n_act = n_active
     else : n_act = n
     for lam in path:
         X = Classo_R2(pb,lam,compute=False)
         BETA.append(X[0])
         pb.init = X[1]
-        if(sum([ (abs(X[0][i])>1e-2) for i in range(len(X[0])) ])>=n_act):
+        if sum([ (abs(X[0][i])>1e-1) for i in range(len(X[0])) ])>=n_act or type(X[1])==str :
                 pb.init = save_init
-                BETA = BETA + [BETA[-1]]*(len(path)-len(BETA))
+                BETA.extend( [BETA[-1]]*(len(path)-len(BETA)) )
                 pb.regpath = False
                 return(BETA)
             
@@ -180,17 +181,12 @@ class problem_R2 :
     def __init__(self,data,algo,rho):
         self.N = 500000
         
-        if(len(data)==3):self.matrix, self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
-        
-        elif(len(data)==5):
-            (A,C,sol), self.dim = generate_random(data), data[:3]
-            self.sol,y = sol, A.dot(sol)+np.random.randn(data[0])*data[-1]
-            self.matrix = (A,C,y)
+        self.matrix, self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
         
         (m,d,k) = self.dim
         self.weights = np.ones(d)
         self.init = np.zeros(m), np.zeros(d), np.zeros(d), np.zeros(k)
-        self.tol = 1e-6
+        self.tol = 1e-4
         self.regpath = False
         self.name = algo + ' Huber'
         self.type = algo        # type of algo used
@@ -198,6 +194,7 @@ class problem_R2 :
         self.gam = 1.
         self.tau = 0.5         # equation for the convergence of Noproj and LS algorithms : gam + tau < 1
         self.lambdamax = 2*LA.norm(self.matrix[0].T.dot(h_prime(self.matrix[2],rho)),np.infty)
+
 
 
     '''
@@ -213,6 +210,33 @@ class problem_R2 :
         self.Cnorm      = LA.norm(C,2)**2
         self.tauN       = self.tau/self.Cnorm
         self.AtAnorm    = LA.norm(self.AtA,2)
+
+
+    def init_R1(self,r=0.):
+        (m,d,k) = self.dim
+        Ahuber = np.append(self.matrix[0], r * np.eye(m), 1)
+        Chuber = np.append(self.matrix[1], np.zeros((k, m)), 1)
+        matrices_huber = (Ahuber, Chuber, self.matrix[2])
+        prob = problem_R1(matrices_huber, 'DR')
+        prob.regpath = self.regpath
+        prob.compute_param()
+
+        self.prob_R1 = prob
+
+    def add_r(self,r):
+        prob=self.prob_R1
+        d = prob.dim[1]-prob.dim[0]
+        np.fill_diagonal(prob.matrix[0][d:] , r ) 
+        np.fill_diagonal(prob.AtA[d:,d:], r**2   )
+        prob.AtA[d:,:d] = prob.matrix[0][:,:d]*r
+        prob.AtA[:d,d:] = prob.matrix[0][:,:d].T*r
+
+        prob.Aty = np.append(prob.Aty,prob.matrix[2]*r)
+        prob.lambdamax = 2*LA.norm(prob.Aty,np.infty)
+
+
+
+
         
 
 

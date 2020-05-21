@@ -92,7 +92,7 @@ def solve_path_Conc(matrices, stop, n_active=False, lassopath=True,true_lam=Fals
     else:
         lamin, beta_old, reduclam_old, r_old = 0, np.zeros(d), 1., -y_over_NORMy
 
-    param = parameters_for_update(matrices, lamin, 0, "Conc", true_lam)
+    param = parameters_for_update(matrices, lamin, 0, "Conc")
     BETA, LAM = [param.beta], [param.lam]
     for i in range(N):
 
@@ -109,7 +109,8 @@ def solve_path_Conc(matrices, stop, n_active=False, lassopath=True,true_lam=Fals
             beta_old, reduclam_old, r_old = param.beta, reduclam, param.r
 
     print('no conv')
-    return (BETA, LAM,R)
+    if lassopath : return (BETA, LAM,R)
+    else : return ((beta_old, param.beta), (reduclam_old, reduclam), (r_old, param.r))
 
 
 
@@ -186,7 +187,7 @@ def up_LS(param):
     try : 
         Xt = LA.inv(M[activity + idr, :][:, activity + idr])
     except LA.LinAlgError :
-        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*sum(activity) + [0]*sum(idr) )   )
+        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*(sum(activity) + sum(idr) )) )
             
 
     beta = beta + lambdamax * D * dlamb
@@ -255,7 +256,7 @@ def up_huber(param):
     try : 
         Xt = LA.inv(M[activity + idr, :][:, activity + idr])
     except LA.LinAlgError :
-        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*sum(activity) + [0]*sum(idr) )   )
+        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*(sum(activity) + sum(idr) )) )
 
 
     param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = number_act, idr, Xt, activity, F, beta, s, lam, M, r
@@ -318,7 +319,7 @@ def up_cl(param):
     try : 
         Xt = LA.inv(M[activity + idr, :][:, activity + idr])
     except LA.LinAlgError :
-        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*sum(activity) + [0]*sum(idr) )   )
+        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*(sum(activity) + sum(idr) )) )
 
     param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = \
         number_act, idr, Xt, activity, F, beta, s, lam, M, r
@@ -390,7 +391,7 @@ def up_huber_cl(param):
     try : 
         Xt = LA.inv(M[activity + idr, :][:, activity + idr])
     except LA.LinAlgError :
-        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*sum(activity) + [0]*sum(idr) )   )
+        Xt = LA.inv( M[activity + idr, :][:, activity + idr] + np.diag([eps_L2]*(sum(activity) + sum(idr) )) )
 
     param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r = number_act, idr, Xt, activity, F, beta, s, lam, M, r
 

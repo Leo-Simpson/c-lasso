@@ -23,10 +23,13 @@ def Classo_R1(pb,lam):
         BETA = solve_path(pb.matrix, lam, False, 0, 'LS')[0]
         return(BETA[-1])
     
+    regpath = pb.regpath
+    if(not regpath): pb.compute_param()   # this is a way to compute costful matrices computation like A^tA only once when we do pathcomputation with warm starts.
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix            
     lamb = lam * pb.lambdamax
-    tol = pb.tol * LA.norm(y)/LA.norm(A,'fro')  # tolerance rescaled
-    regpath = pb.regpath 
+    Anorm = pb.Anorm
+    tol = pb.tol * LA.norm(y)/Anorm  # tolerance rescaled
+
 
     #cvx
     # call to the cvx function of minimization
@@ -40,7 +43,7 @@ def Classo_R1(pb,lam):
         if (regpath): return(x.value,True) 
         return(x.value)
 
-    if(not regpath): pb.compute_param()   # this is a way to compute costful matrices computation like A^tA only once when we do pathcomputation with warm starts.
+    
     Proj,AtA, Aty = proj_c(C,d), pb.AtA, pb.Aty     # Save some matrix products already computed in problem.compute_param()
     gamma, tau    = pb.gam / (2*pb.AtAnorm),    pb.tauN
     w,zerod       = lamb *gamma*pb.weights, np.zeros(d) # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
@@ -123,7 +126,8 @@ def Classo_R1(pb,lam):
             b = nv_b
 
         print('NO CONVERGENCE')
-        return(b)  
+        if regpath : return(b,'stop') 
+        else : return b 
  
 
     
@@ -157,9 +161,9 @@ def pathlasso_R1(pb,path,n_active=False,return_sp_path=False):
         pb.init = X[1]
         if (type(n_active)==int) : n_act = n_active
         else : n_act = n
-        if(sum([ (abs(X[0][i])>1e-4) for i in range(len(X[0])) ])>=n_act):
+        if sum([ (abs(X[0][i])>1e-1) for i in range(len(X[0])) ])>=n_act or type(X[1])==str :
                 pb.init = save_init
-                BETA = BETA + [BETA[-1]]*(len(path)-len(BETA))
+                BETA.extend( [BETA[-1]]*(len(path)-len(BETA)) )
                 pb.regpath = False
                 return(BETA)
             
@@ -184,19 +188,14 @@ class problem_R1 :
     def __init__(self,data,algo):
         self.N = 500000
         
-        if(len(data)==3):self.matrix, self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
-        
-        elif(len(data)==5):
-            (A,C,sol), self.dim = generate_random(data), data[:3]
-            self.sol,y = sol, A.dot(sol)+np.random.randn(data[0])*data[-1]
-            self.matrix = (A,C,y)
+        self.matrix, self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
         
         (m,d,k) = self.dim
         
         if(algo=='P-PDS') : self.init = np.zeros(d), np.zeros(d), np.zeros(k)
         elif (algo=='PF-PDS')         : self.init = np.zeros(d), np.zeros(k)
         else                        : self.init = np.zeros(d), np.zeros(d), np.zeros(d)
-        self.tol = 1e-6 
+        self.tol = 1e-4
          
         self.weights = np.ones(d)  
         self.regpath = False
@@ -215,12 +214,16 @@ class problem_R1 :
     def compute_param(self):
         (A,C,y) = self.matrix
         m,d,k = self.dim
-        self.c = (d/LA.norm(A,2))**2  # parameter for Concomitant problem : the matrix is scaled as c*A^2 
 
-        self.AtA        =(A.T).dot(A)
+        self.Anorm = LA.norm(A,'fro')
+
+        self.AtA  =(A.T).dot(A)      
+        self.c = d**2/np.trace(self.AtA)  # parameter for Concomitant problem : the matrix is scaled as c*A^2 
         self.Cnorm      = LA.norm(C,2)**2
         self.tauN       = self.tau/self.Cnorm
         self.AtAnorm    = LA.norm(self.AtA,2)
+
+
 
         
         

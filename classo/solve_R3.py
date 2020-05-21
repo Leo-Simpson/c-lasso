@@ -30,12 +30,12 @@ def Classo_R3(pb,lam):
         beta  = beta1 *teta + beta2 *(1-teta)
         return(beta,sigma)
     
-
-    if(not pb.regpath): pb.compute_param()
+    regpath = pb.regpath
+    if(not regpath): pb.compute_param()
 
     lamb          = lam * LA.norm(pb.Aty, np.infty) / LA.norm(y) * np.sqrt(2)
-    Anorm         = LA.norm(A,'fro')
-    tol,regpath   = pb.tol * LA.norm(y)/Anorm,pb.regpath   # tolerance rescaled
+    Anorm         = pb.Anorm
+    tol           = pb.tol * LA.norm(y)/Anorm   # tolerance rescaled
     Proj          = proj_c(C,d)   # Proj = I - C^t . (C . C^t )^-1 . C
     QA, Q1, Q2    = pb.QA, pb.Q1, pb.Q2     # Save some matrix products already computed in problem.compute_param()
     gamma         = pb.gam / (pb.Anorm2*lam)   # Normalize gamma
@@ -59,9 +59,11 @@ def Classo_R3(pb,lam):
 
             if (LA.norm(b)+LA.norm(s)>1e6):
                 print('DIVERGENCE')
-                return(b,s)
+                if regpath : return(b,'stop',s)
+                else : return(b,s)
         print('NO CONVERGENCE')
-        return(b,'slow',s)
+        if regpath : return(b,'stop',s)
+        else       : return(b,s)
     print('none of the cases ! ')
 
 
@@ -98,9 +100,10 @@ def pathlasso_R3(pb,path,n_active=False,e=1.):
         pb.init = X[1]
         if (type(n_active)==int) : n_act = n_active
         else : n_act = n
-        if(sum([ (abs(X[0][i])>1e-2) for i in range(len(X[0])) ])>=n_act):
+        if sum([ (abs(X[0][i])>1e-1) for i in range(len(X[0])) ])>=n_act or type(X[1])==str :
                 pb.init = save_init
-                BETA = BETA + [BETA[-1]]*(len(path)-len(BETA))
+                BETA.extend( [BETA[-1]]*(len(path)-len(BETA)) )
+                SIGMA.extend( [SIGMA[-1]]*(len(path)-len(SIGMA)) )
                 pb.regpath = False
                 return(BETA,SIGMA)
             
@@ -123,7 +126,7 @@ class problem_R3 :
         (m,d,k) = self.dim
         self.weights = np.ones(d)
         
-        self.tol = 1e-6
+        self.tol = 1e-4
           
         self.regpath = False
         self.name = algo + ' Concomitant'
@@ -143,7 +146,8 @@ class problem_R3 :
     def compute_param(self):
         (A,C,y) = self.matrix
         m,d,k = self.dim
-        self.Anorm2 = LA.norm(A, 2) ** 2
+        self.Anorm = LA.norm(A, 2)
+        self.Anorm2 = self.Anorm ** 2
         c = d**2/self.Anorm2  # parameter for Concomitant problem : the matrix is scaled as c*A^2
         self.c = c
         self.Q1, self.Q2 = QQ(c, A)

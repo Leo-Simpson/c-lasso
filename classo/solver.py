@@ -46,10 +46,11 @@ class classo_problem:
         n, d = len(data.X), len(data.X[0])
         if self.formulation.classification :
             self.formulation.concomitant = False
-        else : 
+        
+        elif(type(self.formulation.e) == str):
             if (self.formulation.e == 'n/2'): self.formulation.e = n/2  #useful to be able to write e='n/2' as it is in the default parameters
             elif(self.formulation.e == 'n'): self.formulation.e = n     # same
-            elif(self.formulation.e == 'not specified'):
+            else :
                 if (self.formulation.huber): self.formulation.e = n
                 else                       : self.formulation.e = n / 2
         
@@ -781,12 +782,13 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
     # cases where we use classo at a fixed lambda    
     elif (model == 'LAM') or (model == 'StabSel' and StabSelmethod == 'lam'):
 
-        if formulation.concomitant:
+        if formulation.concomitant :
             if not method in ['Path-Alg', 'DR']:
                 if (lam > 0.05):
                     return 'Path-Alg'
                 else:
                     return 'DR'
+
 
         else:
             if not method in ['Path-Alg', 'DR', 'P-PDS', 'PF-PDS']:
@@ -803,7 +805,9 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
             if not method in ['Path-Alg', 'DR', 'P-PDS']: return 'Path-Alg'
 
         elif formulation.concomitant:
-            if not method in ['Path-Alg', 'DR']: return 'Path-Alg'
+            if not method in ['Path-Alg', 'DR']: 
+                if formulation.huber : return 'DR'
+                else : return 'Path-Alg'
 
         else:
             if not method in ['Path-Alg', 'DR', 'P-PDS', 'PF-PDS']: return 'Path-Alg'
