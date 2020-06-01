@@ -162,7 +162,7 @@ random_data, csv_to_mat, mat_to_np, clr, theoretical_lam, to_zarr
 '''
 
 
-def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification = False, exp = False, A = None):
+def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification = False, exp = False, A = None, lb_beta = 3, ub_beta = 10):
     ''' Generation of random matrices as data such that y = X.sol + sigma. noise
 
     The data X is generated as a normal matrix
@@ -193,7 +193,11 @@ def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification =
     if A is None: A = np.eye(d)
     d1= len(A[0])
 
-    sol, sol_reduc,list_i = np.zeros(d1), np.random.randint(-10,11,d_nonzero),np.random.randint(d1, size=d_nonzero)
+    sol,list_i = np.zeros(d1),np.random.randint(d1, size=d_nonzero)
+
+    # sol reduc is random int between lb_beta and ub_beta with a random sign. 
+    sol_reduc =  np.random.randint(low=lb_beta,high=ub_beta+1,size = d_nonzero) * (np.random.randint(2,size=d_nonzero)*2-1) 
+
     
     if (zerosum): C,k = np.ones((1,d)),1
     else :
@@ -301,6 +305,22 @@ def to_zarr(obj,name,root, first=True):
     else :
         to_zarr(obj.__dict__,name,root,first=first)
 
+
+'''
+misc of compact func
+'''
+def unpenalized(matrix, eps = 1e-3):
+    A,C,y = matrix
+
+    M1 = np.concatenate([A.T.dot(A), C.T],axis = 1)
+    M2 = np.concatenate([C,np.zeros((len(C),len(C)))], axis=1)
+    M = np.concatenate([M1,M2], axis=0)
+    b = np.concatenate([A.T.dot(y),np.zeros(len(C))])
+
+    try : 
+        return LA.inv(M).dot(b)
+    except LA.LinAlgError :
+        beta = LA.inv(M+eps*np.eye(len(M))).dot(b)
 
 
 

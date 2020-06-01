@@ -1,6 +1,7 @@
 from .path_alg import solve_path
 import numpy as np
 import numpy.linalg as LA
+from .misc_functions import unpenalized 
     
 '''    
 Problem    :   min ||Ab - y||^2 + lambda ||b||1 with C.b= 0
@@ -16,6 +17,9 @@ The parameters are lam (lambda/lambdamax, in [0,1]) and pb, which has to be a 'p
 
 def Classo_R1(pb,lam):
     pb_type = pb.type  # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
+
+    if (lam == 0.): return unpenalized(pb.matrix)
+
 
     # ODE
     # here we compute the path algo until our lambda, and just take the last beta

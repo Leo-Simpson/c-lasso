@@ -16,6 +16,11 @@ def Classo_R4(pb,lam,e=1.):
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     lamb,rho  = lam * pb.lambdamax, pb.rho
     regpath = pb.regpath
+
+    if (lam==0.): pb_type ='Path-Alg' # in this case, we will simply use R3. 
+
+
+
     # Only alternative to 2prox : one can use the other formulation of the problem which shows that we can augment the data and then simply solve a concomitant problem
     # (we do that with the method ODE for example becasue it is pretty efficient). Unfortunately we can do that only for fixed lambda and not for any path algorithms
     # because the augmentation of the data required depends on lambda.

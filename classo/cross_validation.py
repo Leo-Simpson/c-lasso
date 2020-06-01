@@ -28,44 +28,44 @@ def train_test_i (SUBLIST,i):
     return(training_set,test_set)
             
 
-def training(matrices,typ,num_meth, training_set, rho, rho_classification, e,lambdas):
+def training(matrices,typ,num_meth, training_set, rho, rho_classification, e,lambdas, w):
     (A,C,y)   = matrices
     mat       = (A[training_set],C,y[training_set]) 
     sol       = pathlasso(mat,lambdas = lambdas,typ=typ,meth=num_meth,
-                            rho = rho, e=e,rho_classification=rho_classification)[0]
+                            rho = rho, e=e,rho_classification=rho_classification, w=w)[0]
     return(sol)
 
 
-def test_i (matrices,typ,num_meth, SUBLIST,i, rho, rho_classification, e,lambdas):
+def test_i (matrices,typ,num_meth, SUBLIST,i, rho, rho_classification, e,lambdas, w):
     training_set,test_set = train_test_i (SUBLIST,i)
-    BETA                  = training(matrices,typ,num_meth, training_set, rho, rho_classification, e, lambdas)
+    BETA                  = training(matrices,typ,num_meth, training_set, rho, rho_classification, e, lambdas, w)
     n_lam = len(lambdas)
     residual = np.zeros(n_lam)
     for j in range(n_lam):
         residual[j] = accuracy_func(matrices[0][test_set],matrices[2][test_set],BETA[j],typ)/len(test_set)
     return(residual)
 
-def average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e,lambdas):
+def average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e,lambdas, w):
     k = len(SUBLIST)
     n_lam = len(lambdas)
     RESIDUAL = np.zeros((k,n_lam))
     for i in range(k):
-        RESIDUAL[i,:] = test_i (matrices,typ,num_meth, SUBLIST,i, rho, rho_classification, e, lambdas)
+        RESIDUAL[i,:] = test_i (matrices,typ,num_meth, SUBLIST,i, rho, rho_classification, e, lambdas, w)
     MSE = np.mean(RESIDUAL,axis = 0)
     SE = np.std(RESIDUAL,axis = 0) # official standard error should be divided by sqrt(k) ... 
     return(MSE,SE)
 
-def CV(matrices,k,typ='LS',num_meth="Path-Alg",test=0., seed = 1, rho = 1.345, rho_classification=-1., e= 1.,lambdas = np.linspace(1.,1e-3,n_lam),oneSE = True):
+def CV(matrices,k,typ='LS',num_meth="Path-Alg",test=0., seed = 1, rho = 1.345, rho_classification=-1., e= 1.,lambdas = np.linspace(1.,1e-3,n_lam),oneSE = True, w=None):
     
     rd.seed(seed)
     (A,C,y) = matrices
     SUBLIST, idx_train, idx_test = train_test_CV(len(y),k,test)
-    MSE,SE  = average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e, lambdas)
+    MSE,SE  = average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e, lambdas, w)
     i       = np.argmin(MSE)
     i_1SE   = compute_1SE(MSE[i]+SE[i],MSE,i)
     if oneSE : lam = lambdas[i_1SE]
     else     : lam = lambdas[i]
-    out = Classo((A[idx_train],C,y[idx_train]),lam,typ=typ,meth=num_meth,rho=rho, e=e,rho_classification=rho_classification)
+    out = Classo((A[idx_train],C,y[idx_train]),lam,typ=typ,meth=num_meth,rho=rho, e=e,rho_classification=rho_classification, w=w)
     return(out,MSE,SE,i,i_1SE)
     
         

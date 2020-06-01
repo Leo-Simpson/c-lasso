@@ -47,7 +47,7 @@ class classo_problem:
         if self.formulation.classification :
             self.formulation.concomitant = False
         
-        elif(type(self.formulation.e) == str):
+        if(type(self.formulation.e) == str):
             if (self.formulation.e == 'n/2'): self.formulation.e = n/2  #useful to be able to write e='n/2' as it is in the default parameters
             elif(self.formulation.e == 'n'): self.formulation.e = n     # same
             else :
@@ -166,6 +166,9 @@ class classo_formulation:
             If 'n/2' then it becomes n/2 during the method solve(), same for 'n'.
             Default value : 'n' if huber formulation ; 'n/2' else
 
+        w (numpy ndarray) : array of size d with the weights of the L1 penalization
+            Default value : None (which makes it the 1,...,1 vector)
+
 
     '''
     def __init__(self):
@@ -175,6 +178,7 @@ class classo_formulation:
         self.rho = 1.345
         self.rho_classification = -1.
         self.e = 'not specified'
+        self.w = None
 
     def name(self):
         if self.classification:
@@ -473,7 +477,7 @@ class solution_PATH:
 
         out = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
                                                 typ=name_formulation, meth=numerical_method, return_sigm=True,
-                                                rho=rho, e=e,rho_classification=rho_classification)
+                                                rho=rho, e=e,rho_classification=rho_classification, w=param.formulation.w)
         if(formulation.concomitant): self.BETAS, self.LAMBDAS, self.SIGMAS = out
         else :
             self.BETAS, self.LAMBDAS = out
@@ -542,7 +546,7 @@ class solution_CV:
                                                                                    lambdas=param.lambdas,
                                                                                    seed=param.seed, rho=rho,
                                                                                    rho_classification=rho_classification,
-                                                                                   oneSE=param.oneSE, e=e)
+                                                                                   oneSE=param.oneSE, e=e, w=param.formulation.w)
 
         self.xGraph = param.lambdas
         self.lambda_1SE = param.lambdas[self.index_1SE]
@@ -627,7 +631,7 @@ class solution_StabSel:
                            lam=lam, q=param.q, B=param.B, percent_nS=param.percent_nS,
                            formulation=name_formulation, seed=param.seed, rho=rho,
                            rho_classification=rho_classification,
-                           true_lam=param.true_lam, e=e)
+                           true_lam=param.true_lam, e=e, w=param.formulation.w)
 
         if (param.method == 'first'):
             distribution, distribution_path, lambdas = output
@@ -724,7 +728,7 @@ class solution_LAMfixed:
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Compute the theoretical lam if necessary
-        if param.lam == 'theoretical':
+        if param.lam == 'theoretical' or param.lam < 0:
             self.lam = param.theoretical_lam
         else:
             self.lam = param.lam
@@ -737,7 +741,7 @@ class solution_LAMfixed:
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         out = Classo(
             matrices, self.lam, typ=name_formulation, meth=numerical_method, rho=rho,
-            get_lambdamax=True, true_lam=self.true_lam, e=e, rho_classification=rho_classification)
+            get_lambdamax=True, true_lam=self.true_lam, e=e, rho_classification=rho_classification, w=param.formulation.w)
 
         if param.formulation.concomitant: self.lambdamax, self.beta, self.sigma = out
         else: self.lambdamax, self.beta = out

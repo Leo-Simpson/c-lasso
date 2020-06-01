@@ -1,6 +1,7 @@
 from .path_alg import solve_path_Conc
 import numpy as np
 import numpy.linalg as LA
+from .misc_functions import unpenalized 
     
 '''    
 Problem    :   min ||Ab - y||^2/sigma + e sigma + lambda ||b||1 with C.b= 0 and sigma > 0
@@ -16,6 +17,13 @@ def Classo_R3(pb,lam):
     pb_type = pb.type     # can be 'Path-Alg' or 'DR'
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     sigmax = LA.norm(y)*np.sqrt(2)
+
+    if (lam == 0.): 
+        beta =  unpenalized(pb.matrix)
+        sigma= LA.norm(A.dot(beta)-y)*np.sqrt(2)
+        return beta,sigma
+
+
     #Path algorithm
     # here we compute the path algo until our lambda, and just take the last beta
 

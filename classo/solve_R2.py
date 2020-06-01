@@ -20,6 +20,8 @@ def Classo_R2(pb,lam, compute=True):
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix        
     lamb, rho = lam * pb.lambdamax,  pb.rho
 
+    if (lam == 0.): pb_type, compute = 'DR', True  #here we simply refer to Classo_R1 that is called line 42. 
+
     
     
     
