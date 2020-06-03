@@ -298,7 +298,7 @@ class CVparameters:
             Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
         lambdas (numpy.ndarray) : list of lambdas for computinf lasso-path for cross validation on lambda.
-            Default value : np.linspace(1., 1e-3, 500)
+            Default value : None 
 
         oneSE (bool) : if set to True, the selected lambda if computed with method 'one-standard-error'
             Default value : True
@@ -313,7 +313,8 @@ class CVparameters:
         self.numerical_method = 'choose'
 
         self.Nsubset = 5  # Number of subsets used
-        self.lambdas = np.linspace(1., 1e-3, 80)
+        self.Nlam = 80
+        self.lambdas = None
         self.oneSE = True
 
     def __repr__(self): return (  '\n     Nsubset = ' + str(self.Nsubset)
@@ -378,22 +379,27 @@ class StabSelparameters:
         self.B = 50
         self.q = 10
         self.percent_nS = 0.5
-        self.lamin = 1e-2  # the lambda where one stop for 'max' method
-        self.hd = False  # if set to True, then the 'max' will stop when it reaches n-k actives variables
+        self.Nlam = 80      # for path computation
+        self.lamin = 1e-2   # the lambda where one stop for 'max' method
+        self.hd = False     # if set to True, then the 'max' will stop when it reaches n-k actives variables
         self.lam = 'theoretical'  # can also be a float, for the 'lam' method
         self.true_lam = True
         self.threshold = 0.7
         self.threshold_label = 0.4
         self.theoretical_lam = 0.0
 
-    def __repr__(self): return (  '\n     method = ' + str(self.method)
+    def __repr__(self): 
+        return (  '\n     method = ' + str(self.method)
                                 + '\n     lamin = ' + str(self.lamin)
                                 + '\n     lam = ' + str(self.lam)
+                                + '\n     Nlam = '+ str(self.Nlam)
                                 + '\n     B = ' + str(self.B)
                                 + '\n     q = ' + str(self.q)
                                 + '\n     percent_nS = ' + str(self.percent_nS)
                                 + '\n     threshold = ' + str(self.threshold)
                                 + '\n     numerical_method = ' + str(self.numerical_method))
+
+
 class LAMfixedparameters:
             '''object parameters to compute the lasso for a fixed lambda
 
@@ -545,6 +551,9 @@ class solution_CV:
         numerical_method = choose_numerical_method(param.numerical_method, 'CV', param.formulation)
         param.numerical_method = numerical_method
 
+
+        if param.lambdas is None : param.lambdas = np.linspace(1.,1e-3,param.Nlam)
+
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         out, self.yGraph, self.standard_error, self.index_min, self.index_1SE = CV(matrices, param.Nsubset,
                                                                                    typ=name_formulation,
@@ -634,7 +643,7 @@ class solution_StabSel:
 
         # Compute the distribution
         output = stability(matrices, StabSelmethod=param.method, numerical_method=numerical_method,
-                           lam=lam, q=param.q, B=param.B, percent_nS=param.percent_nS,
+                           lam=lam,Nlam=param.Nlam, q=param.q, B=param.B, percent_nS=param.percent_nS,
                            formulation=name_formulation, seed=param.seed, rho=rho,
                            rho_classification=rho_classification,
                            true_lam=param.true_lam, e=e, w=param.formulation.w)

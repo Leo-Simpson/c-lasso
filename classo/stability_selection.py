@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.random as rd
 from .compact_func import Classo,pathlasso
-n_lam = 80
+
 
 '''
 Here is the function that does stability selection. It returns the distribution as an d-array. 
@@ -21,33 +21,35 @@ There is three different stability selection methods implemented here : 'first' 
 
 
 
-def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg",
+def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg", Nlam = 100, lamin=1e-2,
               lam = 0.1, q = 10 ,B = 50, percent_nS = 0.5 ,
               formulation = 'LS', seed = 1, rho=1.345,
               rho_classification=-1.,
               true_lam = False, e=1., w=None):
     
+
     rd.seed(seed)
     n, d = len(matrix[2]), len(matrix[0][0])
     nS = int(percent_nS*n)
     distribution=np.zeros(d)
-
+    
+    lambdas= np.linspace(1.,lamin,Nlam)
 
 
 
     if (StabSelmethod == 'first') :
     
-        distr_path = None
+        
+        distr_path = np.zeros((Nlam,d))
         for i in range(B):
             subset = build_subset(n,nS)
             submatrix = build_submatrix(matrix,subset)
             # compute the path until n_active = q.
-            BETA = np.array(pathlasso(submatrix,n_active=q+1,lamin=0,
+            BETA = np.array(pathlasso(submatrix,lambdas=lambdas,n_active=q+1,lamin=0,
                              typ=formulation, meth = numerical_method,
                              rho = rho, rho_classification=rho_classification,e=e*percent_nS, w=w )[0])
 
-            if distr_path is None : distr_path = (abs(BETA) >= 1e-1)
-            else : distr_path = distr_path + (abs(BETA) >= 1e-1)
+            distr_path = distr_path + (abs(BETA) >= 1e-1)
         distribution = distr_path[-1]
         return(distribution * 1./B, distr_path * 1./B,lambdas)
     
@@ -75,7 +77,7 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg",
             subset = build_subset(n,nS)
             submatrix = build_submatrix(matrix,subset)
             # compute the path until n_active = q, and only take the last Beta
-            BETA = pathlasso(submatrix,n_active=0,lamin=1e-2,
+            BETA = pathlasso(submatrix,n_active=0,lambdas=lambdas,
                              typ=formulation,meth = numerical_method,
                              rho = rho, rho_classification=rho_classification, e=e*percent_nS , w=w)[0]
             betamax = np.amax( abs(np.array(BETA)), axis = 0 )

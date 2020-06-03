@@ -79,8 +79,7 @@ def solve_path(matrices, lamin, n_active, rho,typ):
         if (n_active > 0  and param.number_act >= n_active) or param.lam == lamin : 
             return (BETA, LAM)
 
-    print('no conv')
-    return (BETA, LAM)
+    raise ValueError("The path algorithm did not finsh after %i iterations " %N, "and with lamin=%f" %lamin, " and with n_active ="+str(n_active))
 
 def solve_path_Conc(matrices, stop, n_active=False, lassopath=True,true_lam=False):
     (A, C, y) = matrices
@@ -108,9 +107,8 @@ def solve_path_Conc(matrices, stop, n_active=False, lassopath=True,true_lam=Fals
             if reduclam <= LA.norm(param.r): return ((beta_old, param.beta), (reduclam_old, reduclam), (r_old, param.r))
             beta_old, reduclam_old, r_old = param.beta, reduclam, param.r
 
-    print('no conv')
-    if lassopath : return (BETA, LAM,R)
-    else : return ((beta_old, param.beta), (reduclam_old, reduclam), (r_old, param.r))
+    raise ValueError("The concomitant path algorithm did not finsh after %i iterations " %N, "and with lamin=" + str(stop), " and with n_active ="+str(n_active))
+
 
 
 

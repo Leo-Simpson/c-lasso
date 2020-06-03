@@ -55,8 +55,10 @@ def average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e,lamb
     SE = np.std(RESIDUAL,axis = 0) # official standard error should be divided by sqrt(k) ... 
     return(MSE,SE)
 
-def CV(matrices,k,typ='LS',num_meth="Path-Alg",test=0., seed = 1, rho = 1.345, rho_classification=-1., e= 1.,lambdas = np.linspace(1.,1e-3,n_lam), oneSE = True, w=None):
+def CV(matrices,k,typ='LS',num_meth="Path-Alg",test=0., seed = 1, rho = 1.345, rho_classification=-1., e= 1.,lambdas = None, Nlam = 100, oneSE = True, w=None):
     
+    if lambdas is None : lambdas = np.linspace(1.,1e-3, Nlam)
+
     rd.seed(seed)
     (A,C,y) = matrices
     SUBLIST, idx_train, idx_test = train_test_CV(len(y),k,test)
