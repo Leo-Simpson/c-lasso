@@ -318,9 +318,9 @@ def unpenalized(matrix, eps = 1e-3):
     b = np.concatenate([A.T.dot(y),np.zeros(len(C))])
 
     try : 
-        return LA.inv(M).dot(b)
+        return LA.inv(M).dot(b)[:len(A[0])]
     except LA.LinAlgError :
-        beta = LA.inv(M+eps*np.eye(len(M))).dot(b)
+        return LA.inv(M+eps*np.eye(len(M))).dot(b)[:len(A[0])]
 
 
 

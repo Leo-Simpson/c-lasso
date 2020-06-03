@@ -73,10 +73,10 @@ def Classo_R1(pb,lam):
                 else :        return(x) 
             
             if (LA.norm(x)+LA.norm(p)+LA.norm(v)>1e6): 
-                print('DIVERGENCE')
-                return(x)
-        print('NO CONVERGENCE')
-        return(x)
+                raise ValueError("The algorithm of PF-PDS diverges")
+
+        raise ValueError("The algorithm of PF-PDS did not converge after %i iterations " %pb.N)
+
     
 
     #FORARD BACKWARD
@@ -99,10 +99,9 @@ def Classo_R1(pb,lam):
                 else :        return(x) 
             x= nw_x 
             if (LA.norm(x)>1e10): 
-                print('DIVERGENCE')
-                return(x)
-        print('NO CONVERGENCE')
-        return(x)
+                raise ValueError("The algorithm of P-PDS diverges")
+
+        raise ValueError("The algorithm of P-PDS did not converge after %i iterations " %pb.N)
 
     gamma             = gamma/(2*lam)
     w                 = w /(2*lam)
@@ -129,9 +128,7 @@ def Classo_R1(pb,lam):
     
             b = nv_b
 
-        print('NO CONVERGENCE')
-        if regpath : return(b,'stop') 
-        else : return b 
+        raise ValueError("The algorithm of Doulgas Rachford did not converge after %i iterations " %pb.N)
  
 
     
@@ -159,12 +156,13 @@ def pathlasso_R1(pb,path,n_active=False,return_sp_path=False):
     save_init = pb.init   
     pb.regpath = True
     pb.compute_param()
+    if type(n_active)==int and n_active > 0 : n_act = n_active
+    else : n_act = n
     for lam in path:
         X = Classo_R1(pb,lam)
         BETA.append(X[0])
         pb.init = X[1]
-        if (type(n_active)==int) : n_act = n_active
-        else : n_act = n
+        
         if sum([ (abs(X[0][i])>1e-1) for i in range(len(X[0])) ])>=n_act or type(X[1])==str :
                 pb.init = save_init
                 BETA.extend( [BETA[-1]]*(len(path)-len(BETA)) )

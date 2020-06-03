@@ -59,6 +59,12 @@ class classo_problem:
         # (list of initial norms of A-colomns,
         #         initial norm of centered y,
         #          mean of initial y )
+
+        if not self.formulation.w is None : 
+            if min(self.formulation.w) < 1e-3 : 
+                raise ValueError("w has to be positive weights, here it has a value smaller than 1e-3")
+
+
         
         # Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
         if self.model_selection.PATH:
@@ -307,7 +313,7 @@ class CVparameters:
         self.numerical_method = 'choose'
 
         self.Nsubset = 5  # Number of subsets used
-        self.lambdas = np.linspace(1., 1e-3, 500)
+        self.lambdas = np.linspace(1., 1e-3, 80)
         self.oneSE = True
 
     def __repr__(self): return (  '\n     Nsubset = ' + str(self.Nsubset)

@@ -84,10 +84,9 @@ def Classo_R2(pb,lam, compute=True):
                 else :        return(x) 
             x= nw_x 
             if (LA.norm(x)>1e10): 
-                print('DIVERGENCE')
-                return(x)
-        print('NO CONVERGENCE')
-        return(x)
+                raise ValueError("The algorithm of P-PDS diverges")
+
+        raise ValueError("The algorithm of P-PDS did not converge after %i iterations " %pb.N)
      
         
     # NO PROJ
@@ -116,11 +115,9 @@ def Classo_R2(pb,lam, compute=True):
                 else :        return(x) 
             
             if (LA.norm(x)+LA.norm(o)+LA.norm(v)>1e6): 
-                print('DIVERGENCE')
-                return(x)
-        print('NO CONVERGENCE')
-        return(x)
-    
+                raise ValueError("The algorithm of PF-PDS diverges")
+
+        raise ValueError("The algorithm of PF-PDS did not converge after %i iterations " %pb.N)
     
     
     
@@ -150,7 +147,7 @@ def pathlasso_R2(pb,path,n_active=False):
     pb.regpath = True
     pb.compute_param()
     pb.init_R1()
-    if (type(n_active)==int) : n_act = n_active
+    if type(n_active)==int and n_active > 0: n_act = n_active
     else : n_act = n
     for lam in path:
         X = Classo_R2(pb,lam,compute=False)

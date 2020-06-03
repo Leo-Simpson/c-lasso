@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.random as rd
 from .compact_func import Classo,pathlasso
-n_lam = 100
+n_lam = 80
 
 '''
 Here is the function that does stability selection. It returns the distribution as an d-array. 
@@ -37,18 +37,17 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg",
 
     if (StabSelmethod == 'first') :
     
-        NN = 500
-        lambdas= np.linspace(1.,0.,NN)
-        distr_path = np.zeros((NN,d))
+        distr_path = None
         for i in range(B):
             subset = build_subset(n,nS)
             submatrix = build_submatrix(matrix,subset)
             # compute the path until n_active = q.
-            BETA = np.array(pathlasso(submatrix,lambdas=lambdas,n_active=q+1,lamin=0,
+            BETA = np.array(pathlasso(submatrix,n_active=q+1,lamin=0,
                              typ=formulation, meth = numerical_method,
                              rho = rho, rho_classification=rho_classification,e=e*percent_nS, w=w )[0])
 
-            distr_path = distr_path + (abs(BETA) >= 1e-1)
+            if distr_path is None : distr_path = (abs(BETA) >= 1e-1)
+            else : distr_path = distr_path + (abs(BETA) >= 1e-1)
         distribution = distr_path[-1]
         return(distribution * 1./B, distr_path * 1./B,lambdas)
     

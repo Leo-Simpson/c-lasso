@@ -16,7 +16,7 @@ Classo and pathlasso are the main functions, they can call every algorithm acord
 
 def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False, true_lam=False, e=1., rho_classification=-1., w = None):
 
-    if not w is None : matrices = (  matrix[0]/(w+1e-3), matrix[1],matrix[2] )
+    if not w is None : matrices = (  matrix[0]/w, matrix[1],matrix[2] )
     else : matrices = matrix
 
     
@@ -64,7 +64,7 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
         else : beta = Classo_R1(pb,lam)
 
 
-    if not w is None : beta = beta / (w+1e-3)
+    if not w is None : beta = beta / w
 
     if (typ  in ['R3','R4']):
         if (get_lambdamax): return(lambdamax,beta,s)
@@ -77,8 +77,9 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg
     Nactive = n_active
     if(Nactive==0):Nactive=False
     if (type(lambdas)!= bool):
-        if (lambdas[0]<lambdas[-1]): lambdas = [lambdas[i] for i in range(len(lambdas)-1,-1,-1)]  # reverse the list if needed
-    else: lambdas = np.linspace(1.,lamin,100)
+        if (lambdas[0]<lambdas[-1]): lambdass = [lambdas[i] for i in range(len(lambdas)-1,-1,-1)]  # reverse the list if needed
+        else : lambdass = [lambdas[i] for i in range(len(lambdas))]
+    else: lambdass = np.linspace(1.,lamin,80)
 
 
     if not w is None : matrices = (  matrix[0]/(w+1e-3), matrix[1],matrix[2] )
@@ -87,40 +88,40 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg
     if(typ=='R2'):
         pb = problem_R2(matrices,meth,rho)
         lambdamax = pb.lambdamax
-        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
-        BETA  = pathlasso_R2(pb,lambdas,n_active=Nactive)
+        if (true_lam): lambdass=[lamb/lambdamax for lamb in lambdass]
+        BETA  = pathlasso_R2(pb,lambdass,n_active=Nactive)
 
     elif(typ=='R3'):
         pb = problem_R3(matrices,meth,e=e)
         lambdamax = pb.lambdamax
-        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
-        BETA,S = pathlasso_R3(pb,lambdas,n_active=Nactive)
+        if (true_lam): lambdass=[lamb/lambdamax for lamb in lambdass]
+        BETA,S = pathlasso_R3(pb,lambdass,n_active=Nactive)
         S=np.array(S)/np.sqrt(e)
 
     elif(typ=='R4'):
         meth='DR'
         pb = problem_R4(matrices,meth,rho,e=e)
         lambdamax = pb.lambdamax
-        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
-        BETA,S = pathlasso_R4(pb,lambdas,n_active=Nactive)
+        if (true_lam): lambdass=[lamb/lambdamax for lamb in lambdass]
+        BETA,S = pathlasso_R4(pb,lambdass,n_active=Nactive)
         
     elif(typ == 'C2'):
         lambdamax = h_lambdamax(matrices[0],matrices[2],rho)
-        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
-        BETA = pathalgo_general(matrices, lambdas, 'huber_cl', n_active=Nactive, rho=rho_classification)
+        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdass]
+        BETA = pathalgo_general(matrices, lambdass, 'huber_cl', n_active=Nactive, rho=rho_classification)
 
     elif (typ == 'C1'):
-        lambdamax = lambdamax = h_lambdamax(matrices[0],matrices[2],0)
-        if (true_lam): lambdas = [lamb / lambdamax for lamb in lambdas]
-        BETA = pathalgo_general(matrices, lambdas, 'cl', n_active=Nactive)
+        lambdamax = h_lambdamax(matrices[0],matrices[2],0)
+        if (true_lam): lambdass = [lamb / lambdamax for lamb in lambdass]
+        BETA = pathalgo_general(matrices, lambdass, 'cl', n_active=Nactive)
 
     else:
         pb = problem_R1(matrices,meth)
         lambdamax = pb.lambdamax
-        if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdas]
-        BETA = pathlasso_R1(pb,lambdas,n_active=n_active)
+        if (true_lam): lambdass=[lamb/lambdamax for lamb in lambdass]
+        BETA = pathlasso_R1(pb,lambdass,n_active=n_active)
 
-    real_path = [lam*lambdamax for lam in lambdas]
+    real_path = [lam*lambdamax for lam in lambdass]
 
     if not w is None : BETA = np.array([beta / (w+1e-3) for beta in BETA])
 

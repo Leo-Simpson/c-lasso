@@ -66,12 +66,9 @@ def Classo_R3(pb,lam):
             xs,nu,o,xbar,x = xs+mu*sup[0] ,  nu+mu*sup[1] ,  o+mu*sup[2] ,  xbar+mu*sup[3] ,  x+mu*sup[4]
 
             if (LA.norm(b)+LA.norm(s)>1e6):
-                print('DIVERGENCE')
-                if regpath : return(b,'stop',s)
-                else : return(b,s)
-        print('NO CONVERGENCE')
-        if regpath : return(b,'stop',s)
-        else       : return(b,s)
+                raise ValueError("The algorithm of Doulgas Rachford diverges")
+
+        raise ValueError("The algorithm of Doulgas Rachford did not converge after %i iterations " %pb.N)
     print('none of the cases ! ')
 
 
@@ -101,13 +98,15 @@ def pathlasso_R3(pb,path,n_active=False,e=1.):
     save_init = pb.init   
     pb.regpath = True
     pb.compute_param()
+    if type(n_active)==int and n_active > 0 : n_act = n_active
+    else : n_act = n
+    
     for lam in path:
         X = Classo_R3(pb,lam)
         BETA.append(X[0])
         SIGMA.append(X[-1])
         pb.init = X[1]
-        if (type(n_active)==int) : n_act = n_active
-        else : n_act = n
+        
         if sum([ (abs(X[0][i])>1e-1) for i in range(len(X[0])) ])>=n_act or type(X[1])==str :
                 pb.init = save_init
                 BETA.extend( [BETA[-1]]*(len(path)-len(BETA)) )
