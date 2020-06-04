@@ -32,6 +32,7 @@ def rescale(matrices):
 
     '''
     (X,C,y)=matrices
+
     my = sum(y)/len(y)
     lX = [LA.norm(X[:,j]) for j in range(len(X[0]))]
     ly = LA.norm(y-my*np.ones(len(y)))

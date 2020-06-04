@@ -25,7 +25,7 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg", Nlam
               lam = 0.1, q = 10 ,B = 50, percent_nS = 0.5 ,
               formulation = 'LS', seed = 1, rho=1.345,
               rho_classification=-1.,
-              true_lam = False, e=1., w=None):
+              true_lam = False, e=1., w=None, intercept=False):
     
 
     rd.seed(seed)
@@ -47,7 +47,7 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg", Nlam
             # compute the path until n_active = q.
             BETA = np.array(pathlasso(submatrix,lambdas=lambdas,n_active=q+1,lamin=0,
                              typ=formulation, meth = numerical_method,
-                             rho = rho, rho_classification=rho_classification,e=e*percent_nS, w=w )[0])
+                             rho = rho, rho_classification=rho_classification,e=e*percent_nS, w=w, intercept=intercept)[0])
 
             distr_path = distr_path + (abs(BETA) >= 1e-1)
         distribution = distr_path[-1]
@@ -59,15 +59,13 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg", Nlam
             subset = build_subset(n,nS)
             submatrix = build_submatrix(matrix,subset)
             regress = Classo(submatrix,lam,typ = formulation,
-                             meth=numerical_method, rho = rho, rho_classification=rho_classification, e=e*percent_nS, true_lam = true_lam, w=w)
+                             meth=numerical_method, rho = rho, rho_classification=rho_classification, e=e*percent_nS, true_lam = true_lam, w=w, intercept=intercept)
             if (type(regress)==tuple): beta =regress[0]
             else : beta = regress
             qbiggest = biggest_indexes(abs(beta),q)
             for i in qbiggest:
                 distribution[i]+=1
                 
-    
-    
     
     elif (StabSelmethod == 'max') :
         
@@ -79,7 +77,7 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg", Nlam
             # compute the path until n_active = q, and only take the last Beta
             BETA = pathlasso(submatrix,n_active=0,lambdas=lambdas,
                              typ=formulation,meth = numerical_method,
-                             rho = rho, rho_classification=rho_classification, e=e*percent_nS , w=w)[0]
+                             rho = rho, rho_classification=rho_classification, e=e*percent_nS , w=w, intercept=intercept)[0]
             betamax = np.amax( abs(np.array(BETA)), axis = 0 )
             qmax = biggest_indexes(betamax,q)
             for i in qmax:

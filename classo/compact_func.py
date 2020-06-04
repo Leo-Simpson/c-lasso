@@ -14,10 +14,12 @@ Classo and pathlasso are the main functions, they can call every algorithm acord
 
 # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
-def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False, true_lam=False, e=1., rho_classification=-1., w = None):
+def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False, true_lam=False, e=1., rho_classification=-1., w = None, intercept = False):
 
     if not w is None : matrices = (  matrix[0]/w, matrix[1],matrix[2] )
     else : matrices = matrix
+    if intercept : 
+        matrices = (matrices[0]-np.mean(matrices[0],axis=0),matrices[1],matrices[2]-np.mean(matrices[2]))
 
     
     if(typ=='R3'):
@@ -73,7 +75,7 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
     else              : return(beta)
 
 
-def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg',rho = 1.345, true_lam = False, e= 1.,return_sigm= False,rho_classification=-1, w =None):
+def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg',rho = 1.345, true_lam = False, e= 1.,return_sigm= False,rho_classification=-1, w =None, intercept = False):
     Nactive = n_active
     if(Nactive==0):Nactive=False
     if (type(lambdas)!= bool):
@@ -84,6 +86,8 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg
 
     if not w is None : matrices = (  matrix[0]/(w+1e-3), matrix[1],matrix[2] )
     else : matrices = matrix
+    if intercept : 
+        matrices = (matrices[0]-np.mean(matrices[0],axis=0),matrices[1],matrices[2]-np.mean(matrices[2]))
 
     if(typ=='R2'):
         pb = problem_R2(matrices,meth,rho)

@@ -194,8 +194,6 @@ def up_LS(param):
 
     param.number_act, param.idr, param.Xt, param.activity, param.beta, param.s, param.lam = number_act, idr, Xt, activity, beta, s, lam
 
-
-
 def up_huber(param):
     lambdamax, lamin, A, y, C, rho, eps_L2 = param.lambdamax, param.lamin, param.A, param.y, param.C, param.rho, param.eps_L2
     number_act, idr, Xt, activity, F, beta, s, lam, M, r = param.number_act, param.idr, param.Xt, param.activity, param.F, param.beta, param.s, param.lam, param.M, param.r

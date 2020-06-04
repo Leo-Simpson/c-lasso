@@ -28,41 +28,41 @@ def train_test_i (SUBLIST,i):
     return(training_set,test_set)
             
 
-def training(matrices,typ,num_meth, training_set, rho, rho_classification, e,lambdas, w):
+def training(matrices,typ,num_meth, training_set, rho, rho_classification, e,lambdas, w, intercept):
     (A,C,y)   = matrices
     mat       = (A[training_set],C,y[training_set]) 
     sol       = pathlasso(mat,lambdas = lambdas,typ=typ,meth=num_meth,
-                            rho = rho, e=e,rho_classification=rho_classification, w=w)[0]
+                            rho = rho, e=e,rho_classification=rho_classification, w=w, intercept=intercept)[0]
     return(sol)
 
 
-def test_i (matrices,typ,num_meth, SUBLIST,i, rho, rho_classification, e,lambdas, w):
+def test_i (matrices,typ,num_meth, SUBLIST,i, rho, rho_classification, e,lambdas, w, intercept):
     training_set,test_set = train_test_i (SUBLIST,i)
-    BETA                  = training(matrices,typ,num_meth, training_set, rho, rho_classification, e, lambdas, w)
+    BETA                  = training(matrices,typ,num_meth, training_set, rho, rho_classification, e, lambdas, w, intercept)
     n_lam = len(lambdas)
     residual = np.zeros(n_lam)
     for j in range(n_lam):
-        residual[j] = accuracy_func(matrices[0][test_set],matrices[2][test_set],BETA[j],typ)/len(test_set)
+        residual[j] = accuracy_func(matrices[0][test_set],matrices[2][test_set],BETA[j],typ, rho = rho, rho_classification=rho_classification, intercept=intercept)/len(test_set)
     return(residual)
 
-def average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e,lambdas, w):
+def average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e,lambdas, w, intercept):
     k = len(SUBLIST)
     n_lam = len(lambdas)
     RESIDUAL = np.zeros((k,n_lam))
     for i in range(k):
-        RESIDUAL[i,:] = test_i (matrices,typ,num_meth, SUBLIST,i, rho, rho_classification, e, lambdas, w)
+        RESIDUAL[i,:] = test_i (matrices,typ,num_meth, SUBLIST,i, rho, rho_classification, e, lambdas, w, intercept )
     MSE = np.mean(RESIDUAL,axis = 0)
     SE = np.std(RESIDUAL,axis = 0) # official standard error should be divided by sqrt(k) ... 
     return(MSE,SE)
 
-def CV(matrices,k,typ='LS',num_meth="Path-Alg",test=0., seed = 1, rho = 1.345, rho_classification=-1., e= 1.,lambdas = None, Nlam = 100, oneSE = True, w=None):
+def CV(matrices,k,typ='LS',num_meth="Path-Alg",test=0., seed = 1, rho = 1.345, rho_classification=-1., e= 1.,lambdas = None, Nlam = 100, oneSE = True, w=None, intercept=False):
     
     if lambdas is None : lambdas = np.linspace(1.,1e-3, Nlam)
 
     rd.seed(seed)
     (A,C,y) = matrices
     SUBLIST, idx_train, idx_test = train_test_CV(len(y),k,test)
-    MSE,SE  = average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e, lambdas, w)
+    MSE,SE  = average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e, lambdas, w, intercept)
     i       = np.argmin(MSE)
     i_1SE   = compute_1SE(MSE[i]+SE[i],MSE,i)
     if oneSE : lam = lambdas[i_1SE]
@@ -93,8 +93,13 @@ def huber_hinge(A,y,beta, rho):
     return s
 
 
-def accuracy_func(A,y,beta, typ='LS',rho = 1.345, rho_classification=-1.):
-    if (typ == 'Huber'):                   return(hub( A.dot(beta) - y , rho ) )
-    elif (typ == 'Classification') :       return(hinge(A,y,beta))
-    elif (typ == 'Huber_Classification') : return(huber_hinge(A,y,beta,rho_classification))
-    else :                                 return(LA.norm( A.dot(beta) - y )**2)
+def accuracy_func(A,y,beta, typ='LS',rho = 1.345, rho_classification=-1., intercept=False):
+    
+    if intercept : Aprime, yprime = A - np.mean(A,axis=0), y - np.mean(y)
+    else : Aprime, yprime = A[:,:], y[:]
+
+
+    if (typ == 'Huber'):                   return(hub( Aprime.dot(beta) - yprime , rho ) )
+    elif (typ == 'Classification') :       return(hinge(Aprime,yprime,beta))
+    elif (typ == 'Huber_Classification') : return(huber_hinge(Aprime,yprime,beta,rho_classification))
+    else :                                 return(LA.norm( Aprime.dot(beta) - yprime )**2)

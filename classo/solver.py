@@ -185,6 +185,7 @@ class classo_formulation:
         self.rho_classification = -1.
         self.e = 'not specified'
         self.w = None
+        self.intercept = False
 
     def name(self):
         if self.classification:
@@ -379,8 +380,8 @@ class StabSelparameters:
         self.B = 50
         self.q = 10
         self.percent_nS = 0.5
-        self.Nlam = 80      # for path computation
-        self.lamin = 1e-2   # the lambda where one stop for 'max' method
+        self.Nlam = 50      # for path computation
+        self.lamin = 1e-1   # the lambda where one stop for 'max' method
         self.hd = False     # if set to True, then the 'max' will stop when it reaches n-k actives variables
         self.lam = 'theoretical'  # can also be a float, for the 'lam' method
         self.true_lam = True
@@ -398,8 +399,6 @@ class StabSelparameters:
                                 + '\n     percent_nS = ' + str(self.percent_nS)
                                 + '\n     threshold = ' + str(self.threshold)
                                 + '\n     numerical_method = ' + str(self.numerical_method))
-
-
 class LAMfixedparameters:
             '''object parameters to compute the lasso for a fixed lambda
 
@@ -489,7 +488,8 @@ class solution_PATH:
 
         out = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
                                                 typ=name_formulation, meth=numerical_method, return_sigm=True,
-                                                rho=rho, e=e,rho_classification=rho_classification, w=param.formulation.w)
+                                                rho=rho, e=e,rho_classification=rho_classification, w=param.formulation.w, 
+                                                intercept = param.formulation.intercept)
         if(formulation.concomitant): self.BETAS, self.LAMBDAS, self.SIGMAS = out
         else :
             self.BETAS, self.LAMBDAS = out
@@ -561,7 +561,8 @@ class solution_CV:
                                                                                    lambdas=param.lambdas,
                                                                                    seed=param.seed, rho=rho,
                                                                                    rho_classification=rho_classification,
-                                                                                   oneSE=param.oneSE, e=e, w=param.formulation.w)
+                                                                                   oneSE=param.oneSE, e=e, w=param.formulation.w,
+                                                                                   intercept = param.formulation.intercept)
 
         self.xGraph = param.lambdas
         self.lambda_1SE = param.lambdas[self.index_1SE]
@@ -642,11 +643,11 @@ class solution_StabSel:
         param.numerical_method = numerical_method
 
         # Compute the distribution
-        output = stability(matrices, StabSelmethod=param.method, numerical_method=numerical_method,
+        output = stability(matrices, StabSelmethod=param.method, numerical_method=numerical_method, lamin=param.lamin,
                            lam=lam,Nlam=param.Nlam, q=param.q, B=param.B, percent_nS=param.percent_nS,
                            formulation=name_formulation, seed=param.seed, rho=rho,
                            rho_classification=rho_classification,
-                           true_lam=param.true_lam, e=e, w=param.formulation.w)
+                           true_lam=param.true_lam, e=e, w=param.formulation.w, intercept = param.formulation.intercept)
 
         if (param.method == 'first'):
             distribution, distribution_path, lambdas = output
@@ -756,7 +757,7 @@ class solution_LAMfixed:
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         out = Classo(
             matrices, self.lam, typ=name_formulation, meth=numerical_method, rho=rho,
-            get_lambdamax=True, true_lam=self.true_lam, e=e, rho_classification=rho_classification, w=param.formulation.w)
+            get_lambdamax=True, true_lam=self.true_lam, e=e, rho_classification=rho_classification, w=param.formulation.w, intercept = param.formulation.intercept)
 
         if param.formulation.concomitant: self.lambdamax, self.beta, self.sigma = out
         else: self.lambdamax, self.beta = out
@@ -832,6 +833,20 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
             if not method in ['Path-Alg', 'DR', 'P-PDS', 'PF-PDS']: return 'Path-Alg'
 
     return method
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 CV_beta             = {
