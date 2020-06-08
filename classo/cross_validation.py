@@ -67,7 +67,7 @@ def CV(matrices,k,typ='LS',num_meth="Path-Alg",test=0., seed = 1, rho = 1.345, r
     i_1SE   = compute_1SE(MSE[i]+SE[i],MSE,i)
     if oneSE : lam = lambdas[i_1SE]
     else     : lam = lambdas[i]
-    out = Classo((A[idx_train],C,y[idx_train]),lam,typ=typ,meth=num_meth,rho=rho, e=e,rho_classification=rho_classification, w=w)
+    out = Classo((A[idx_train],C,y[idx_train]),lam,typ=typ,meth=num_meth,rho=rho, e=e,rho_classification=rho_classification, w=w,intercept=intercept)
     return(out,MSE,SE,i,i_1SE)
     
         
@@ -95,11 +95,12 @@ def huber_hinge(A,y,beta, rho):
 
 def accuracy_func(A,y,beta, typ='LS',rho = 1.345, rho_classification=-1., intercept=False):
     
-    if intercept : Aprime, yprime = A - np.mean(A,axis=0), y - np.mean(y)
-    else : Aprime, yprime = A[:,:], y[:]
+    if intercept : 
+        Aprime = np.concatenate([np.ones((len(A),1)), A],axis=1)
+    else : Aprime = A[:,:]
 
 
-    if (typ == 'Huber'):                   return(hub( Aprime.dot(beta) - yprime , rho ) )
-    elif (typ == 'Classification') :       return(hinge(Aprime,yprime,beta))
-    elif (typ == 'Huber_Classification') : return(huber_hinge(Aprime,yprime,beta,rho_classification))
-    else :                                 return(LA.norm( Aprime.dot(beta) - yprime )**2)
+    if (typ == 'Huber'):                   return(hub( Aprime.dot(beta) - y , rho ) )
+    elif (typ == 'Classification') :       return(hinge(Aprime,y,beta))
+    elif (typ == 'Huber_Classification') : return(huber_hinge(Aprime,y,beta,rho_classification))
+    else :                                 return(LA.norm( Aprime.dot(beta) - y)**2)

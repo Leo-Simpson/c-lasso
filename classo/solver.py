@@ -64,15 +64,19 @@ class classo_problem:
             if min(self.formulation.w) < 1e-3 : 
                 raise ValueError("w has to be positive weights, here it has a value smaller than 1e-3")
 
+        if self.formulation.intercept : 
+            label = np.array(['intercept']+list(data.label))
+        else : label = data.label
+
 
         
         # Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
         if self.model_selection.PATH:
-            solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, data.label)
+            solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, label)
         
         # Compute the cross validation thanks to the class solution_CV which contains directely the computation in the initialisation
         if self.model_selection.CV:
-            solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation, data.label)
+            solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation, label)
     
         # Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
         if self.model_selection.StabSel:
@@ -80,14 +84,14 @@ class classo_problem:
             param.theoretical_lam = theoretical_lam(int(n * param.percent_nS), d)
             if(param.true_lam): param.theoretical_lam = param.theoretical_lam*int(n * param.percent_nS)
             
-            solution.StabSel = solution_StabSel(matrices, param, self.formulation, data.label)
+            solution.StabSel = solution_StabSel(matrices, param, self.formulation, label)
         
         # Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
         if self.model_selection.LAMfixed:
             param = self.model_selection.LAMfixedparameters
             param.theoretical_lam = theoretical_lam(n, d)
             if(param.true_lam): param.theoretical_lam = param.theoretical_lam*n
-            solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, data.label)
+            solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, label)
 
         self.solution = solution
     
@@ -574,7 +578,7 @@ class solution_CV:
             self.beta = out
 
         self.selected_param = abs(self.beta) > 1e-3  # boolean array, false iff beta_i =0
-        self.refit = min_LS(matrices, self.selected_param)
+        self.refit = min_LS(matrices, self.selected_param, intercept=param.formulation.intercept)
         self.time = time() - t0
         self.save=False
         self.label = label
@@ -659,7 +663,7 @@ class solution_StabSel:
         self.lambdas_path = lambdas
         self.selected_param, self.to_label = selected_param(self.distribution, param.threshold,param.threshold_label)
         self.threshold = param.threshold
-        self.refit = min_LS(matrices, self.selected_param)
+        self.refit = min_LS(matrices, self.selected_param,  intercept=param.formulation.intercept)
         self.save1 = False
         self.save2 = False
         self.save3 = False
@@ -763,7 +767,7 @@ class solution_LAMfixed:
         else: self.lambdamax, self.beta = out
         avg_beta = np.mean(abs(self.beta))
         self.selected_param = abs(self.beta) > avg_beta
-        self.refit = min_LS(matrices, self.selected_param)
+        self.refit = min_LS(matrices, self.selected_param, intercept=param.formulation.intercept)
         self.label = label
         self.time = time() - t0
         self.save = False

@@ -19,7 +19,8 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
     if not w is None : matrices = (  matrix[0]/w, matrix[1],matrix[2] )
     else : matrices = matrix
     if intercept : 
-        matrices = (matrices[0]-np.mean(matrices[0],axis=0),matrices[1],matrices[2]-np.mean(matrices[2]))
+        means = (np.mean(matrices[0],axis=0), np.mean(matrices[2]) )
+        matrices = (matrices[0]-means[0],matrices[1],matrices[2]-means[1])
 
     
     if(typ=='R3'):
@@ -67,6 +68,9 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
 
 
     if not w is None : beta = beta / w
+    if intercept : 
+        betaO = means[0].dot(beta) - means[1]
+        beta = np.array([betaO]+list(beta))
 
     if (typ  in ['R3','R4']):
         if (get_lambdamax): return(lambdamax,beta,s)
@@ -87,7 +91,8 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg
     if not w is None : matrices = (  matrix[0]/(w+1e-3), matrix[1],matrix[2] )
     else : matrices = matrix
     if intercept : 
-        matrices = (matrices[0]-np.mean(matrices[0],axis=0),matrices[1],matrices[2]-np.mean(matrices[2]))
+        means = (np.mean(matrices[0],axis=0), np.mean(matrices[2]) )
+        matrices = (matrices[0]-means[0],matrices[1],matrices[2]-means[1])
 
     if(typ=='R2'):
         pb = problem_R2(matrices,meth,rho)
@@ -128,6 +133,8 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='LS',meth='Path-Alg
     real_path = [lam*lambdamax for lam in lambdass]
 
     if not w is None : BETA = np.array([beta / (w+1e-3) for beta in BETA])
+    if intercept : 
+        BETA = np.array([ [means[0].dot(beta) - means[1]]+list(beta) for beta in BETA] )
 
 
     if(typ in ['R3','R4'] and return_sigm): return(BETA,real_path,S)

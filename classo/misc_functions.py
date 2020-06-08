@@ -73,15 +73,18 @@ def theoretical_lam(n,d):
         dx = dx/10
     return(2*f/np.sqrt(n))
 
-def min_LS(matrices,selected):
+def min_LS(matrices,selected, intercept=False):
     # function to do LS : return  X (X^t X)^-1  X^t y
     X,C,y = matrices
-    Xr, Cr = X[:,selected],C.T[selected]
-    proj = np.eye(len(Cr)) - Cr.dot(LA.pinv(Cr))
-    ls = LA.multi_dot([ proj, LA.pinv(Xr.dot(proj)),y]) 
-    beta = np.zeros(len(X[0]))
-    beta[selected] = ls
-    return(beta)
+    if intercept : Xr, Cr = X[:,selected[1:]],C[:,selected[1:]]
+    else : Xr, Cr = X[:,selected],C[:,selected]
+    
+    use_intercept = intercept
+    if not selected[0] : use_intercept=False
+    
+    beta = np.zeros(len(selected))
+    beta[selected] = unpenalized((Xr,Cr,y), intercept = use_intercept)
+    return beta
 
 def affichage(LISTE_BETA, path, title=' ', labels=False, pix=False, xlabel=" ", ylabel=" ", naffichage=10):
     BETAS = np.array(LISTE_BETA)
@@ -163,7 +166,7 @@ random_data, csv_to_mat, mat_to_np, clr, theoretical_lam, to_zarr
 '''
 
 
-def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification = False, exp = False, A = None, lb_beta = 3, ub_beta = 10):
+def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification = False, exp = False, A = None, lb_beta = 3, ub_beta = 10, intercept=None):
     ''' Generation of random matrices as data such that y = X.sol + sigma. noise
 
     The data X is generated as a normal matrix
@@ -223,6 +226,7 @@ def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification =
         break
 
     y = X.dot(A.dot(sol))+np.random.randn(n)*sigma
+    if not intercept is None : y = y + intercept
     if classification : y = np.sign(y)
     if exp : return (np.exp(X), C, y), sol
     return (X,C,y),sol 
@@ -310,8 +314,14 @@ def to_zarr(obj,name,root, first=True):
 '''
 misc of compact func
 '''
-def unpenalized(matrix, eps = 1e-3):
-    A,C,y = matrix
+def unpenalized(matrix, eps = 1e-3, intercept=False):
+    
+    if intercept: 
+        A1, C1,y = matrix
+        A = np.concatenate([np.ones((len(A1),1)), A1],axis=1)
+        C = np.concatenate([np.zeros((len(C1),1)), C1], axis = 1)
+
+    else : A,C,y = matrix
 
     M1 = np.concatenate([A.T.dot(A), C.T],axis = 1)
     M2 = np.concatenate([C,np.zeros((len(C),len(C)))], axis=1)

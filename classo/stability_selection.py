@@ -30,6 +30,7 @@ def stability(matrix,StabSelmethod = 'first',numerical_method = "Path-Alg", Nlam
 
     rd.seed(seed)
     n, d = len(matrix[2]), len(matrix[0][0])
+    if intercept : d+=1
     nS = int(percent_nS*n)
     distribution=np.zeros(d)
     
