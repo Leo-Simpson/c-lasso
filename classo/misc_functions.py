@@ -101,18 +101,16 @@ def affichage(LISTE_BETA, path, title=' ', labels=False, pix=False, xlabel=" ", 
 def check_size(X,y,C):
     samples, n_features = min(len(y),len(X)), len(X[0])
     X2,y2 = X[:samples] , y[:samples]
-    if len(y)   >samples   : print("More outputs than features ! ")
-    elif len(X) > samples  : print("More features than outputs !")
+    #if len(y)   >samples   : print("More outputs than features ! ")
+    #elif len(X) > samples  : print("More features than outputs !")
 
     if C is None : C2 = np.ones((1, n_features ))
     else : 
         k = len(C)
         if len(C[0])==n_features : C2 = C
         elif len(C)>n_features : 
-            print("Too many colomns in constraint matrix !")
             C2 = C[:,:n_features]
         else : 
-            print("Too few colomns in constraint matrix !")
             C2 = np.zeros((k,n_features))
             C2[:,:len(C)] = C
 
