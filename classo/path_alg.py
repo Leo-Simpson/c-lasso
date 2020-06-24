@@ -48,7 +48,7 @@ class parameters_for_update:
         elif (rho<0):
             for j in range(n):
                 if( self.y[j] < self.rho ): self.F[j] = False
-        AtA = self.A[self.F].T.dot(self.A[self.F]) + l2_reg*np.eye(sum(self.F))
+        AtA = self.A[self.F].T.dot(self.A[self.F]) + l2_reg*np.eye(d)
         for i in range(d):
             if (self.s[i] == 1. or self.s[i] == -1.):
                 self.activity[i] = True
@@ -233,7 +233,7 @@ def up_huber(param):
 
     if (huber_up):
         F[j_switch] = not F[j_switch]
-        M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + l2_reg*np.eye(sum(F))
+        M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + l2_reg*np.eye(d)
     else:
         # Update matrix inverse, list of rows in C and activity
         for i in range(d):
