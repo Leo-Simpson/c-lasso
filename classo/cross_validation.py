@@ -99,8 +99,9 @@ def accuracy_func(A,y,beta, typ='LS',rho = 1.345, rho_classification=-1., interc
         Aprime = np.concatenate([np.ones((len(A),1)), A],axis=1)
     else : Aprime = A[:,:]
 
+    n = len(y)
 
-    if (typ == 'Huber'):                   return(hub( Aprime.dot(beta) - y , rho ) )
+    if (typ == 'Huber'):                   return(hub( Aprime.dot(beta) - y , rho )/ hub( y , rho ) )
     elif (typ == 'Classification') :       return(hinge(Aprime,y,beta))
     elif (typ == 'Huber_Classification') : return(huber_hinge(Aprime,y,beta,rho_classification))
-    else :                                 return(LA.norm( Aprime.dot(beta) - y)**2)
+    else :                                 return(LA.norm( Aprime.dot(beta) - y)**2/LA.norm(y)**2)
