@@ -179,6 +179,9 @@ class classo_formulation:
         w (numpy ndarray) : array of size d with the weights of the L1 penalization
             Default value : None (which makes it the 1,...,1 vector)
 
+        intercept (bool)  : set to true if we should use an intercept (i.e. a column of ones will be added to X)
+            Default value : False
+
 
     '''
     def __init__(self):
