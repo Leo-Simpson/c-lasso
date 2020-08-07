@@ -42,7 +42,8 @@ def test_i (matrices,typ,num_meth, SUBLIST,i, rho, rho_classification, e,lambdas
     n_lam = len(lambdas)
     residual = np.zeros(n_lam)
     for j in range(n_lam):
-        residual[j] = accuracy_func(matrices[0][test_set],matrices[2][test_set],BETA[j],typ, rho = rho, rho_classification=rho_classification, intercept=intercept)/len(test_set)
+        residual[j] = accuracy_func(matrices[0][test_set],matrices[2][test_set],BETA[j],typ, rho = rho, rho_classification=rho_classification, intercept=intercept)
+    
     return(residual)
 
 def average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e,lambdas, w, intercept):
@@ -52,10 +53,10 @@ def average_test(matrices,typ,num_meth, SUBLIST, rho, rho_classification, e,lamb
     for i in range(k):
         RESIDUAL[i,:] = test_i (matrices,typ,num_meth, SUBLIST,i, rho, rho_classification, e, lambdas, w, intercept )
     MSE = np.mean(RESIDUAL,axis = 0)
-    SE = np.std(RESIDUAL,axis = 0) # official standard error should be divided by sqrt(k) ... 
+    SE = np.std(RESIDUAL,axis = 0)/np.sqrt(k)
     return(MSE,SE)
 
-def CV(matrices,k,typ='LS',num_meth="Path-Alg",test=0., seed = 1, rho = 1.345, rho_classification=-1., e= 1.,lambdas = None, Nlam = 100, oneSE = True, w=None, intercept=False):
+def CV(matrices,k,typ='R1',num_meth="Path-Alg",test=0., seed = 1, rho = 1.345, rho_classification=-1., e= 1.,lambdas = None, Nlam = 100, oneSE = True, w=None, intercept=False):
     
     if lambdas is None : lambdas = np.linspace(1.,1e-3, Nlam)
 
@@ -93,7 +94,7 @@ def huber_hinge(A,y,beta, rho):
     return s
 
 
-def accuracy_func(A,y,beta, typ='LS',rho = 1.345, rho_classification=-1., intercept=False):
+def accuracy_func(A,y,beta, typ='R1',rho = 1.345, rho_classification=-1., intercept=False):
     
     if intercept : 
         Aprime = np.concatenate([np.ones((len(A),1)), A],axis=1)
@@ -101,7 +102,7 @@ def accuracy_func(A,y,beta, typ='LS',rho = 1.345, rho_classification=-1., interc
 
     n = len(y)
 
-    if (typ == 'Huber'):                   return(hub( Aprime.dot(beta) - y , rho )/ hub( y , rho ) )
-    elif (typ == 'Classification') :       return(hinge(Aprime,y,beta))
-    elif (typ == 'Huber_Classification') : return(huber_hinge(Aprime,y,beta,rho_classification))
-    else :                                 return(LA.norm( Aprime.dot(beta) - y)**2/LA.norm(y)**2)
+    if (typ == 'R2'):                      return(hub( Aprime.dot(beta) - y , rho )/ n )
+    elif (typ == 'C1') :                   return(hinge(Aprime,y,beta)/n)
+    elif (typ == 'C2') :                   return(huber_hinge(Aprime,y,beta,rho_classification)/n)
+    else :                                 return(LA.norm( Aprime.dot(beta) - y,2)**2/n)

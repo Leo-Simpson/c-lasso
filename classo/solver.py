@@ -56,20 +56,19 @@ class classo_problem:
         
         if data.rescale:
             matrices, data.scaling = rescale(matrices)  # SCALING contains  :
-        # (list of initial norms of A-colomns,
-        #         initial norm of centered y,
-        #          mean of initial y )
+                                                                # (list of initial norms of A-colomns,
+                                                                #         initial norm of centered y,
+                                                                #          mean of initial y )
 
         if not self.formulation.w is None : 
             if min(self.formulation.w) < 1e-3 : 
                 raise ValueError("w has to be positive weights, here it has a value smaller than 1e-3")
 
         if self.formulation.intercept : 
-            label = np.array(['intercept']+list(data.label))
-        else : label = data.label
-
-
+            data.label = np.array(['intercept']+list(data.label))
         
+        label = data.label
+
         # Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
         if self.model_selection.PATH:
             solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, label)
@@ -179,7 +178,7 @@ class classo_formulation:
         w (numpy ndarray) : array of size d with the weights of the L1 penalization
             Default value : None (which makes it the 1,...,1 vector)
 
-        intercept (bool)  : set to true if we should use an intercept (i.e. a column of ones will be added to X)
+        intercept (bool)  : set to true if we should use an intercept
             Default value : False
 
 
@@ -274,7 +273,7 @@ class PATHparameters:
             Dafault value : 0
 
         lambdas (numpy.ndarray) : list of lambdas for computinf lasso-path for cross validation on lambda.
-            Default value : np.array([10**(-delta * float(i) / nlam) for i in range(0,nlam) ] ) with delta=2. and nlam = 40
+            Default value : np.array([10**(-delta * float(i) / Nlam) for i in range(0,Nlam) ] ) with delta=2. and Nlam = 40
 
         plot_sigma (bool) : if True then the print method of the solution will also show sigma if it is computed (formulation R3 or R4)
             Default value : True
@@ -286,8 +285,8 @@ class PATHparameters:
         self.numerical_method = 'choose'
         self.n_active = 0
         lamin= 1e-2
-        nlam = 40
-        self.lambdas = np.array([10**(np.log10(lamin) * float(i) / (nlam+1)) for i in range(0,nlam) ] )
+        Nlam = 40
+        self.lambdas = np.array([10**(np.log10(lamin) * float(i) / (Nlam+1)) for i in range(0,Nlam) ] )
         self.plot_sigma = True
 
     def __repr__(self): return (  '\n     Npath = ' + str(len(self.lambdas))
@@ -327,7 +326,7 @@ class CVparameters:
 
     def __repr__(self): return (  '\n     Nsubset = ' + str(self.Nsubset)
                                 + '\n     lamin = ' + str(self.lambdas[-1])
-                                + '\n     n_lam = ' + str(len(self.lambdas))
+                                + '\n     Nlam = ' + str(len(self.lambdas))
                                 + '\n     numerical_method = ' + str(self.numerical_method))
 class StabSelparameters:
     '''object parameters to compute the stability selection.
@@ -529,9 +528,9 @@ class solution_CV:
 
 
     Attributes:
-        xGraph (numpy.ndarray) : array of size Nlambdas of the lambdas / lambda_max
-        yGraph (numpy.ndarray) : array of size Nlambdas of the average validation residual (over the K subsets)
-        standard_error (numpy.ndarray) : array of size Nlambdas of the standard error of the validation residual (over the K subsets)
+        xGraph (numpy.ndarray) : array of size Nlam of the lambdas / lambda_max
+        yGraph (numpy.ndarray) : array of size Nlam of the average validation residual (over the K subsets)
+        standard_error (numpy.ndarray) : array of size Nlam of the standard error of the validation residual (over the K subsets)
         index_min (int) : index on xGraph of the selected lambda without 1-standard-error method
         index_1SE (int) : index on xGraph of the selected lambda with 1-standard-error method
         lambda_min (float) : selected lambda without 1-standard-error method
@@ -617,8 +616,8 @@ class solution_StabSel:
 
     Attributes:
         distribution (array) : d array of stability rations.
-        lambdas_path (array or string) : for 'first' method : N_lambdas array of the lambdas used. Other cases : 'not used'
-        distribution_path (array or string) : for 'first' method :  N_lambdas x d array with stability ratios as a function of lambda. Other cases : 'not computed'
+        lambdas_path (array or string) : for 'first' method : Nlam array of the lambdas used. Other cases : 'not used'
+        distribution_path (array or string) : for 'first' method :  Nlam x d array with stability ratios as a function of lambda. Other cases : 'not computed'
         threshold (float) : threshold for StabSel, ie for a variable i, stability ratio that is needed to get selected
         save1,save2,save3 (bool or string) : if a string is given, the corresponding graph will be saved with the given name of the file (save1 is for stability plot ; save2 for path-stability plot; and save3 for refit beta-solution)
         selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected

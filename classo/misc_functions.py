@@ -76,14 +76,12 @@ def theoretical_lam(n,d):
 def min_LS(matrices,selected, intercept=False):
     # function to do LS : return  X (X^t X)^-1  X^t y
     X,C,y = matrices
+    
     if intercept : Xr, Cr = X[:,selected[1:]],C[:,selected[1:]]
     else : Xr, Cr = X[:,selected],C[:,selected]
     
-    use_intercept = intercept
-    if not selected[0] : use_intercept=False
-    
     beta = np.zeros(len(selected))
-    beta[selected] = unpenalized((Xr,Cr,y), intercept = use_intercept)
+    beta[selected] = unpenalized((Xr,Cr,y), intercept = intercept)
     return beta
 
 def affichage(LISTE_BETA, path, title=' ', labels=False, pix=False, xlabel=" ", ylabel=" ", naffichage=10):

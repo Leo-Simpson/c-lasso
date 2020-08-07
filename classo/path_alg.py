@@ -23,7 +23,7 @@ class parameters_for_update:
 
 
     '''
-    def __init__(self,matrices,lamin, rho,typ, l2_reg = 0.):
+    def __init__(self,matrices,lamin, rho,typ, eps_L2 = 1e-3):
 
         (self.A, self.C, self.y) = matrices
         self.lamin = lamin
@@ -41,14 +41,14 @@ class parameters_for_update:
         self.lam         = 1.
         self.r           = -self.y
         self.F           = [True] * n
-        self.eps_L2      = 1e-3
+        self.eps_L2      = eps_L2
         if (rho>0):
             for j in range(n):
                 if( abs(self.y[j]) > self.rho ): self.F[j] = False
         elif (rho<0):
             for j in range(n):
                 if( self.y[j] < self.rho ): self.F[j] = False
-        AtA = self.A[self.F].T.dot(self.A[self.F]) + l2_reg*np.eye(d)
+        AtA = self.A[self.F].T.dot(self.A[self.F]) + self.eps_L2*np.eye(d)
         for i in range(d):
             if (self.s[i] == 1. or self.s[i] == -1.):
                 self.activity[i] = True
@@ -233,7 +233,7 @@ def up_huber(param):
 
     if (huber_up):
         F[j_switch] = not F[j_switch]
-        M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + l2_reg*np.eye(d)
+        M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + eps_L2*np.eye(d)
     else:
         # Update matrix inverse, list of rows in C and activity
         for i in range(d):
