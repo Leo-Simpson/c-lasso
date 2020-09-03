@@ -286,8 +286,8 @@ def to_zarr(obj,name,root, first=True):
         for key,value in obj.items() :
             to_zarr(value,key,zz,first=False) 
             
-    elif type(obj) == np.ndarray:
-         root.create_dataset(name,data=obj,shape=obj.shape)
+    elif type(obj) in [np.ndarray,pd.DataFrame]:
+        root.create_dataset(name,data=obj,shape=obj.shape)
 
     elif type(obj)==np.float64 :
         root.attrs[name] = float(obj)
