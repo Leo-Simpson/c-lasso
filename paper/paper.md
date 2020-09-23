@@ -270,9 +270,6 @@ Then we have chosen the [model selections](##model-selections) we want to comput
 
 Finally, those problems are solved using the method `solve` which computes everything. 
 
-### Solve the optimization problem
-One can solve the corresponding c-lasso problem instance using the method solve. 
-
 ### Visualize the result 
 
 One can, before or after having solve the problem, plot the main caracteristics of the problem solved and of its solution: 
