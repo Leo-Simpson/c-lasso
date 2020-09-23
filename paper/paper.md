@@ -202,7 +202,7 @@ the routine ```random_data``` included in the c-lasso package, that allows you t
 >>> list(numpy.nonzero(sol))
 [43, 47, 74, 79, 84]
 ```
-This code snippet generates the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ , $C \in R^{k\timesd}$ (here it is actually all-one vector because of the input ```zerosum```), and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N(0,\sigma)$ and $\beta$ has only d_nonzero non-null componant (which are plot exmplicetly above).
+This code snippet generates the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ , $C \in R^{k\times d}$ (here it is actually all-one vector because of the input ```zerosum```), and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N(0,\sigma)$ and $\beta$ has only d_nonzero non-null componant (which are plot exmplicetly above).
 
 
 Then, let's define a ```classo_problem``` instance with the generated dataset in order to formulate the optimization problem we want to solve. 
