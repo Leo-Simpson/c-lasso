@@ -180,35 +180,25 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 
 Here is a basic example that shows how to run c-lasso on synthetic data.
 
+c-lasso is available on pip, one can install it using ```pip install c_lasso```. Then on python, to import the package, one should use ```import classo```
 
-c-lasso is available on pip. You can install the package in the shell using :
-
-```shell
-pip install c_lasso
-```
-To use the c-lasso package in Python, type :
-
-```python
-from classo import *
-```
-
-
-Firstly, let's generate a dataset using
+Let us now begin the tutorial. 
+Firstly, let us generate a dataset using
 the routine ```random_data``` included in the c-lasso package, that allows you to generate instances using normally distributed data.
 
 ```python
 >>> n,d,d_nonzero,k,sigma =100,100,5,1,0.5
->>> (X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
+>>> (X,C,y),sol = classo.random_data(n,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
 >>> list(numpy.nonzero(sol))
 [43, 47, 74, 79, 84]
 ```
 This code snippet generates the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ , $C \in R^{k\times d}$ (here it is actually all-one vector because of the input ```zerosum```), and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N(0,\sigma)$ and $\beta$ has only d_nonzero non-null componant (which are plot exmplicetly above).
 
 
-Then, let's define a ```classo_problem``` instance with the generated dataset in order to formulate the optimization problem we want to solve. 
+Then, let us define a ```classo_problem``` instance with the generated dataset in order to formulate the optimization problem we want to solve. 
 
 ```python
-problem  = classo_problem(X,y,C)  # define a c-lasso problem instance with default setting
+problem  = classo.classo_problem(X,y,C)  # define a c-lasso problem instance with default setting
 
 problem.formulation.huber  = True
 problem.formulation.concomitant = False
@@ -233,7 +223,7 @@ Finally, one can visualize the solutions and see the running time, and the name 
 
 ![Graphics plotted after calling ```problem.solution``` ](figures/figure-concat.png)
 
-Let's note that the models have recovered the right variables and the computation have been done quickly, which is comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
+Let us that the models have recovered the right variables and the computation have been done quickly, which is comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
 
 
 # Acknowledgements
