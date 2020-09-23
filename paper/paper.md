@@ -81,7 +81,7 @@ the scale $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.
 This formulation is similar to *R1* but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
 
 - ***C2* Contrained sparse classification with Huberized Square Hinge loss**:        
-This formulation is similar to *C1* but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2017].
+This formulation is similar to *C1* but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007].
 
 ## Optimization schemes
 
@@ -101,21 +101,21 @@ proximal splitting algorithms. It extends the classical Forward-Backward (FB)
 (aka proximal gradient descent) algorithm to handle an additional linear equality constraint
 via projection. In the absence of a linear constraint, the method reduces to FB.
 This method can solve problem *R1*. For the Huber problem *R2*, 
-P-PDS can solve the mean-shift formulation of the problem (see [@Mishra:2019]).
+P-PDS can solve the mean-shift formulation of the problem  [@Mishra:2019].
 
 - **Projection-free primal-dual splitting method (*PF-PDS*)** :
 This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
 proximal splitting algorithms. The algorithm does not require projection operators 
 which may be beneficial when C has a more complex structure. In the absence of a linear constraint, 
 the method reduces to the Forward-Backward-Forward scheme. This method can solve problem *R1*. 
-For the Huber problem *R2*, PF-PDS can solve the mean-shift formulation of the problem (see [@Mishra:2019]).
+For the Huber problem *R2*, PF-PDS can solve the mean-shift formulation of the problem [@Mishra:2019].
 
 - **Douglas-Rachford-type splitting method (*DR*)** : 
 This algorithm is the most general algorithm and can solve all regression problems 
 *R1-R4*. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
-It makes use of the proximity operators of the perspective of the LS objective (see [@Combettes:2020.1; @Combettes:2020.2])
+It makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020.1; @Combettes:2020.2].
 The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem 
-with the mean shift (see [@Mishra:2019]) and thus solved in (n + d) dimensions. 
+with the mean shift [@Mishra:2019] and thus solved in (n + d) dimensions. 
 
 
 ## Model selections
@@ -129,9 +129,9 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 
 [comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts : starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
 
-- *Cross Validation* : Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" (see [@Hastie:2009]).
+- *Cross Validation* : Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" [@Hastie:2009].
 
-- *Stability Selection* : Another variable selection model than can be used is stability selection (see [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
+- *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
 
 # Basic workflow
 
