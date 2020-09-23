@@ -220,8 +220,7 @@ problem.model_selection.LAMfixedparameters.lam = 0.1 # lambda is 0.1*lambdamax
 
 problem.model_selection.PATH = True #add the computation of the lambda-path
 
-# let's solve our problem instance
-problem.solve()
+problem.solve() # solve our optimization problem
 ```
 
 
