@@ -156,19 +156,21 @@ This code snippet generates the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ 
 Then, let us define a ```classo_problem``` instance with the generated dataset in order to formulate the optimization problem we want to solve. 
 
 ```python
->>> problem  = classo_problem(X,y,C)  # define a c-lasso problem instance with default setting
-
+# define a c-lasso problem instance with default setting
+>>> problem  = classo_problem(X,y,C)  
+# change the formulation of the problem
 >>> problem.formulation.huber  = True
 >>> problem.formulation.concomitant = False
->>> problem.formulation.rho = 1.5  # change the formulation of the problem
-
->>> problem.model_selection.LAMfixed = True # add the computation for a fixed lambda
+>>> problem.formulation.rho = 1.5  
+# add the computation for a fixed lambda
+>>> problem.model_selection.LAMfixed = True 
+# lambda is 0.1*lambdamax
 >>> problem.model_selection.LAMfixedparameters.rescaled_lam = True
->>> problem.model_selection.LAMfixedparameters.lam = 0.1 # lambda is 0.1*lambdamax
-
->>> problem.model_selection.PATH = True #add the computation of the lambda-path
-
->>> problem.solve() # solve our optimization problem
+>>> problem.model_selection.LAMfixedparameters.lam = 0.1 
+#add the computation of the lambda-path
+>>> problem.model_selection.PATH = True 
+# solve our optimization problem
+>>> problem.solve() 
 ```
 
 
