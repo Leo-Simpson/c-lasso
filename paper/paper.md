@@ -326,7 +326,7 @@ STABILITY SELECTION PARAMETERS:
 
 The latter command will also plot those graphics : 
 
-![Caption for LAM-Beta](figures/figure-concat.png)
+![Graphics plotted after calling problem.solution ](figures/figure-concat.png)
 
 
 
