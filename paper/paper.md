@@ -326,15 +326,8 @@ STABILITY SELECTION PARAMETERS:
 
 The latter command will also plot those graphics : 
 
-![Caption for LAM-Beta](figures/figure1.png)
+![Caption for LAM-Beta](figures/figure-concat.png)
 
-![Caption for Path](figures/figure2.png)
-
-![Caption for StabSel](figures/figure3.png)
-
-![Caption for StabSel-Path](figures/figure4.png)
-
-![Caption for StabSel-beta](figures/figure5.png)
 
 
 As this variable selection has been computed for generated data, one can plot the real relevant variables :
