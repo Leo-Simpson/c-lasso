@@ -305,8 +305,6 @@ STABILITY SELECTION PARAMETERS:
 
 ```
 
-The latter command will also plot those graphics : 
-
 ![Graphics plotted after calling problem.solution ](figures/figure-concat.png)
 
 
