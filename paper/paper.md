@@ -156,27 +156,27 @@ This code snippet generates the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ 
 Then, let us define a ```classo_problem``` instance with the generated dataset in order to formulate the optimization problem we want to solve. 
 
 ```python
-# define a c-lasso problem instance with default setting
+# to define a c-lasso problem instance with default setting : 
 >>> problem  = classo_problem(X,y,C)  
-# change the formulation of the problem
+# to change the formulation of the problem :
 >>> problem.formulation.huber  = True
 >>> problem.formulation.concomitant = False
 >>> problem.formulation.rho = 1.5  
-# add the computation for a fixed lambda
+# to add the computation for a fixed lambda :
 >>> problem.model_selection.LAMfixed = True 
-# lambda is 0.1*lambdamax
+# to set lambda to 0.1*lambdamax : 
 >>> problem.model_selection.LAMfixedparameters.rescaled_lam = True
 >>> problem.model_selection.LAMfixedparameters.lam = 0.1 
-#add the computation of the lambda-path
+# to add the computation of the lambda-path : 
 >>> problem.model_selection.PATH = True 
-# solve our optimization problem
+# to solve our optimization problem : 
 >>> problem.solve() 
 ```
 
 
 Here, we have modified the [formulation](##formulations) of the problem in order to use *R2*, with $\rho=1.5$. 
 We have chosen the following [model selections](##model-selections) : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
-Then, those problems are solved using the method ```solve()``` which computes everything. 
+Then, those problems are solved using the recommanded optimization scheme on each model according to the formulation and the size of the parameter $\lambda$
 
 Finally, one can visualize the solutions and see the running time, and the name of the selected variables by calling the instance ```problem.solution```. Note that by calling directly the instance ```problem``` one could also visualize the main parameters of the optimization problems one is solving. In our case, the running time is in the order of 0.1sec for the fixed lambda and path computation, but vary from 2sec to 4sec for the stability selection computation.  
 
