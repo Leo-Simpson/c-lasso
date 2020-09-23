@@ -146,7 +146,7 @@ the routine ```random_data``` included in the c-lasso package, that allows you t
 
 ```python
 >>> n,d,d_nonzero,k,sigma =100,100,5,1,0.5
->>> (X,C,y),sol = classo.random_data(n,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
+>>> (X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
 >>> list(numpy.nonzero(sol))
 [43, 47, 74, 79, 84]
 ```
@@ -156,7 +156,7 @@ This code snippet generates the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ 
 Then, let us define a ```classo_problem``` instance with the generated dataset in order to formulate the optimization problem we want to solve. 
 
 ```python
->>> problem  = classo.classo_problem(X,y,C)  # define a c-lasso problem instance with default setting
+>>> problem  = classo_problem(X,y,C)  # define a c-lasso problem instance with default setting
 
 >>> problem.formulation.huber  = True
 >>> problem.formulation.concomitant = False
