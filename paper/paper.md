@@ -156,19 +156,19 @@ This code snippet generates the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ 
 Then, let us define a ```classo_problem``` instance with the generated dataset in order to formulate the optimization problem we want to solve. 
 
 ```python
-problem  = classo.classo_problem(X,y,C)  # define a c-lasso problem instance with default setting
+>>> problem  = classo.classo_problem(X,y,C)  # define a c-lasso problem instance with default setting
 
-problem.formulation.huber  = True
-problem.formulation.concomitant = False
-problem.formulation.rho = 1.5  # change the formulation of the problem
+>>> problem.formulation.huber  = True
+>>> problem.formulation.concomitant = False
+>>> problem.formulation.rho = 1.5  # change the formulation of the problem
 
-problem.model_selection.LAMfixed = True # add the computation for a fixed lambda
-problem.model_selection.LAMfixedparameters.rescaled_lam = True
-problem.model_selection.LAMfixedparameters.lam = 0.1 # lambda is 0.1*lambdamax
+>>> problem.model_selection.LAMfixed = True # add the computation for a fixed lambda
+>>> problem.model_selection.LAMfixedparameters.rescaled_lam = True
+>>> problem.model_selection.LAMfixedparameters.lam = 0.1 # lambda is 0.1*lambdamax
 
-problem.model_selection.PATH = True #add the computation of the lambda-path
+>>> problem.model_selection.PATH = True #add the computation of the lambda-path
 
-problem.solve() # solve our optimization problem
+>>> problem.solve() # solve our optimization problem
 ```
 
 
@@ -176,7 +176,7 @@ Here, we have modified the [formulation](##formulations) of the problem in order
 We have chosen the following [model selections](##model-selections) : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
 Then, those problems are solved using the method ```solve()``` which computes everything. 
 
-Finally, one can visualize the solutions and see the running time, and the name of the selected variables by calling the instance ```problem.solution```. Note that by calling directly the instance ```problem``` one could also visualize the main parameters of the optimization problems one is solving. In our case, the running time is in the order of 0.1sec for the fixed lambda and path computation, but from 2sec to 4sec for the stability selection computation.  
+Finally, one can visualize the solutions and see the running time, and the name of the selected variables by calling the instance ```problem.solution```. Note that by calling directly the instance ```problem``` one could also visualize the main parameters of the optimization problems one is solving. In our case, the running time is in the order of 0.1sec for the fixed lambda and path computation, but vary from 2sec to 4sec for the stability selection computation.  
 
 
 ![Graphics plotted after calling ```problem.solution``` ](figures/figure-concat.png)
