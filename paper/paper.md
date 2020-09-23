@@ -253,9 +253,10 @@ problem.solve()
 Here, we have modified the [formulation](##formulations) of the problem in order to use [*R2*](###*R2*-contrained-sparse-Huber-regression), with $\rho=1.5$. 
 
 Then we have chosen the [model selections](##model-selections) we want to compute : 
-  - [Fixed Lambda](###fixed-lambda) with $\lambda = 0.1\lambda_{\max}$ 
-  - [Path computation](###path-computation) with default $\lambda$-set, which is a logarithmic grid in $[10^{-2}\lambda_{\max},\lambda_{\max}]$
-  - [Stability Selection](###stability-selection) with "q-first" method as it is in the problem instance by default.
+
+- [Fixed Lambda](###fixed-lambda) with $\lambda = 0.1\lambda_{\max}$ 
+- [Path computation](###path-computation) with default $\lambda$-set, which is a logarithmic grid in $[10^{-2}\lambda_{\max},\lambda_{\max}]$
+- [Stability Selection](###stability-selection) with "q-first" method as it is in the problem instance by default.
 
 Finally, those problems are solved using the method `solve` which computes everything. 
 
