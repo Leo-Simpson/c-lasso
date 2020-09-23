@@ -175,6 +175,152 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 
 - *Stability Selection* : Another variable selection model than can be used is stability selection (see [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
 
+# Basic workflow
+
+
+Here is a basic example that shows how to run c-lasso on synthetic data.
+
+#### Installation 
+c-lasso is available on pip. You can install the package
+in the shell using
+
+```shell
+pip install c_lasso
+```
+To use the c-lasso package in Python, type 
+
+```python
+from classo import *
+```
+
+
+The c-lasso package depends on several standard Python packages. 
+The dependencies are included in the package. Those are, namely : 
+
+`numpy` ; 
+`matplotlib` ; 
+`scipy` ; 
+`pandas` ; 
+`h5py` . 
+
+
+#### Generate random data
+The c-lasso package includes
+the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
+
+```python
+m,d,d_nonzero,k,sigma =100,100,5,1,0.5
+(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
+```
+This code snippet generates a problem instance with sparse $\beta$ in dimension
+d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples generated from an i.i.d standard normal
+distribution. The dimension of the constraint matrix C is d x k matrix. The noise level is $\sigma$=0.5. 
+The input ```zerosum=True``` implies that C is the all-ones vector and $C\beta=0$. The n-dimensional outcome vector y
+and the regression vector $\beta$ is then generated to satisfy the given constraints. 
+
+#### Use of c-lasso on the data
+Here is an example of problem instance one can create with those set of data. 
+
+```python
+# let's define a c-lasso problem instance with default setting
+problem  = classo_problem(X,y,C)
+
+
+# let's change the formulation of the problem
+problem.formulation.huber  = True
+problem.formulation.concomitant = False
+problem.formulation.rho = 1.5
+
+
+# let's add a computation of beta for a fixed lambda 
+problem.model_selection.LAMfixed = True
+# and set it to to 0.1*lambdamax
+problem.model_selection.LAMfixedparameters.rescaled_lam = True
+problem.model_selection.LAMfixedparameters.lam = 0.1
+
+# let's add a computation of the lambda-path
+problem.model_selection.PATH = True
+
+
+# let's solve our problem instance
+problem.solve()
+```
+
+Here, we have modified the [formulation](##formulations) of the problem in order to use [*R2*](###*R2*-contrained-sparse-Huber-regression), with $\rho=1.5$. 
+
+Then we have chosen the [model selections](##model-selections) we want to compute : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
+
+Finally, those problems are solved using the method `solve` which computes everything. 
+
+#### Visualize the result 
+One can, before or after having solve the problem, plot the main caracteristics of the problem solved and of its solution: 
+
+```python
+>>> # let's visualize the main parameters set in the problem instance
+>>> problem
+
+FORMULATION: R2
+ 
+MODEL SELECTION COMPUTED:  
+     Lambda fixed
+     Path
+     Stability selection
+ 
+LAMBDA FIXED PARAMETERS: 
+     numerical_method = DR
+     rescaled lam : True
+     threshold = 0.177
+     lam = 0.1
+     theoretical_lam = 0.1994
+ 
+PATH PARAMETERS: 
+     numerical_method : Path-Alg
+     Npath = 40
+     lamin = 0.013
+     lamax = 1.0
+ 
+STABILITY SELECTION PARAMETERS: 
+     numerical_method : Path-Alg
+     method : first
+     B = 50
+     q = 10
+     percent_nS = 0.5
+     threshold = 0.7
+     lamin = 0.01
+     Nlam = 50
+
+>>> # let's the solutions found
+>>> problem.solution
+
+ LAMBDA FIXED : 
+   Selected variables :  43    47    74    79    84    
+   Running time :  0.094s
+
+ PATH COMPUTATION : 
+   Running time :  0.221s
+
+ STABILITY SELECTION : 
+   Selected variables :  43    47    74    79    84    
+   Running time :  2.468s
+
+```
+
+![Graphics plotted after calling problem.solution ](figures/figure-concat.png)
+
+
+
+As this variable selection has been computed for generated data, one can plot the real relevant variables :
+
+```python
+>>> import numpy
+>>> print( list(numpy.nonzero(sol)) )
+[43, 47, 74, 79, 84]
+```
+
+It is indeed the variables that have been selected with the solution threshold for a fixed lambda, and with stability selection.
+
+
+
 # Acknowledgements
 
 We acknowledge ... 
