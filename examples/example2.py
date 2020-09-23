@@ -1,25 +1,50 @@
-path = '/Users/lsimpson/Desktop/GitHub/Figures/example2/'
-from CLasso import *
+path = '/Users/lsimpson/Desktop/GitHub/c-lasso/joss-paper/figures/'
+from classo import *
 m,d,d_nonzero,k,sigma =100,100,5,1,0.5
-(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True, seed = 4 )
+(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
 
-problem                                     = classo_problem(X,y,C)
-problem.formulation.huber                   = False
-problem.formulation.concomitant             = True
-problem.model_selection.CV                  = True
-problem.model_selection.LAMfixed            = True
-problem.model_selection.PATH                = True
-problem.model_selection.StabSelparameters.method = 'max'
+import numpy
+print( list(numpy.nonzero(sol)[0]) )
 
+
+# let's define a c-lasso problem instance with the previously generated data and parameters set to default values
+problem  = classo_problem(X,y,C)
+
+
+# let's change the optimization formulation of problem instance
+problem.formulation.huber  = True
+problem.formulation.concomitant = False
+problem.formulation.rho = 1.5
+
+# let's add a computation of the lambda-path
+problem.model_selection.PATH = True
+
+# let's then add a computation of beta for a fixed lambda 
+problem.model_selection.LAMfixed = True
+# and set it to to 0.1*lambdamax
+problem.model_selection.LAMfixedparameters.rescaled_lam = True
+problem.model_selection.LAMfixedparameters.lam = 0.1
+
+
+
+# Finally one can compute the solutions of those optimization problems
 problem.solve()
+
+print(" \n Here is the problem instance plot : \n ")
 print(problem)
 
 problem.solution.StabSel.save1 = path+'StabSel'
+problem.solution.StabSel.save2 = path+'StabSel-path'
 problem.solution.StabSel.save3 = path+'StabSel-beta'
-problem.solution.CV.save = path+'CV-beta'
+#problem.solution.CV.save = path+'CV-beta'
 problem.solution.LAMfixed.save = path+'LAM-beta'
 problem.solution.PATH.save = path+'PATH'
 
+
+print(" \n Here is the solution instance plot : \n ")
 print(problem.solution)
 
-problem.solution.CV.graphic(mse_max = 1.,save=path+'CV-graph')
+
+#problem.solution.CV.graphic(mse_max = 1.,save=path+'CV-graph')
+
+

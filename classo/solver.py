@@ -81,7 +81,7 @@ class classo_problem:
         if self.model_selection.StabSel:
             param = self.model_selection.StabSelparameters
             param.theoretical_lam = theoretical_lam(int(n * param.percent_nS), d)
-            if(param.true_lam): param.theoretical_lam = param.theoretical_lam*int(n * param.percent_nS)
+            if not param.rescaled_lam : param.theoretical_lam = param.theoretical_lam*int(n * param.percent_nS)
             
             solution.StabSel = solution_StabSel(matrices, param, self.formulation, label)
         
@@ -89,23 +89,25 @@ class classo_problem:
         if self.model_selection.LAMfixed:
             param = self.model_selection.LAMfixedparameters
             param.theoretical_lam = theoretical_lam(n, d)
-            if(param.true_lam): param.theoretical_lam = param.theoretical_lam*n
+            if not param.rescaled_lam: param.theoretical_lam = param.theoretical_lam*n
             solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, label)
 
         self.solution = solution
     
     def __repr__(self):
         print_parameters = ''
-        if (self.model_selection.CV):
-            print_parameters += '\n \nCROSS VALIDATION PARAMETERS: ' + self.model_selection.CVparameters.__repr__()
-        if (self.model_selection.StabSel):
-            print_parameters += '\n \nSTABILITY SELECTION PARAMETERS: ' + self.model_selection.StabSelparameters.__repr__()
         if (self.model_selection.LAMfixed):
             print_parameters += '\n \nLAMBDA FIXED PARAMETERS: ' + self.model_selection.LAMfixedparameters.__repr__()
         
         if (self.model_selection.PATH):
             print_parameters += '\n \nPATH PARAMETERS: ' + self.model_selection.PATHparameters.__repr__()
         
+        if (self.model_selection.CV):
+            print_parameters += '\n \nCROSS VALIDATION PARAMETERS: ' + self.model_selection.CVparameters.__repr__()
+        
+        if (self.model_selection.StabSel):
+            print_parameters += '\n \nSTABILITY SELECTION PARAMETERS: ' + self.model_selection.StabSelparameters.__repr__()
+
         return (' \n \nFORMULATION: ' + self.formulation.__repr__()
                 + '\n \n' +
                 'MODEL SELECTION COMPUTED:  ' + self.model_selection.__repr__()
@@ -181,8 +183,8 @@ class classo_formulation:
         intercept (bool)  : set to true if we should use an intercept
             Default value : False
 
-
     '''
+
     def __init__(self):
         self.huber = False
         self.concomitant = True
@@ -205,7 +207,6 @@ class classo_formulation:
         if self.huber:
             return "R2"
         else : return "R1"
-
 
     def __repr__(self):
         return (self.name())
@@ -255,15 +256,16 @@ class classo_model_selection:
 
     def __repr__(self):
         string = ''
+        if self.LAMfixed: string += '\n     Lambda fixed'
         if self.PATH: string +=     '\n     Path'
         if self.CV: string +=       '\n     Cross Validation'
         if self.StabSel: string +=  '\n     Stability selection'
-        if self.LAMfixed: string += '\n     Lambda fixed'
+        
         return string
 
 class PATHparameters:
     '''object parameters to compute the lasso-path.
-
+    
     Attributes:
         numerical_method (str) : name of the numerical method that is used, it can be :
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
@@ -279,6 +281,7 @@ class PATHparameters:
             Default value : True
 
         label (numpy.ndarray of str) : labels on each coefficients
+    
     '''
     def __init__(self):
         self.formulation = 'not specified'
@@ -289,16 +292,24 @@ class PATHparameters:
         self.lambdas = np.array([10**(np.log10(lamin) * float(i) / (Nlam+1)) for i in range(0,Nlam) ] )
         self.plot_sigma = True
 
-    def __repr__(self): return (  '\n     Npath = ' + str(len(self.lambdas))
-                                + '\n     n_active = ' + str(self.n_active)
-                                + '\n     lamin = ' + str(self.lambdas[-1])
-                                + '\n     numerical_method = ' + str(self.numerical_method))
+    def __repr__(self): 
+        string  = '\n     numerical_method : ' + str(self.numerical_method)
+        string += '\n     Npath = ' + str(len(self.lambdas))
+        string += '\n     lamin = ' + str(round(self.lambdas[-1],3))
+        string += '\n     lamax = ' + str(round(self.lambdas[0],3))
+        
+        if self.n_active > 0 : 
+            string += '\n     n_active = ' + str(self.n_active)
+
+        return string
+                                
+
 class CVparameters:
     '''object parameters to compute the cross-validation.
 
     Attributes:
-        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random vectors
-            Default value : None
+        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random seed
+            Default value : 0
 
         numerical_method (str) : name of the numerical method that is used, can be :
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
@@ -315,7 +326,7 @@ class CVparameters:
 
     '''
     def __init__(self):
-        self.seed = None
+        self.seed = 0
         self.formulation = 'not specified'
         self.numerical_method = 'choose'
 
@@ -324,17 +335,23 @@ class CVparameters:
         self.lambdas = None
         self.oneSE = True
 
-    def __repr__(self): return (  '\n     Nsubset = ' + str(self.Nsubset)
-                                + '\n     lamin = ' + str(self.lambdas[-1])
-                                + '\n     Nlam = ' + str(len(self.lambdas))
-                                + '\n     numerical_method = ' + str(self.numerical_method))
+    def __repr__(self): 
+        string  = '\n     numerical_method : ' + str(self.numerical_method)
+        string += '\n     one-SE method : ' + str(self.oneSE)
+        string += '\n     Nsubset = ' + str(self.Nsubset)
+        string += '\n     lamin = ' + str(self.lambdas[-1])
+        string += '\n     Nlam = ' + str(len(self.lambdas))
+        
+        
+        return string
+
 class StabSelparameters:
     '''object parameters to compute the stability selection.
 
     Attributes:
 
-        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random vectors
-            Default value : None
+        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random seed
+            Default value : 123
 
         numerical_method (str) : name of the numerical method that is used, can be :
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
@@ -343,8 +360,8 @@ class StabSelparameters:
         lam (float or str) : (only used if :obj:`method` = 'lam') lam for which the lasso should be computed.
             Default value : 'theoretical' which mean it will be equal to :obj:`theoretical_lam` once it is computed
 
-        true_lam (bool) : (only used if :obj:`method` = 'lam') True if the lambda given is the real lambda, False if it lambda/lambdamax which is between 0 and 1.
-            If True and lam = 'theoretical' , then it will takes the  value n*theoretical_lam.
+        rescaled_lam (bool) : (only used if :obj:`method` = 'lam') False if lam = lambda, False if lam = lambda/lambdamax which is between 0 and 1.
+            If False and lam = 'theoretical' , then it will takes the  value n*theoretical_lam.
             Default value : True
 
 
@@ -378,7 +395,7 @@ class StabSelparameters:
 
     '''
     def __init__(self):
-        self.seed = None
+        self.seed = 123
         self.formulation = 'not specified'
         self.numerical_method = 'choose'
 
@@ -387,53 +404,74 @@ class StabSelparameters:
         self.q = 10
         self.percent_nS = 0.5
         self.Nlam = 50      # for path computation
-        self.lamin = 1e-1   # the lambda where one stop for 'max' method
+        self.lamin = 1e-2   # the lambda where one stop for 'max' method
         self.hd = False     # if set to True, then the 'max' will stop when it reaches n-k actives variables
         self.lam = 'theoretical'  # can also be a float, for the 'lam' method
-        self.true_lam = True
+        self.rescaled_lam = True
         self.threshold = 0.7
         self.threshold_label = 0.4
         self.theoretical_lam = 0.0
 
     def __repr__(self): 
-        return (  '\n     method = ' + str(self.method)
-                                + '\n     lamin = ' + str(self.lamin)
-                                + '\n     lam = ' + str(self.lam)
-                                + '\n     Nlam = '+ str(self.Nlam)
-                                + '\n     B = ' + str(self.B)
-                                + '\n     q = ' + str(self.q)
-                                + '\n     percent_nS = ' + str(self.percent_nS)
-                                + '\n     threshold = ' + str(self.threshold)
-                                + '\n     numerical_method = ' + str(self.numerical_method))
+        string  = '\n     numerical_method : ' + str(self.numerical_method)
+        string += '\n     method : ' + str(self.method)
+        string += '\n     B = ' + str(self.B)
+        string += '\n     q = ' + str(self.q)
+        string += '\n     percent_nS = ' + str(self.percent_nS)
+        string += '\n     threshold = ' + str(self.threshold)
+        
+
+        if self.method == 'lam': 
+            string += '\n     lam = ' + str(self.lam)
+            if self.theoretical_lam != 0.  :
+                string += '\n     theoretical_lam = ' + str(round(self.theoretical_lam, 4))
+        else : 
+            string += '\n     lamin = ' + str(self.lamin) 
+            string += '\n     Nlam = '+ str(self.Nlam)
+
+        return string
+
 class LAMfixedparameters:
-            '''object parameters to compute the lasso for a fixed lambda
+    '''object parameters to compute the lasso for a fixed lambda
 
-            Attributes:
-                numerical_method (str) : name of the numerical method that is used, can be :
-                    'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
-                    Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
+    Attributes:
+        numerical_method (str) : name of the numerical method that is used, can be :
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
+            Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
-                lam (float or str) : lam for which the lasso should be computed.
-                    Default value : 'theoretical' which mean it will be equal to :obj:`theoretical_lam` once it is computed
+        lam (float or str) : lam for which the lasso should be computed.
+            Default value : 'theoretical' which mean it will be equal to :obj:`theoretical_lam` once it is computed
 
-                true_lam (bool) : True if the lambda given is the real lambda, False if it lambda/lambdamax which is between 0 and 1.
-                    If True and lam = 'theoretical' , then it will takes the  value n*theoretical_lam.
-                    Default value : True
+        rescaled_lam (bool) : False if lam = lambda, True if lam = lambda/lambdamax which is between 0 and 1.
+            If False and lam = 'theoretical' , then it will takes the  value n*theoretical_lam.
+            Default value : True
 
+        theoretical_lam (float) : Theoretical lam
+            Default value : 0.0 (once it is not computed yet, it is computed thanks to the function :func:`theoretical_lam` used in :meth:`classo_problem.solve`)
 
-                theoretical_lam (float) : Theoretical lam
-                    Default value : 0.0 (once it is not computed yet, it is computed thanks to the function :func:`theoretical_lam` used in :meth:`classo_problem.solve`)
-            '''
-            def __init__(self):
-                self.lam = 'theoretical'
-                self.formulation = 'not specified'
-                self.numerical_method = 'choose'
-                self.true_lam = True
-                self.theoretical_lam = 0.0
+        threshold (float) : Threshold such that the parameters i selected or the ones such as | beta_i | > threshold
+            If None, then it will be set to the average of the vector |beta|
+            Default value : None
+    '''
+    def __init__(self):
+        self.lam = 'theoretical'
+        self.formulation = 'not specified'
+        self.numerical_method = 'choose'
+        self.rescaled_lam = True
+        self.theoretical_lam = 0.0
+        self.threshold = None
 
-            def __repr__(self): return (  '\n     lam = ' + str(self.lam)
-                                        + '\n     theoretical_lam = ' + str(round(self.theoretical_lam, 4))
-                                        + '\n     numerical_method = ' + str(self.numerical_method))
+    def __repr__(self): 
+        string  = '\n     numerical_method = ' + str(self.numerical_method)
+        string += '\n     rescaled lam : ' + str(self.rescaled_lam)
+        string += '\n     threshold = ' + str(round(self.threshold,3))
+        string += '\n     lam = ' + str(round(self.lam,3))
+        
+        
+        if self.theoretical_lam != 0.  :
+            string += '\n     theoretical_lam = ' + str(round(self.theoretical_lam, 4))
+        
+        return string
 
 class classo_solution:
     ''' Class giving characteristics of the solution of the model_selection that is asked.
@@ -454,19 +492,25 @@ class classo_solution:
         self.LAMfixed = 'not computed'
 
     def __repr__(self):
-        return ("Running time : " + '\n'
-                                 'Running time for Path computation    : ' + self.PATH.__repr__() + '\n'
-                + 'Running time for Cross Validation    : ' + self.CV.__repr__() + '\n'
-                + 'Running time for Stability Selection : ' + self.StabSel.__repr__() + '\n'
-                + 'Running time for Fixed LAM           : ' + self.LAMfixed.__repr__()
-                )
+        string = ''
+        if not type(self.LAMfixed) is str : 
+            string  += self.LAMfixed.__repr__()  +  '\n'
+        if not type(self.PATH) is str : 
+            string  += self.PATH.__repr__()  +  '\n'
+        if not type(self.CV) is str : 
+            string  += self.CV.__repr__()  +  '\n'
+        if not type(self.StabSel) is str : 
+            string  += self.StabSel.__repr__()  +  '\n'
+
+
+
+        return string
 
 
 #Here, the main function used is pathlasso ; from the file compact_func
 class solution_PATH:
     ''' Class giving characteristics of the lasso-path computed,
     which also contains a method _repr_ that plot the graphic of this lasso-path
-
 
     Attributes:
         BETAS (numpy.ndarray) : array of size Npath x d with the solution beta for each lambda on each row
@@ -509,6 +553,10 @@ class solution_PATH:
         self.time = time() - t0
 
     def __repr__(self):
+
+        string = "\n PATH COMPUTATION : "
+
+
         affichage(self.BETAS, self.LAMBDAS, labels=self.label, naffichage=5,
                   title=PATH_beta_path["title"] + self.formulation.name(),xlabel=PATH_beta_path["xlabel"],ylabel=PATH_beta_path["ylabel"])
         if (type(self.save) == str): plt.savefig(self.save + 'Beta-path')
@@ -518,14 +566,15 @@ class solution_PATH:
             plt.title(PATH_sigma_path["title"] + self.formulation.name())
             if (type(self.save)==str) : plt.savefig(self.save + 'Sigma-path')
             plt.show()
-        return (str(round(self.time, 3)) + "s")
+
+        string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
+        return string
 
 #Here, the main function used is CV ; from the file cross_validation
 class solution_CV:
     ''' Class giving characteristics of the cross validation computed,
     which also contains a method _repr_() that plot the selected parameters and the solution of the not-sparse problem on the selected variables set
     It also contains a method gaphic(self, mse_max=1.,save=False) that computes the curve of validation error as a function of lambda
-
 
     Attributes:
         xGraph (numpy.ndarray) : array of size Nlam of the lambdas / lambda_max
@@ -586,11 +635,20 @@ class solution_CV:
         self.label = label
 
     def __repr__(self):
+
+        string = "\n CROSS VALIDATION : "
+
         plt.bar(range(len(self.refit)), self.refit), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
         plt.xticks(np.where(self.selected_param)[0],self.label[self.selected_param], rotation=30)
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
-        return (str(round(self.time, 3)) + "s")
+        
+        string += "\n   Selected variables :  " 
+        for i in np.where(self.selected_param)[0] :
+            string += self.label[i] + "    "
+
+        string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
+        return string
 
     def graphic(self, ratio_mse_max=1.,save=False):
         i_min, i_1SE = self.index_min, self.index_1SE
@@ -611,8 +669,6 @@ class solution_StabSel:
     ''' Class giving characteristics of the stability selection computed,
     which also contains a method _repr_() that plot the selected parameters,
     the solution of the not-sparse problem on the selected variables set, the stability plot with the evolution of it with lambda if the used method is 'first'
-
-
 
     Attributes:
         distribution (array) : d array of stability rations.
@@ -648,12 +704,16 @@ class solution_StabSel:
                                                    StabSelmethod=param.method, lam=lam)
         param.numerical_method = numerical_method
 
+        # verify the method 
+        if not param.method in ['first','max','lam']:
+            raise ValueError("name of the stability selection method should be one of those : 'first' , 'max' , 'lam'     not {}".format(param.method))
+
         # Compute the distribution
         output = stability(matrices, StabSelmethod=param.method, numerical_method=numerical_method, lamin=param.lamin,
                            lam=lam,Nlam=param.Nlam, q=param.q, B=param.B, percent_nS=param.percent_nS,
                            formulation=name_formulation, seed=param.seed, rho=rho,
                            rho_classification=rho_classification,
-                           true_lam=param.true_lam, e=e, w=param.formulation.w, intercept = param.formulation.intercept)
+                           true_lam= not param.rescaled_lam, e=e, w=param.formulation.w, intercept = param.formulation.intercept)
 
         if (param.method == 'first'):
             distribution, distribution_path, lambdas = output
@@ -674,8 +734,9 @@ class solution_StabSel:
         self.label = label
         self.time = time() - t0
 
-
     def __repr__(self):
+
+        string = "\n STABILITY SELECTION : "
 
         D, Dpath, selected = self.distribution, self.distribution_path, self.selected_param
         unselected = [not i for i in selected]
@@ -693,10 +754,7 @@ class solution_StabSel:
 
         plt.show()
         
-        
-        print("SELECTED VARIABLES : ")
-        for i in np.where(selected)[0] :
-            print(self.label[i])
+
 
         if (type(Dpath) != str):
             lambdas = self.lambdas_path
@@ -719,17 +777,23 @@ class solution_StabSel:
         plt.xticks(np.where(self.selected_param)[0],self.label[self.selected_param], rotation=30)
         if (type(self.save3) == str): plt.savefig(self.save3)
         plt.show()
-        return (str(round(self.time, 3)) + "s")
+
+
+        string += "\n   Selected variables :  " 
+        for i in np.where(selected)[0] :
+            string += self.label[i] + "    "
+
+        string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
+        return string
 
 #Here, the main function used is Classo ; from the file compact_func
 class solution_LAMfixed:
     ''' Class giving characteristics of the lasso computed
     which also contains a method _repr_() that plot this solution.
 
-
     Attributes:
         lambdamax (float) : lambda maximum for which the solution is non-null
-        true_lam (bool) : if False, it means that the problem had been computed for lambda*lambdamax (so lambda should be between 0 and 1)
+        rescaled_lam (bool) : if True, the problem had been computed for lambda*lambdamax (so lambda should be between 0 and 1)
         lambda (float) : lambda for which the problem is solved
         beta (numpy.ndarray) : solution beta of classo
         sigma (float) : solution sigma of classo when formulation is 'R2' or 'R4'
@@ -758,29 +822,43 @@ class solution_LAMfixed:
         # Algorithmic method choosing
         numerical_method = choose_numerical_method(param.numerical_method, 'LAM', param.formulation, lam=self.lam)
         param.numerical_method = numerical_method
-        self.true_lam = param.true_lam
+        self.rescaled_lam = param.rescaled_lam
 
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         out = Classo(
             matrices, self.lam, typ=name_formulation, meth=numerical_method, rho=rho,
-            get_lambdamax=True, true_lam=self.true_lam, e=e, rho_classification=rho_classification, w=param.formulation.w, intercept = param.formulation.intercept)
+            get_lambdamax=True, true_lam= not self.rescaled_lam, e=e, rho_classification=rho_classification, w=param.formulation.w, intercept = param.formulation.intercept)
 
         if param.formulation.concomitant: self.lambdamax, self.beta, self.sigma = out
         else: self.lambdamax, self.beta = out
-        avg_beta = np.mean(abs(self.beta))
-        self.selected_param = abs(self.beta) > avg_beta
+        if param.threshold is None : 
+            param.threshold = np.mean(abs(self.beta))
+
+        
+        self.selected_param = abs(self.beta) > param.threshold
         self.refit = min_LS(matrices, self.selected_param, intercept=param.formulation.intercept)
         self.label = label
         self.time = time() - t0
         self.save = False
 
     def __repr__(self):
+
+        string = "\n LAMBDA FIXED : "
+
+
         plt.bar(range(len(self.beta)), self.beta), plt.title(LAM_beta["title"] + str(round(self.lam,3) ) ), plt.xlabel(LAM_beta["xlabel"]),plt.ylabel(LAM_beta["ylabel"])
         plt.xticks(np.where(self.selected_param)[0],self.label[self.selected_param], rotation=30)
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
-        if(self.formulation.concomitant) : print("SIGMA FOR LAMFIXED  : ", self.sigma )
-        return (str(round(self.time, 3)) + "s")
+        if(self.formulation.concomitant) : 
+            string += "\n   Sigma  =  " + str(round(self.sigma, 3))
+          
+        string += "\n   Selected variables :  " 
+        for i in np.where(self.selected_param)[0] :
+            string += self.label[i] + "    "
+
+        string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
+        return string
 
 
 

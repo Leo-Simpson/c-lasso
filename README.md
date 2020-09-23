@@ -51,15 +51,13 @@ from classo import *
 ```
 
 The c-lasso package depends on several standard Python packages. 
-To import these packages, use 
+The dependencies are included in the package. Those are, namely : 
 
-```shell
-pip install numpy
-pip install matplotlib
-pip install scipy
-pip install pandas
-pip install time
-```
+`numpy` ; 
+`matplotlib` ; 
+`scipy` ; 
+`pandas` ; 
+`h5py` .
 
 ##  Regression and classification problems
 

@@ -58,7 +58,7 @@ Our package can solve six of those : four regression-type and two classification
 
 
 
-#### [R1] Standard constrained Lasso regression:             
+### **R1** Standard constrained Lasso regression:             
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \left\lVert X\beta - y \right\rVert^2 + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -67,7 +67,7 @@ $$
 This is the standard Lasso problem with linear equality constraints on the $\beta$ vector. 
 The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
 
-#### [R2] Contrained sparse Huber regression:                   
+### **R2** Contrained sparse Huber regression:                   
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} h_{\rho} (X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -76,7 +76,7 @@ $$
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
 for robust model fitting with l1 and linear equality constraints on the $\beta$ vector. The parameter $\rho=1.345$.
 
-#### [R3] Contrained scaled Lasso regression: 
+### **R3** Contrained scaled Lasso regression: 
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -85,20 +85,20 @@ $$
 
 
 This formulation is similar to [R1] but allows for joint estimation of the (constrained) $\beta$ vector and 
-the standard deviation $\sigma$ in a concomitant fashion (see [References](#references) [4,5] for further info).
+the standard deviation $\sigma$ in a concomitant fashion (see [@Combettes:2020.1; @Combettes:2020.2] for further info).
 This is the default problem formulation in c-lasso.
 
-#### [R4] Contrained sparse Huber regression with concomitant scale estimation:        
+### **R4** Contrained sparse Huber regression with concomitant scale estimation:        
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
 
-This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) $\beta$ vector and 
-the scale $\sigma$ in a concomitant fashion (see [References](#references) [4,5] for further info).
+This formulation combines **R2** and **R3** to allow robust joint estimation of the (constrained) $\beta$ vector and 
+the scale $\sigma$ in a concomitant fashion (see [@Combettes:2020.1; @Combettes:2020.2] for further info).
 
-#### [C1] Contrained sparse classification with Square Hinge loss: 
+### **C1** Contrained sparse classification with Square Hinge loss: 
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} L(y^T X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -111,9 +111,9 @@ l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{ca
 $$
 
 
-This formulation is similar to [R1] but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation.
+This formulation is similar to **R1** but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation.
 
-#### [C2] Contrained sparse classification with Huberized Square Hinge loss:        
+### **C2** Contrained sparse classification with Huberized Square Hinge loss:        
 
 
 $$
@@ -126,154 +126,230 @@ $$
 l_{\rho}(r) = \begin{cases} (1-r)^2 &if \quad \rho \leq r \leq 1 \\ (1-\rho)(1+\rho-2r) & if \quad r \leq \rho \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-This formulation is similar to [C1] but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation.
+This formulation is similar to **C1** but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation.
 
 
 
 ## Optimization schemes
 
-The available problem formulations [R1-C2] require different algorithmic strategies for 
+The available problem formulations **R1-C2** require different algorithmic strategies for 
 efficiently solving the underlying optimization problem. We have implemented four 
 algorithms (with provable convergence guarantees) that vary in generality and are not 
 necessarily applicable to all problems. For each problem type, c-lasso has a default algorithm 
 setting that proved to be the fastest in our numerical experiments.
 
-#### Path algorithms (Path-Alg) 
-This is the default algorithm for non-concomitant problems [R1,R3,C1,C2]. 
-The algorithm uses the fact that the solution path along &lambda; is piecewise-
-affine (as shown, e.g., in [1]). When Least-Squares is used as objective function,
-we derive a novel efficient procedure that allows us to also derive the 
-solution for the concomitant problem [R2] along the path with little extra computational overhead.
+### Path algorithms (*Path-Alg*) 
+This is the default algorithm for non-concomitant problems **R1,R2,C1,C2**. 
+The algorithm uses the fact that the solution path along &lambda; is piecewise-affine (as shown, e.g., in [@Gaines:2018]). When Least-Squares is used as objective function, we derive a novel efficient procedure that allows us to also derive the solution for the concomitant problem **R3** along the path with little extra computational overhead.
 
-#### Projected primal-dual splitting method (P-PDS):
-This algorithm is derived from [2] and belongs to the class of 
+### Projected primal-dual splitting method (*P-PDS*):
+This algorithm is derived from [@Briceno:2020] and belongs to the class of 
 proximal splitting algorithms. It extends the classical Forward-Backward (FB) 
 (aka proximal gradient descent) algorithm to handle an additional linear equality constraint
 via projection. In the absence of a linear constraint, the method reduces to FB.
-This method can solve problem [R1]. For the Huber problem [R3], 
-P-PDS can solve the mean-shift formulation of the problem (see [6]).
+This method can solve problem **R1**. For the Huber problem **R2**, 
+P-PDS can solve the mean-shift formulation of the problem (see [@Mishra:2019]).
 
-#### Projection-free primal-dual splitting method (PF-PDS):
-This algorithm is a special case of an algorithm proposed in [3] (Eq.4.5) and also belongs to the class of 
+### Projection-free primal-dual splitting method (*PF-PDS*):
+This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
 proximal splitting algorithms. The algorithm does not require projection operators 
 which may be beneficial when C has a more complex structure. In the absence of a linear constraint, 
-the method reduces to the Forward-Backward-Forward scheme. This method can solve problem [R1]. 
-For the Huber problem [R3], PF-PDS can solve the mean-shift formulation of the problem (see [6]).
+the method reduces to the Forward-Backward-Forward scheme. This method can solve problem **R1**. 
+For the Huber problem **R2**, PF-PDS can solve the mean-shift formulation of the problem (see [@Mishra:2019]).
 
-#### Douglas-Rachford-type splitting method (DR)
+### Douglas-Rachford-type splitting method (*DR*)
 This algorithm is the most general algorithm and can solve all regression problems 
-[R1-R4]. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
-It makes use of the proximity operators of the perspective of the LS objective (see [4,5])
-The Huber problem with concomitant scale [R4] is reformulated as scaled Lasso problem 
-with the mean shift (see [6]) and thus solved in (n + d) dimensions. 
+**R1-R4**. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
+It makes use of the proximity operators of the perspective of the LS objective (see [@Combettes:2020.1; @Combettes:2020.2])
+The Huber problem with concomitant scale **R4** is reformulated as scaled Lasso problem 
+with the mean shift (see [@Mishra:2019]) and thus solved in (n + d) dimensions. 
 
 
 ## Model selections
 
-#### Path computation
+Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. 
 
-#### Cross validation
+### Fixed Lambda
 
-#### Stability Selection
+This approach is simply letting the user choose the parameter $\lambda$, or to choose $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
+The default value is a scale-dependent tuning parameter that has been proposed in [Combettes:2020.2] and derived in [@Shi:2016].
 
-#### Fixed Lambda
+### Path Computation
+
+The package also leaves the possibility to us to compute the solution for a range of $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. It can be done using *Path-Alg* or warm-start with any other optimization scheme. 
+
+[comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts : starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
+
+### Cross Validation
+
+Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" (see [@Hastie:2009]).
+
+### Stability Selection
+
+Another variable selection model than can be used is stability selection (see [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
 
 # Basic workflow
 
 
 Here is a basic example that shows how to run c-lasso on synthetic data.
 
-#### Generate random data
+### Installation 
+
+c-lasso is available on pip. You can install the package
+in the shell using
+
+```shell
+pip install c_lasso
+```
+To use the c-lasso package in Python, type 
+
+```python
+from classo import *
+```
+
+
+The c-lasso package depends on several standard Python packages. 
+The dependencies are included in the package. Those are, namely : 
+
+`numpy` ; 
+`matplotlib` ; 
+`scipy` ; 
+`pandas` ; 
+`h5py` . 
+
+
+### Generate random data
 The c-lasso package includes
 the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
 
 ```python
-n,d,d_nonzero,k,sigma =100,100,5,1,0.5
-(X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True)
+m,d,d_nonzero,k,sigma =100,100,5,1,0.5
+(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
 ```
-This code snippet generates a problem instance with sparse &beta; in dimension
+This code snippet generates a problem instance with sparse $\beta$ in dimension
 d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples generated from an i.i.d standard normal
 distribution. The dimension of the constraint matrix C is d x k matrix. The noise level is $\sigma$=0.5. 
 The input ```zerosum=True``` implies that C is the all-ones vector and $C\beta=0$. The n-dimensional outcome vector y
 and the regression vector $\beta$ is then generated to satisfy the given constraints. 
 
-#### Define the problem
-Next we can define a default c-lasso problem instance with the generated data:
+### Use of c-lasso on the data
+
+Here is an example of problem instance one can create with those set of data. 
 
 ```python
-problem = classo_problem(X,y,C) 
-```
+# let's define a c-lasso problem instance with default setting
+problem  = classo_problem(X,y,C)
 
-#### Solve the optimization problem
-One can solve the corresponding c-lasso problem instance using
 
-```python
+# let's change the formulation of the problem
+problem.formulation.huber  = True
+problem.formulation.concomitant = False
+problem.formulation.rho = 1.5
+
+
+# let's add a computation of beta for a fixed lambda 
+problem.model_selection.LAMfixed = True
+# and set it to to 0.1*lambdamax
+problem.model_selection.LAMfixedparameters.rescaled_lam = True
+problem.model_selection.LAMfixedparameters.lam = 0.1
+
+# let's add a computation of the lambda-path
+problem.model_selection.PATH = True
+
+
+# let's solve our problem instance
 problem.solve()
 ```
 
-#### Vizualise the result 
-After completion, the results of the optimization and model selection routines 
-can be visualized using
+Here, we have modified the [formulation](##formulations) of the problem in order to use [**R2**](###**R2**-contrained-sparse-Huber-regression), with $\rho=1.5$. 
+
+Then we have chosen the [model selections](##model-selections) we want to compute : 
+  - [Fixed Lambda](###fixed-lambda) with $\lambda = 0.1\lambda_{\max}$ 
+  - [Path computation](###path-computation) with default $\lambda$-set, which is a logarithmic grid in $[10^{-2}\lambda_{\max},\lambda_{\max}]$
+  - [Stability Selection](###stability-selection) with "q-first" method as it is in the problem instance by default.
+
+Finally, those problems are solved using the method `solve` which computes everything. 
+
+### Solve the optimization problem
+One can solve the corresponding c-lasso problem instance using the method solve. 
+
+### Visualize the result 
+
+One can, before or after having solve the problem, plot the main caracteristics of the problem solved and of its solution: 
 
 ```python
-print(problem.solution)
+>>> # let's visualize the main parameters set in the problem instance
+>>> problem
+
+FORMULATION: R2
+ 
+MODEL SELECTION COMPUTED:  
+     Lambda fixed
+     Path
+     Stability selection
+ 
+LAMBDA FIXED PARAMETERS: 
+     numerical_method = DR
+     rescaled lam : True
+     threshold = 0.177
+     lam = 0.1
+     theoretical_lam = 0.1994
+ 
+PATH PARAMETERS: 
+     numerical_method : Path-Alg
+     Npath = 40
+     lamin = 0.013
+     lamax = 1.0
+ 
+STABILITY SELECTION PARAMETERS: 
+     numerical_method : Path-Alg
+     method : first
+     B = 50
+     q = 10
+     percent_nS = 0.5
+     threshold = 0.7
+     lamin = 0.01
+     Nlam = 50
+
+>>> # let's the solutions found
+>>> problem.solution
+
+ LAMBDA FIXED : 
+   Selected variables :  43    47    74    79    84    
+   Running time :  0.094s
+
+ PATH COMPUTATION : 
+   Running time :  0.221s
+
+ STABILITY SELECTION : 
+   Selected variables :  43    47    74    79    84    
+   Running time :  2.468s
+
 ```
 
-The command shows the running time(s) for the c-lasso problem instance, and the selected variables for sability selection
+The latter command will also plot those graphics : 
 
+![Caption for LAM-Beta](figures/figure1.png)
+
+![Caption for Path](figures/figure2.png)
+
+![Caption for StabSel](figures/figure3.png)
+
+![Caption for StabSel-Path](figures/figure4.png)
+
+![Caption for StabSel-beta](figures/figure5.png)
+
+
+As this variable selection has been computed for generated data, one can plot the real relevant variables :
+
+```python
+>>> import numpy
+>>> print( list(numpy.nonzero(sol)) )
+[43, 47, 74, 79, 84]
 ```
-SELECTED VARIABLES : 
-16
-44
-65
-90
-93
-Running time : 
-Running time for Path computation    : 'not computed'
-Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 1.561s
-Running time for Fixed LAM           : 'not computed'
-```
 
-Here, we only used stability selection as *default* model selection strategy. 
-The command also allows you to inspect the computed stability profile for all variables 
-at the theoretical $\lambda$
+It is indeed the variables that have been selected with the solution threshold for a fixed lambda, and with stability selection.
 
-![1.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/example1/StabSel.png)
-
-and the entire $\lambda$ path (as we have used the path algorithm for optimization). We can see that stability selection
-can identify the five true non-zero entries in the $\beta$ vector
-
-![StabSel-path](https://github.com/Leo-Simpson/Figures/blob/master/example1/StabSel-path.png)
-
-
-The refitted $\beta$ values on the selected support are also displayed in the next plot
-
-![beta](https://github.com/Leo-Simpson/Figures/blob/master/example1/StabSel-beta.png)
-
-
-
-
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Figures
-
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
 
 
 # Acknowledgements
@@ -281,3 +357,6 @@ and referenced from text using \autoref{fig:example}.
 We acknowledge ... 
 
 # References
+
+
+
