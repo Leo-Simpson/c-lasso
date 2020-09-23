@@ -66,7 +66,7 @@ The objective function combines Least-Squares for model fitting with $L_1$ penal
 
 - ***R2* Contrained sparse Huber regression**: 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
-for robust model fitting with $L_1$ and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default.
+for robust model fitting with $L_1$ and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Aigner:1976]
 
 - ***R3* Contrained scaled Lasso regression**: 
 This formulation is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
@@ -78,10 +78,10 @@ This formulation combines *R2* and *R3* to allow robust joint estimation of the 
 the scale $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
 
 - ***C1* Contrained sparse classification with Square Hinge loss**: 
-This formulation is similar to *R1* but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation.
+This formulation is similar to *R1* but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
 
 - ***C2* Contrained sparse classification with Huberized Square Hinge loss**:        
-This formulation is similar to *C1* but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation.
+This formulation is similar to *C1* but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2017].
 
 ## Optimization schemes
 
@@ -172,7 +172,7 @@ problem.solve() # solve our optimization problem
 ```
 
 
-Here, we have modified the [formulation](##formulations) of the problem in order to use [*R2*](###*R2*-contrained-sparse-Huber-regression), with $\rho=1.5$. 
+Here, we have modified the [formulation](##formulations) of the problem in order to use *R2*, with $\rho=1.5$. 
 We have chosen the following [model selections](##model-selections) : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
 Then, those problems are solved using the method ```solve()``` which computes everything. 
 
