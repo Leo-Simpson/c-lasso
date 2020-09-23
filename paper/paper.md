@@ -228,28 +228,13 @@ Here, we have modified the [formulation](##formulations) of the problem in order
 We have chosen the following [model selections](##model-selections) : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
 Then, those problems are solved using the method ```solve()``` which computes everything. 
 
-Finally, one can visualize the solutions and see the running time, and the name of the selected variables. Note that by plotting directly the instance ```problem``` one could also visualize the main parameters of the optimization problems one is solving.   
-
-```python
->>> problem.solution
-
- LAMBDA FIXED : 
-   Selected variables :  43    47    74    79    84    
-   Running time :  0.094s
-
- PATH COMPUTATION : 
-   Running time :  0.221s
-
- STABILITY SELECTION : 
-   Selected variables :  43    47    74    79    84    
-   Running time :  2.468s
-```
-
+Finally, one can visualize the solutions and see the running time, and the name of the selected variables by calling the instance ```problem.solution```. Note that by calling directly the instance ```problem``` one could also visualize the main parameters of the optimization problems one is solving.  
+In our case, the running time is in the order of 0.1sec for the fixed lambda and path computation, but between 2sec and 4sec for the stability selection computation.  
 
 
 ![Graphics plotted after calling ```problem.solution``` ](figures/figure-concat.png)
 
-Let's note that here, the models have recovered the right variables.
+As a conclusion of this example, the models have recovered the right variables, which is comforting, but not surprising as the noise was relatively low and the number of variable in this example is still affordable. 
 
 
 # Acknowledgements
