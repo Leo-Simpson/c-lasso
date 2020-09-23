@@ -54,13 +54,16 @@ Depending on the prior on the solution $\beta, \sigma$ and on the noise $\epsilo
 Our package can solve six of those : four regression-type and two classification-type formulations.
 
 
-- *R1* Standard constrained Lasso regression:             
-$\arg \min_{\beta \in \mathbb{R}^d} \left\lVert X\beta - y \right\rVert^2 + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0$
+### *R1* Standard constrained Lasso regression:             
+
+$$
+    \arg \min_{\beta \in \mathbb{R}^d} \left\lVert X\beta - y \right\rVert^2 + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+$$
 
 This is the standard Lasso problem with linear equality constraints on the $\beta$ vector. 
 The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
 
-- *R2* Contrained sparse Huber regression:                   
+### *R2* Contrained sparse Huber regression:                   
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} h_{\rho} (X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -69,7 +72,7 @@ $$
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
 for robust model fitting with l1 and linear equality constraints on the $\beta$ vector. The parameter $\rho=1.345$.
 
-- *R3* Contrained scaled Lasso regression: 
+### *R3* Contrained scaled Lasso regression: 
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -81,7 +84,7 @@ This formulation is similar to *R1* but allows for joint estimation of the (cons
 the standard deviation $\sigma$ in a concomitant fashion (see [@Combettes:2020.1; @Combettes:2020.2] for further info).
 This is the default problem formulation in c-lasso.
 
-- *R4* Contrained sparse Huber regression with concomitant scale estimation:        
+### *R4* Contrained sparse Huber regression with concomitant scale estimation:        
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -91,7 +94,7 @@ $$
 This formulation combines *R2* and *R3* to allow robust joint estimation of the (constrained) $\beta$ vector and 
 the scale $\sigma$ in a concomitant fashion (see [@Combettes:2020.1; @Combettes:2020.2] for further info).
 
-- *C1* Contrained sparse classification with Square Hinge loss: 
+### *C1* Contrained sparse classification with Square Hinge loss: 
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} L(y^T X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -106,7 +109,7 @@ $$
 
 This formulation is similar to *R1* but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation.
 
-- *C2* Contrained sparse classification with Huberized Square Hinge loss:        
+### *C2* Contrained sparse classification with Huberized Square Hinge loss:        
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} L_{\rho}(y^T X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -243,7 +246,7 @@ problem.model_selection.PATH = True
 problem.solve()
 ```
 
-Here, we have modified the [formulation](##formulations) of the problem in order to use [*R2*](##formulations), with $\rho=1.5$. 
+Here, we have modified the [formulation](##formulations) of the problem in order to use [*R2*](###*R2*-contrained-sparse-Huber-regression), with $\rho=1.5$. 
 
 Then we have chosen the [model selections](##model-selections) we want to compute : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
 
