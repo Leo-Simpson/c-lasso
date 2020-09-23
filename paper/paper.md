@@ -53,77 +53,35 @@ Depending on the prior on the solution $\beta, \sigma$ and on the noise $\epsilo
 
 Our package can solve six of those : four regression-type and two classification-type formulations.
 
-
-### *R1* Standard constrained Lasso regression:             
+Those are all variants of the standard formulation "*R1*" : 
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \left\lVert X\beta - y \right\rVert^2 + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
+
+- ***R1* Standard constrained Lasso regression**: 
 This is the standard Lasso problem with linear equality constraints on the $\beta$ vector. 
-The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
+The objective function combines Least-Squares for model fitting with $L_1$ penalty for sparsity.   
 
-### *R2* Contrained sparse Huber regression:                   
-
-$$
-    \arg \min_{\beta \in \mathbb{R}^d} h_{\rho} (X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
-$$
-
+- ***R2* Contrained sparse Huber regression**: 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
-for robust model fitting with l1 and linear equality constraints on the $\beta$ vector. The parameter $\rho=1.345$.
+for robust model fitting with $L_1$ and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default.
 
-### *R3* Contrained scaled Lasso regression: 
-
-$$
-    \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
-$$
-
-
-
+- ***R3* Contrained scaled Lasso regression**: 
 This formulation is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
-the standard deviation $\sigma$ in a concomitant fashion (see [@Combettes:2020.1; @Combettes:2020.2] for further info).
+the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
 This is the default problem formulation in c-lasso.
 
-### *R4* Contrained sparse Huber regression with concomitant scale estimation:        
-
-$$
-    \arg \min_{\beta \in \mathbb{R}^d} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
-$$
-
-
+- ***R4* Contrained sparse Huber regression with concomitant scale estimation**: 
 This formulation combines *R2* and *R3* to allow robust joint estimation of the (constrained) $\beta$ vector and 
-the scale $\sigma$ in a concomitant fashion (see [@Combettes:2020.1; @Combettes:2020.2] for further info).
+the scale $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
 
-### *C1* Contrained sparse classification with Square Hinge loss: 
-
-$$
-    \arg \min_{\beta \in \mathbb{R}^d} L(y^T X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
-$$
-
-where $L \left((r_1,...,r_n)^T \right) := \sum_{i=1}^n l(r_i)$ and $l$ is defined as :
-
-$$
-l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}
-$$
-
-
+- ***C1* Contrained sparse classification with Square Hinge loss**: 
 This formulation is similar to *R1* but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation.
 
-### *C2* Contrained sparse classification with Huberized Square Hinge loss:        
-
-$$
-    \arg \min_{\beta \in \mathbb{R}^d} L_{\rho}(y^T X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
-$$
-
-where $L_{\rho} \left((r_1,...,r_n)^T \right) := \sum_{i=1}^n l_{\rho}(r_i)$ and $l_{\rho}$ is defined as :
-
-$$
-l_{\rho}(r) = \begin{cases} (1-r)^2 &if \quad \rho \leq r \leq 1 \\ (1-\rho)(1+\rho-2r) & if \quad r \leq \rho \\ 0 &if \quad r \geq 1 \end{cases}
-$$
-
+- ***C2* Contrained sparse classification with Huberized Square Hinge loss**:        
 This formulation is similar to *C1* but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation.
-
-
 
 ## Optimization schemes
 
