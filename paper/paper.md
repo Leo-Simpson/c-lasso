@@ -26,7 +26,6 @@ bibliography: paper.bib
 ---
 
 # Summary
-
 c-lasso is a Python package that enables sparse and robust linear
 regression and classification with linear equality constraints. 
 
@@ -47,8 +46,6 @@ $$
 
 
 ### Formulations
-
-
 - ***R1* Standard constrained Lasso regression**: 
 This is the standard Lasso problem with linear equality constraints on the $\beta$ vector. 
 The objective function combines Least-Squares for model fitting with $L_1$ penalty for sparsity.   
@@ -74,7 +71,6 @@ This formulation is similar to *C1* but uses the Huberized Square Hinge loss for
 
 
 ### Model selections
-
 Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. 
 
 - *Fixed Lambda* : This approach is simply letting the user choose the parameter $\lambda$, or to choose $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
@@ -91,15 +87,12 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 
 
 # Statement of need 
-
 The package handles several estimators for inferring location and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimation with linear equality constraints Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems. We also include two model selection strategies for determining the sparsity of the model parameters: k-fold cross-validation and stability selection. This package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
 
 
 
 
 # Basic workflow
-
-
 Here is a basic example that shows how to run c-lasso on synthetic data.
 
 c-lasso is available on pip, one can install it using ```pip install c_lasso```. Then on python, to import the package, one should use ```import classo```
