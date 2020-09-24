@@ -83,41 +83,6 @@ This formulation is similar to *R1* but adapted for classification tasks using t
 - ***C2* Contrained sparse classification with Huberized Square Hinge loss**:        
 This formulation is similar to *C1* but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007].
 
-## Optimization schemes
-
-The available problem formulations *R1-C2* require different algorithmic strategies for 
-efficiently solving the underlying optimization problem. We have implemented four 
-algorithms (with provable convergence guarantees) that vary in generality and are not 
-necessarily applicable to all problems. For each problem type, c-lasso has a default algorithm 
-setting that proved to be the fastest in our numerical experiments.
-
-- **Path algorithms (*Path-Alg*)** : 
-This is the default algorithm for non-concomitant problems *R1,R2,C1,C2*. 
-The algorithm uses the fact that the solution path along &lambda; is piecewise-affine (as shown, e.g., in [@Gaines:2018]). When Least-Squares is used as objective function, we derive a novel efficient procedure that allows us to also derive the solution for the concomitant problem *R3* along the path with little extra computational overhead.
-
-- **Projected primal-dual splitting method (*P-PDS*)** : 
-This algorithm is derived from [@Briceno:2020] and belongs to the class of 
-proximal splitting algorithms. It extends the classical Forward-Backward (FB) 
-(aka proximal gradient descent) algorithm to handle an additional linear equality constraint
-via projection. In the absence of a linear constraint, the method reduces to FB.
-This method can solve problem *R1*. For the Huber problem *R2*, 
-P-PDS can solve the mean-shift formulation of the problem  [@Mishra:2019].
-
-- **Projection-free primal-dual splitting method (*PF-PDS*)** :
-This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
-proximal splitting algorithms. The algorithm does not require projection operators 
-which may be beneficial when C has a more complex structure. In the absence of a linear constraint, 
-the method reduces to the Forward-Backward-Forward scheme. This method can solve problem *R1*. 
-For the Huber problem *R2*, PF-PDS can solve the mean-shift formulation of the problem [@Mishra:2019].
-
-- **Douglas-Rachford-type splitting method (*DR*)** : 
-This algorithm is the most general algorithm and can solve all regression problems 
-*R1-R4*. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
-It makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020.1; @Combettes:2020.2].
-The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem 
-with the mean shift [@Mishra:2019] and thus solved in (n + d) dimensions. 
-
-
 ## Model selections
 
 Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. 
@@ -150,7 +115,7 @@ the routine ```random_data``` included in the c-lasso package, that allows you t
 >>> list(numpy.nonzero(sol))
 [43, 47, 74, 79, 84]
 ```
-This code snippet generates the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ , $C \in R^{k\times d}$ (here it is actually all-one vector because of the input ```zerosum```), and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N(0,\sigma)$ and $\beta$ has only d_nonzero non-null componant (which are plot exmplicetly above).
+This code snippet generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ , $C \in R^{k\times d}$ (here it is the all-one vector instead because of the input ```zerosum```), and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N(0,I_n\sigma^2)$ and $\beta$ has only d_nonzero non-null componant (which are plot above).
 
 
 Then, let us define a ```classo_problem``` instance with the generated dataset in order to formulate the optimization problem we want to solve. 
@@ -183,7 +148,7 @@ Finally, one can visualize the solutions and see the running time, and the name 
 
 ![Graphics plotted after calling ```problem.solution``` ](figures/figure-concat.png)
 
-Let us that the models have recovered the right variables and the computation have been done quickly, which is comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
+Let us remark that the models have recovered the right variables and the computation have been done quickly, which is comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
 
 
 # Acknowledgements

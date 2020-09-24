@@ -61,7 +61,8 @@ $$
 $$
 
 This is the standard Lasso problem with linear equality constraints on the $\beta$ vector. 
-The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
+The objective function combines Least-Squares for model fitting with $L_1$ penalty for sparsity.   
+ 
 
 ### *R2* Contrained sparse Huber regression:                   
 
@@ -70,7 +71,7 @@ $$
 $$
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
-for robust model fitting with l1 and linear equality constraints on the $\beta$ vector. The parameter $\rho=1.345$.
+for robust model fitting with $L_1$ and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Aigner:1976]
 
 ### *R3* Contrained scaled Lasso regression: 
 
@@ -81,7 +82,7 @@ $$
 
 
 This formulation is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
-the standard deviation $\sigma$ in a concomitant fashion (see [@Combettes:2020.1; @Combettes:2020.2] for further info).
+the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
 This is the default problem formulation in c-lasso.
 
 ### *R4* Contrained sparse Huber regression with concomitant scale estimation:        
@@ -90,9 +91,8 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-
 This formulation combines *R2* and *R3* to allow robust joint estimation of the (constrained) $\beta$ vector and 
-the scale $\sigma$ in a concomitant fashion (see [@Combettes:2020.1; @Combettes:2020.2] for further info).
+the scale $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
 
 ### *C1* Contrained sparse classification with Square Hinge loss: 
 
@@ -106,8 +106,7 @@ $$
 l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-
-This formulation is similar to *R1* but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation.
+This formulation is similar to *R1* but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
 
 ### *C2* Contrained sparse classification with Huberized Square Hinge loss:        
 
@@ -121,7 +120,8 @@ $$
 l_{\rho}(r) = \begin{cases} (1-r)^2 &if \quad \rho \leq r \leq 1 \\ (1-\rho)(1+\rho-2r) & if \quad r \leq \rho \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-This formulation is similar to *C1* but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation.
+This formulation is similar to *C1* but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007].
+
 
 
 
@@ -143,22 +143,21 @@ proximal splitting algorithms. It extends the classical Forward-Backward (FB)
 (aka proximal gradient descent) algorithm to handle an additional linear equality constraint
 via projection. In the absence of a linear constraint, the method reduces to FB.
 This method can solve problem *R1*. For the Huber problem *R2*, 
-P-PDS can solve the mean-shift formulation of the problem (see [@Mishra:2019]).
+P-PDS can solve the mean-shift formulation of the problem  [@Mishra:2019].
 
 - **Projection-free primal-dual splitting method (*PF-PDS*)** :
 This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
 proximal splitting algorithms. The algorithm does not require projection operators 
 which may be beneficial when C has a more complex structure. In the absence of a linear constraint, 
 the method reduces to the Forward-Backward-Forward scheme. This method can solve problem *R1*. 
-For the Huber problem *R2*, PF-PDS can solve the mean-shift formulation of the problem (see [@Mishra:2019]).
+For the Huber problem *R2*, PF-PDS can solve the mean-shift formulation of the problem [@Mishra:2019].
 
 - **Douglas-Rachford-type splitting method (*DR*)** : 
 This algorithm is the most general algorithm and can solve all regression problems 
 *R1-R4*. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
-It makes use of the proximity operators of the perspective of the LS objective (see [@Combettes:2020.1; @Combettes:2020.2])
+It makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020.1; @Combettes:2020.2].
 The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem 
-with the mean shift (see [@Mishra:2019]) and thus solved in (n + d) dimensions. 
-
+with the mean shift [@Mishra:2019] and thus solved in (n + d) dimensions.
 
 ## Model selections
 
@@ -171,9 +170,9 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 
 [comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts : starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
 
-- *Cross Validation* : Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" (see [@Hastie:2009]).
+- *Cross Validation* : Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" [@Hastie:2009].
 
-- *Stability Selection* : Another variable selection model than can be used is stability selection (see [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
+- *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
 
 # Basic workflow
 
@@ -209,14 +208,10 @@ The c-lasso package includes
 the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
 
 ```python
-m,d,d_nonzero,k,sigma =100,100,5,1,0.5
-(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
+n,d,d_nonzero,k,sigma =100,100,5,1,0.5
+(X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
 ```
-This code snippet generates a problem instance with sparse $\beta$ in dimension
-d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples generated from an i.i.d standard normal
-distribution. The dimension of the constraint matrix C is d x k matrix. The noise level is $\sigma$=0.5. 
-The input ```zerosum=True``` implies that C is the all-ones vector and $C\beta=0$. The n-dimensional outcome vector y
-and the regression vector $\beta$ is then generated to satisfy the given constraints. 
+This code snippet generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ , $C \in R^{k\times d}$ (here it is the all-one vector instead because of the input ```zerosum```), and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N(0,I_n\sigma^2)$ and $\beta$ has only d_nonzero non-null componant.
 
 #### Use of c-lasso on the data
 Here is an example of problem instance one can create with those set of data. 
@@ -294,14 +289,14 @@ STABILITY SELECTION PARAMETERS:
 
  LAMBDA FIXED : 
    Selected variables :  43    47    74    79    84    
-   Running time :  0.094s
+   Running time :  0.094 s
 
  PATH COMPUTATION : 
-   Running time :  0.221s
+   Running time :  0.221 s
 
  STABILITY SELECTION : 
    Selected variables :  43    47    74    79    84    
-   Running time :  2.468s
+   Running time :  2.468 s
 
 ```
 
@@ -312,7 +307,6 @@ STABILITY SELECTION PARAMETERS:
 As this variable selection has been computed for generated data, one can plot the real relevant variables :
 
 ```python
->>> import numpy
 >>> print( list(numpy.nonzero(sol)) )
 [43, 47, 74, 79, 84]
 ```
@@ -323,7 +317,7 @@ It is indeed the variables that have been selected with the solution threshold f
 
 # Acknowledgements
 
-We acknowledge ... 
+This work was supported by the Flatiron Institute and the Helmholtz Zentrum Munchen. 
 
 # References
 
