@@ -188,6 +188,6 @@ Let us that the models have recovered the right variables and the computation ha
 
 # Acknowledgements
 
-We acknowledge ... 
+This work was supported by the Flatiron Institute and the Helmholtz Zentrum Munchen. 
 
 # References
