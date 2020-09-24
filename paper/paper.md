@@ -140,7 +140,7 @@ Finally, one can visualize the solutions and see the running time, and the name 
 
 ![Graphics plotted after calling ```problem.solution``` ](figures/figure-concat.png)
 
-Let us remark that the models have recovered the right variables and the computation have been done quickly, which is comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
+
 
 
 # References

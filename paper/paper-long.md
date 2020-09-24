@@ -311,7 +311,9 @@ As this variable selection has been computed for generated data, one can plot th
 [43, 47, 74, 79, 84]
 ```
 
-It is indeed the variables that have been selected with the solution threshold for a fixed lambda, and with stability selection.
+It is indeed the variables that have been selected with the solution threshold for a fixed lambda, and with stability selection. Let us also note that the running time is still very low in our example. 
+
+Those remarks are comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
 
 
 
