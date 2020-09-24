@@ -27,7 +27,7 @@ bibliography: paper.bib
 
 # Summary
 
-This article illustrates c-lasso, a Python package that enables sparse and robust linear
+c-lasso is a Python package that enables sparse and robust linear
 regression and classification with linear equality constraints. 
 
 
@@ -37,27 +37,16 @@ $$
 y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
 $$
 
-Here, $X$ and $y$ are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). $C$ is a general constraint matrix. The vector $\beta$ comprises the unknown coefficients and $\sigma$ an unknown scale.
+Here, $X$ and $y$ are given outcome and predictor data. The vector $y$ can be continuous (for regression) or binary (for classification). $C$ is a general constraint matrix. The vector $\beta$ comprises the unknown coefficients $\epsilon$ an unknown noise and $\sigma$ an unknown scale.
 
-
-# Statement of need 
-
-The package handles several estimators for inferring location and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimation with linear equality constraints Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems. We also include two model selection strategies for determining the sparsity of the model parameters: k-fold cross-validation and stability selection. This package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
-
-
-# Current functionalities
-
-## Formulations 
-
-Depending on the prior on the solution $\beta, \sigma$ and on the noise $\epsilon$, the previous forward model can lead to different types of estimation problems. 
-
-Our package can solve six of those : four regression-type and two classification-type formulations.
-
-Those are all variants of the standard formulation "*R1*" : 
+Depending on the prior we assume on those unknown variables, this forward model can lead to different types of estimation. Our package can solve six of those : four regression-type and two classification-type formulations. Those are all variants of the standard formulation "*R1*" : 
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \left\lVert X\beta - y \right\rVert^2 + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
+
+
+### Formulations
 
 
 - ***R1* Standard constrained Lasso regression**: 
@@ -83,7 +72,8 @@ This formulation is similar to *R1* but adapted for classification tasks using t
 - ***C2* Contrained sparse classification with Huberized Square Hinge loss**:        
 This formulation is similar to *C1* but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007].
 
-## Model selections
+
+### Model selections
 
 Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. 
 
@@ -97,6 +87,15 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 - *Cross Validation* : Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" [@Hastie:2009].
 
 - *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
+
+
+
+# Statement of need 
+
+The package handles several estimators for inferring location and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimation with linear equality constraints Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems. We also include two model selection strategies for determining the sparsity of the model parameters: k-fold cross-validation and stability selection. This package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
+
+
+
 
 # Basic workflow
 
@@ -139,8 +138,8 @@ Then, let us define a ```classo_problem``` instance with the generated dataset i
 ```
 
 
-Here, we have modified the [formulation](##formulations) of the problem in order to use *R2*, with $\rho=1.5$. 
-We have chosen the following [model selections](##model-selections) : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
+Here, we have modified the [formulation](###formulations) of the problem in order to use *R2*, with $\rho=1.5$. 
+We have chosen the following [model selections](###model-selections) : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
 Then, those problems are solved using the recommanded optimization scheme on each model according to the formulation and the size of the parameter $\lambda$
 
 Finally, one can visualize the solutions and see the running time, and the name of the selected variables by calling the instance ```problem.solution```. Note that by calling directly the instance ```problem``` one could also visualize the main parameters of the optimization problems one is solving. In our case, the running time is in the order of 0.1sec for the fixed lambda and path computation, but vary from 2sec to 4sec for the stability selection computation.  
