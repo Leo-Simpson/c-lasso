@@ -37,7 +37,7 @@ $$
 y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
 $$
 
-Here, $X$ and $y$ are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). $C$ is a general constraint matrix. The vector $\beta$ comprises the unknown coefficients and $\sigma$ an unknown scale. The typical use case is logarithmic regression with compositional data, that impose the constraint $\sum_{i=1}^d \beta_i = 0$, hence $C = \mathbb{1}_d^T$.
+Here, $X$ and $y$ are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). $C$ is a general constraint matrix. The vector $\beta$ comprises the unknown coefficients and $\sigma$ an unknown scale. The typical use case is logarithmic regression with compositional data, that impose the constraint $\sum_{i=1}^d \beta_i = 0$, hence $C = \mathbb{1}_d^T$ [@Aitchison:1984].
 
 # Statement of need 
 
@@ -122,7 +122,7 @@ $$
 
 
 This formulation is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
-the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
+the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
 This is the default problem formulation in c-lasso.
 
 ```python
@@ -139,7 +139,7 @@ $$
 $$
 
 This formulation combines *R2* and *R3* to allow robust joint estimation of the (constrained) $\beta$ vector and 
-the scale $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
+the scale $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
 
 ```python
 # formulation R4
@@ -252,7 +252,7 @@ problem.model_selection.StabSel = False
 
 
 - *Fixed Lambda* : This approach is simply letting the user choose the parameter $\lambda$, or to choose $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
-The default value is a scale-dependent tuning parameter that has been proposed in [Combettes:2020.2] and derived in [@Shi:2016].
+The default value is a scale-dependent tuning parameter that has been proposed in [Muller:2020] and derived in [@Shi:2016].
 
 - *Path Computation* :The package also leaves the possibility to us to compute the solution for a range of $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. It can be done using *Path-Alg* or warm-start with any other optimization scheme. 
 
@@ -261,7 +261,7 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 - *Cross Validation* : Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" [@Hastie:2009].
 
 
-- *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
+- *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Muller:2020].
 
 
 
