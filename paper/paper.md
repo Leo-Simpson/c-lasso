@@ -274,17 +274,17 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 The c-lasso package includes
 the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
 
-It generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ , $C \in R^{k\times d}$ (can also be the all-one vector with the input ```zerosum``` set to true), and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N(0,I_n\sigma^2)$ and $\beta$ has only d_nonzero non-null componant.
+[comment]: <> (It generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\times d}$, $C \in R^{k\times d}$ [can also be the all-one vector with the input ```zerosum``` set to true], and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N[0,I_n\sigma^2]$ and $\beta$ has only d_nonzero non-null componant. )
 
 
-
-Let us now use c-lasso with this dataset. 
+ It allows perform some functionality of the package on synthetic data as an example. 
 
 ```python
 from classo import classo_problem, random_data
 
 n,d,d_nonzero,k,sigma =100,100,5,1,0.5
 (X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
+print("Relevant variables  : {}".format(list(numpy.nonzero(sol)) ) )
 
 problem  = classo_problem(X,y,C)
 
@@ -298,78 +298,33 @@ problem.model_selection.LAMfixedparameters.rescaled_lam = True
 problem.model_selection.LAMfixedparameters.lam = 0.1
 
 problem.solve()
+
+print(problem.solution)
 ```
 
-Here, the [formulation](#formulations) used is [*R2*](#R2), with $\rho=1.5$. The [model selections](#model) used are *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ , *Path computation* and *Stability Selection* which is computed by default. 
+The [formulation](#formulations) used is [*R2*](#R2), with $\rho=1.5$. The [model selections](#model) used are *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ , *Path computation* and *Stability Selection* which is computed by default. 
 
-#### Output
-
+The output is then : 
 
 ```python
->>> # let's visualize the main parameters set in the problem instance
->>> problem
-
-FORMULATION: R2
- 
-MODEL SELECTION COMPUTED:  
-     Lambda fixed
-     Path
-     Stability selection
- 
-LAMBDA FIXED PARAMETERS: 
-     numerical_method = DR
-     rescaled lam : True
-     threshold = 0.177
-     lam = 0.1
-     theoretical_lam = 0.1994
- 
-PATH PARAMETERS: 
-     numerical_method : Path-Alg
-     Npath = 40
-     lamin = 0.013
-     lamax = 1.0
- 
-STABILITY SELECTION PARAMETERS: 
-     numerical_method : Path-Alg
-     method : first
-     B = 50
-     q = 10
-     percent_nS = 0.5
-     threshold = 0.7
-     lamin = 0.01
-     Nlam = 50
-
->>> # let's the solutions found
->>> problem.solution
+Relevant variables  : [43 47 74 79 84]
 
  LAMBDA FIXED : 
    Selected variables :  43    47    74    79    84    
-   Running time :  0.094 s
+   Running time :  0.294s
 
  PATH COMPUTATION : 
-   Running time :  0.221 s
+   Running time :  0.566s
 
  STABILITY SELECTION : 
    Selected variables :  43    47    74    79    84    
-   Running time :  2.468 s
-
+   Running time :  5.3s
 ```
 
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
 
-
-As this variable selection has been computed for generated data, one can plot the real relevant variables :
-
-```python
->>> print( list(numpy.nonzero(sol)) )
-[43, 47, 74, 79, 84]
-```
-
-It is indeed the variables that have been selected with the solution threshold for a fixed lambda, and with stability selection. Let us also note that the running time is still very low in our example. 
-
-Those remarks are comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
-
+It is indeed the variables that have been selected with the solution threshold for a fixed lambda, and with stability selection. Let us also note that the running time is still very low in our example. Those remarks are comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
 
 
 # Acknowledgements
