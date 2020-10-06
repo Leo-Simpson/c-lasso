@@ -169,7 +169,7 @@ problem.formulation.concomitant = False
 problem.formulation.classification = True
 ```
 
-### *C2* Contrained sparse classification with Huberized Square Hinge loss: {#C2}       
+- ***C2* Contrained sparse classification with Huberized Square Hinge loss** : {#C2}       
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} L_{\rho}(y^T X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -194,7 +194,19 @@ problem.formulation.classification = True
 
 ## Optimization schemes {#method}
 
-The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problem. We have implemented four algorithms (with provable convergence guarantees) that vary in generality and are not necessarily applicable to all problems. For Huber regression, in most of the cases, mean-shift formulation of the problem is used [@Mishra:2019]. For each problem type, c-lasso has a default algorithm setting that proved to be the fastest in our numerical experiments if one still want to specify the algorithm used the command is also provided. 
+The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problem. We have implemented four algorithms (with provable convergence guarantees) that vary in generality and are not necessarily applicable to all problems. For Huber regression, in most of the cases, mean-shift formulation of the problem is used [@Mishra:2019]. 
+
+
+|             |[Path-Alg](#Path-Alg)| [DR](#DR) | [P-PDS](#P-PDS) | [PF-PDS](#PF-PDS) |
+|-|:-:|:-:|:-:|:-:|
+| [*R1*](#R1) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
+| [*R2*](#R2) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
+| [*R3*](#R3) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ |  |   |
+| [*R4*](#R4) |   | recommanded |   |   |
+| [*C1*](#C1) | recommanded |   |   |   |
+| [*C2*](#C2) | recommanded |   |   |   |
+
+
 
 ### Path algorithms (*Path-Alg*) : {#Path-Alg}
 The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown, in [@Gaines:2018].
@@ -225,18 +237,6 @@ proximal splitting algorithms.
   problem.numerical_method = "PF-PDS"
   ```
 
-
-
-Here is a table of which algorithm can be used in each case thanks to adaptations of each algorithms. 
-
-|             |[Path-Alg](#Path-Alg)| [DR](#DR) | [P-PDS](#P-PDS) | [PF-PDS](#PF-PDS) |
-|-|:-:|:-:|:-:|:-:|
-| [*R1*](#R1) | x | x | x | x |
-| [*R2*](#R2) | x | x | x | x |
-| [*R3*](#R3) | x | x |   |   |
-| [*R4*](#R4) |   | x |   |   |
-| [*C1*](#C1) | x |   |   |   |
-| [*C2*](#C2) | x |   |   |   |
 
 
 
