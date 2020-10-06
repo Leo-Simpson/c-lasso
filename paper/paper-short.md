@@ -138,7 +138,7 @@ Then, those problems are solved using the recommanded optimization scheme on eac
 Finally, one can visualize the solutions and see the running time, and the name of the selected variables by calling the instance ```problem.solution```. Note that by calling directly the instance ```problem``` one could also visualize the main parameters of the optimization problems one is solving. In our case, the running time is in the order of 0.1sec for the fixed lambda and path computation, but vary from 2sec to 4sec for the stability selection computation.  
 
 
-![Graphics plotted after calling ```problem.solution``` ](figures/figure-concat.png)
+![Graphics plotted after calling ```problem.solution``` ](figures/_figure-concat.png)
 
 
 

@@ -26,7 +26,10 @@ class classo_problem:
         formulation (classo_formulation) : object containing the info about the formulation of the minimization problem we solve.
         model_selection (classo_model_selection) : object giving the parameters we need to do variable selection.
         solution (classo_solution) : object giving caracteristics of the solution of the model_selection that is asked.
-        Before using the method solve() , its componant are empty/null.
+            Before using the method solve() , its componant are empty/null.
+        numerical_method (str) : name of the numerical method that is used, it can be :
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
+            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
         
         '''
     def __init__(self, X, y, C=None,Tree = None, label=None, rescale=False):  # zero sum constraint by default, but it can be any matrix
@@ -34,6 +37,7 @@ class classo_problem:
         self.formulation = classo_formulation()
         self.model_selection = classo_model_selection()
         self.solution = classo_solution()
+        self.numerical_method = "not specified"
     
     
     # This method is the way to solve the model selections contained in the object model_selection, with the formulation of 'formulation' and the data.
@@ -71,11 +75,11 @@ class classo_problem:
 
         # Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
         if self.model_selection.PATH:
-            solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, label)
+            solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, self.numerical_method, label)
         
         # Compute the cross validation thanks to the class solution_CV which contains directely the computation in the initialisation
         if self.model_selection.CV:
-            solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation, label)
+            solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation, self.numerical_method, label)
     
         # Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
         if self.model_selection.StabSel:
@@ -83,14 +87,14 @@ class classo_problem:
             param.theoretical_lam = theoretical_lam(int(n * param.percent_nS), d)
             if not param.rescaled_lam : param.theoretical_lam = param.theoretical_lam*int(n * param.percent_nS)
             
-            solution.StabSel = solution_StabSel(matrices, param, self.formulation, label)
+            solution.StabSel = solution_StabSel(matrices, param, self.formulation, self.numerical_method, label)
         
         # Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
         if self.model_selection.LAMfixed:
             param = self.model_selection.LAMfixedparameters
             param.theoretical_lam = theoretical_lam(n, d)
             if not param.rescaled_lam: param.theoretical_lam = param.theoretical_lam*n
-            solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, label)
+            solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, self.numerical_method, label)
 
         self.solution = solution
     
@@ -238,21 +242,21 @@ class classo_model_selection:
         LAMfixedparameters (LAMparameters):  object parameters to compute the lasso for a fixed lambda
 
     '''
-    def __init__(self):
+    def __init__(self, method = "not specified"):
 
         # Model selection variables
 
         self.PATH = False
-        self.PATHparameters = PATHparameters()
+        self.PATHparameters = PATHparameters(method=method) 
 
         self.CV = False
-        self.CVparameters = CVparameters()
+        self.CVparameters = CVparameters(method=method)
 
         self.StabSel = True            # Only model selection that is used by default
-        self.StabSelparameters = StabSelparameters()
+        self.StabSelparameters = StabSelparameters(method=method)
 
         self.LAMfixed = False
-        self.LAMfixedparameters = LAMfixedparameters()
+        self.LAMfixedparameters = LAMfixedparameters(method=method)
 
     def __repr__(self):
         string = ''
@@ -269,7 +273,7 @@ class PATHparameters:
     Attributes:
         numerical_method (str) : name of the numerical method that is used, it can be :
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
-            Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
+            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
         n_active (int): if it is higher than 0, then the algo stop computing the path when n_active variables are actives. then the solution does not change from this point.
             Dafault value : 0
@@ -283,9 +287,9 @@ class PATHparameters:
         label (numpy.ndarray of str) : labels on each coefficients
     
     '''
-    def __init__(self):
+    def __init__(self, method="not specified"):
         self.formulation = 'not specified'
-        self.numerical_method = 'choose'
+        self.numerical_method = method
         self.n_active = 0
         lamin= 1e-2
         Nlam = 40
@@ -313,7 +317,7 @@ class CVparameters:
 
         numerical_method (str) : name of the numerical method that is used, can be :
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
-            Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
+            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
         lambdas (numpy.ndarray) : list of lambdas for computinf lasso-path for cross validation on lambda.
             Default value : None 
@@ -325,10 +329,10 @@ class CVparameters:
             Dafault value : 5
 
     '''
-    def __init__(self):
+    def __init__(self,method = "not specified"):
         self.seed = 0
         self.formulation = 'not specified'
-        self.numerical_method = 'choose'
+        self.numerical_method = method
 
         self.Nsubset = 5  # Number of subsets used
         self.Nlam = 80
@@ -355,7 +359,7 @@ class StabSelparameters:
 
         numerical_method (str) : name of the numerical method that is used, can be :
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
-            Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
+            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
         lam (float or str) : (only used if :obj:`method` = 'lam') lam for which the lasso should be computed.
             Default value : 'theoretical' which mean it will be equal to :obj:`theoretical_lam` once it is computed
@@ -394,10 +398,10 @@ class StabSelparameters:
             Default value : 0.4
 
     '''
-    def __init__(self):
+    def __init__(self, method="not specified"):
         self.seed = 123
         self.formulation = 'not specified'
-        self.numerical_method = 'choose'
+        self.numerical_method = method
 
         self.method = 'first'  # Can be 'first' ; 'max' or 'lam'
         self.B = 50
@@ -437,7 +441,7 @@ class LAMfixedparameters:
     Attributes:
         numerical_method (str) : name of the numerical method that is used, can be :
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
-            Default value : 'choose', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
+            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
         lam (float or str) : lam for which the lasso should be computed.
             Default value : 'theoretical' which mean it will be equal to :obj:`theoretical_lam` once it is computed
@@ -453,10 +457,10 @@ class LAMfixedparameters:
             If None, then it will be set to the average of the vector |beta|
             Default value : None
     '''
-    def __init__(self):
+    def __init__(self, method="not specified"):
         self.lam = 'theoretical'
         self.formulation = 'not specified'
-        self.numerical_method = 'choose'
+        self.numerical_method = method
         self.rescaled_lam = True
         self.theoretical_lam = 0.0
         self.threshold = None
@@ -522,11 +526,12 @@ class solution_PATH:
         time (float) : running time of this action
 
     '''
-    def __init__(self, matrices, param, formulation, label):
+    def __init__(self, matrices, param, formulation, numerical_method, label):
         t0 = time()
 
         # Formulation choosing
         if param.formulation == 'not specified': param.formulation = formulation
+        if param.numerical_method == "not specified" : param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
         rho = param.formulation.rho
         rho_classification = param.formulation.rho_classification
@@ -592,11 +597,12 @@ class solution_CV:
         time (float) : running time of this action
 
     '''
-    def __init__(self, matrices, param, formulation, label):
+    def __init__(self, matrices, param, formulation, numerical_method, label):
         t0 = time()
 
         # Formulation choosing
         if param.formulation == 'not specified': param.formulation = formulation
+        if param.numerical_method == "not specified" : param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
 
         rho = param.formulation.rho
@@ -683,11 +689,12 @@ class solution_StabSel:
         time (float) : running time of this action
 
     '''
-    def __init__(self, matrices, param, formulation, label):
+    def __init__(self, matrices, param, formulation, numerical_method, label):
         t0 = time()
 
         # Formulation choosing
         if param.formulation == 'not specified': param.formulation = formulation
+        if param.numerical_method == "not specified" : param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
 
         rho = param.formulation.rho
@@ -803,11 +810,12 @@ class solution_LAMfixed:
         time (float) : running time of this action
 
     '''
-    def __init__(self, matrices, param, formulation, label):
+    def __init__(self, matrices, param, formulation, numerical_method, label):
         t0 = time()
         self.formulation = formulation
         # Formulation choosing
         if param.formulation == 'not specified': param.formulation = formulation
+        if param.numerical_method == "not specified" : param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
 
         rho = param.formulation.rho
