@@ -196,6 +196,26 @@ problem.formulation.classification = True
 
 The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problem. We have implemented four algorithms (with provable convergence guarantees). Those algorithms originally exist for standard regression (formulation [*R1*](#R1)), but we have adapted it to different formulations when it was possible, for example, using the mean-shift formulation [@Mishra:2019] for Huber regression. 
 
+Here is a summary of which algorithm can be used for each problem : 
+
+|             |*Path-Alg*| *DR* | *P-PDS* | *PF-PDS* |
+|-|:-:|:-:|:-:|:-:|
+| [*R1*](#R1) | recommanded for high $\lambda$ and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
+| [*R2*](#R2) | recommanded for high $\lambda$  and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
+| [*R3*](#R3) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ |          |                   |
+| [*R4*](#R4) |                                                                    | recommanded (only option)                |          |   |
+| [*C1*](#C1) | recommanded (only option)                                                       |                                 |          |   |
+| [*C2*](#C2) | recommanded   (only option)                                                     |                                 |          |   |
+
+
+
+The python syntax to use an algorithm different than recommanded is the following : 
+```python
+problem.numerical_method = "Path-Alg" 
+# also works with "DR", "P-PDS" or "PF-PDS" 
+```
+
+
 - Path algorithms (*Path-Alg*) :
 The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown, in [@Gaines:2018].
 
@@ -209,30 +229,6 @@ This algorithm is based on Doulgas Rachford splitting in a higher-dimensional pr
 
 - Projection-free primal-dual splitting method (*PF-PDS*) : This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
 proximal splitting algorithms. 
-
-The python syntax to use an algorithm different than recommanded is the following : 
-```python
-problem.numerical_method = "Path-Alg" 
-# also works with "DR", "P-PDS" or "PF-PDS" 
-```
-
-
-
-
-Here is a summary of which algorithm can be used for each problem : 
-
-
-
-
-|             |*Path-Alg*| *DR* | *P-PDS* | *PF-PDS* |
-|-|:-:|:-:|:-:|:-:|
-| [*R1*](#R1) | recommanded for high $\lambda$ and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
-| [*R2*](#R2) | recommanded for high $\lambda$  and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
-| [*R3*](#R3) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ |          |                   |
-| [*R4*](#R4) |                                                                    | recommanded (only option)                |          |   |
-| [*C1*](#C1) | recommanded (only option)                                                       |                                 |          |   |
-| [*C2*](#C2) | recommanded   (only option)                                                     |                                 |          |   |
-
 
 
 
