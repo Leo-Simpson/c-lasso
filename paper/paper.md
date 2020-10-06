@@ -194,13 +194,20 @@ problem.formulation.classification = True
 
 ## Optimization schemes {#method}
 
-The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problem. We have implemented four algorithms (with provable convergence guarantees) that vary in generality and are not necessarily applicable to all problems. For Huber regression, in most of the cases, mean-shift formulation of the problem is used [@Mishra:2019]. 
+The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problem. We have implemented four algorithms (with provable convergence guarantees). Those algorithms originally exist for standard regression (formulation [*R1*](#R1)), but we have adapted it to different formulations when it was possible, for example, using the mean-shift formulation [@Mishra:2019] for Huber regression. 
+
+The python syntax to use an algorithm different than recommanded is the following : 
+```python
+problem.numerical_method = "Path-Alg" 
+# also works with "DR", "P-PDS" or "PF-PDS" 
+```
 
 
-|             |[Path-Alg](#Path-Alg)| [DR](#DR) | [P-PDS](#P-PDS) | [PF-PDS](#PF-PDS) |
+
+|             |[*Path-Alg*](#Path-Alg)| [*DR*](#DR) | [*P-PDS*](#P-PDS) | [*PF-PDS*](#PF-PDS) |
 |-|:-:|:-:|:-:|:-:|
-| [*R1*](#R1) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
-| [*R2*](#R2) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
+| [*R1*](#R1) | recommanded for high $\lambda$ and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
+| [*R2*](#R2) | recommanded for high $\lambda$  and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
 | [*R3*](#R3) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ |          |                   |
 | [*R4*](#R4) |                                                                    | recommanded (only option)                |          |   |
 | [*C1*](#C1) | recommanded (only option)                                                       |                                 |          |   |
@@ -208,34 +215,22 @@ The available problem formulations *R1-C2* require different algorithmic strateg
 
 
 
+
 ### Path algorithms (*Path-Alg*) : {#Path-Alg}
 The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown, in [@Gaines:2018].
 
-  ```python
-  problem.numerical_method = "Path-Alg"
-  ```
 
 ### Douglas-Rachford-type splitting method (*DR*) : {#DR}
-This algorithm is based on Doulgas Rachford splitting in a higher-dimensional product space. It makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020.1; @Combettes:2020.2].
+This algorithm is based on Doulgas Rachford splitting in a higher-dimensional product space [@Combettes:2020; @Muller:2020].
 
-  ```python
-  problem.numerical_method = "DR"
-  ```
 
 ### Projected primal-dual splitting method (*P-PDS*) : {#P-PDS}
 This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms. 
 
-  ```python
-  problem.numerical_method = "P-PDS"
-  ```
 
 ### Projection-free primal-dual splitting method (*PF-PDS*) : {#PF-PDS}
 This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
 proximal splitting algorithms. 
-
-  ```python
-  problem.numerical_method = "PF-PDS"
-  ```
 
 
 
@@ -245,28 +240,28 @@ proximal splitting algorithms.
 
 Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. When using the package, several of those model selection can be computed with the same problem-instance.
 
+The python syntax to use some specific model selection is the following
+```python
+# to perform Cross-Validation and Path computation :
+problem.model_selection.LAMfixed = False
+problem.model_selection.PATH = True
+problem.model_selection.CV = True
+problem.model_selection.StabSel = False
+# obviously any other combination also works
+```
+
+
 - *Fixed Lambda* : This approach is simply letting the user choose the parameter $\lambda$, or to choose $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
 The default value is a scale-dependent tuning parameter that has been proposed in [Combettes:2020.2] and derived in [@Shi:2016].
-  ```python
-  problem.model_selection.LAMfixed = True
-  ```
 
 - *Path Computation* :The package also leaves the possibility to us to compute the solution for a range of $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. It can be done using *Path-Alg* or warm-start with any other optimization scheme. 
-  ```python
-  problem.model_selection.PATH = True
-  ```
 
 [comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts : starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
 
 - *Cross Validation* : Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" [@Hastie:2009].
-  ```python
-  problem.model_selection.CV = True
-  ```
+
 
 - *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
-  ```python
-  problem.model_selection.StabSel = True
-  ```
 
 
 
