@@ -72,14 +72,14 @@ print(problem)
 print(problem.solution)
 ```
 
-## Formulations 
+## Formulations {#formulations}
 
 Depending on the prior on the solution $\beta, \sigma$ and on the noise $\epsilon$, the previous forward model can lead to different types of estimation problems. 
 
 Our package can solve six of those : four regression-type and two classification-type formulations. Here is an overview of those formulation, with a code snippet to see how to use those in the python. 
 
 
-#### *R1* Standard constrained Lasso regression:             
+### *R1* Standard constrained Lasso regression: {#R1}           
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \left\lVert X\beta - y \right\rVert^2 + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -97,7 +97,7 @@ problem.formulation.classification = False
 
  
 
-#### *R2* Contrained sparse Huber regression:                   
+### *R2* Contrained sparse Huber regression: {#R2}                  
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} h_{\rho} (X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -113,7 +113,7 @@ problem.formulation.concomitant = False
 problem.formulation.classification = False
 ```
 
-#### *R3* Contrained scaled Lasso regression: 
+### *R3* Contrained scaled Lasso regression: {#R3}
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -132,7 +132,7 @@ problem.formulation.concomitant = True
 problem.formulation.classification = False
 ```
 
-#### *R4* Contrained sparse Huber regression with concomitant scale estimation:        
+### *R4* Contrained sparse Huber regression with concomitant scale estimation: {#R4}       
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -148,7 +148,7 @@ problem.formulation.concomitant = True
 problem.formulation.classification = False
 ```
 
-#### *C1* Contrained sparse classification with Square Hinge loss: {#C1}
+### *C1* Contrained sparse classification with Square Hinge loss: {#C1}
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} L(y^T X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -169,7 +169,7 @@ problem.formulation.concomitant = False
 problem.formulation.classification = True
 ```
 
-#### *C2* Contrained sparse classification with Huberized Square Hinge loss: {#C2}       
+### *C2* Contrained sparse classification with Huberized Square Hinge loss: {#C2}       
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} L_{\rho}(y^T X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -192,25 +192,32 @@ problem.formulation.classification = True
 
 
 
-## Optimization schemes
+## Optimization schemes {#method}
 
 The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problem. We have implemented four algorithms (with provable convergence guarantees) that vary in generality and are not necessarily applicable to all problems. For Huber regression, in most of the cases, mean-shift formulation of the problem is used [@Mishra:2019]. For each problem type, c-lasso has a default algorithm setting that proved to be the fastest in our numerical experiments if one still want to specify the algorithm used the command is also provided. 
 
-#### Path algorithms (*Path-Alg*) : 
-The algorithm uses the fact that the solution path along &lambda; is piecewise-affine (as shown, e.g., in [@Gaines:2018]). When Least-Squares is used as objective function, we derive a novel efficient procedure that allows us to also derive the solution for the concomitant problem *R3* along the path with little extra computational overhead.
+### Path algorithms (*Path-Alg*) : {#Path-Alg}
+The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown, in [@Gaines:2018].
 
   ```python
   problem.numerical_method = "Path-Alg"
   ```
 
-#### Projected primal-dual splitting method (*P-PDS*) : 
+### Douglas-Rachford-type splitting method (*DR*) : {#DR}
+This algorithm is based on Doulgas Rachford splitting in a higher-dimensional product space. It makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020.1; @Combettes:2020.2].
+
+  ```python
+  problem.numerical_method = "DR"
+  ```
+
+### Projected primal-dual splitting method (*P-PDS*) : {#P-PDS}
 This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms. 
 
   ```python
   problem.numerical_method = "P-PDS"
   ```
 
-#### Projection-free primal-dual splitting method (*PF-PDS*) :
+### Projection-free primal-dual splitting method (*PF-PDS*) : {#PF-PDS}
 This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
 proximal splitting algorithms. 
 
@@ -218,26 +225,23 @@ proximal splitting algorithms.
   problem.numerical_method = "PF-PDS"
   ```
 
-#### Douglas-Rachford-type splitting method (*DR*) : 
-This algorithm is based on Doulgas Rachford splitting in a higher-dimensional product space. It makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020.1; @Combettes:2020.2].
 
-  ```python
-  problem.numerical_method = "DR"
-  ```
 
-|                    |[Path](####path-algorithms-(*Path-Alg*))| Path | Path|   Path   |
-|--------------------|:----------:|:--------------:|:-------------:|:---------------:|
-| [*R1*](####*R1*-standard-constrained-lasso-regression) |    x       |      x         |      x        |    x    |
-| [*R2*](###*R2*-contrained-sparse-Huber-regression)     |    x       |      x         |      x        |    x    |
-| [*R3*](###*R3*-contrained-scaled-lasso-regression)           |    x       |                |      x        |                 |
-| [*R4*](###*R4*-contrained-sparse-Huber-regression-with-concomitant-scale-estimation)           |    x       |                |               |                 |
-| [*C1*](#C1)            |    x       |                |               |                 |
-| [*C2*](#C2)             |    x       |                |      x        |                 |
+Here is a table of which algorithm can be used in each case thanks to adaptations of each algorithms. 
+
+|             |[Path-Alg](#Path-Alg)| [DR](#DR) | [P-PDS](#P-PDS) | [PF-PDS](#PF-PDS) |
+|-|:-:|:-:|:-:|:-:|
+| [*R1*](#R1) | x | x | x | x |
+| [*R2*](#R2) | x | x | x | x |
+| [*R3*](#R3) | x | x |   |   |
+| [*R4*](#R4) |   | x |   |   |
+| [*C1*](#C1) | x |   |   |   |
+| [*C2*](#C2) | x |   |   |   |
 
 
 
 
-## Model selections
+## Model selections {#model}
 
 Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. When using the package, several of those model selection can be computed with the same problem-instance.
 
@@ -307,9 +311,9 @@ problem.model_selection.PATH = True
 problem.solve()
 ```
 
-Here, we have modified the [formulation](##formulations) of the problem in order to use [*R2*](###*R2*-contrained-sparse-Huber-regression), with $\rho=1.5$. 
+Here, we have modified the [formulation](#formulations) of the problem in order to use [*R2*](#R2), with $\rho=1.5$. 
 
-Then we have chosen the [model selections](##model-selections) we want to compute : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
+Then we have chosen the [model selections](#model) we want to compute : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
 
 Finally, those problems are solved using the method `solve` which computes everything. 
 
