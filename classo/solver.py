@@ -157,7 +157,6 @@ class classo_data:
             self.X,self.y,self.C, self.label = X1.dot(A),y1,C1.dot(A), label2
             
        
-
 class classo_formulation:
     ''' Class containing the data of the problem
 

@@ -37,7 +37,7 @@ $$
 y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
 $$
 
-Here, $X$ and $y$ are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). $C$ is a general constraint matrix. The vector $\beta$ comprises the unknown coefficients and $\sigma$ an unknown scale. The typical use case is logarithmic regression with compositional data, that impose the constraint $\sum_{i=1}^d \beta_i = 0$, hence $C = \mathbb{1}_d^T$ [@Aitchison:1984].
+Here, $X$ and $y$ are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). $C$ is a general constraint matrix. The vector $\beta$ comprises the unknown coefficients and $\sigma$ an unknown scale. The typical use case is logarithmic regression with compositional data, that impose the constraint $\sum_{i=1}^d \beta_i = 0$, hence $C = 1_d^T$ [@Aitchison:1984].
 
 # Statement of need 
 
@@ -196,6 +196,20 @@ problem.formulation.classification = True
 
 The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problem. We have implemented four algorithms (with provable convergence guarantees). Those algorithms originally exist for standard regression (formulation [*R1*](#R1)), but we have adapted it to different formulations when it was possible, for example, using the mean-shift formulation [@Mishra:2019] for Huber regression. 
 
+- Path algorithms (*Path-Alg*) :
+The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown, in [@Gaines:2018].
+
+
+- Douglas-Rachford-type splitting method (*DR*) :
+This algorithm is based on Doulgas Rachford splitting in a higher-dimensional product space [@Combettes:2020; @Muller:2020].
+
+
+- Projected primal-dual splitting method (*P-PDS*) : This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms. 
+
+
+- Projection-free primal-dual splitting method (*PF-PDS*) : This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
+proximal splitting algorithms. 
+
 The python syntax to use an algorithm different than recommanded is the following : 
 ```python
 problem.numerical_method = "Path-Alg" 
@@ -204,7 +218,13 @@ problem.numerical_method = "Path-Alg"
 
 
 
-|             |[*Path-Alg*](#Path-Alg)| [*DR*](#DR) | [*P-PDS*](#P-PDS) | [*PF-PDS*](#PF-PDS) |
+
+Here is a summary of which algorithm can be used for each problem : 
+
+
+
+
+|             |*Path-Alg*| *DR* | *P-PDS* | *PF-PDS* |
 |-|:-:|:-:|:-:|:-:|
 | [*R1*](#R1) | recommanded for high $\lambda$ and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
 | [*R2*](#R2) | recommanded for high $\lambda$  and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
@@ -213,24 +233,6 @@ problem.numerical_method = "Path-Alg"
 | [*C1*](#C1) | recommanded (only option)                                                       |                                 |          |   |
 | [*C2*](#C2) | recommanded   (only option)                                                     |                                 |          |   |
 
-
-
-
-### Path algorithms (*Path-Alg*) : {#Path-Alg}
-The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown, in [@Gaines:2018].
-
-
-### Douglas-Rachford-type splitting method (*DR*) : {#DR}
-This algorithm is based on Doulgas Rachford splitting in a higher-dimensional product space [@Combettes:2020; @Muller:2020].
-
-
-### Projected primal-dual splitting method (*P-PDS*) : {#P-PDS}
-This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms. 
-
-
-### Projection-free primal-dual splitting method (*PF-PDS*) : {#PF-PDS}
-This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
-proximal splitting algorithms. 
 
 
 
@@ -268,41 +270,33 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 
 # Example on synthetic data
 
-#### Generate random data
+
 The c-lasso package includes
 the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
 
-```python
-n,d,d_nonzero,k,sigma =100,100,5,1,0.5
-(X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
-```
-This code snippet generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ , $C \in R^{k\times d}$ (here it is the all-one vector instead because of the input ```zerosum```), and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N(0,I_n\sigma^2)$ and $\beta$ has only d_nonzero non-null componant.
+It generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\times d}$ , $C \in R^{k\times d}$ (can also be the all-one vector with the input ```zerosum``` set to true), and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N(0,I_n\sigma^2)$ and $\beta$ has only d_nonzero non-null componant.
+
 
 
 Let us now use c-lasso with this dataset. 
 
 ```python
-# let's define a c-lasso problem instance with default setting
+from classo import classo_problem, random_data
+
+n,d,d_nonzero,k,sigma =100,100,5,1,0.5
+(X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True, seed = 123 )
+
 problem  = classo_problem(X,y,C)
 
-
-# let's change the formulation of the problem
 problem.formulation.huber  = True
 problem.formulation.concomitant = False
 problem.formulation.rho = 1.5
 
-
-# let's add a computation of beta for a fixed lambda 
 problem.model_selection.LAMfixed = True
-# and set it to to 0.1*lambdamax
+problem.model_selection.PATH = True
 problem.model_selection.LAMfixedparameters.rescaled_lam = True
 problem.model_selection.LAMfixedparameters.lam = 0.1
 
-# let's add a computation of the lambda-path
-problem.model_selection.PATH = True
-
-
-# let's solve our problem instance
 problem.solve()
 ```
 
