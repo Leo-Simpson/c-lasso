@@ -44,7 +44,7 @@ Here, $X$ and $y$ are given outcome and predictor data. The vector y can be cont
 The package handles several estimators for inferring location and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimation with linear equality constraints Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems. We also include two model selection strategies for determining the sparsity of the model parameters: k-fold cross-validation and stability selection. This package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
 
 
-# Functionality
+# Functionalities
 
 c-lasso is available on pip. You can install the package
 in the shell using
@@ -56,15 +56,15 @@ pip install c_lasso
 Here is the typical syntax to use c-lasso on python. 
 
 ```python
-# let us import the main class of the package
+# to import the main class of the package
 from classo import classo_problem
 
-# let's define a c-lasso problem instance with default setting
+# to define a c-lasso problem instance with default setting
 problem  = classo_problem(X,y,C)
 
 # insert here possible modifications of the problem instance 
 
-# let's solve our problem instance
+# to solve our problem instance
 problem.solve()
 
 # finally one can visualize the instance we just solved and see solution plots as well
@@ -266,6 +266,24 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 - *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Muller:2020].
 
 
+
+## Example on R 
+
+As an alternative, one can use this package in R instead of python by calling the python package with the Rlibrary ```reticulate```. As an example, this code snippet used in R will perform regression with a fixed lambda set to $\lambda = 0.1\lambda_{\max}$.
+
+One should be careful with the inputs : X should be a ```matrix```, C as well, but y should be an ```array``` (if one set y to be matrix $1\times n$ for example, c-lasso will not work).
+
+```r
+problem<- classo$classo_problem(X=X,C=C,y=y)
+problem$model_selection$LAMfixed <- TRUE
+problem$model_selection$StabSel <- FALSE
+problem$model_selection$LAMfixedparameters$rescaled_lam <- TRUE
+problem$model_selection$LAMfixedparameters$lam <- 0.1
+problem$solve()
+
+# extract outputs
+beta <- as.matrix(map_dfc(problem$solution$LAMfixed$beta, as.numeric))
+```
 
 
 # Example on synthetic data
