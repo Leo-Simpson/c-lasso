@@ -306,7 +306,7 @@ The [formulation](#formulations) used is [*R2*](#R2), with $\rho=1.5$. The [mode
 
 The output is then : 
 
-```python
+```shell
 Relevant variables  : [43 47 74 79 84]
 
  LAMBDA FIXED : 

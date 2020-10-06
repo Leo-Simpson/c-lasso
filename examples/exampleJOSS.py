@@ -1,4 +1,4 @@
-path = '/Users/lsimpson/Desktop/GitHub/Figures/example1/'
+path = '/Users/lsimpson/Desktop/GitHub/c-lasso/paper/figures/'
 import numpy
 from classo import classo_problem, random_data
 
