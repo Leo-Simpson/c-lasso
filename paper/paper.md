@@ -306,14 +306,10 @@ problem.model_selection.PATH = True
 problem.solve()
 ```
 
-Here, we have modified the [formulation](#formulations) of the problem in order to use [*R2*](#R2), with $\rho=1.5$. 
+Here, the [formulation](#formulations) used is [*R2*](#R2), with $\rho=1.5$. The [model selections](#model) used are *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ , *Path computation* and *Stability Selection* which is computed by default. 
 
-Then we have chosen the [model selections](#model) we want to compute : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
+#### Output
 
-Finally, those problems are solved using the method `solve` which computes everything. 
-
-#### Visualize the result 
-One can, before or after having solve the problem, plot the main caracteristics of the problem solved and of its solution: 
 
 ```python
 >>> # let's visualize the main parameters set in the problem instance
