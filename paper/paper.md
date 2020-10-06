@@ -169,7 +169,7 @@ problem.formulation.concomitant = False
 problem.formulation.classification = True
 ```
 
-- ***C2* Contrained sparse classification with Huberized Square Hinge loss** : {#C2}       
+### *C2* Contrained sparse classification with Huberized Square Hinge loss : {#C2}       
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} L_{\rho}(y^T X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -201,10 +201,10 @@ The available problem formulations *R1-C2* require different algorithmic strateg
 |-|:-:|:-:|:-:|:-:|
 | [*R1*](#R1) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
 | [*R2*](#R2) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
-| [*R3*](#R3) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ |  |   |
-| [*R4*](#R4) |   | recommanded |   |   |
-| [*C1*](#C1) | recommanded |   |   |   |
-| [*C2*](#C2) | recommanded |   |   |   |
+| [*R3*](#R3) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ |          |                   |
+| [*R4*](#R4) |                                                                    | recommanded (only option)                |          |   |
+| [*C1*](#C1) | recommanded (only option)                                                       |                                 |          |   |
+| [*C2*](#C2) | recommanded   (only option)                                                     |                                 |          |   |
 
 
 
