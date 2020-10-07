@@ -206,7 +206,7 @@ Here is a summary of which algorithm can be used for each problem :
 |-|:-:|:-:|:-:|:-:|
 | [*R1*](#R1) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
 | [*R2*](#R2) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
-| [*R3*](#R3) | recommended for large $\lambda$ or when path computation is require | recommended for small $\lambda$ |          |                   |
+| [*R3*](#R3) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ |          |                   |
 | [*R4*](#R4) |                                                                    | recommended (only option)                |          |   |
 | [*C1*](#C1) | recommended (only option)                                                       |                                 |          |   |
 | [*C2*](#C2) | recommended (only option)                                                     |                                 |          |   |
