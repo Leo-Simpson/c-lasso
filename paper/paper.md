@@ -173,7 +173,7 @@ problem.formulation.concomitant = False
 problem.formulation.classification = True
 ```
 
-### *C2* Contrained sparse classification with Huberized Square Hinge loss : {#C2}       
+### *C2* Contrained sparse classification with Huberized Square Hinge loss: {#C2}       
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} L_{\rho}(y^T X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -230,7 +230,7 @@ This algorithm is based on the Doulgas-Rachford algorithm in a higher-dimensiona
 - Projection-free primal-dual splitting method (*PF-PDS*): This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and belongs to the class of proximal splitting algorithms. 
 
 
-## Model selections {#model}
+## Computation modes and model selection {#model}
 
 Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. When using the package, several of those model selection can be computed with the same problem-instance.
 
@@ -244,7 +244,7 @@ problem.model_selection.StabSel = False
 # obviously any other combination also works
 ```
 
-- *Fixed Lambda*: This setting lets the user choose a parameter $\lambda$, or a proportion $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
+- *Fixed Lambda*: This setting lets the user choose a fixed parameter $\lambda$ or a proportion $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
 The default value is a scale-dependent tuning parameter that has been derived in [@Shi:2016] and applied in [Muller:2020].
 
 - *Path Computation*: This setting allows the computation of a solution path for $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. The solution path is computed via the *Path-Alg* scheme or via warm-starts for other optimization schemes. 
