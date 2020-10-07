@@ -468,7 +468,8 @@ class LAMfixedparameters:
         string  = '\n     numerical_method = ' + str(self.numerical_method)
         string += '\n     rescaled lam : ' + str(self.rescaled_lam)
         string += '\n     threshold = ' + str(round(self.threshold,3))
-        string += '\n     lam = ' + str(round(self.lam,3))
+        if type(lam) is str : string += '\n     lam : ' + lam
+        else : string += '\n     lam = ' + str(round(self.lam,3))
         
         
         if self.theoretical_lam != 0.  :
