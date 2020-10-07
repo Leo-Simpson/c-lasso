@@ -234,16 +234,6 @@ This algorithm is based on the Doulgas-Rachford algorithm in a higher-dimensiona
 
 The `c-lasso` package provides several computation modes and model selection schemes for regularization parameter selection.
 
-The python syntax to use some specific model selection is the following
-```python
-# to perform Cross-Validation and Path computation :
-problem.model_selection.LAMfixed = False
-problem.model_selection.PATH = True
-problem.model_selection.CV = True
-problem.model_selection.StabSel = False
-# obviously any other combination also works
-```
-
 - *Fixed Lambda*: This setting lets the user choose a fixed parameter $\lambda$ or a proportion $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
 The default value is a scale-dependent tuning parameter that has been derived in [@Shi:2016] and applied in [Muller:2020].
 
@@ -255,6 +245,19 @@ The default value is a scale-dependent tuning parameter that has been derived in
 
 - *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Lin:2014; @Meinshausen:2010; Muller:2020].
 
+The python syntax to use some specific model selection is the following
+
+```python
+# Example how to do only cross-validation and path computation:
+problem.model_selection.LAMfixed = False
+problem.model_selection.PATH = True
+problem.model_selection.CV = True
+problem.model_selection.StabSel = False
+
+# c-lasso also allows to specify multiple model selection schemes, 
+# CV and stability selection by setting
+problem.model_selection.StabSel = True
+```
 
 
 ## Example on R 
