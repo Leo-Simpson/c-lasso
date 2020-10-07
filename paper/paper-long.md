@@ -42,7 +42,7 @@ $$
 y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
 $$
 
-Here, $X$ is a given design matrix and the vector $y$ is a continuous or binary response vector. The matrix $C$ is a general constraint matrix. The vector $\beta$ contains the unknown coefficients and $\sigma$ an unknown scale.
+Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale.
 
 
 # Statement of need 
@@ -75,15 +75,13 @@ $$
 $$
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
-for robust model fitting with an $L_1$ penalty and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Huber:1981]
+for robust model fitting with an $L_1$ penalty and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Huber:1981].
 
 ### *R3* Contrained scaled Lasso regression: 
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
-
-
 
 This formulation is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
 the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
@@ -95,7 +93,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-This formulation combines *R2* and *R3* to allow robust joint estimation of the (constrained) $\beta$ vector and 
+This formulation combines *R2* and *R3* allowing robust joint estimation of the (constrained) $\beta$ vector and 
 the scale $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
 
 ### *C1* Contrained sparse classification with Square Hinge loss: 
@@ -139,7 +137,7 @@ setting that proved to be the fastest in our numerical experiments.
 
 - **Path algorithms (*Path-Alg*)** : 
 This is the default algorithm for non-concomitant problems *R1,R2,C1,C2*. 
-The algorithm uses the fact that the solution path along &lambda; is piecewise-affine (as shown, e.g., in [@Gaines:2018]). When Least-Squares is used as objective function, we derive a novel efficient procedure that allows us to also derive the solution for the concomitant problem *R3* along the path with little extra computational overhead.
+The algorithm uses the fact that the solution path along &lambda; is piecewise-affine (as shown, e.g., in [@Gaines:2018]). When Least-Squares is used as objective function, we provide a novel efficient procedure that also allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
 
 - **Projected primal-dual splitting method (*P-PDS*)** : 
 This algorithm is derived from [@Briceno:2020] and belongs to the class of 
@@ -147,7 +145,7 @@ proximal splitting algorithms. It extends the classical Forward-Backward (FB)
 (aka proximal gradient descent) algorithm to handle an additional linear equality constraint
 via projection. In the absence of a linear constraint, the method reduces to FB.
 This method can solve problem *R1*. For the Huber problem *R2*, 
-P-PDS can solve the mean-shift formulation of the problem  [@Mishra:2019].
+P-PDS can solve the mean-shift formulation of the problem [@Mishra:2019].
 
 - **Projection-free primal-dual splitting method (*PF-PDS*)** :
 This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
@@ -163,25 +161,24 @@ It makes use of the proximity operators of the perspective of the LS objective [
 The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem 
 with the mean shift [@Mishra:2019] and thus solved in (n + d) dimensions.
 
-## Model selections
+## Computation modes and model selections
 
 Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. 
 
-- *Fixed Lambda* : This approach is simply letting the user choose the parameter $\lambda$, or to choose $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
-The default value is a scale-dependent tuning parameter that has been proposed in [Combettes:2020.2] and derived in [@Shi:2016].
+- *Fixed Lambda*: This setting lets the user choose a parameter $\lambda$, or a proportion $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
+The default value is a scale-dependent tuning parameter that has been derived in [@Shi:2016] and applied in [Combettes:2020.2].
 
-- *Path Computation* :The package also leaves the possibility to us to compute the solution for a range of $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. It can be done using *Path-Alg* or warm-start with any other optimization scheme. 
+- *Path Computation*: This setting allows the computation of a solution path for $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. The solution path is computed via the *Path-Alg* scheme or via warm-starts for other optimization schemes. 
 
 [comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts : starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
 
-- *Cross Validation* : Then one can use a model selection, to choose the appropriate penalization. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" [@Hastie:2009].
+- *Cross Validation*: This setting allows the selection of the regularization parameter $\lambda$ via k-fold cross validation for $\lambda \in [\lambda_{\min}, \lambda_{\max}]$. Both the Minimum Mean Squared Error (or Deviance) (MSE)  and the "One-Standard-Error rule" (1SE) are available [@Hastie:2009].
 
-- *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
+- *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
 
 # Basic workflow
 
-
-Here is a basic example that shows how to run c-lasso on synthetic data.
+Here is a basic example how to install and run c-lasso on synthetic data.
 
 #### Installation 
 c-lasso is available on pip. You can install the package
@@ -196,9 +193,8 @@ To use the c-lasso package in Python, type
 from classo import *
 ```
 
-
-The c-lasso package depends on several standard Python packages. 
-The dependencies are included in the package. Those are, namely : 
+The c-lasso package depends on the following Python packages,
+included in the package: 
 
 `numpy` ; 
 `matplotlib` ; 
@@ -209,7 +205,7 @@ The dependencies are included in the package. Those are, namely :
 
 #### Generate random data
 The c-lasso package includes
-the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
+the routine ```random_data``` that allows to generate problem instances with normally distributed data $X$, sparse $\beta$, and constraints $C$.
 
 ```python
 n,d,d_nonzero,k,sigma =100,100,5,1,0.5
