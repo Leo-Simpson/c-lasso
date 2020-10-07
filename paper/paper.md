@@ -266,7 +266,7 @@ As an alternative, one can use this package in R instead of python by calling th
 One should be careful with the inputs : X should be a ```matrix```, C as well, but y should be an ```array``` (if one set y to be matrix $1\times n$ for example, c-lasso will not work).
 
 ```r
-problem<- classo$classo_problem(X=X,C=C,y=y)
+problem<- classo$classo_problem(X=X,C=C,y=array(y))
 problem$model_selection$LAMfixed <- TRUE
 problem$model_selection$StabSel <- FALSE
 problem$model_selection$LAMfixedparameters$rescaled_lam <- TRUE
