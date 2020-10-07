@@ -10,15 +10,20 @@ authors:
   - name: Patrick L. Combettes
     affiliation: 2
   - name: Christian L. Müller
-    affiliation: 3
+    affiliation: 3,4,5
 affiliations:
- - name: TUM  
+ - name: Technische Universit$\"a$t M$\"u$nchen 
    index: 1
- - name: NC State
+ - name: Department of Mathematics, North Carolina State University
    index: 2
- - name: LMU
+ - name: Center for Computational Mathematics, Flatiron Institute
    index: 3
-date: 13 August 2020
+ - name: Institute of Computational Biology, Helmholtz-Zentrum M$\"u$nchen
+   index: 4
+ - name: Department of Statistics, Ludwig-Maximilians-Universit$\"a$t M$\"u$nchen
+   index: 5
+   
+date: 01 October 2020
 bibliography: paper.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
@@ -27,7 +32,7 @@ bibliography: paper.bib
 
 # Summary
 
-This article illustrates c-lasso, a Python package that enables sparse and robust linear
+We introduce c-lasso, a Python package that enables sparse and robust linear
 regression and classification with linear equality constraints. 
 
 
@@ -37,12 +42,12 @@ $$
 y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
 $$
 
-Here, $X$ and $y$ are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). $C$ is a general constraint matrix. The vector $\beta$ comprises the unknown coefficients and $\sigma$ an unknown scale.
+Here, $X$ is a given design matrix and the vector $y$ is a continuous or binary response vector. The matrix $C$ is a general constraint matrix. The vector $\beta$ contains the unknown coefficients and $\sigma$ an unknown scale.
 
 
 # Statement of need 
 
-The package handles several estimators for inferring location and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimation with linear equality constraints Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems. We also include two model selection strategies for determining the sparsity of the model parameters: k-fold cross-validation and stability selection. This package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
+The package handles several estimators for inferring coefficients and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints, none of which can be currently solved in Python in an efficient manner. Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems at fixed regularization and across an entire regularization path. We include three model selection strategies for determining model parameter regularization levels: a theoretically derived fixed regularization, k-fold cross-validation, and stability selection. The c-lasso package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems and/or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
 
 
 # Current functionalities
