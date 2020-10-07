@@ -37,6 +37,7 @@ def Classo_R1(pb,lam):
 
     #cvx
     # call to the cvx function of minimization
+    '''
     if (pb_type == 'cvx'):
         import cvxpy as cp
         lamb = lam*2*LA.norm(A.T.dot(y),np.infty)
@@ -46,6 +47,7 @@ def Classo_R1(pb,lam):
         result = prob.solve(warm_start=regpath,eps_abs= tol)
         if (regpath): return(x.value,True) 
         return(x.value)
+    '''
 
     
     Proj,AtA, Aty = proj_c(C,d), pb.AtA, pb.Aty     # Save some matrix products already computed in problem.compute_param()
@@ -103,13 +105,14 @@ def Classo_R1(pb,lam):
 
         raise ValueError("The algorithm of P-PDS did not converge after %i iterations " %pb.N)
 
-    gamma             = gamma/(2*lam)
-    w                 = w /(2*lam)
-    mu,ls, c, root    = pb.mu,[], pb.c, 0.
+    
      # 2 PROX  
+    
     if (pb_type=='DR'):
-        
-        Q1,Q2  = QQ(2*gamma/(mu-1),A)
+        gamma             = gamma/(2*lam)
+        w                 = w /(2*lam)
+        mu,ls, c, root    = pb.mu,[], pb.c, 0.
+        Q1,Q2  = QQ(2*gamma/(mu-1),A,AtA = AtA)
         QA,qy = Q1.dot(A), Q1.dot(y)
         
         qy_mult = qy*(mu-1)
@@ -252,5 +255,9 @@ def proj_c(M,d):
 
 
 
-def QQ(coef,A): return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*A.dot(A.T))),LA.inv(2*np.eye(A.shape[1])+coef*(A.T).dot(A)))    
+def QQ(coef,A,AtA=None): 
+    if AtA is None : 
+        return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*A.dot(A.T))),LA.inv(2*np.eye(A.shape[1])+coef*(A.T).dot(A)))   
+    else : 
+        return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*A.dot(A.T))),LA.inv(2*np.eye(A.shape[1])+coef*AtA)) 
 

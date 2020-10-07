@@ -216,7 +216,7 @@ class problem_R2 :
         Ahuber = np.append(self.matrix[0], r * np.eye(m), 1)
         Chuber = np.append(self.matrix[1], np.zeros((k, m)), 1)
         matrices_huber = (Ahuber, Chuber, self.matrix[2])
-        prob = problem_R1(matrices_huber, 'DR')
+        prob = problem_R1(matrices_huber, self.type)
         prob.regpath = self.regpath
         prob.compute_param()
 
@@ -230,8 +230,9 @@ class problem_R2 :
         prob.AtA[d:,:d] = prob.matrix[0][:,:d]*r
         prob.AtA[:d,d:] = prob.matrix[0][:,:d].T*r
 
-        prob.Aty = np.append(prob.Aty,prob.matrix[2]*r)
+        prob.Aty = np.append(prob.Aty[:d],prob.matrix[2]*r)
         prob.lambdamax = 2*LA.norm(prob.Aty,np.infty)
+        prob.AtAnorm    = LA.norm(prob.AtA,2)
 
 
 
