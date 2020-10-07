@@ -12,15 +12,15 @@ authors:
   - name: Christian L. Müller
     affiliation: 3,4,5
 affiliations:
- - name: Technische Universit$\"a$t M$\"u$nchen 
+ - name: Technische Universität München 
    index: 1
  - name: Department of Mathematics, North Carolina State University
    index: 2
  - name: Center for Computational Mathematics, Flatiron Institute
    index: 3
- - name: Institute of Computational Biology, Helmholtz-Zentrum M$\"u$nchen
+ - name: Institute of Computational Biology, Helmholtz Zentrum München
    index: 4
- - name: Department of Statistics, Ludwig-Maximilians-Universit$\"a$t M$\"u$nchen
+ - name: Department of Statistics, Ludwig-Maximilians-Universität München
    index: 5
    
 date: 01 October 2020
@@ -55,8 +55,7 @@ The package handles several estimators for inferring coefficients and scale, inc
 ## Formulations 
 
 Depending on the prior on the solution $\beta, \sigma$ and on the noise $\epsilon$, the previous forward model can lead to different types of estimation problems. 
-
-Our package can solve four regression-type and two classification-type formulations:
+The package can solve four regression-type and two classification-type formulations:
 
 
 ### *R1* Standard constrained Lasso regression:             
@@ -76,7 +75,7 @@ $$
 $$
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
-for robust model fitting with an $L_1$ penalty and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Huber:1972]
+for robust model fitting with an $L_1$ penalty and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Huber:1981]
 
 ### *R3* Contrained scaled Lasso regression: 
 
@@ -175,7 +174,7 @@ The default value is a scale-dependent tuning parameter that has been proposed i
 
 [comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts : starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
 
-- *Cross Validation* : Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" [@Hastie:2009].
+- *Cross Validation* : Then one can use a model selection, to choose the appropriate penalization. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" [@Hastie:2009].
 
 - *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
 
