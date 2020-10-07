@@ -232,7 +232,7 @@ This algorithm is based on the Doulgas-Rachford algorithm in a higher-dimensiona
 
 ## Computation modes and model selection {#model}
 
-The `c-lasso` package provides several computation modes and model selection schemes for regularization parameter selection.
+The `c-lasso` package provides several computation modes and model selection schemes for tuning the regularization parameter.
 
 - *Fixed Lambda*: This setting lets the user choose a fixed parameter $\lambda$ or a proportion $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
 The default value is a scale-dependent tuning parameter that has been derived in [@Shi:2016] and applied in [Muller:2020].
@@ -243,9 +243,10 @@ The default value is a scale-dependent tuning parameter that has been derived in
 
 - *Cross Validation*: This setting allows the selection of the regularization parameter $\lambda$ via k-fold cross validation for $\lambda \in [\lambda_{\min}, \lambda_{\max}]$. Both the Minimum Mean Squared Error (or Deviance) (MSE)  and the "One-Standard-Error rule" (1SE) are available [@Hastie:2009].
 
-- *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Lin:2014; @Meinshausen:2010; Muller:2020].
+- *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Lin:2014; @Meinshausen:2010; Muller:2020]. Three modes are
+available for the selection of variables over subsamples: selection at a fixed $\lambda$ [@Muller:2020], selection of the q first variables entering the path (the default setting in `c-lasso`), and selection of the q largest coefficients (in absolute value) across the path [@Meinshausen:2010].
 
-The python syntax to use some specific model selection is the following
+The python syntax to use a specific model selection is exemplified below:
 
 ```python
 # Example how to do only cross-validation and path computation:
@@ -255,29 +256,9 @@ problem.model_selection.CV = True
 problem.model_selection.StabSel = False
 
 # c-lasso also allows to specify multiple model selection schemes, 
-# CV and stability selection by setting
+# e.g., adding stability selection here by setting
 problem.model_selection.StabSel = True
 ```
-
-
-## Example on R 
-
-As an alternative, one can use this package in R instead of python by calling the python package with the Rlibrary ```reticulate```. As an example, this code snippet used in R will perform regression with a fixed lambda set to $\lambda = 0.1\lambda_{\max}$.
-
-One should be careful with the inputs : X should be a ```matrix```, C as well, but y should be an ```array``` (if one set y to be matrix $1\times n$ for example, c-lasso will not work).
-
-```r
-problem<- classo$classo_problem(X=X,C=C,y=array(y))
-problem$model_selection$LAMfixed <- TRUE
-problem$model_selection$StabSel <- FALSE
-problem$model_selection$LAMfixedparameters$rescaled_lam <- TRUE
-problem$model_selection$LAMfixedparameters$lam <- 0.1
-problem$solve()
-
-# extract outputs
-beta <- as.matrix(map_dfc(problem$solution$LAMfixed$beta, as.numeric))
-```
-
 
 # Example on synthetic data
 
@@ -334,9 +315,25 @@ Relevant variables  : [43 47 74 79 84]
 
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
-
 It is indeed the variables that have been selected with the solution threshold for a fixed lambda, and with stability selection. Let us also note that the running time is still very low in our example. Those remarks are comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
 
+# Calling c-lasso from R 
+
+As an alternative, one can use this package in R instead of python by calling the python package with the Rlibrary ```reticulate```. As an example, this code snippet used in R will perform regression with a fixed lambda set to $\lambda = 0.1\lambda_{\max}$.
+
+One should be careful with the inputs : X should be a ```matrix```, C as well, but y should be an ```array``` (if one set y to be matrix $1\times n$ for example, c-lasso will not work).
+
+```r
+problem<- classo$classo_problem(X=X,C=C,y=array(y))
+problem$model_selection$LAMfixed <- TRUE
+problem$model_selection$StabSel <- FALSE
+problem$model_selection$LAMfixedparameters$rescaled_lam <- TRUE
+problem$model_selection$LAMfixedparameters$lam <- 0.1
+problem$solve()
+
+# extract outputs
+beta <- as.matrix(map_dfc(problem$solution$LAMfixed$beta, as.numeric))
+```
 
 # Acknowledgements
 
