@@ -156,12 +156,12 @@ For the Huber problem *R2*, PF-PDS can solve the mean-shift formulation of the p
 
 - **Douglas-Rachford-type splitting method (*DR*)** : 
 This algorithm is the most general algorithm and can solve all regression problems 
-*R1-R4*. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
-It makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020.1; @Combettes:2020.2].
+*R1-R4*. It is based on Doulgas-Rachford splitting in a higher-dimensional product space and 
+makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020.1; @Combettes:2020.2].
 The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem 
 with the mean shift [@Mishra:2019] and thus solved in (n + d) dimensions.
 
-## Computation modes and model selections
+## Model selections and computation modes
 
 Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. 
 
@@ -217,41 +217,42 @@ This code snippet generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\t
 Here is an example of problem instance one can create with those set of data. 
 
 ```python
-# let's define a c-lasso problem instance with default setting
+# Define a c-lasso problem instance with default setting
 problem  = classo_problem(X,y,C)
 
 
-# let's change the formulation of the problem
+# Example how to change the default formulation R3 to formulation R2 with a new rho parameter
 problem.formulation.huber  = True
 problem.formulation.concomitant = False
 problem.formulation.rho = 1.5
 
 
-# let's add a computation of beta for a fixed lambda 
+# Example how to add the computation of beta at a fixed lambda (as a proportion of lambdamax) 
 problem.model_selection.LAMfixed = True
 # and set it to to 0.1*lambdamax
 problem.model_selection.LAMfixedparameters.rescaled_lam = True
 problem.model_selection.LAMfixedparameters.lam = 0.1
 
-# let's add a computation of the lambda-path
+# Example how to a computation of the lambda-path
 problem.model_selection.PATH = True
 
 
-# let's solve our problem instance
+# Solve the specified problem instance
 problem.solve()
 ```
 
-Here, we have modified the [formulation](##formulations) of the problem in order to use [*R2*](###*R2*-contrained-sparse-Huber-regression), with $\rho=1.5$. 
+Here, we modified the [formulation](##formulations) of the problem in order to use [*R2*](###*R2*-contrained-sparse-Huber-regression), with $\rho=1.5$. 
 
-Then we have chosen the [model selections](##model-selections) we want to compute : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
+Then, we chose the [model selections](##model-selections) we want to compute: *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ and *Path computation*. 
+*Stability Selection* is also computed by default. 
 
-Finally, those problems are solved using the method `solve` which computes everything. 
+Finally, these problem specifications are solved using the method `solve`. 
 
-#### Visualize the result 
-One can, before or after having solve the problem, plot the main caracteristics of the problem solved and of its solution: 
+#### Visualizing the problem setup and solutions 
+c-lasso enables the visualization of the problem specifications and (after solve) the problem solutions: 
 
 ```python
->>> # let's visualize the main parameters set in the problem instance
+>>> # Visualizing the main parameter specifications in the problem instance
 >>> problem
 
 FORMULATION: R2
@@ -284,7 +285,7 @@ STABILITY SELECTION PARAMETERS:
      lamin = 0.01
      Nlam = 50
 
->>> # let's the solutions found
+>>> # Visualizing the solutions
 >>> problem.solution
 
  LAMBDA FIXED : 
@@ -303,8 +304,7 @@ STABILITY SELECTION PARAMETERS:
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
 
-
-As this variable selection has been computed for generated data, one can plot the real relevant variables :
+In the present synthetic setup, one can also plot the ground truth $\beta$ solution of the problem:
 
 ```python
 >>> print( list(numpy.nonzero(sol)) )
