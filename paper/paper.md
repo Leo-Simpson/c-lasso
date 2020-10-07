@@ -244,18 +244,16 @@ problem.model_selection.StabSel = False
 # obviously any other combination also works
 ```
 
+- *Fixed Lambda*: This setting lets the user choose a parameter $\lambda$, or a proportion $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
+The default value is a scale-dependent tuning parameter that has been derived in [@Shi:2016] and applied in [Muller:2020].
 
-- *Fixed Lambda* : This approach is simply letting the user choose the parameter $\lambda$, or to choose $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
-The default value is a scale-dependent tuning parameter that has been proposed in [Muller:2020] and derived in [@Shi:2016].
-
-- *Path Computation* :The package also leaves the possibility to us to compute the solution for a range of $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. It can be done using *Path-Alg* or warm-start with any other optimization scheme. 
+- *Path Computation*: This setting allows the computation of a solution path for $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. The solution path is computed via the *Path-Alg* scheme or via warm-starts for other optimization schemes. 
 
 [comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts : starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
 
-- *Cross Validation* : Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" [@Hastie:2009].
+- *Cross Validation*: This setting allows the selection of the regularization parameter $\lambda$ via k-fold cross validation for $\lambda \in [\lambda_{\min}, \lambda_{\max}]$. Both the Minimum Mean Squared Error (or Deviance) (MSE)  and the "One-Standard-Error rule" (1SE) are available [@Hastie:2009].
 
-
-- *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Muller:2020].
+- *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Lin:2014; @Meinshausen:2010; Muller:2020].
 
 
 
