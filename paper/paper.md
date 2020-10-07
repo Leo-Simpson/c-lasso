@@ -2,23 +2,32 @@
 title: 'c-lasso - a package for constrained sparse and robust regression and classification in Python'
 tags:
   - Python
-  - Linear regression
-  - Optimization
+  - regression
+  - classification
+  - constrained regression
+  - Lasso
+  - Huber function
+  - convex optimization
 authors:
   - name: Léo Simpson
     affiliation: 1
   - name: Patrick L. Combettes
     affiliation: 2
   - name: Christian L. Müller
-    affiliation: 3
+    affiliation: 3,4,5
 affiliations:
- - name: TUM  
+ - name: Technische Universität München 
    index: 1
- - name: NC State
+ - name: Department of Mathematics, North Carolina State University
    index: 2
- - name: LMU
+ - name: Center for Computational Mathematics, Flatiron Institute
    index: 3
-date: 13 August 2020
+ - name: Institute of Computational Biology, Helmholtz Zentrum München
+   index: 4
+ - name: Department of Statistics, Ludwig-Maximilians-Universität München
+   index: 5
+   
+date: 01 October 2020
 bibliography: paper.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
@@ -27,7 +36,7 @@ bibliography: paper.bib
 
 # Summary
 
-This article illustrates c-lasso, a Python package that enables sparse and robust linear
+We introduce `c-lasso`, a Python package that enables sparse and robust linear
 regression and classification with linear equality constraints. 
 
 
@@ -37,11 +46,12 @@ $$
 y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
 $$
 
-Here, $X$ and $y$ are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). $C$ is a general constraint matrix. The vector $\beta$ comprises the unknown coefficients and $\sigma$ an unknown scale. The typical use case is logarithmic regression with compositional data, that impose the constraint $\sum_{i=1}^d \beta_i = 0$, hence $C = 1_d^T$ [@Aitchison:1984].
+Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast regression with compositional data $X$ which leads to the constraint $\sum_{i=1}^d \beta_i = 0$, i.e., $C = 1_d^T$ [@Aitchison:1984] and Generalized lasso-type
+problems (see Example 3 in [James et al.](http://faculty.marshall.usc.edu/gareth-james/Research/PAC.pdf))
 
 # Statement of need 
 
-The package handles several estimators for inferring location and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimation with linear equality constraints Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems. We also include two model selection strategies for determining the sparsity of the model parameters: k-fold cross-validation and stability selection. This package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
+The package handles several estimators for inferring unknown coefficients and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints, none of which can be currently solved in Python in an efficient manner. Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems at fixed regularization and across an entire regularization path. We include three model selection strategies for determining model parameter regularization levels: a theoretically derived fixed regularization, k-fold cross-validation, and stability selection. The c-lasso package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems and/or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
 
 
 # Functionalities
@@ -74,9 +84,7 @@ print(problem.solution)
 
 ## Formulations {#formulations}
 
-Depending on the prior on the solution $\beta, \sigma$ and on the noise $\epsilon$, the previous forward model can lead to different types of estimation problems. 
-
-Our package can solve six of those : four regression-type and two classification-type formulations. Here is an overview of those formulation, with a code snippet to see how to use those in the python. 
+Depending on the type of the data and prior assumptions on the data, the noise $\epsilon$, and the model parameters, different types of estimation problems can be formulated. The package allows solving four regression-type and two classification-type formulations:
 
 
 ### *R1* Standard constrained Lasso regression: {#R1}           
@@ -86,7 +94,7 @@ $$
 $$
 
 This is the standard Lasso problem with linear equality constraints on the $\beta$ vector. 
-The objective function combines Least-Squares for model fitting with $L_1$ penalty for sparsity.   
+The objective function combines Least-Squares (LS) for model fitting with the $L_1$-norm penalty for sparsity.   
 
 ```python
 # formulation R1
@@ -95,7 +103,6 @@ problem.formulation.concomitant = False
 problem.formulation.classification = False
 ```
 
- 
 
 ### *R2* Contrained sparse Huber regression: {#R2}                  
 
@@ -104,7 +111,7 @@ $$
 $$
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
-for robust model fitting with $L_1$ and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Aigner:1976]
+for robust model fitting with an $L_1$ penalty and linear equality constraints on the $\beta$ vector. The default parameter $\rho$ is set to $1.345$ [@Huber:1981].
 
 ```python
 # formulation R2
@@ -119,11 +126,8 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-
-
-This formulation is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
+This formulation is the default problem formulation in c-lasso. It is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
 the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
-This is the default problem formulation in c-lasso.
 
 ```python
 # formulation R3
@@ -138,7 +142,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-This formulation combines *R2* and *R3* to allow robust joint estimation of the (constrained) $\beta$ vector and 
+This formulation combines *R2* and *R3* allowing robust joint estimation of the (constrained) $\beta$ vector and 
 the scale $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
 
 ```python
@@ -194,44 +198,36 @@ problem.formulation.classification = True
 
 ## Optimization schemes {#method}
 
-The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problem. We have implemented four algorithms (with provable convergence guarantees). Those algorithms originally exist for standard regression (formulation [*R1*](#R1)), but we have adapted it to different formulations when it was possible, for example, using the mean-shift formulation [@Mishra:2019] for Huber regression. 
+The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. We have implemented four published algorithms (with provable convergence guarantees). The c-lasso package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. 
 
 Here is a summary of which algorithm can be used for each problem : 
 
 |             |*Path-Alg*| *DR* | *P-PDS* | *PF-PDS* |
 |-|:-:|:-:|:-:|:-:|
-| [*R1*](#R1) | recommanded for high $\lambda$ and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
-| [*R2*](#R2) | recommanded for high $\lambda$  and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
-| [*R3*](#R3) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ |          |                   |
-| [*R4*](#R4) |                                                                    | recommanded (only option)                |          |   |
-| [*C1*](#C1) | recommanded (only option)                                                       |                                 |          |   |
-| [*C2*](#C2) | recommanded   (only option)                                                     |                                 |          |   |
+| [*R1*](#R1) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
+| [*R2*](#R2) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
+| [*R3*](#R3) | recommended for large $\lambda$ or when path computation is require | recommended for small $\lambda$ |          |                   |
+| [*R4*](#R4) |                                                                    | recommended (only option)                |          |   |
+| [*C1*](#C1) | recommended (only option)                                                       |                                 |          |   |
+| [*C2*](#C2) | recommended (only option)                                                     |                                 |          |   |
 
 
 
 The python syntax to use an algorithm different than recommanded is the following : 
 ```python
 problem.numerical_method = "Path-Alg" 
-# also works with "DR", "P-PDS" or "PF-PDS" 
+# alternative options: "DR", "P-PDS", and "PF-PDS" 
 ```
 
+- Path algorithms (*Path-Alg*):
+The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown in [@Gaines:2018].
 
-- Path algorithms (*Path-Alg*) :
-The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown, in [@Gaines:2018].
+- Douglas-Rachford-type splitting method (*DR*):
+This algorithm is based on the Doulgas-Rachford algorithm in a higher-dimensional product space [@Combettes:2020; @Muller:2020].
 
+- Projected primal-dual splitting method (*P-PDS*): This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms. 
 
-- Douglas-Rachford-type splitting method (*DR*) :
-This algorithm is based on Doulgas Rachford splitting in a higher-dimensional product space [@Combettes:2020; @Muller:2020].
-
-
-- Projected primal-dual splitting method (*P-PDS*) : This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms. 
-
-
-- Projection-free primal-dual splitting method (*PF-PDS*) : This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
-proximal splitting algorithms. 
-
-
-
+- Projection-free primal-dual splitting method (*PF-PDS*): This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and belongs to the class of proximal splitting algorithms. 
 
 
 ## Model selections {#model}

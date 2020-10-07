@@ -10,15 +10,20 @@ authors:
   - name: Patrick L. Combettes
     affiliation: 2
   - name: Christian L. Müller
-    affiliation: 3
+    affiliation: 3,4,5
 affiliations:
- - name: TUM  
+ - name: Technische Universität München 
    index: 1
- - name: NC State
+ - name: Department of Mathematics, North Carolina State University
    index: 2
- - name: LMU
+ - name: Center for Computational Mathematics, Flatiron Institute
    index: 3
-date: 13 August 2020
+ - name: Institute of Computational Biology, Helmholtz Zentrum München
+   index: 4
+ - name: Department of Statistics, Ludwig-Maximilians-Universität München
+   index: 5
+   
+date: 01 October 2020
 bibliography: paper.bib
 
 # Optional fields if submitting to a AAS journal too, see this blog post:
@@ -27,7 +32,7 @@ bibliography: paper.bib
 
 # Summary
 
-This article illustrates c-lasso, a Python package that enables sparse and robust linear
+We introduce c-lasso, a Python package that enables sparse and robust linear
 regression and classification with linear equality constraints. 
 
 
@@ -37,12 +42,12 @@ $$
 y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
 $$
 
-Here, $X$ and $y$ are given outcome and predictor data. The vector y can be continuous (for regression) or binary (for classification). $C$ is a general constraint matrix. The vector $\beta$ comprises the unknown coefficients and $\sigma$ an unknown scale.
+Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale.
 
 
 # Statement of need 
 
-The package handles several estimators for inferring location and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimation with linear equality constraints Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems. We also include two model selection strategies for determining the sparsity of the model parameters: k-fold cross-validation and stability selection. This package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
+The package handles several estimators for inferring coefficients and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints, none of which can be currently solved in Python in an efficient manner. Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems at fixed regularization and across an entire regularization path. We include three model selection strategies for determining model parameter regularization levels: a theoretically derived fixed regularization, k-fold cross-validation, and stability selection. The c-lasso package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems and/or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
 
 
 # Current functionalities
@@ -50,8 +55,7 @@ The package handles several estimators for inferring location and scale, includi
 ## Formulations 
 
 Depending on the prior on the solution $\beta, \sigma$ and on the noise $\epsilon$, the previous forward model can lead to different types of estimation problems. 
-
-Our package can solve six of those : four regression-type and two classification-type formulations.
+The package can solve four regression-type and two classification-type formulations:
 
 
 ### *R1* Standard constrained Lasso regression:             
@@ -71,15 +75,13 @@ $$
 $$
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
-for robust model fitting with $L_1$ and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Aigner:1976]
+for robust model fitting with an $L_1$ penalty and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Huber:1981].
 
 ### *R3* Contrained scaled Lasso regression: 
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
-
-
 
 This formulation is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
 the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
@@ -91,7 +93,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-This formulation combines *R2* and *R3* to allow robust joint estimation of the (constrained) $\beta$ vector and 
+This formulation combines *R2* and *R3* allowing robust joint estimation of the (constrained) $\beta$ vector and 
 the scale $\sigma$ in a concomitant fashion [@Combettes:2020.1; @Combettes:2020.2].
 
 ### *C1* Contrained sparse classification with Square Hinge loss: 
@@ -135,7 +137,7 @@ setting that proved to be the fastest in our numerical experiments.
 
 - **Path algorithms (*Path-Alg*)** : 
 This is the default algorithm for non-concomitant problems *R1,R2,C1,C2*. 
-The algorithm uses the fact that the solution path along &lambda; is piecewise-affine (as shown, e.g., in [@Gaines:2018]). When Least-Squares is used as objective function, we derive a novel efficient procedure that allows us to also derive the solution for the concomitant problem *R3* along the path with little extra computational overhead.
+The algorithm uses the fact that the solution path along &lambda; is piecewise-affine (as shown, e.g., in [@Gaines:2018]). When Least-Squares is used as objective function, we provide a novel efficient procedure that also allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
 
 - **Projected primal-dual splitting method (*P-PDS*)** : 
 This algorithm is derived from [@Briceno:2020] and belongs to the class of 
@@ -143,7 +145,7 @@ proximal splitting algorithms. It extends the classical Forward-Backward (FB)
 (aka proximal gradient descent) algorithm to handle an additional linear equality constraint
 via projection. In the absence of a linear constraint, the method reduces to FB.
 This method can solve problem *R1*. For the Huber problem *R2*, 
-P-PDS can solve the mean-shift formulation of the problem  [@Mishra:2019].
+P-PDS can solve the mean-shift formulation of the problem [@Mishra:2019].
 
 - **Projection-free primal-dual splitting method (*PF-PDS*)** :
 This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
@@ -154,30 +156,29 @@ For the Huber problem *R2*, PF-PDS can solve the mean-shift formulation of the p
 
 - **Douglas-Rachford-type splitting method (*DR*)** : 
 This algorithm is the most general algorithm and can solve all regression problems 
-*R1-R4*. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
-It makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020.1; @Combettes:2020.2].
+*R1-R4*. It is based on Doulgas-Rachford splitting in a higher-dimensional product space and 
+makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020.1; @Combettes:2020.2].
 The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem 
 with the mean shift [@Mishra:2019] and thus solved in (n + d) dimensions.
 
-## Model selections
+## Model selections and computation modes
 
 Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. 
 
-- *Fixed Lambda* : This approach is simply letting the user choose the parameter $\lambda$, or to choose $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
-The default value is a scale-dependent tuning parameter that has been proposed in [Combettes:2020.2] and derived in [@Shi:2016].
+- *Fixed Lambda*: This setting lets the user choose a parameter $\lambda$, or a proportion $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
+The default value is a scale-dependent tuning parameter that has been derived in [@Shi:2016] and applied in [Combettes:2020.2].
 
-- *Path Computation* :The package also leaves the possibility to us to compute the solution for a range of $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. It can be done using *Path-Alg* or warm-start with any other optimization scheme. 
+- *Path Computation*: This setting allows the computation of a solution path for $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. The solution path is computed via the *Path-Alg* scheme or via warm-starts for other optimization schemes. 
 
 [comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts : starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
 
-- *Cross Validation* : Then one can use a model selection, to choose the appropriate penalisation. This can be done by using k-fold cross validation to find the best $\lambda \in [\lambda_{\min}, \lambda_{\max}]$ with or without "one-standard-error rule" [@Hastie:2009].
+- *Cross Validation*: This setting allows the selection of the regularization parameter $\lambda$ via k-fold cross validation for $\lambda \in [\lambda_{\min}, \lambda_{\max}]$. Both the Minimum Mean Squared Error (or Deviance) (MSE)  and the "One-Standard-Error rule" (1SE) are available [@Hastie:2009].
 
-- *Stability Selection* : Another variable selection model than can be used is stability selection [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
+- *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Lin:2014; @Meinshausen:2010; Combettes:2020.2].
 
 # Basic workflow
 
-
-Here is a basic example that shows how to run c-lasso on synthetic data.
+Here is a basic example how to install and run c-lasso on synthetic data.
 
 #### Installation 
 c-lasso is available on pip. You can install the package
@@ -192,9 +193,8 @@ To use the c-lasso package in Python, type
 from classo import *
 ```
 
-
-The c-lasso package depends on several standard Python packages. 
-The dependencies are included in the package. Those are, namely : 
+The c-lasso package depends on the following Python packages,
+included in the package: 
 
 `numpy` ; 
 `matplotlib` ; 
@@ -205,7 +205,7 @@ The dependencies are included in the package. Those are, namely :
 
 #### Generate random data
 The c-lasso package includes
-the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
+the routine ```random_data``` that allows to generate problem instances with normally distributed data $X$, sparse $\beta$, and constraints $C$.
 
 ```python
 n,d,d_nonzero,k,sigma =100,100,5,1,0.5
@@ -217,41 +217,42 @@ This code snippet generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\t
 Here is an example of problem instance one can create with those set of data. 
 
 ```python
-# let's define a c-lasso problem instance with default setting
+# Define a c-lasso problem instance with default setting
 problem  = classo_problem(X,y,C)
 
 
-# let's change the formulation of the problem
+# Example how to change the default formulation R3 to formulation R2 with a new rho parameter
 problem.formulation.huber  = True
 problem.formulation.concomitant = False
 problem.formulation.rho = 1.5
 
 
-# let's add a computation of beta for a fixed lambda 
+# Example how to add the computation of beta at a fixed lambda (as a proportion of lambdamax) 
 problem.model_selection.LAMfixed = True
 # and set it to to 0.1*lambdamax
 problem.model_selection.LAMfixedparameters.rescaled_lam = True
 problem.model_selection.LAMfixedparameters.lam = 0.1
 
-# let's add a computation of the lambda-path
+# Example how to a computation of the lambda-path
 problem.model_selection.PATH = True
 
 
-# let's solve our problem instance
+# Solve the specified problem instance
 problem.solve()
 ```
 
-Here, we have modified the [formulation](##formulations) of the problem in order to use [*R2*](###*R2*-contrained-sparse-Huber-regression), with $\rho=1.5$. 
+Here, we modified the [formulation](##formulations) of the problem in order to use [*R2*](###*R2*-contrained-sparse-Huber-regression), with $\rho=1.5$. 
 
-Then we have chosen the [model selections](##model-selections) we want to compute : *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ ; *Path computation* and *Stability Selection* which is computed by default. 
+Then, we chose the [model selections](##model-selections) we want to compute: *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ and *Path computation*. 
+*Stability Selection* is also computed by default. 
 
-Finally, those problems are solved using the method `solve` which computes everything. 
+Finally, these problem specifications are solved using the method `solve`. 
 
-#### Visualize the result 
-One can, before or after having solve the problem, plot the main caracteristics of the problem solved and of its solution: 
+#### Visualizing the problem setup and solutions 
+c-lasso enables the visualization of the problem specifications and (after solve) the problem solutions: 
 
 ```python
->>> # let's visualize the main parameters set in the problem instance
+>>> # Visualizing the main parameter specifications in the problem instance
 >>> problem
 
 FORMULATION: R2
@@ -284,7 +285,7 @@ STABILITY SELECTION PARAMETERS:
      lamin = 0.01
      Nlam = 50
 
->>> # let's the solutions found
+>>> # Visualizing the solutions
 >>> problem.solution
 
  LAMBDA FIXED : 
@@ -303,8 +304,7 @@ STABILITY SELECTION PARAMETERS:
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
 
-
-As this variable selection has been computed for generated data, one can plot the real relevant variables :
+In the present synthetic setup, one can also plot the ground truth $\beta$ solution of the problem:
 
 ```python
 >>> print( list(numpy.nonzero(sol)) )
