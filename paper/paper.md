@@ -232,7 +232,7 @@ This algorithm is based on the Doulgas-Rachford algorithm in a higher-dimensiona
 
 ## Computation modes and model selection {#model}
 
-Different models are implemented together with the optimization schemes, to overcome the difficulty of choosing the penalization free parameter $\lambda$. When using the package, several of those model selection can be computed with the same problem-instance.
+The `c-lasso` package provides several computation modes and model selection schemes for regularization parameter selection.
 
 The python syntax to use some specific model selection is the following
 ```python
