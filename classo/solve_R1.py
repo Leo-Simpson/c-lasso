@@ -112,7 +112,7 @@ def Classo_R1(pb,lam):
         gamma             = gamma/(2*lam)
         w                 = w /(2*lam)
         mu,ls, c, root    = pb.mu,[], pb.c, 0.
-        Q1,Q2  = QQ(2*gamma/(mu-1),A,AtA = AtA)
+        Q1,Q2  = QQ(2*gamma/(mu-1),A,AtA = pb.AtA, AAt = pb.AAt)
         QA,qy = Q1.dot(A), Q1.dot(y)
         
         qy_mult = qy*(mu-1)
@@ -212,6 +212,8 @@ class problem_R1 :
         self.gam = 1.
         self.tau = 0.5         # equation for the convergence of 'PF-PDS' and LS algorithms : gam + tau < 1
         if (algo =='DR'): self.gam = self.dim[1]
+        self.AtA = None
+        self.AAt = None
 
 
     #this is a method of the class pb that is used to computed the expensive multiplications only once. (espacially usefull for warm start. )
@@ -227,6 +229,9 @@ class problem_R1 :
         self.Cnorm      = LA.norm(C,2)**2
         self.tauN       = self.tau/self.Cnorm
         self.AtAnorm    = LA.norm(self.AtA,2)
+
+        if self.type == 'DR' : 
+            self.AAt = A.dot(A.T)
 
 
 
@@ -255,9 +260,11 @@ def proj_c(M,d):
 
 
 
-def QQ(coef,A,AtA=None): 
+def QQ(coef,A,AtA=None, AAt = None): 
     if AtA is None : 
-        return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*A.dot(A.T))),LA.inv(2*np.eye(A.shape[1])+coef*(A.T).dot(A)))   
-    else : 
-        return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*A.dot(A.T))),LA.inv(2*np.eye(A.shape[1])+coef*AtA)) 
+        AtA = (A.T).dot(A)
+    if AAt is None:
+        AAt = A.dot(A.T)
+    
+    return(coef*(A.T).dot(LA.inv(2*np.eye(A.shape[0])+coef*AAt)),LA.inv(2*np.eye(A.shape[1])+coef*AtA)) 
 

@@ -225,14 +225,17 @@ class problem_R2 :
     def add_r(self,r):
         prob=self.prob_R1
         d = prob.dim[1]-prob.dim[0]
-        np.fill_diagonal(prob.matrix[0][d:] , r ) 
+        np.fill_diagonal(prob.matrix[0][:,d:] , r ) 
         np.fill_diagonal(prob.AtA[d:,d:], r**2   )
         prob.AtA[d:,:d] = prob.matrix[0][:,:d]*r
-        prob.AtA[:d,d:] = prob.matrix[0][:,:d].T*r
+        prob.AtA[:d,d:] = prob.AtA[d:,:d].T
 
         prob.Aty = np.append(prob.Aty[:d],prob.matrix[2]*r)
         prob.lambdamax = 2*LA.norm(prob.Aty,np.infty)
         prob.AtAnorm    = LA.norm(prob.AtA,2)
+
+        A = self.matrix[0]
+        prob.AAt = A.dot(A.T)+np.eye(A.shape[0])*r**2
 
 
 
