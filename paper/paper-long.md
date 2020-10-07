@@ -56,7 +56,7 @@ The package handles several estimators for inferring coefficients and scale, inc
 
 Depending on the prior on the solution $\beta, \sigma$ and on the noise $\epsilon$, the previous forward model can lead to different types of estimation problems. 
 
-Our package can solve six of those : four regression-type and two classification-type formulations.
+Our package can solve four regression-type and two classification-type formulations:
 
 
 ### *R1* Standard constrained Lasso regression:             
@@ -76,7 +76,7 @@ $$
 $$
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
-for robust model fitting with $L_1$ and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Aigner:1976]
+for robust model fitting with an $L_1$ penalty and linear equality constraints on the $\beta$ vector. The parameter $\rho$ is set to $1.345$ by default [@Huber:1972]
 
 ### *R3* Contrained scaled Lasso regression: 
 
