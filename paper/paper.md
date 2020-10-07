@@ -2,8 +2,12 @@
 title: 'c-lasso - a package for constrained sparse and robust regression and classification in Python'
 tags:
   - Python
-  - Linear regression
-  - Optimization
+  - regression
+  - classification
+  - constrained regression
+  - Lasso
+  - Huber function
+  - convex optimization
 authors:
   - name: Léo Simpson
     affiliation: 1
@@ -32,7 +36,7 @@ bibliography: paper.bib
 
 # Summary
 
-We introduce c-lasso, a Python package that enables sparse and robust linear
+We introduce `c-lasso`, a Python package that enables sparse and robust linear
 regression and classification with linear equality constraints. 
 
 
@@ -194,44 +198,36 @@ problem.formulation.classification = True
 
 ## Optimization schemes {#method}
 
-The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problem. We have implemented four algorithms (with provable convergence guarantees). The c-lasso package also includes novel algorithmic adaptations to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. 
+The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. We have implemented four published algorithms (with provable convergence guarantees). The c-lasso package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. 
 
 Here is a summary of which algorithm can be used for each problem : 
 
 |             |*Path-Alg*| *DR* | *P-PDS* | *PF-PDS* |
 |-|:-:|:-:|:-:|:-:|
-| [*R1*](#R1) | recommanded for high $\lambda$ and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
-| [*R2*](#R2) | recommanded for high $\lambda$  and for path computation | recommanded for small $\lambda$ | possible | recommanded for complex constraints |
-| [*R3*](#R3) | recommanded for high $\lambda$ or when path computation is require | recommanded for small $\lambda$ |          |                   |
-| [*R4*](#R4) |                                                                    | recommanded (only option)                |          |   |
-| [*C1*](#C1) | recommanded (only option)                                                       |                                 |          |   |
-| [*C2*](#C2) | recommanded   (only option)                                                     |                                 |          |   |
+| [*R1*](#R1) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
+| [*R2*](#R2) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
+| [*R3*](#R3) | recommended for large $\lambda$ or when path computation is require | recommended for small $\lambda$ |          |                   |
+| [*R4*](#R4) |                                                                    | recommended (only option)                |          |   |
+| [*C1*](#C1) | recommended (only option)                                                       |                                 |          |   |
+| [*C2*](#C2) | recommended (only option)                                                     |                                 |          |   |
 
 
 
 The python syntax to use an algorithm different than recommanded is the following : 
 ```python
 problem.numerical_method = "Path-Alg" 
-# also works with "DR", "P-PDS" or "PF-PDS" 
+# alternative options: "DR", "P-PDS", and "PF-PDS" 
 ```
 
+- Path algorithms (*Path-Alg*):
+The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown in [@Gaines:2018].
 
-- Path algorithms (*Path-Alg*) :
-The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown, in [@Gaines:2018].
+- Douglas-Rachford-type splitting method (*DR*):
+This algorithm is based on the Doulgas-Rachford algorithm in a higher-dimensional product space [@Combettes:2020; @Muller:2020].
 
+- Projected primal-dual splitting method (*P-PDS*): This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms. 
 
-- Douglas-Rachford-type splitting method (*DR*) :
-This algorithm is based on Doulgas Rachford splitting in a higher-dimensional product space [@Combettes:2020; @Muller:2020].
-
-
-- Projected primal-dual splitting method (*P-PDS*) : This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms. 
-
-
-- Projection-free primal-dual splitting method (*PF-PDS*) : This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
-proximal splitting algorithms. 
-
-
-
+- Projection-free primal-dual splitting method (*PF-PDS*): This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and belongs to the class of proximal splitting algorithms. 
 
 
 ## Model selections {#model}
