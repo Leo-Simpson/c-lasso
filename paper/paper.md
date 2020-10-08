@@ -45,7 +45,7 @@ $$
 
 Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general
 constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast
-regression with compositional data $X$, leading to the constraint $\sum_{i=1}^d \beta_i = 0$ (i.e., $C = 1_d^T$) [@Aitchison:1984] and Generalized lasso-type
+regression with compositional data $X$, leading to the constraint $\sum_{i=1}^d \beta_i = 0$ (i.e., $C = 1_d^T$) [@Aitchison:1984] and Generalized Lasso-type
 problems (see, e.g, [James et al.](http://faculty.marshall.usc.edu/gareth-james/Research/PAC.pdf), Example 3). The `c-lasso` package provides 
 several estimators for inferring unknown coefficients and scale (perspective M-estimators), including 
 - the constrained Lasso, 
@@ -133,7 +133,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-This formulation is the default problem formulation in c-lasso. It is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
+This formulation is the default problem formulation in `c-lasso`. It is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
 the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
 
 ```python
