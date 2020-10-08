@@ -56,6 +56,8 @@ The package handles several estimators for inferring unknown coefficients and sc
 
 # Functionalities
 
+## Installation and basic usage {#gettingstarted}
+
 c-lasso is available on pip. You can install the package
 in the shell using
 
