@@ -38,9 +38,11 @@ bibliography: paper.bib
 
 We introduce `c-lasso`, a Python package that enables sparse and robust linear regression and classification with linear equality constraints. 
 The underlying statistical forward model is assumed to be of the following form:
+
 $$
 y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
 $$
+
 Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general
 constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast
 regression with compositional data $X$, leading to the constraint $\sum_{i=1}^d \beta_i = 0$ (i.e., $C = 1_d^T$) [@Aitchison:1984] and Generalized lasso-type
