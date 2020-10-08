@@ -269,15 +269,16 @@ problem.model_selection.StabSel = True
 Each model selection procedure has additional meta-parameters that are described in the Documentation.
 
 
-# Example on synthetic data
+# Computational examples  
 
-The c-lasso package includes
-the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
+## Basic workflow using synthetic data
+
+We illustrate the workflow of the `c-lasso` package on synthetic data using the built-in routine ```random_data``` which enables the generation of test 
+problem instances with normally distributed data X, sparse coefficient vectors $\beta$, and constraints $C \in R^{k\times d}$.
 
 [comment]: <> (It generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\times d}$, $C \in R^{k\times d}$ [can also be the all-one vector with the input ```zerosum``` set to true], and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N[0,I_n\sigma^2]$ and $\beta$ has only d_nonzero non-null componant. )
 
-
- It allows perform some functionality of the package on synthetic data as an example. 
+It allows perform some functionality of the package on synthetic data as an example. 
 
 ```python
 from classo import classo_problem, random_data
@@ -325,7 +326,9 @@ Relevant variables  : [43 47 74 79 84]
 
 It is indeed the variables that have been selected with the solution threshold for a fixed lambda, and with stability selection. Let us also note that the running time is still very low in our example. Those remarks are comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
 
-# Calling c-lasso from R 
+## Log-contrast regression on gut microbiome data
+
+## Calling c-lasso from R 
 
 As an alternative, one can use this package in R instead of python by calling the python package with the Rlibrary ```reticulate```. As an example, this code snippet used in R will perform regression with a fixed lambda set to $\lambda = 0.1\lambda_{\max}$.
 
