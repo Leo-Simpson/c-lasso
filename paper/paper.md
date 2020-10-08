@@ -47,14 +47,15 @@ y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
 $$
 
 Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast regression with compositional data $X$ which leads to the constraint $\sum_{i=1}^d \beta_i = 0$, i.e., $C = 1_d^T$ [@Aitchison:1984] and Generalized lasso-type
-problems (see Example 3 in [James et al.](http://faculty.marshall.usc.edu/gareth-james/Research/PAC.pdf))
+problems (see, e.g, [James et al.](http://faculty.marshall.usc.edu/gareth-james/Research/PAC.pdf), Example 3)
 
 # Statement of need 
 
 The package handles several estimators for inferring unknown coefficients and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints, none of which can be currently solved in Python in an efficient manner. Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems at fixed regularization and across an entire regularization path. We include three model selection strategies for determining model parameter regularization levels: a theoretically derived fixed regularization, k-fold cross-validation, and stability selection. The c-lasso package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems and/or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
 
-
 # Functionalities
+
+## Installation and basic usage {#gettingstarted}
 
 c-lasso is available on pip. You can install the package
 in the shell using
@@ -63,28 +64,31 @@ in the shell using
 pip install c_lasso
 ```
 
-Here is the typical syntax to use c-lasso on python. 
+Below is an example of the basic usage of c-lasso in Python. 
 
 ```python
 # to import the main class of the package
 from classo import classo_problem
 
-# to define a c-lasso problem instance with default setting
+# Define a c-lasso problem instance with default setting, given data X,y, and C.
 problem  = classo_problem(X,y,C)
 
-# insert here possible modifications of the problem instance 
+# Add possible modifications of the problem instance 
+...
 
-# to solve our problem instance
+# Solve the specified problem instance
 problem.solve()
 
-# finally one can visualize the instance we just solved and see solution plots as well
+# Show the problem specficiation and the corresponding solution
 print(problem)
 print(problem.solution)
 ```
 
 ## Formulations {#formulations}
 
-Depending on the type of the data and prior assumptions on the data, the noise $\epsilon$, and the model parameters, different types of estimation problems can be formulated. The package allows solving four regression-type and two classification-type formulations:
+Depending on the type of data and the prior assumptions on data, the noise $\epsilon$, and the model parameters, `c-lasso` allows 
+different estimation problem formulations. More specifically, the package can solve the following 
+four regression-type and two classification-type formulations:
 
 
 ### *R1* Standard constrained Lasso regression: {#R1}           
@@ -102,7 +106,6 @@ problem.formulation.huber = False
 problem.formulation.concomitant = False
 problem.formulation.classification = False
 ```
-
 
 ### *R2* Contrained sparse Huber regression: {#R2}                  
 
@@ -195,40 +198,44 @@ problem.formulation.classification = True
 ```
 
 
-
 ## Optimization schemes {#method}
 
-The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. We have implemented four published algorithms (with provable convergence guarantees). The c-lasso package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. 
+The problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. The `c-lasso` package implements four published algorithms with provable convergence guarantees. The package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. The following algorithmic schemes are implemented: 
 
-Here is a summary of which algorithm can be used for each problem : 
+- Path algorithms (*Path-Alg*): 
+This algorithm follows the proposal in [@Gaines:2018]) and uses the fact that the solution path along &lambda; is piecewise-affine [@Rosset:2007]. We also provide a novel efficient procedure that allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
+
+- Douglas-Rachford-type splitting method (*DR*): 
+This algorithm can solve all regression problems *R1-R4*. It is based on Doulgas-Rachford splitting in a higher-dimensional product space and 
+makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020; @Muller:2020]. The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem with mean shift vector [@Mishra:2019] and thus solved in (n + d) dimensions.
+
+- Projected primal-dual splitting method (*P-PDS*): 
+This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms, extending the classical Forward-Backward (FB) 
+(aka proximal gradient descent) algorithm to handle an additional linear equality constraint via projection. In the absence of a linear constraint, the method reduces to FB.
+
+- Projection-free primal-dual splitting method (*PF-PDS*):
+This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
+proximal splitting algorithms. The algorithm does not require projection operators which may be beneficial when C has a more complex structure. 
+In the absence of a linear constraint, the method reduces to the Forward-Backward-Forward scheme.
+
+The following table summarizes the available algorithms and their recommended usage for each problem: 
 
 |             |*Path-Alg*| *DR* | *P-PDS* | *PF-PDS* |
 |-|:-:|:-:|:-:|:-:|
 | [*R1*](#R1) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
 | [*R2*](#R2) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
-| [*R3*](#R3) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ |          |                   |
-| [*R4*](#R4) |                                                                    | recommended (only option)                |          |   |
-| [*C1*](#C1) | recommended (only option)                                                       |                                 |          |   |
-| [*C2*](#C2) | recommended (only option)                                                     |                                 |          |   |
+| [*R3*](#R3) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ |    -      |        -           |
+| [*R4*](#R4) |           -                                                         | recommended (only option)                |    -      |  - |-
+| [*C1*](#C1) | recommended (only option)                                                       |                 -                |   -       |  - |
+| [*C2*](#C2) | recommended (only option)                                                     |                -                 |     -     |  - |
 
 
 
-The python syntax to use an algorithm different than recommanded is the following : 
+The following Python snippet shows how to select a specific algorithm: 
 ```python
 problem.numerical_method = "Path-Alg" 
 # alternative options: "DR", "P-PDS", and "PF-PDS" 
 ```
-
-- Path algorithms (*Path-Alg*):
-The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown in [@Gaines:2018].
-
-- Douglas-Rachford-type splitting method (*DR*):
-This algorithm is based on the Doulgas-Rachford algorithm in a higher-dimensional product space [@Combettes:2020; @Muller:2020].
-
-- Projected primal-dual splitting method (*P-PDS*): This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms. 
-
-- Projection-free primal-dual splitting method (*PF-PDS*): This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and belongs to the class of proximal splitting algorithms. 
-
 
 ## Computation modes and model selection {#model}
 
@@ -255,21 +262,23 @@ problem.model_selection.PATH = True
 problem.model_selection.CV = True
 problem.model_selection.StabSel = False
 
-# c-lasso also allows to specify multiple model selection schemes, 
-# e.g., adding stability selection here by setting
+# c-lasso also allows to specify multiple model selection schemes, e.g., adding stability selection via
 problem.model_selection.StabSel = True
 ```
 
-# Example on synthetic data
+Each model selection procedure has additional meta-parameters that are described in the Documentation.
 
 
-The c-lasso package includes
-the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
+# Computational examples  
+
+## Basic workflow using synthetic data
+
+We illustrate the workflow of the `c-lasso` package on synthetic data using the built-in routine ```random_data``` which enables the generation of test 
+problem instances with normally distributed data X, sparse coefficient vectors $\beta$, and constraints $C \in R^{k\times d}$.
 
 [comment]: <> (It generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\times d}$, $C \in R^{k\times d}$ [can also be the all-one vector with the input ```zerosum``` set to true], and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N[0,I_n\sigma^2]$ and $\beta$ has only d_nonzero non-null componant. )
 
-
- It allows perform some functionality of the package on synthetic data as an example. 
+It allows perform some functionality of the package on synthetic data as an example. 
 
 ```python
 from classo import classo_problem, random_data
@@ -317,7 +326,9 @@ Relevant variables  : [43 47 74 79 84]
 
 It is indeed the variables that have been selected with the solution threshold for a fixed lambda, and with stability selection. Let us also note that the running time is still very low in our example. Those remarks are comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
 
-# Calling c-lasso from R 
+## Log-contrast regression on gut microbiome data
+
+## Calling c-lasso from R 
 
 As an alternative, one can use this package in R instead of python by calling the python package with the Rlibrary ```reticulate```. As an example, this code snippet used in R will perform regression with a fixed lambda set to $\lambda = 0.1\lambda_{\max}$.
 
@@ -337,7 +348,7 @@ beta <- as.matrix(map_dfc(problem$solution$LAMfixed$beta, as.numeric))
 
 # Acknowledgements
 
-This work was supported by the Flatiron Institute and the Helmholtz Zentrum Munchen. 
+This work of LS was conducted at and financially supported by the Center for Computational Mathematics (CCM), Flatiron Institute, New York, and the Institute of Computational Biology, Helmholtz Zentrum München. We thank Dr. Leslie Greengard (CCM and Courant Institute, NYU) for facilitating the initial contact between LS and CLM. 
 
 # References
 
