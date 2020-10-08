@@ -223,12 +223,12 @@ The following table summarizes the available algorithms and their recommended us
 
 |             |*Path-Alg*| *DR* | *P-PDS* | *PF-PDS* |
 |-|:-:|:-:|:-:|:-:|
-| [*R1*](#R1) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
-| [*R2*](#R2) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
-| [*R3*](#R3) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ |    -      |        -           |
-| [*R4*](#R4) |           -                                                         | recommended (only option)                |    -      |  - |-
-| [*C1*](#C1) | recommended (only option)                                                       |                 -                |   -       |  - |
-| [*C2*](#C2) | recommended (only option)                                                     |                -                 |     -     |  - |
+| [*R1*](#R1) | use for large $\lambda$ and path computation | use for small $\lambda$ | possible | use for complex constraints |
+| [*R2*](#R2) | use for large $\lambda$ and path computation | use for small $\lambda$ | possible | use for complex constraints |
+| [*R3*](#R3) | use for large $\lambda$ and path computation | use for small $\lambda$ |    -      |        -           |
+| [*R4*](#R4) |           -                                                         | only option                |    -      |  - |-
+| [*C1*](#C1) | only option                                                      |                 -                |   -       |  - |
+| [*C2*](#C2) | only option                                                     |                -                 |     -     |  - |
 
 
 
