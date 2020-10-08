@@ -61,17 +61,16 @@ Currently, there is no Python package available that can solve these specific bu
 
 ## Installation and basic usage {#gettingstarted}
 
-c-lasso is available on pip. You can install the package
-in the shell using
+c-lasso is available on pip and can be installed in the shell using
 
 ```shell
 pip install c_lasso
 ```
 
-Below is an example of the basic usage of c-lasso in Python. 
+Below is an example of the basic usage of `c-lasso` in Python. 
 
 ```python
-# to import the main class of the package
+# Import the main class of the package
 from classo import classo_problem
 
 # Define a c-lasso problem instance with default setting, given data X,y, and C.
