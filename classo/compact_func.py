@@ -14,7 +14,12 @@ Classo and pathlasso are the main functions, they can call every algorithm acord
 
 # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
-def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False, true_lam=False, e=1., rho_classification=-1., w = None, intercept = False):
+def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False, true_lam=False, e=None, rho_classification=-1., w = None, intercept = False):
+
+    if e is None:
+        if typ == 'R3':   e = len(matrix[0])/2
+        elif typ == 'R4': e = len(matrix[0])
+
 
     if not w is None : matrices = (  matrix[0]/w, matrix[1],matrix[2] )
     else : matrices = matrix
@@ -80,6 +85,11 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
 
 
 def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg',rho = 1.345, true_lam = False, e= 1.,return_sigm= False,rho_classification=-1, w =None, intercept = False):
+
+    if e is None:
+    if typ == 'R3':   e = len(matrix[0])/2
+    elif typ == 'R4': e = len(matrix[0])
+    
     Nactive = n_active
     if(Nactive==0):Nactive=False
     if (type(lambdas)!= bool):
@@ -108,7 +118,6 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg
         S=np.array(S)/np.sqrt(e)
 
     elif(typ=='R4'):
-        meth='DR'
         pb = problem_R4(matrices,meth,rho,e=e)
         lambdamax = pb.lambdamax
         if (true_lam): lambdass=[lamb/lambdamax for lamb in lambdass]

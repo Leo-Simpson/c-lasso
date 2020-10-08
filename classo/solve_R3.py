@@ -16,11 +16,11 @@ The first function compute a solution of a Lasso problem for a given lambda. The
 def Classo_R3(pb,lam):
     pb_type = pb.type     # can be 'Path-Alg' or 'DR'
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
-    sigmax = LA.norm(y)*np.sqrt(2)
+    sigmax = pb.sigmax
 
     if (lam == 0.): 
         beta =  unpenalized(pb.matrix)
-        sigma= LA.norm(A.dot(beta)-y)*np.sqrt(2)
+        sigma= LA.norm(A.dot(beta)-y)/np.sqrt(pb.e)
         return beta,sigma
 
 
@@ -41,7 +41,7 @@ def Classo_R3(pb,lam):
     regpath = pb.regpath
     if(not regpath): pb.compute_param()
 
-    lamb          = lam * LA.norm(pb.Aty, np.infty) / LA.norm(y) * np.sqrt(2)
+    lamb          = lam * pb.lambdamax
     Anorm         = pb.Anorm
     tol           = pb.tol * LA.norm(y)/Anorm   # tolerance rescaled
     Proj          = proj_c(C,d)   # Proj = I - C^t . (C . C^t )^-1 . C
@@ -75,11 +75,12 @@ def Classo_R3(pb,lam):
 '''
 This function compute the the solution for a given path of lam : by calling the function 'algo' for each lambda with warm start, or wuth the method ODE, by computing the whole path thanks to the ODE that rules Beta and the subgradient s, and then to evaluate it in the given finite path.  
 '''
-def pathlasso_R3(pb,path,n_active=False,e=1.):
+def pathlasso_R3(pb,path,n_active=False):
     n,d,k  = pb.dim
     BETA,SIGMA,tol = [],[],pb.tol
 
     if(pb.type=='Path-Alg'):
+        # to do : change it w.r.t different value of e
         y=pb.matrix[2]
         sigmax= LA.norm(y)
         X,LAM,R = solve_path_Conc(pb.matrix,path[-1],n_active=n_active)
@@ -123,7 +124,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 '''
 class problem_R3 :
     
-    def __init__(self,data,algo,e=1.):
+    def __init__(self,data,algo,e=None):
         self.N = 500000
 
         (A,C,y) = data
@@ -146,6 +147,8 @@ class problem_R3 :
         self.Aty        = (A.T).dot(y)
         self.sigmax     = LA.norm(y)/np.sqrt(e)
         self.lambdamax = 2 * LA.norm(self.Aty, np.infty) / self.sigmax
+        if e is None : self.e = m/2
+        else : self.e = e
         self.init       = 1.,1.,np.zeros(m), np.zeros(d), np.zeros(d)    
 
 
