@@ -130,8 +130,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-This formulation is the default problem formulation in `c-lasso`. It is similar to [*R1*](#R1) but allows for joint estimation of the (constrained) $\beta$ vector and 
-the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
+This formulation is the default problem formulation in `c-lasso`. It is similar to [*R1*](#R1) but allows for joint estimation of the (constrained) $\beta$ vector and the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
 
 ```python
 # formulation R3
@@ -254,7 +253,7 @@ The default value is a scale-dependent tuning parameter that has been derived in
 - *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Lin:2014; @Meinshausen:2010; Muller:2020]. Three modes are
 available for the selection of variables over subsamples: selection at a fixed $\lambda$ [@Muller:2020], selection of the q first variables entering the path (the default setting in `c-lasso`), and selection of the q largest coefficients (in absolute value) across the path [@Meinshausen:2010].
 
-The python syntax to use a specific model selection is exemplified below:
+The python syntax to use a specific computation mode and model selection is exemplified below:
 
 ```python
 # Example how to do only cross-validation and path computation:
@@ -279,7 +278,7 @@ problem instances with normally distributed data X, sparse coefficient vectors $
 
 [comment]: <> (It generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\times d}$, $C \in R^{k\times d}$ [can also be the all-one vector with the input ```zerosum``` set to true], and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N[0,I_n\sigma^2]$ and $\beta$ has only d_nonzero non-null componant. )
 
-It allows perform some functionality of the package on synthetic data as an example. 
+Here, we use a problem instance with $n=100$, $d=100$, a $\beta$ with five non-zero components, $\sigma=0.5$, and a zero-sum contraint. 
 
 ```python
 from classo import classo_problem, random_data
@@ -304,9 +303,9 @@ problem.solve()
 print(problem.solution)
 ```
 
-The [formulation](#formulations) used is [*R2*](#R2), with $\rho=1.5$. The [model selections](#model) used are *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$ , *Path computation* and *Stability Selection* which is computed by default. 
+Here, we use [formulation](#formulations) [*R2*](#R2) with $\rho=1.5$, [computation mode and model selections](#model) *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$, *Path computation*, and *Stability Selection* (as per default). 
 
-The output is then : 
+Here, the corresponding output reads: 
 
 ```shell
 Relevant variables  : [43 47 74 79 84]
@@ -325,15 +324,19 @@ Relevant variables  : [43 47 74 79 84]
 
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
-It is indeed the variables that have been selected with the solution threshold for a fixed lambda, and with stability selection. Let us also note that the running time is still very low in our example. Those remarks are comforting, but not surprising because in this example the noise is little and the number of variable is still small. 
+For this tuned example, the solutions at the fixed lambda and the one selected with stability selection can perfectly recover the oracle solution. 
+Note that the running time for this $d=100$-dimensional example for a single path computation is about 0.5 seconds on a standard Laptop.
 
 ## Log-contrast regression on gut microbiome data
 
-## Calling c-lasso from R 
+We next illustrate the application of the `c-lasso` package on a microbiome dataset, considered in [@Shi:2016] and [Muller:2020]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $p=45$ relative abundances of bacterial genera. 
 
-As an alternative, one can use this package in R instead of python by calling the python package with the Rlibrary ```reticulate```. As an example, this code snippet used in R will perform regression with a fixed lambda set to $\lambda = 0.1\lambda_{\max}$.
 
-One should be careful with the inputs : X should be a ```matrix```, C as well, but y should be an ```array``` (if one set y to be matrix $1\times n$ for example, c-lasso will not work).
+## Calling `c-lasso` in R 
+
+The `c-lasso` package can also be conveniently interfaced with R using the R package ```reticulate```. The code snippet below shows how used in R will perform regression with a fixed lambda set to $\lambda = 0.1\lambda_{\max}$.
+
+One should be careful with the inputs: X should be a ```matrix```, C as well, but y should be an ```array``` (if one set y to be matrix $1\times n$ for example, c-lasso will not work).
 
 ```r
 problem<- classo$classo_problem(X=X,C=C,y=array(y))
@@ -343,7 +346,7 @@ problem$model_selection$LAMfixedparameters$rescaled_lam <- TRUE
 problem$model_selection$LAMfixedparameters$lam <- 0.1
 problem$solve()
 
-# extract outputs
+# extract coefficent vector 
 beta <- as.matrix(map_dfc(problem$solution$LAMfixed$beta, as.numeric))
 ```
 
