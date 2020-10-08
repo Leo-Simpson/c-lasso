@@ -195,10 +195,25 @@ problem.formulation.classification = True
 ```
 
 
-
 ## Optimization schemes {#method}
 
-The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. The `c-lasso` package implements four published algorithms with provable convergence guarantees. The package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. 
+The problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. The `c-lasso` package implements four published algorithms with provable convergence guarantees. The package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. The following algorithmic schemes are implemented: 
+
+- Path algorithms (*Path-Alg*): 
+This algorithm follows the proposal in [@Gaines:2018]) and uses the fact that the solution path along &lambda; is piecewise-affine [@Rosset:2007]. We also provide a novel efficient procedure that allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
+
+- Douglas-Rachford-type splitting method (*DR*): 
+This algorithm can solve all regression problems *R1-R4*. It is based on Doulgas-Rachford splitting in a higher-dimensional product space and 
+makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020; @Muller:2020]. The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem with mean shift vector [@Mishra:2019] and thus solved in (n + d) dimensions.
+
+- Projected primal-dual splitting method (*P-PDS*): 
+This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms, extending the classical Forward-Backward (FB) 
+(aka proximal gradient descent) algorithm to handle an additional linear equality constraint via projection. In the absence of a linear constraint, the method reduces to FB.
+
+- Projection-free primal-dual splitting method (*PF-PDS*):
+This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
+proximal splitting algorithms. The algorithm does not require projection operators which may be beneficial when C has a more complex structure. 
+In the absence of a linear constraint, the method reduces to the Forward-Backward-Forward scheme.
 
 The following table summarizes the available algorithms and their recommended usage for each problem: 
 
@@ -213,22 +228,11 @@ The following table summarizes the available algorithms and their recommended us
 
 
 
-The python syntax to use an algorithm different than recommanded is the following : 
+The following Python snippet shows how to select a specific algorithm: 
 ```python
 problem.numerical_method = "Path-Alg" 
 # alternative options: "DR", "P-PDS", and "PF-PDS" 
 ```
-
-- Path algorithms (*Path-Alg*):
-The algorithm uses the fact that the solution path along &lambda; is piecewise-affine as shown in [@Gaines:2018].
-
-- Douglas-Rachford-type splitting method (*DR*):
-This algorithm is based on the Doulgas-Rachford algorithm in a higher-dimensional product space [@Combettes:2020; @Muller:2020].
-
-- Projected primal-dual splitting method (*P-PDS*): This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms. 
-
-- Projection-free primal-dual splitting method (*PF-PDS*): This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and belongs to the class of proximal splitting algorithms. 
-
 
 ## Computation modes and model selection {#model}
 
@@ -255,13 +259,14 @@ problem.model_selection.PATH = True
 problem.model_selection.CV = True
 problem.model_selection.StabSel = False
 
-# c-lasso also allows to specify multiple model selection schemes, 
-# e.g., adding stability selection here by setting
+# c-lasso also allows to specify multiple model selection schemes, e.g., adding stability selection via
 problem.model_selection.StabSel = True
 ```
 
-# Example on synthetic data
+Each model selection procedure has additional meta-parameters that are described in the Documentation.
 
+
+# Example on synthetic data
 
 The c-lasso package includes
 the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
