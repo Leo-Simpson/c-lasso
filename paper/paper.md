@@ -345,7 +345,7 @@ beta <- as.matrix(map_dfc(problem$solution$LAMfixed$beta, as.numeric))
 
 # Acknowledgements
 
-This work was supported by the Flatiron Institute and the Helmholtz Zentrum Munchen. 
+The authors acknowledge financial support from the Center for Computational Mathematics, Flatiron Institute, New York, and the Institute of Computational Biology, Helmholtz Zentrum Munchen. 
 
 # References
 
