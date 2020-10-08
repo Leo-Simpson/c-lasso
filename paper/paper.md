@@ -198,18 +198,18 @@ problem.formulation.classification = True
 
 ## Optimization schemes {#method}
 
-The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. We have implemented four published algorithms (with provable convergence guarantees). The c-lasso package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. 
+The available problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. The `c-lasso` package implements four published algorithms with provable convergence guarantees. The package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. 
 
-Here is a summary of which algorithm can be used for each problem : 
+The following table summarizes the available algorithms and their recommended usage for each problem: 
 
 |             |*Path-Alg*| *DR* | *P-PDS* | *PF-PDS* |
 |-|:-:|:-:|:-:|:-:|
 | [*R1*](#R1) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
 | [*R2*](#R2) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ | possible | recommended for complex constraints |
-| [*R3*](#R3) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ |          |                   |
-| [*R4*](#R4) |                                                                    | recommended (only option)                |          |   |
-| [*C1*](#C1) | recommended (only option)                                                       |                                 |          |   |
-| [*C2*](#C2) | recommended (only option)                                                     |                                 |          |   |
+| [*R3*](#R3) | recommended for large $\lambda$ and path computation | recommended for small $\lambda$ |    -      |        -           |
+| [*R4*](#R4) |           -                                                         | recommended (only option)                |    -      |  - |-
+| [*C1*](#C1) | recommended (only option)                                                       |                 -                |   -       |  - |
+| [*C2*](#C2) | recommended (only option)                                                     |                -                 |     -     |  - |
 
 
 
