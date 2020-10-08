@@ -14,7 +14,7 @@ authors:
   - name: Patrick L. Combettes
     affiliation: 2
   - name: Christian L. Müller
-    affiliation: 3,4,5
+    affiliation: 3 4 5
 affiliations:
  - name: Technische Universität München 
    index: 1
@@ -36,22 +36,21 @@ bibliography: paper.bib
 
 # Summary
 
-We introduce `c-lasso`, a Python package that enables sparse and robust linear
-regression and classification with linear equality constraints. 
-
-
-The forward model is assumed to be:
-
+We introduce `c-lasso`, a Python package that enables sparse and robust linear regression and classification with linear equality constraints. 
+The underlying statistical forward model is assumed to be of the following form:
 $$
 y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
 $$
-
-Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast regression with compositional data $X$ which leads to the constraint $\sum_{i=1}^d \beta_i = 0$, i.e., $C = 1_d^T$ [@Aitchison:1984] and Generalized lasso-type
-problems (see, e.g, [James et al.](http://faculty.marshall.usc.edu/gareth-james/Research/PAC.pdf), Example 3)
+Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general
+constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast
+regression with compositional data $X$, leading to the constraint $\sum_{i=1}^d \beta_i = 0$ (i.e., $C = 1_d^T$) [@Aitchison:1984] and Generalized lasso-type
+problems (see, e.g, [James et al.](http://faculty.marshall.usc.edu/gareth-james/Research/PAC.pdf), Example 3). The `c-lasso` package provides 
+several estimators for inferring unknown coefficients and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints.  
 
 # Statement of need 
 
-The package handles several estimators for inferring unknown coefficients and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints, none of which can be currently solved in Python in an efficient manner. Several algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve the underlying convex optimization problems at fixed regularization and across an entire regularization path. We include three model selection strategies for determining model parameter regularization levels: a theoretically derived fixed regularization, k-fold cross-validation, and stability selection. The c-lasso package is intended to fill the gap between popular python tools such as `scikit-learn` which <em>cannot</em> solve sparse constrained problems and general-purpose optimization solvers such as `cvx` that do not scale well for the considered problems and/or are inaccurate. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data. We also highlight the seamless integration of the solver into `R` via the `reticulate` package. 
+Currently, there is no Python package available that can solve these specific but very popular statistical estimation problems in a fast and efficient manner. 
+`c-lasso` provides several algorithmic strategies, including path and proximal splitting algorithms, to solve the underlying convex optimization problems with provable convergence guarantees. The c-lasso package is intended to fill the gap between popular Python tools such as [`scikit-learn`](https://scikit-learn.org/stable/) which <em>cannot</em> solve these constrained problems and general-purpose optimization solvers such as [`cvxpy`](https://www.cvxpy.org) that do not scale well for the considered problems and/or are inaccurate. `c-lasso` can solve the estimation problems at fixed regularization level and across an entire regularization path and includes three model selection strategies for determining model parameter regularization levels: a theoretically derived fixed regularization, k-fold cross-validation, and stability selection. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data, and highlight the seamless integration of the solver into `R` via the `reticulate` [package](https://rstudio.github.io/reticulate/). 
 
 # Functionalities
 
