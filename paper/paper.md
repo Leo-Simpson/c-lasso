@@ -47,7 +47,10 @@ Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}
 constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast
 regression with compositional data $X$, leading to the constraint $\sum_{i=1}^d \beta_i = 0$ (i.e., $C = 1_d^T$) [@Aitchison:1984] and Generalized lasso-type
 problems (see, e.g, [James et al.](http://faculty.marshall.usc.edu/gareth-james/Research/PAC.pdf), Example 3). The `c-lasso` package provides 
-several estimators for inferring unknown coefficients and scale, including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints.  
+several estimators for inferring unknown coefficients and scale (perspective M-estimators), including 
+- the constrained Lasso, 
+- the constrained scaled Lasso, and
+- sparse Huber M-estimators with linear equality constraints,
 
 # Statement of need 
 
