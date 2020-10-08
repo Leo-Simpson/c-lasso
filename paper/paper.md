@@ -114,7 +114,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} h_{\rho} (X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
+This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) $h_{\rho}$ as objective function 
 for robust model fitting with an $L_1$ penalty and linear equality constraints on the $\beta$ vector. The default parameter $\rho$ is set to $1.345$ [@Huber:1981].
 
 ```python
@@ -130,7 +130,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-This formulation is the default problem formulation in `c-lasso`. It is similar to *R1* but allows for joint estimation of the (constrained) $\beta$ vector and 
+This formulation is the default problem formulation in `c-lasso`. It is similar to [*R1*](#R1) but allows for joint estimation of the (constrained) $\beta$ vector and 
 the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
 
 ```python
@@ -146,7 +146,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-This formulation combines *R2* and *R3* allowing robust joint estimation of the (constrained) $\beta$ vector and 
+This formulation combines [*R2*](#R2) and [*R3*](#R3) allowing robust joint estimation of the (constrained) $\beta$ vector and 
 the scale $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
 
 ```python
@@ -168,7 +168,7 @@ $$
 l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-This formulation is similar to *R1* but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
+This formulation is similar to [*R1*](#R1) but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
 
 ```python
 # formulation C1
