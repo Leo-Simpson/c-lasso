@@ -65,28 +65,31 @@ in the shell using
 pip install c_lasso
 ```
 
-Here is the typical syntax to use c-lasso on python. 
+Below is an example of the basic usage of c-lasso in Python. 
 
 ```python
 # to import the main class of the package
 from classo import classo_problem
 
-# to define a c-lasso problem instance with default setting
+# Define a c-lasso problem instance with default setting, given data X,y, and C.
 problem  = classo_problem(X,y,C)
 
-# insert here possible modifications of the problem instance 
+# Add possible modifications of the problem instance 
+...
 
-# to solve our problem instance
+# Solve the specified problem instance
 problem.solve()
 
-# finally one can visualize the instance we just solved and see solution plots as well
+# Show the problem specficiation and the corresponding solution
 print(problem)
 print(problem.solution)
 ```
 
 ## Formulations {#formulations}
 
-Depending on the type of the data and prior assumptions on the data, the noise $\epsilon$, and the model parameters, different types of estimation problems can be formulated. The package allows solving four regression-type and two classification-type formulations:
+Depending on the type of data and the prior assumptions on data, the noise $\epsilon$, and the model parameters, `c-lasso` allows 
+different estimation problem formulations. More specifically, the package can solve the following 
+four regression-type and two classification-type formulations:
 
 
 ### *R1* Standard constrained Lasso regression: {#R1}           
