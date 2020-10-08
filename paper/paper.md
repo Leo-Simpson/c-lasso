@@ -85,7 +85,7 @@ print(problem)
 print(problem.solution)
 ```
 
-## Formulations {#formulations}
+## Statistical problem formulations {#formulations}
 
 Depending on the type of data and the prior assumptions on data, the noise $\epsilon$, and the model parameters, `c-lasso` allows 
 different estimation problem formulations. More specifically, the package can solve the following 
@@ -196,7 +196,6 @@ problem.formulation.huber = True
 problem.formulation.concomitant = False
 problem.formulation.classification = True
 ```
-
 
 ## Optimization schemes {#method}
 
@@ -334,12 +333,13 @@ We next illustrate the application of the `c-lasso` package on a microbiome data
 
 ## Calling `c-lasso` in R 
 
-The `c-lasso` package can also be conveniently interfaced with R using the R package ```reticulate```. The code snippet below shows how used in R will perform regression with a fixed lambda set to $\lambda = 0.1\lambda_{\max}$.
+The `c-lasso` package can also be conveniently interfaced with R using the R package ```reticulate```. A successful interfacing is already in use in the 
+R package [`trac`](https://github.com/jacobbien/trac).
 
-One should be careful with the inputs: X should be a ```matrix```, C as well, but y should be an ```array``` (if one set y to be matrix $1\times n$ for example, c-lasso will not work).
+The code snippet below shows how `c-lasso` is called in R to perform regression at a fixed lambda $\lambda = 0.1\lambda_{\max}$. In R, X and C should be of ```matrix``` type, and y of ```array``` type.
 
 ```r
-problem<- classo$classo_problem(X=X,C=C,y=array(y))
+problem<- classo$classo_problem(X=X,C=C,y=y)) 
 problem$model_selection$LAMfixed <- TRUE
 problem$model_selection$StabSel <- FALSE
 problem$model_selection$LAMfixedparameters$rescaled_lam <- TRUE
