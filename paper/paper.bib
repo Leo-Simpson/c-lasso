@@ -16,7 +16,7 @@
     eprint = {https://academic.oup.com/biomet/article-pdf/71/2/323/635145/71-2-323.pdf},
 }
 
-@article{Bien2020,
+@article{Bien:2020,
 abstract = {Modern high-throughput sequencing technologies provide low-cost microbiome survey data across all habitats of life at unprecedented scale. At the most granular level, the primary data consist of sparse counts of amplicon sequence variants or operational taxonomic units that are associated with taxonomic and phylogenetic group information. In this contribution, we leverage the hierarchical structure of amplicon data and propose a data-driven, parameter-free, and scalable tree-guided aggregation framework to associate microbial subcompositions with response variables of interest. The excess number of zero or low count measurements at the read level forces traditional microbiome data analysis workflows to remove rare sequencing variants or group them by a fixed taxonomic rank, such as genus or phylum, or by phylogenetic similarity. By contrast, our framework, which we call trac (tree-aggregation of compositional data), learns data-adaptive taxon aggregation levels for predictive modeling making user-defined aggregation obsolete while simultaneously integrating seamlessly into the compositional data analysis framework. We illustrate the versatility of our framework in the context of large-scale regression problems in human-gut, soil, and marine microbial ecosystems. We posit that the inferred aggregation levels provide highly interpretable taxon groupings that can help microbial ecologists gain insights into the structure and functioning of the underlying ecosystem of interest.Competing Interest StatementThe authors have declared no competing interest.},
 author = {Bien, Jacob and Yan, Xiaohan and Simpson, L{\'{e}}o and M{\"{u}}ller, Christian L},
 doi = {10.1101/2020.09.01.277632},
@@ -166,7 +166,7 @@ doi = {10.1162/NECO_a_00434}
 }
 
 
-@article{Lin2014,
+@article{Lin:2014,
 abstract = {Motivated by research problems arising in the analysis of gut microbiome and metagenomic data, we consider variable selection and estimation in high-dimensional regression with compositional covariates. We propose an {\{}ell{\}}1 regularization method for the linear log-contrast model that respects the unique features of compositional data. We formulate the proposed procedure as a constrained convex optimization problem and introduce a coordinate descent method of multipliers for efficient computation. In the high-dimensional setting where the dimensionality grows at most exponentially with the sample size, model selection consistency and [IMG]f1.gif" ALT="Formula" BORDER="0"{\textgreater} bounds for the resulting estimator are established under conditions that are mild and interpretable for compositional data. The numerical performance of our method is evaluated via simulation studies and its usefulness is illustrated by an application to a microbiome study relating human body mass index to gut microbiome composition.},
 author = {Lin, Wei and Shi, Pixu and Feng, Rui and Li, Hongzhe},
 doi = {10.1093/biomet/asu031},
@@ -198,7 +198,7 @@ year = {2014}
   }
 
 
-@article{Mishra2019,
+@article{Mishra:2019,
 abstract = {Many high-throughput sequencing data sets in biology are compositional in nature. A prominent example is microbiome profiling data, including targeted amplicon-based and metagenomic sequencing data. These profiling data comprises surveys of microbial communities in their natural habitat and sparse proportional (or compositional) read counts that represent operational taxonomic units or genes. When paired measurements of other covariates, including physicochemical properties of the habitat or phenotypic variables of the host, are available, inference of parsimonious and robust statistical relationships between the microbial abundance data and the covariate measurements is often an important first step in exploratory data analysis. To this end, we propose a sparse robust statistical regression framework that considers compositional and non-compositional measurements as predictors and identifies outliers in continuous response variables. Our model extends the seminal log-contrast model of Aitchison and Bacon-Shone (1984) by a mean shift formulation for capturing outliers, sparsity-promoting convex and non-convex penalties for parsimonious model selection, and data-driven robust initialization procedures adapted to the compositional setting. We show, in theory and simulations, the ability of our approach to jointly select a sparse set of predictive microbial features and identify outliers in the response. We illustrate the viability of our method by robustly predicting human body mass indices from American Gut Project amplicon data and non-compositional covariate data. We believe that the robust estimators introduced here and available in the R package RobRegCC can serve as a practical tool for reliable statistical regression analysis of compositional data, including microbiome survey data.},
 archivePrefix = {arXiv},
 arxivId = {1909.04990},
@@ -210,7 +210,7 @@ year = {2019}
 }
 
 
-@article{Rosset2007,
+@article{Rosset:2007,
 abstract = {We consider the generic regularized optimization problem {\$}\backslashhat{\{}\backslashmathsf{\{}\backslashbeta{\}}{\}}(\backslashlambda)=\backslasharg \backslashmin{\_}{\{}\backslashbeta{\}}L({\{}\backslashsf{\{}y{\}}{\}},X{\{}\backslashsf{\{}\backslashbeta{\}}{\}})+\backslashlambda J({\{}\backslashsf{\{}\backslashbeta{\}}{\}}){\$}. Efron, Hastie, Johnstone and Tibshirani [Ann. Statist. 32 (2004) 407--499] have shown that for the LASSO--that is, if {\$}L{\$} is squared error loss and {\$}J(\backslashbeta)=\backslash|\backslashbeta\backslash|{\_}1{\$} is the {\$}\backslashell{\_}1{\$} norm of {\$}\backslashbeta{\$}--the optimal coefficient path is piecewise linear, that is, {\$}\backslashpartial \backslashhat{\{}\backslashbeta{\}}(\backslashlambda)/\backslashpartial \backslashlambda{\$} is piecewise constant. We derive a general characterization of the properties of (loss {\$}L{\$}, penalty {\$}J{\$}) pairs which give piecewise linear coefficient paths. Such pairs allow for efficient generation of the full regularized coefficient paths. We investigate the nature of efficient path following algorithms which arise. We use our results to suggest robust versions of the LASSO for regression and classification, and to develop new, efficient algorithms for existing problems in the literature, including Mammen and van de Geer's locally adaptive regression splines.},
 author = {Rosset, Saharon and Zhu, Ji},
 doi = {10.1214/009053606000001370},
