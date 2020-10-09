@@ -13,8 +13,8 @@ authors:
     affiliation: 1
 
 affiliations:
- - name: Technische Universitaet Muenchen 
-   index: 1
+  - name: Technische Universitaet Muenchen
+    index: 1
  
    
 date: 09 October 2020
