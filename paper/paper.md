@@ -14,7 +14,8 @@ authors:
   - name: Patrick L. Combettes
     affiliation: 2
   - name: Christian L. Müller
-    affiliation: 3,4,5
+    orcid: 0000-0002-3821-7083
+    affiliation: "3,4,5"
 affiliations:
  - name: Technische Universität München 
    index: 1
