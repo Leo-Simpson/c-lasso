@@ -11,7 +11,7 @@ The first function compute a solution of a Lasso problem for a given lambda. The
 '''    
 
 
-def Classo_R4(pb,lam,e=1.):
+def Classo_R4(pb,lam):
     pb_type = pb.type      # can be 'Path-Alg' or 'DR'
     (m,d,k),(A,C,y)  = pb.dim,pb.matrix
     lamb,rho  = lam * pb.lambdamax, pb.rho
@@ -25,10 +25,12 @@ def Classo_R4(pb,lam,e=1.):
     # (we do that with the method ODE for example becasue it is pretty efficient). Unfortunately we can do that only for fixed lambda and not for any path algorithms
     # because the augmentation of the data required depends on lambda.
     if pb_type=='Path-Alg' :
-        matrix_aug = (np.concatenate((A,lamb/(2*rho)*np.eye(m)),axis=1),np.concatenate((C,np.zeros((k,m))),axis=1),y)
-        pb_aug = problem_R3(matrix_aug, 'Path-Alg', e=e)
+        # trick of mean-shift formulation explained in the pdf "concomitant huber"
+        # problem of e ==> same trick to do as explained as in the end of the file compact_func, with r = np.sqrt(2)
+        matrix_aug = (np.sqrt(2)*np.concatenate((A,lamb/(2*rho)*np.eye(m)),axis=1),np.concatenate((C,np.zeros((k,m))),axis=1),np.sqrt(2)*y)
+        pb_aug = problem_R3(matrix_aug, 'Path-Alg')
         beta,s = Classo_R3(pb_aug, lamb / pb_aug.lambdamax)
-        s = s / np.sqrt(e)
+        s = s / 2
         beta= beta[:d]
         return beta,s
 
@@ -115,7 +117,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 
 class problem_R4 :
     
-    def __init__(self,data,algo,rho,e=1.):
+    def __init__(self,data,algo,rho):
         self.N = 500000
         
         (A,C,y), self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
@@ -135,7 +137,7 @@ class problem_R4 :
         self.c = (d/LA.norm(A,2))**2  # parameter for Concomitant problem : the matrix is scaled as c*A^2 
         self.gam = np.sqrt(d)
 
-        sigmax = find_sigmax(y,rho,e)
+        sigmax = find_sigmax(y,rho,m)
         #sigmax = LA.norm(y)/np.sqrt(m)
         self.sigmax = sigmax
         self.lambdamax = 2*LA.norm((A.T).dot(h_prime(y/sigmax,rho)),np.infty)

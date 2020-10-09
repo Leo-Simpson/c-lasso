@@ -16,11 +16,6 @@ Classo and pathlasso are the main functions, they can call every algorithm acord
 
 def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False, true_lam=False, e=None, rho_classification=-1., w = None, intercept = False):
 
-    if e is None:
-        if typ == 'R3':   e = len(matrix[0])/2
-        elif typ == 'R4': e = len(matrix[0])
-
-
     if not w is None : matrices = (  matrix[0]/w, matrix[1],matrix[2] )
     else : matrices = matrix
     if intercept : 
@@ -30,7 +25,12 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
     
     if(typ=='R3'):
         if not meth in ['Path-Alg', 'DR']: meth='DR'
-        pb = problem_R3(matrices,meth,e=e)
+        if e is None or e == len(matrices[0])/2: 
+            r = 1.
+            pb = problem_R3(matrices,meth)
+        else: 
+            r = np.sqrt(2*e/len(matrices[0]))
+            pb = problem_R3((matrices[0]*r,matrices[1],matrices[2]*r),meth)
         lambdamax = pb.lambdamax
         if (true_lam): beta,s = Classo_R3(pb,lam/lambdamax)
         else : beta, s = Classo_R3(pb, lam)
@@ -38,10 +38,16 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
 
     elif(typ=='R4'):
         if not meth in ['Path-Alg', 'DR']: meth='DR'
-        pb  = problem_R4(matrices,meth,rho,e=e)
+        if e is None or e == len(matrices[0]): 
+            r = 1.
+            pb = problem_R4(matrices,meth,rho)
+        else: 
+            r = np.sqrt(e/len(matrices[0]))
+            pb = problem_R4((matrices[0]*r,matrices[1],matrices[2]*r),meth,rho/r)
+
         lambdamax = pb.lambdamax
-        if (true_lam): beta,s = Classo_R4(pb,lam/lambdamax,e=e)
-        else : beta, s = Classo_R4(pb, lam,e=e)
+        if (true_lam): beta,s = Classo_R4(pb,lam/lambdamax)
+        else : beta, s = Classo_R4(pb, lam)
 
 
     elif(typ=='R2'):
@@ -84,11 +90,8 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
     else              : return(beta)
 
 
-def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg',rho = 1.345, true_lam = False, e= 1.,return_sigm= False,rho_classification=-1, w =None, intercept = False):
+def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg',rho = 1.345, true_lam = False, e= None,return_sigm= False,rho_classification=-1, w =None, intercept = False):
 
-    if e is None:
-    if typ == 'R3':   e = len(matrix[0])/2
-    elif typ == 'R4': e = len(matrix[0])
     
     Nactive = n_active
     if(Nactive==0):Nactive=False
@@ -111,17 +114,32 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg
         BETA  = pathlasso_R2(pb,lambdass,n_active=Nactive)
 
     elif(typ=='R3'):
-        pb = problem_R3(matrices,meth,e=e)
+        if e is None or e == len(matrices[0])/2: 
+            r = 1.
+            pb = problem_R3(matrices,meth)
+        else: 
+            r = np.sqrt(2*e/len(matrices[0]))
+            pb = problem_R3((matrices[0]*r,matrices[1],matrices[2]*r),meth)
         lambdamax = pb.lambdamax
         if (true_lam): lambdass=[lamb/lambdamax for lamb in lambdass]
         BETA,S = pathlasso_R3(pb,lambdass,n_active=Nactive)
-        S=np.array(S)/np.sqrt(e)
+        S=np.array(S)/r**2
+        BETA = np.array(BETA)
+
 
     elif(typ=='R4'):
-        pb = problem_R4(matrices,meth,rho,e=e)
+        if e is None or e == len(matrices[0]): 
+            r = 1.
+            pb = problem_R4(matrices,meth,rho)
+        else: 
+            r = np.sqrt(e/len(matrices[0]))
+            pb = problem_R4((matrices[0]*r,matrices[1],matrices[2]*r),meth,rho/r)
+
         lambdamax = pb.lambdamax
         if (true_lam): lambdass=[lamb/lambdamax for lamb in lambdass]
         BETA,S = pathlasso_R4(pb,lambdass,n_active=Nactive)
+        S=np.array(S)/r**2
+        BETA = np.array(BETA)
         
     elif(typ == 'C2'):
         lambdamax = h_lambdamax(matrices[0],matrices[2],rho)
@@ -164,4 +182,42 @@ def hub(r,rho) :
         elif(r[j]>0)     : h+= (2*r[j]-rho)*rho
         else             : h+= (-2*r[j]-rho)*rho
     return(h)
+'''
+
+
+'''
+Remark about R3 : 
+
+    The functions Classo_R3 and pathlasso_R3 only allows to compute the solution of R3, with e = n/2 : 
+         min_(beta,sigma) ||Xbeta - y||^2/sigma + n/2 sigma + lambda ||beta||1 = L'(X,y,lambda,beta,sigma) with C.b= 0 and sigma > 0 
+    
+    Now let's say that we have to solve the same problem but with e = r^2 * n/2 :
+        L(r,X,y,lamba,beta,s)   = ||Xbeta - y||^2/s + r^2 *n/2 s + lambda ||beta||1
+                                = ||(Xr)beta - yr||^2/sigma + n/2 sigma + lambda ||beta||1      with sigma = s*r^2
+                                = L'(Xr,yr,lambda,beta,s*r^2)
+        so we just have to solve the problem with e=n/2 , r = sqrt(2e/n), X = X*r , y = y*r and then divide sigma by r^2
+ 
+
+
+
+
+The same remark with R4 holds, but with e = n instead. 
+
+
+
+    The functions Classo_R4 and pathlasso_R4 only allows to compute the solution of R4, with e = n/2 : 
+         min_(beta,sigma) h_rho(Xbeta - y / sigma) sigma + n sigma + lambda ||beta||1 = L'(X,y,rho,lambda,beta,sigma) with C.b= 0 and sigma > 0 
+    
+    Now let's say that we have to solve the same problem but with e = r * n :
+        L(r,X,y,rho,lamba,b,s)  = h_rho((Xbeta - y)/s)  s  + n r^2 s + lambda   ||b||1
+                                = h_p  ( (Xbeta - y)/(sr))  r^2 s  + n r^2 s + lambda ||b||1                    because h_rho(x) =  h_p (x/r) * r^2 , with p = rho/r
+                                = h_p  ( ((Xr)beta - yr)/sigma)  sigma  + n sigma + lambda ||b||1      with sigma = s*r^2 
+                                = L'(Xr,yr,rho/r, lambda,beta,s*r^2)
+
+        so we just have to solve the problem with e=n , r = sqrt(2e/n), X = X*r , y = y*r, rho = rho/r and then divide sigma by r^2
+ 
+
+
+
+
 '''

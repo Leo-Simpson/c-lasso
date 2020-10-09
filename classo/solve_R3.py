@@ -4,7 +4,7 @@ import numpy.linalg as LA
 from .misc_functions import unpenalized 
     
 '''    
-Problem    :   min ||Ab - y||^2/sigma + e sigma + lambda ||b||1 with C.b= 0 and sigma > 0
+Problem    :   min ||Ab - y||^2/sigma + n/2 sigma + lambda ||b||1 with C.b= 0 and sigma > 0
 
 Dimensions :   A : m*d  ;  y : m  ;  b : d   ; C : k*d
 
@@ -20,7 +20,7 @@ def Classo_R3(pb,lam):
 
     if (lam == 0.): 
         beta =  unpenalized(pb.matrix)
-        sigma= LA.norm(A.dot(beta)-y)/np.sqrt(pb.e)
+        sigma= LA.norm(A.dot(beta)-y)/np.sqrt(m/2)
         return beta,sigma
 
 
@@ -80,7 +80,6 @@ def pathlasso_R3(pb,path,n_active=False):
     BETA,SIGMA,tol = [],[],pb.tol
 
     if(pb.type=='Path-Alg'):
-        # to do : change it w.r.t different value of e
         y=pb.matrix[2]
         sigmax= LA.norm(y)
         X,LAM,R = solve_path_Conc(pb.matrix,path[-1],n_active=n_active)
@@ -124,7 +123,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 '''
 class problem_R3 :
     
-    def __init__(self,data,algo,e=None):
+    def __init__(self,data,algo):
         self.N = 500000
 
         (A,C,y) = data
@@ -133,7 +132,6 @@ class problem_R3 :
 
         (m,d,k) = self.dim
         self.weights = np.ones(d)
-        
         self.tol = 1e-4
           
         self.regpath = False
@@ -143,12 +141,10 @@ class problem_R3 :
         self.proj_sigm = lambda x : max(x,0)
         self.mu = 1.95
 
-        self.gam        = np.sqrt(self.dim[1])
+        self.gam        = np.sqrt(d)
         self.Aty        = (A.T).dot(y)
-        self.sigmax     = LA.norm(y)/np.sqrt(e)
-        self.lambdamax = 2 * LA.norm(self.Aty, np.infty) / self.sigmax
-        if e is None : self.e = m/2
-        else : self.e = e
+        self.sigmax     = LA.norm(y)/np.sqrt(m/2)
+        self.lambdamax  = 2 * LA.norm(self.Aty, np.infty) / self.sigmax
         self.init       = 1.,1.,np.zeros(m), np.zeros(d), np.zeros(d)    
 
 
@@ -156,8 +152,8 @@ class problem_R3 :
     def compute_param(self):
         (A,C,y) = self.matrix
         m,d,k = self.dim
-        self.Anorm = LA.norm(A, 2)
-        self.Anorm2 = self.Anorm ** 2
+        self.Anorm = LA.norm(A, 'fro')
+        self.Anorm2 = LA.norm(A, 2) ** 2
         c = d**2/self.Anorm2  # parameter for Concomitant problem : the matrix is scaled as c*A^2
         self.c = c
         self.Q1, self.Q2 = QQ(c, A)
