@@ -29,7 +29,6 @@ affiliations:
     index: 4
   - name: Department of Statistics, Ludwig-Maximilians-Universität München
     index: 5
-
 date: 09 October 2020
 bibliography: paper.bib
 
