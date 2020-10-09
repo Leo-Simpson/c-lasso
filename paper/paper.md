@@ -281,8 +281,6 @@ Each model selection procedure has additional meta-parameters that are described
 We illustrate the workflow of the `c-lasso` package on synthetic data using the built-in routine ```random_data``` which enables the generation of test 
 problem instances with normally distributed data $X$, sparse coefficient vectors $\beta$, and constraints $C \in R^{k\times d}$.
 
-[comment]: <> (It generates randomly the vectors $\beta \in R^d$ , $X \in R^{n\times d}$, $C \in R^{k\times d}$ [can also be the all-one vector with the input ```zerosum``` set to true], and $y \in R^n$ normally distributed with respect to the model $C\beta=0$, $y-X\beta \sim N[0,I_n\sigma^2]$ and $\beta$ has only d_nonzero non-null componant.)
-
 Here, we use a problem instance with $n=100$, $d=100$, a $\beta$ with five non-zero components, $\sigma=0.5$, and a zero-sum contraint. 
 
 ```python
