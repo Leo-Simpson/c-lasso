@@ -151,7 +151,7 @@ $$
 $$
 
 This formulation combines [*R2*](#R2) and [*R3*](#R3) allowing robust joint estimation of the (constrained) $\beta$ vector and 
-the scale $\sigma$ in a concomitant fashion [@Combettes:2020; @Combettes:2020b].
+the scale $\sigma$ in a concomitant fashion [@Combettes:2020a; @Combettes:2020b].
 
 ```python
 # formulation R4
@@ -193,7 +193,7 @@ $$
 l_{\rho}(r) = \begin{cases} (1-r)^2 &if \quad \rho \leq r \leq 1 \\ (1-\rho)(1+\rho-2r) & if \quad r \leq \rho \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-This formulation is similar to [*C1*](#C1) but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset2007].
+This formulation is similar to [*C1*](#C1) but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007].
 
 ```python
 # formulation C2
@@ -207,11 +207,11 @@ problem.formulation.classification = True
 The problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. The `c-lasso` package implements four published algorithms with provable convergence guarantees. The package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra2019]. The following algorithmic schemes are implemented: 
 
 - Path algorithms (*Path-Alg*): 
-This algorithm follows the proposal in [@Gaines:2018;Jeon2020]) and uses the fact that the solution path along &lambda; is piecewise-affine [@Rosset2007]. We also provide a novel efficient procedure that allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
+This algorithm follows the proposal in [@Gaines:2018;Jeon2020]) and uses the fact that the solution path along &lambda; is piecewise-affine [@Rosset:2007]. We also provide a novel efficient procedure that allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
 
 - Douglas-Rachford-type splitting method (*DR*): 
 This algorithm can solve all regression problems *R1-R4*. It is based on Doulgas-Rachford splitting in a higher-dimensional product space and 
-makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020a; @Combettes:2020b]. The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem with mean shift vector [@Mishra2019] and thus solved in (n + d) dimensions.
+makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020a; @Combettes:2020b]. The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem with mean shift vector [@Mishra:2019] and thus solved in (n + d) dimensions.
 
 - Projected primal-dual splitting method (*P-PDS*): 
 This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms, extending the classical Forward-Backward (FB) 
