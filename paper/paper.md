@@ -46,8 +46,7 @@ $$
 Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general
 constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast
 regression with compositional data $X$, leading to the constraint $\sum_{i=1}^d \beta_i = 0$ (i.e., $C = 1_d^T$) [@Aitchison:1984] and Generalized Lasso-type
-problems (see, e.g, [James et al.](http://faculty.marshall.usc.edu/gareth-james/Research/PAC.pdf), Example 3). The `c-lasso` package provides 
-several estimators for inferring unknown coefficients and scale (i.e., perspective M-estimators [@Combettes:2020a]) of the form:
+problems (see, e.g, [@James:2019], Example 3). The `c-lasso` package provides several estimators for inferring unknown coefficients and scale (i.e., perspective M-estimators [@Combettes:2020a]) of the form:
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R_0)}} \left( f \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -208,7 +207,7 @@ problem.formulation.classification = True
 The problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. The `c-lasso` package implements four published algorithms with provable convergence guarantees. The package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. The following algorithmic schemes are implemented: 
 
 - Path algorithms (*Path-Alg*): 
-This algorithm follows the proposal in [@Gaines:2018]) and uses the fact that the solution path along &lambda; is piecewise-affine [@Rosset:2007]. We also provide a novel efficient procedure that allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
+This algorithm follows the proposal in [@Gaines:2018;Jeon2020]) and uses the fact that the solution path along &lambda; is piecewise-affine [@Rosset:2007]. We also provide a novel efficient procedure that allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
 
 - Douglas-Rachford-type splitting method (*DR*): 
 This algorithm can solve all regression problems *R1-R4*. It is based on Doulgas-Rachford splitting in a higher-dimensional product space and 
@@ -339,7 +338,7 @@ We next illustrate the application of the `c-lasso` package on a microbiome data
 
 ## Calling `c-lasso` in R 
 
-The `c-lasso` package can also be conveniently interfaced with R using the R package ```reticulate```. A successful interfacing is already in use in the 
+The `c-lasso` package can be conveniently integrated in `R` using the `R` package ```reticulate```. A successful interfacing is already in use in the 
 R package [`trac`](https://github.com/jacobbien/trac) [@Bien:2020].
 
 The code snippet below shows how `c-lasso` is called in R to perform regression at a fixed lambda $\lambda = 0.1\lambda_{\max}$. In R, X and C should be of ```matrix``` type, and y of ```array``` type.
