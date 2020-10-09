@@ -173,7 +173,7 @@ $$
 l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-This formulation is similar to [*R1*](#R1) but adapted for classification tasks, i.e, $y \in \{-1,1\}^n$ using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
+This formulation is similar to [*R1*](#R1) but adapted for classification tasks, i.e, $y \in {-1,1}^n$ using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
 
 ```python
 # formulation C1
@@ -348,7 +348,7 @@ We next illustrate the application of the `c-lasso` package on a microbiome data
 The `c-lasso` package can be conveniently integrated in `R` using the `R` package ```reticulate```. A successful interfacing is already in use in the 
 R package [`trac`](https://github.com/jacobbien/trac) [@Bien:2020].
 
-The code snippet below shows how `c-lasso` is called in R to perform regression at a fixed lambda $\lambda = 0.1\lambda_{\max}$. In R, X and C should be of ```matrix``` type, and y of ```array``` type.
+The code snippet below shows how `c-lasso` is called in R to perform regression at a fixed lambda $\lambda = 0.1\lambda_{\max}$. In `R`, X and C should be of ```matrix``` type, and y of ```array``` type.
 
 ```r
 problem<- classo$classo_problem(X=X,C=C,y=y)) 
