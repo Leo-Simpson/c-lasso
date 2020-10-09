@@ -327,6 +327,9 @@ Relevant variables  : [43 47 74 79 84]
    Running time :  5.3s
 ```
 
+`c-lasso` allows standard visualization of the computed solutions, e.g., coefficient plots at fixed $\lambda$, the solution path, the stability selection profile
+at the selected $\lambda$, and the stability selection profile across the entire path. 
+
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
 For this tuned example, the solutions at the fixed lambda and with stability selection recover the oracle solution. The solution vectors
