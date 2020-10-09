@@ -13,7 +13,7 @@ authors:
     affiliation: 1
   - name: Patrick L. Combettes
     affiliation: 2
-  - name: Christian L. M$\"u$ller
+  - name: Christian L. Mueller
     orcid: 0000-0002-3821-7083
     affiliation: "3,4,5"
 affiliations:
@@ -267,8 +267,8 @@ problem.model_selection.PATH = True
 problem.model_selection.CV = True
 problem.model_selection.StabSel = False
 
-# c-lasso also allows to specify multiple model selection schemes, 
-# e.g., adding stability selection via
+# c-lasso allows to specify multiple model selection schemes, 
+# e.g., adding stability selection
 problem.model_selection.StabSel = True
 ```
 
