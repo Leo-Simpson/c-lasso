@@ -59,13 +59,13 @@ This includes the constrained Lasso, the constrained scaled Lasso, and sparse Hu
 # Statement of need 
 
 Currently, there is no Python package available that can solve these ubiquitous statistical estimation problems in a fast and efficient manner. 
-`c-lasso` provides algorithmic strategies, including path and proximal splitting algorithms, to solve the underlying convex optimization problems with provable convergence guarantees. The c-lasso package is intended to fill the gap between popular Python tools such as [`scikit-learn`](https://scikit-learn.org/stable/) which <em>cannot</em> solve these constrained problems and general-purpose optimization solvers such as [`cvxpy`](https://www.cvxpy.org) that do not scale well for these problems and/or are inaccurate. `c-lasso` can solve the estimation problems at fixed regularization level and across an entire regularization path and includes three model selection strategies for determining model parameter regularization levels: a theoretically derived fixed regularization, k-fold cross-validation, and stability selection. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data, and highlight the seamless integration into `R` via [`reticulate`](https://rstudio.github.io/reticulate/).
+`c-lasso` provides algorithmic strategies, including path and proximal splitting algorithms, to solve the underlying convex optimization problems with provable convergence guarantees. The `c-lasso` package is intended to fill the gap between popular Python tools such as [`scikit-learn`](https://scikit-learn.org/stable/) which <em>cannot</em> solve these constrained problems and general-purpose optimization solvers such as [`cvxpy`](https://www.cvxpy.org) that do not scale well for these problems and/or are inaccurate. `c-lasso` can solve the estimation problems at fixed regularization level and across an entire regularization path and includes three model selection strategies for determining model parameter regularization levels: a theoretically derived fixed regularization, k-fold cross-validation, and stability selection. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data, and highlight the seamless integration into `R` via [`reticulate`](https://rstudio.github.io/reticulate/).
 
 # Functionalities
 
 ## Installation and basic usage {#gettingstarted}
 
-c-lasso is available on pip and can be installed in the shell using
+`c-lasso` is available on pip and can be installed in the shell using
 
 ```shell
 pip install c_lasso
@@ -308,9 +308,9 @@ problem.solve()
 print(problem.solution)
 ```
 
-Here, we use [formulation](#formulations) [*R2*](#R2) with $\rho=1.5$, [computation mode and model selections](#model) *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$, *Path computation*, and *Stability Selection* (as per default). 
+We use [formulation](#formulations) [*R2*](#R2) with $\rho=1.5$, [computation mode and model selections](#model) *Fixed Lambda* with $\lambda = 0.1\lambda_{\max}$, *Path computation*, and *Stability Selection* (as per default). 
 
-Here, the corresponding output reads: 
+The corresponding output reads: 
 
 ```shell
 Relevant variables  : [43 47 74 79 84]
