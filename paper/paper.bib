@@ -1,16 +1,6 @@
-% Our citations
+% c-lasso references
 
-  @book{Huber:1981,
-	annote = {Wiley Series in Probability and Mathematical Statistics},
-	author = {Huber, P},
-	isbn = {0-471-41805-6},
-	publisher = {John Wiley {\&} Sons Inc.},
-	title = {{Robust statistics}},
-	year = {1981}
-}
-
-
-  @article{Aitchison:1984,
+@article{Aitchison:1984,
     author = {Aitchion, J. and Bacon-Shone, J.},
     title = "{Log contrast models for experiments with mixtures}",
     journal = {Biometrika},
@@ -24,6 +14,17 @@
     doi = {10.1093/biomet/71.2.323},
     url = {https://doi.org/10.1093/biomet/71.2.323},
     eprint = {https://academic.oup.com/biomet/article-pdf/71/2/323/635145/71-2-323.pdf},
+}
+
+@article{Bien2020,
+abstract = {Modern high-throughput sequencing technologies provide low-cost microbiome survey data across all habitats of life at unprecedented scale. At the most granular level, the primary data consist of sparse counts of amplicon sequence variants or operational taxonomic units that are associated with taxonomic and phylogenetic group information. In this contribution, we leverage the hierarchical structure of amplicon data and propose a data-driven, parameter-free, and scalable tree-guided aggregation framework to associate microbial subcompositions with response variables of interest. The excess number of zero or low count measurements at the read level forces traditional microbiome data analysis workflows to remove rare sequencing variants or group them by a fixed taxonomic rank, such as genus or phylum, or by phylogenetic similarity. By contrast, our framework, which we call trac (tree-aggregation of compositional data), learns data-adaptive taxon aggregation levels for predictive modeling making user-defined aggregation obsolete while simultaneously integrating seamlessly into the compositional data analysis framework. We illustrate the versatility of our framework in the context of large-scale regression problems in human-gut, soil, and marine microbial ecosystems. We posit that the inferred aggregation levels provide highly interpretable taxon groupings that can help microbial ecologists gain insights into the structure and functioning of the underlying ecosystem of interest.Competing Interest StatementThe authors have declared no competing interest.},
+author = {Bien, Jacob and Yan, Xiaohan and Simpson, L{\'{e}}o and M{\"{u}}ller, Christian L},
+doi = {10.1101/2020.09.01.277632},
+journal = {bioRxiv},
+publisher = {Cold Spring Harbor Laboratory},
+title = {{Tree-Aggregated Predictive Modeling of Microbiome Data}},
+url = {https://www.biorxiv.org/content/early/2020/09/01/2020.09.01.277632},
+year = {2020}
 }
 
 
@@ -58,21 +59,21 @@
   doi = {10.1007/s11228-011-0191-y}
   }
 
-@article{Combettes:2020,
-author = "Combettes, Patrick L. and Müller, Christian L.",
-doi = "10.1214/19-EJS1662",
-fjournal = "Electronic Journal of Statistics",
-journal = "Electron. J. Statist.",
-number = "1",
-pages = "207--238",
-publisher = "The Institute of Mathematical Statistics and the Bernoulli Society",
-title = "Perspective maximum likelihood-type estimation via proximal decomposition",
-url = "https://doi.org/10.1214/19-EJS1662",
-volume = "14",
-year = "2020"
+@article{Combettes:2020a,
+author = {Combettes, Patrick L. and M{\"u}ller, Christian L.},
+doi = {10.1214/19-EJS1662},
+fjournal = {Electronic Journal of Statistics},
+journal = {Electron. J. Statist.},
+number = {1},
+pages = {207--238},
+publisher = {The Institute of Mathematical Statistics and the Bernoulli Society},
+title = {Perspective maximum likelihood-type estimation via proximal decomposition},
+url = {https://doi.org/10.1214/19-EJS1662},
+volume = {14},
+year = {2020}
 }
 
-@article{Muller:2020,
+@article{Combettes:2020b,
     Abstract = {Compositional data sets are ubiquitous in science, including geology, ecology, and microbiology. In microbiome research, compositional data primarily arise from high-throughput sequence-based profiling experiments. These data comprise microbial compositions in their natural habitat and are often paired with covariate measurements that characterize physicochemical habitat properties or the physiology of the host. Inferring parsimonious statistical associations between microbial compositions and habitat- or host-specific covariate data is an important step in exploratory data analysis. A standard statistical model linking compositional covariates to continuous outcomes is the linear log-contrast model. This model describes the response as a linear combination of log-ratios of the original compositions and has been extended to the high-dimensional setting via regularization. In this contribution, we propose a general convex optimization model for linear log-contrast regression which includes many previous proposals as special cases. We introduce a proximal algorithm that solves the resulting constrained optimization problem exactly with rigorous convergence guarantees. We illustrate the versatility of our approach by investigating the performance of several model instances on soil and gut microbiome data analysis tasks.},
     Author = {Combettes, Patrick L. and M{\"u}ller, Christian L.},
     Da = {2020/06/19},
@@ -104,7 +105,7 @@ year = "2020"
 }
 
 
-@article{Gareth:2020,
+@article{James:2020,
     author = {Gareth M. James and Courtney Paulson and Paat Rusmevichientong},
     title = {Penalized and Constrained Optimization: An Application to High-Dimensional Website Advertising},
     journal = {Journal of the American Statistical Association},
@@ -130,19 +131,27 @@ year = "2020"
   publisher={Springer}
 }
 
+@book{Huber:1981,
+	annote = {Wiley Series in Probability and Mathematical Statistics},
+	author = {Huber, P},
+	isbn = {0-471-41805-6},
+	publisher = {John Wiley {\&} Sons Inc.},
+	title = {{Robust statistics}},
+	year = {1981}
+}
+
 @article{Jeon:2020,
-    title = "Primal path algorithm for compositional data analysis",
-    journal = "Computational Statistics & Data Analysis",
-    volume = "148",
-    pages = "106958",
-    year = "2020",
-    issn = "0167-9473",
-    doi = "https://doi.org/10.1016/j.csda.2020.106958",
-    url = "http://www.sciencedirect.com/science/article/pii/S0167947320300499",
-    author = "Jong-June Jeon and Yongdai Kim and Sungho Won and Hosik Choi",
-    keywords = "Penalized regression, Constraint, Solution path algorithm, Microbiome data",
-    abstract = 
-            "We consider the LASSO estimator for compositional data in which covariates are nonnegative, and their sum is always one. Due to the linear constraint of the regression coefficients caused by the sum to one condition, standard algorithms for LASSO cannot be applied directly to compositional data. Hence, a specific regularized regression model with linear constraints is commonly used. However, linear constraints incur additional computational time, which becomes severe in high-dimensional cases. Additionally, the exact computation for the regression is not investigated under existing methods. In this paper, we first propose an exact solution path algorithm for a l1 regularized regression with high-dimensional compositional data and extend to a classification model. We also compare its computational speed with that of previously developed algorithms and then apply the proposed algorithm to analyzing income inequality data in economics and human gut microbiome data in biology. By analyzing simulated and real data sets, we illustrate that our specialized algorithm is significantly more efficient than the generalized LASSO algorithm for compositional data."
+abstract = {We consider the LASSO estimator for compositional data in which covariates are nonnegative, and their sum is always one. Due to the linear constraint of the regression coefficients caused by the sum to one condition, standard algorithms for LASSO cannot be applied directly to compositional data. Hence, a specific regularized regression model with linear constraints is commonly used. However, linear constraints incur additional computational time, which becomes severe in high-dimensional cases. Additionally, the exact computation for the regression is not investigated under existing methods. In this paper, we first propose an exact solution path algorithm for a l1 regularized regression with high-dimensional compositional data and extend to a classification model. We also compare its computational speed with that of previously developed algorithms and then apply the proposed algorithm to analyzing income inequality data in economics and human gut microbiome data in biology. By analyzing simulated and real data sets, we illustrate that our specialized algorithm is significantly more efficient than the generalized LASSO algorithm for compositional data.},
+author = {Jeon, Jong-June and Kim, Yongdai and Won, Sungho and Choi, Hosik},
+doi = {https://doi.org/10.1016/j.csda.2020.106958},
+issn = {0167-9473},
+journal = {Computational Statistics {\&} Data Analysis},
+keywords = { Constraint, Microbiome data, Solution path algorithm,Penalized regression},
+pages = {106958},
+title = {{Primal path algorithm for compositional data analysis}},
+url = {http://www.sciencedirect.com/science/article/pii/S0167947320300499},
+volume = {148},
+year = {2020}
 }
 
 @article{Lee:2013,
@@ -157,20 +166,21 @@ doi = {10.1162/NECO_a_00434}
 }
 
 
-@article{Lin:2014,
- ISSN = {00063444},
- URL = {http://www.jstor.org/stable/43304688},
- abstract = {Motivated by research problems arising in the analysis of gut microbiome and metagenomic data, we consider variable selection and estimation in high-dimensional regression with compositional covariates. We propose an ℓ₁ regularization method for the linear log-contrast model that respects the unique features of compositional data. We formulate the proposed procedure as a constrained convex optimization problem and introduce a coordinate descent method of multipliers for efficient computation. In the high-dimensional setting where the dimensionality grows at most exponentially with the sample size, model selection consistency and ℓ∞ bounds for the resulting estimator are established under conditions that are mild and interpretable for compositional data. The numerical performance of our method is evaluated via simulation studies and its usefulness is illustrated by an application to a microbiome study relating human body mass index to gut microbiome composition.},
- author = {WEI LIN and PIXU SHI and RUI FENG and HONGZHE LI},
- journal = {Biometrika},
- number = {4},
- pages = {785--797},
- publisher = {[Oxford University Press, Biometrika Trust]},
- title = {Variable selection in regression with compositional covariates},
- volume = {101},
- year = {2014}
+@article{Lin2014,
+abstract = {Motivated by research problems arising in the analysis of gut microbiome and metagenomic data, we consider variable selection and estimation in high-dimensional regression with compositional covariates. We propose an {\{}ell{\}}1 regularization method for the linear log-contrast model that respects the unique features of compositional data. We formulate the proposed procedure as a constrained convex optimization problem and introduce a coordinate descent method of multipliers for efficient computation. In the high-dimensional setting where the dimensionality grows at most exponentially with the sample size, model selection consistency and [IMG]f1.gif" ALT="Formula" BORDER="0"{\textgreater} bounds for the resulting estimator are established under conditions that are mild and interpretable for compositional data. The numerical performance of our method is evaluated via simulation studies and its usefulness is illustrated by an application to a microbiome study relating human body mass index to gut microbiome composition.},
+author = {Lin, Wei and Shi, Pixu and Feng, Rui and Li, Hongzhe},
+doi = {10.1093/biomet/asu031},
+file = {:Users/cmueller/Documents/Mendeley Desktop/Lin et al. - 2014 - Variable selection in regression with compositional covariates(3).pdf:pdf},
+issn = {14643510},
+journal = {Biometrika},
+keywords = {Compositional data,Coordinate descent method of multipliers,High-dimensional regression,Lasso,Log-contrast model,Model selection,Regularization,Sparsity},
+mendeley-groups = {StatsInBiosciences},
+number = {4},
+pages = {785--797},
+title = {{Variable selection in regression with compositional covariates}},
+volume = {101},
+year = {2014}
 }
-
 
 @article{Meinshausen:2010,
   author = {Meinshausen, Nicolai and Bühlmann, Peter},
@@ -188,13 +198,17 @@ doi = {10.1162/NECO_a_00434}
   }
 
 
-@article{Mishra:2019,
-    author = {Mishra, Aditya and Müller, Christian},
-    year = {2019},
-    month = {09},
-    pages = {},
-    title = {Robust Regression with Compositional Covariates}
-    }
+@article{Mishra2019,
+abstract = {Many high-throughput sequencing data sets in biology are compositional in nature. A prominent example is microbiome profiling data, including targeted amplicon-based and metagenomic sequencing data. These profiling data comprises surveys of microbial communities in their natural habitat and sparse proportional (or compositional) read counts that represent operational taxonomic units or genes. When paired measurements of other covariates, including physicochemical properties of the habitat or phenotypic variables of the host, are available, inference of parsimonious and robust statistical relationships between the microbial abundance data and the covariate measurements is often an important first step in exploratory data analysis. To this end, we propose a sparse robust statistical regression framework that considers compositional and non-compositional measurements as predictors and identifies outliers in continuous response variables. Our model extends the seminal log-contrast model of Aitchison and Bacon-Shone (1984) by a mean shift formulation for capturing outliers, sparsity-promoting convex and non-convex penalties for parsimonious model selection, and data-driven robust initialization procedures adapted to the compositional setting. We show, in theory and simulations, the ability of our approach to jointly select a sparse set of predictive microbial features and identify outliers in the response. We illustrate the viability of our method by robustly predicting human body mass indices from American Gut Project amplicon data and non-compositional covariate data. We believe that the robust estimators introduced here and available in the R package RobRegCC can serve as a practical tool for reliable statistical regression analysis of compositional data, including microbiome survey data.},
+archivePrefix = {arXiv},
+arxivId = {1909.04990},
+author = {Mishra, Aditya and M\"uller, Christian L.},
+eprint = {1909.04990},
+title = {{Robust Regression with Compositional Covariates}},
+url = {http://arxiv.org/abs/1909.04990},
+year = {2019}
+}
+
 
 @article{Rosset:2007,
     author = "Rosset, Saharon and Zhu, Ji",
