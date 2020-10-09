@@ -222,7 +222,7 @@ This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (
 proximal splitting algorithms. The algorithm does not require projection operators which may be beneficial when C has a more complex structure. 
 In the absence of a linear constraint, the method reduces to the Forward-Backward-Forward scheme.
 
-The following table summarizes the available algorithms and their recommended usage for each problem: 
+The following table summarizes the available algorithms and their recommended use for each problem: 
 
 |             |*Path-Alg*| *DR* | *P-PDS* | *PF-PDS* |
 |-|:-:|:-:|:-:|:-:|
@@ -257,7 +257,7 @@ The default value is a scale-dependent tuning parameter that has been derived in
 - *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Meinshausen:2010;@Lin:2014;@Combettes:2020b]. Three modes are
 available for the selection of variables over subsamples: selection at a fixed $\lambda$ [@Combettes:2020b], selection of the q first variables entering the path (the default setting in `c-lasso`), and selection of the q largest coefficients (in absolute value) across the path [@Meinshausen:2010].
 
-The python syntax to use a specific computation mode and model selection is exemplified below:
+The Python syntax to use a specific computation mode and model selection is exemplified below:
 
 ```python
 # Example how to do only cross-validation and path computation:
@@ -328,7 +328,14 @@ Relevant variables  : [43 47 74 79 84]
 
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
-For this tuned example, the solutions at the fixed lambda and with stability selection recover the oracle solution. 
+For this tuned example, the solutions at the fixed lambda and with stability selection recover the oracle solution. The solution vectors
+are stored in ```problem.solution``` and can be directly acccessed for each mode/model selection. 
+
+```python
+# Access to the estimated coefficient vector at a fixed lambda 
+problem.solution.LAMfixed.beta
+```
+
 Note that the run time for this $d=100$-dimensional example for a single path computation is about 0.5 seconds on a standard Laptop.
 
 ## Log-contrast regression on gut microbiome data
