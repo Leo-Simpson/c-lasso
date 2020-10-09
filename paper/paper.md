@@ -47,7 +47,13 @@ Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}
 constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast
 regression with compositional data $X$, leading to the constraint $\sum_{i=1}^d \beta_i = 0$ (i.e., $C = 1_d^T$) [@Aitchison:1984] and Generalized Lasso-type
 problems (see, e.g, [James et al.](http://faculty.marshall.usc.edu/gareth-james/Research/PAC.pdf), Example 3). The `c-lasso` package provides 
-several estimators for inferring unknown coefficients and scale (i.e., perspective M-estimators [@Combettes:2020]), including the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints.
+several estimators for inferring unknown coefficients and scale (i.e., perspective M-estimators [@Combettes:2020a]) of the form:
+
+$$
+    \arg \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R_0)}} \left( f \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+$$
+
+This includes the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints.
 
 # Statement of need 
 
@@ -130,7 +136,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-This formulation is the default problem formulation in `c-lasso`. It is similar to [*R1*](#R1) but allows for joint estimation of the (constrained) $\beta$ vector and the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
+This formulation is the default problem formulation in `c-lasso`. It is similar to [*R1*](#R1) but allows for joint estimation of the (constrained) $\beta$ vector and the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020a; @Combettes:2020b].
 
 ```python
 # formulation R3
@@ -146,7 +152,7 @@ $$
 $$
 
 This formulation combines [*R2*](#R2) and [*R3*](#R3) allowing robust joint estimation of the (constrained) $\beta$ vector and 
-the scale $\sigma$ in a concomitant fashion [@Combettes:2020; @Muller:2020].
+the scale $\sigma$ in a concomitant fashion [@Combettes:2020; @Combettes:2020b].
 
 ```python
 # formulation R4
@@ -206,7 +212,7 @@ This algorithm follows the proposal in [@Gaines:2018]) and uses the fact that th
 
 - Douglas-Rachford-type splitting method (*DR*): 
 This algorithm can solve all regression problems *R1-R4*. It is based on Doulgas-Rachford splitting in a higher-dimensional product space and 
-makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020; @Muller:2020]. The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem with mean shift vector [@Mishra:2019] and thus solved in (n + d) dimensions.
+makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020a; @Combettes:2020b]. The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem with mean shift vector [@Mishra:2019] and thus solved in (n + d) dimensions.
 
 - Projected primal-dual splitting method (*P-PDS*): 
 This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms, extending the classical Forward-Backward (FB) 
@@ -241,7 +247,7 @@ problem.numerical_method = "Path-Alg"
 The `c-lasso` package provides several computation modes and model selection schemes for tuning the regularization parameter.
 
 - *Fixed Lambda*: This setting lets the user choose a fixed parameter $\lambda$ or a proportion $l \in [0,1]$ such that $\lambda = l\times \lambda_{\max}$. 
-The default value is a scale-dependent tuning parameter that has been derived in [@Shi:2016] and applied in [Muller:2020].
+The default value is a scale-dependent tuning parameter that has been derived in [@Shi:2016] and applied in [@Combettes:2020b].
 
 - *Path Computation*: This setting allows the computation of a solution path for $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. The solution path is computed via the *Path-Alg* scheme or via warm-starts for other optimization schemes. 
 
@@ -249,8 +255,8 @@ The default value is a scale-dependent tuning parameter that has been derived in
 
 - *Cross Validation*: This setting allows the selection of the regularization parameter $\lambda$ via k-fold cross validation for $\lambda \in [\lambda_{\min}, \lambda_{\max}]$. Both the Minimum Mean Squared Error (or Deviance) (MSE)  and the "One-Standard-Error rule" (1SE) are available [@Hastie:2009].
 
-- *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Lin:2014; @Meinshausen:2010; Muller:2020]. Three modes are
-available for the selection of variables over subsamples: selection at a fixed $\lambda$ [@Muller:2020], selection of the q first variables entering the path (the default setting in `c-lasso`), and selection of the q largest coefficients (in absolute value) across the path [@Meinshausen:2010].
+- *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Meinshausen:2010;@Lin:2014;@Combettes:2020b]. Three modes are
+available for the selection of variables over subsamples: selection at a fixed $\lambda$ [@Combettes:2020b], selection of the q first variables entering the path (the default setting in `c-lasso`), and selection of the q largest coefficients (in absolute value) across the path [@Meinshausen:2010].
 
 The python syntax to use a specific computation mode and model selection is exemplified below:
 
@@ -323,18 +329,18 @@ Relevant variables  : [43 47 74 79 84]
 
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
-For this tuned example, the solutions at the fixed lambda and the one selected with stability selection can perfectly recover the oracle solution. 
-Note that the running time for this $d=100$-dimensional example for a single path computation is about 0.5 seconds on a standard Laptop.
+For this tuned example, the solutions at the fixed lambda and with stability selection recover the oracle solution. 
+Note that the run time for this $d=100$-dimensional example for a single path computation is about 0.5 seconds on a standard Laptop.
 
 ## Log-contrast regression on gut microbiome data
 
-We next illustrate the application of the `c-lasso` package on a microbiome dataset, considered in [@Shi:2016] and [Muller:2020]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $p=45$ relative abundances of bacterial genera. 
+We next illustrate the application of the `c-lasso` package on a microbiome dataset, considered in [@Lin:2014;@Shi:2016;@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $p=45$ relative abundances of bacterial genera. 
 
 
 ## Calling `c-lasso` in R 
 
 The `c-lasso` package can also be conveniently interfaced with R using the R package ```reticulate```. A successful interfacing is already in use in the 
-R package [`trac`](https://github.com/jacobbien/trac).
+R package [`trac`](https://github.com/jacobbien/trac) [@Bien:2020].
 
 The code snippet below shows how `c-lasso` is called in R to perform regression at a fixed lambda $\lambda = 0.1\lambda_{\max}$. In R, X and C should be of ```matrix``` type, and y of ```array``` type.
 
