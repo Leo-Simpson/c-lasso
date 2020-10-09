@@ -9,11 +9,11 @@ tags:
   - Huber function
   - convex optimization
 authors:
-  - name: Léo Simpson
+  - name: Leo Simpson
     affiliation: 1
   - name: Patrick L. Combettes
     affiliation: 2
-  - name: Christian L. Müller
+  - name: Christian L. M$\"u$ller
     orcid: 0000-0002-3821-7083
     affiliation: "3,4,5"
 affiliations:
@@ -267,7 +267,8 @@ problem.model_selection.PATH = True
 problem.model_selection.CV = True
 problem.model_selection.StabSel = False
 
-# c-lasso also allows to specify multiple model selection schemes, e.g., adding stability selection via
+# c-lasso also allows to specify multiple model selection schemes, 
+# e.g., adding stability selection via
 problem.model_selection.StabSel = True
 ```
 
