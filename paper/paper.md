@@ -11,22 +11,11 @@ tags:
 authors:
   - name: Leo Simpson
     affiliation: 1
-  - name: Patrick L. Combettes
-    affiliation: 2
-  - name: Christian L. Mueller
-    orcid: 0000-0002-3821-7083
-    affiliation: "3,4,5"
+
 affiliations:
  - name: Technische Universitaet Muenchen 
    index: 1
- - name: Department of Mathematics, North Carolina State University
-   index: 2
- - name: Center for Computational Mathematics, Flatiron Institute
-   index: 3
- - name: Institute of Computational Biology, Helmholtz Zentrum Muenchen
-   index: 4
- - name: Department of Statistics, Ludwig-Maximilians-Universitaet Muenchen
-   index: 5
+ 
    
 date: 09 October 2020
 bibliography: paper.bib
