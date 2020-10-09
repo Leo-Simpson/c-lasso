@@ -2,7 +2,7 @@
 
 @article{Aitchison:1984,
     author = {Aitchion, J. and Bacon-Shone, J.},
-    title = "{Log contrast models for experiments with mixtures}",
+    title = {Log contrast models for experiments with mixtures},
     journal = {Biometrika},
     volume = {71},
     number = {2},
@@ -45,7 +45,6 @@ year = {2020}
 	Url = {https://doi.org/10.1007/s10957-018-1430-2},
 	Volume = {180},
 	Year = {2019},
-	Bdsk-Url-1 = {https://doi.org/10.1007/s10957-018-1430-2}
 }
 
 @article{Combettes:2011,
@@ -74,8 +73,7 @@ year = {2020}
 }
 
 @article{Combettes:2020b,
-    Abstract = {Compositional data sets are ubiquitous in science, including geology, ecology, and microbiology. In microbiome research, compositional data primarily arise from high-throughput sequence-based profiling experiments. These data comprise microbial compositions in their natural habitat and are often paired with covariate measurements that characterize physicochemical habitat properties or the physiology of the host. Inferring parsimonious statistical associations between microbial compositions and habitat- or host-specific covariate data is an important step in exploratory data analysis. A standard statistical model linking compositional covariates to continuous outcomes is the linear log-contrast model. This model describes the response as a linear combination of log-ratios of the original compositions and has been extended to the high-dimensional setting via regularization. In this contribution, we propose a general convex optimization model for linear log-contrast regression which includes many previous proposals as special cases. We introduce a proximal algorithm that solves the resulting constrained optimization problem exactly with rigorous convergence guarantees. We illustrate the versatility of our approach by investigating the performance of several model instances on soil and gut microbiome data analysis tasks.},
-    Author = {Patrick L. Combettes and M{\"u}ller, Christian L.},
+    author = {Patrick L. Combettes and M{\"u}ller, Christian L.},
     Da = {2020/06/19},
     Date-Added = {2020-07-07 12:02:54 +0000},
     Date-Modified = {2020-07-07 12:02:54 +0000},
@@ -141,7 +139,6 @@ year = {2020}
 }
 
 @article{Jeon:2020,
-abstract = {We consider the LASSO estimator for compositional data in which covariates are nonnegative, and their sum is always one. Due to the linear constraint of the regression coefficients caused by the sum to one condition, standard algorithms for LASSO cannot be applied directly to compositional data. Hence, a specific regularized regression model with linear constraints is commonly used. However, linear constraints incur additional computational time, which becomes severe in high-dimensional cases. Additionally, the exact computation for the regression is not investigated under existing methods. In this paper, we first propose an exact solution path algorithm for a l1 regularized regression with high-dimensional compositional data and extend to a classification model. We also compare its computational speed with that of previously developed algorithms and then apply the proposed algorithm to analyzing income inequality data in economics and human gut microbiome data in biology. By analyzing simulated and real data sets, we illustrate that our specialized algorithm is significantly more efficient than the generalized LASSO algorithm for compositional data.},
 author = {Jeon, Jong-June and Kim, Yongdai and Won, Sungho and Choi, Hosik},
 doi = {https://doi.org/10.1016/j.csda.2020.106958},
 issn = {0167-9473},
@@ -167,7 +164,6 @@ doi = {10.1162/NECO_a_00434}
 
 
 @article{Lin:2014,
-abstract = {Motivated by research problems arising in the analysis of gut microbiome and metagenomic data, we consider variable selection and estimation in high-dimensional regression with compositional covariates. We propose an {\{}ell{\}}1 regularization method for the linear log-contrast model that respects the unique features of compositional data. We formulate the proposed procedure as a constrained convex optimization problem and introduce a coordinate descent method of multipliers for efficient computation. In the high-dimensional setting where the dimensionality grows at most exponentially with the sample size, model selection consistency and [IMG]f1.gif" ALT="Formula" BORDER="0"{\textgreater} bounds for the resulting estimator are established under conditions that are mild and interpretable for compositional data. The numerical performance of our method is evaluated via simulation studies and its usefulness is illustrated by an application to a microbiome study relating human body mass index to gut microbiome composition.},
 author = {Lin, Wei and Shi, Pixu and Feng, Rui and Li, Hongzhe},
 doi = {10.1093/biomet/asu031},
 file = {:Users/cmueller/Documents/Mendeley Desktop/Lin et al. - 2014 - Variable selection in regression with compositional covariates(3).pdf:pdf},
@@ -195,11 +191,10 @@ year = {2014}
   eprint = {https://rss.onlinelibrary.wiley.com/doi/pdf/10.1111/j.1467-9868.2010.00740.x},
   abstract = {Summary.  Estimation of structure, such as in variable selection, graphical modelling or cluster analysis, is notoriously difficult, especially for high dimensional data. We introduce stability selection. It is based on subsampling in combination with (high dimensional) selection algorithms. As such, the method is extremely general and has a very wide range of applicability. Stability selection provides finite sample control for some error rates of false discoveries and hence a transparent principle to choose a proper amount of regularization for structure estimation. Variable selection and structure estimation improve markedly for a range of selection methods if stability selection is applied. We prove for the randomized lasso that stability selection will be variable selection consistent even if the necessary conditions for consistency of the original lasso method are violated. We demonstrate stability selection for variable selection and Gaussian graphical modelling, using real and simulated data.},
   year = {2010}
-  }
+}
 
 
 @article{Mishra:2019,
-abstract = {Many high-throughput sequencing data sets in biology are compositional in nature. A prominent example is microbiome profiling data, including targeted amplicon-based and metagenomic sequencing data. These profiling data comprises surveys of microbial communities in their natural habitat and sparse proportional (or compositional) read counts that represent operational taxonomic units or genes. When paired measurements of other covariates, including physicochemical properties of the habitat or phenotypic variables of the host, are available, inference of parsimonious and robust statistical relationships between the microbial abundance data and the covariate measurements is often an important first step in exploratory data analysis. To this end, we propose a sparse robust statistical regression framework that considers compositional and non-compositional measurements as predictors and identifies outliers in continuous response variables. Our model extends the seminal log-contrast model of Aitchison and Bacon-Shone (1984) by a mean shift formulation for capturing outliers, sparsity-promoting convex and non-convex penalties for parsimonious model selection, and data-driven robust initialization procedures adapted to the compositional setting. We show, in theory and simulations, the ability of our approach to jointly select a sparse set of predictive microbial features and identify outliers in the response. We illustrate the viability of our method by robustly predicting human body mass indices from American Gut Project amplicon data and non-compositional covariate data. We believe that the robust estimators introduced here and available in the R package RobRegCC can serve as a practical tool for reliable statistical regression analysis of compositional data, including microbiome survey data.},
 archivePrefix = {arXiv},
 arxivId = {1909.04990},
 author = {Mishra, Aditya and M\"uller, Christian L.},
@@ -211,12 +206,11 @@ year = {2019}
 
 
 @article{Rosset:2007,
-abstract = {We consider the generic regularized optimization problem {\$}\backslashhat{\{}\backslashmathsf{\{}\backslashbeta{\}}{\}}(\backslashlambda)=\backslasharg \backslashmin{\_}{\{}\backslashbeta{\}}L({\{}\backslashsf{\{}y{\}}{\}},X{\{}\backslashsf{\{}\backslashbeta{\}}{\}})+\backslashlambda J({\{}\backslashsf{\{}\backslashbeta{\}}{\}}){\$}. Efron, Hastie, Johnstone and Tibshirani [Ann. Statist. 32 (2004) 407--499] have shown that for the LASSO--that is, if {\$}L{\$} is squared error loss and {\$}J(\backslashbeta)=\backslash|\backslashbeta\backslash|{\_}1{\$} is the {\$}\backslashell{\_}1{\$} norm of {\$}\backslashbeta{\$}--the optimal coefficient path is piecewise linear, that is, {\$}\backslashpartial \backslashhat{\{}\backslashbeta{\}}(\backslashlambda)/\backslashpartial \backslashlambda{\$} is piecewise constant. We derive a general characterization of the properties of (loss {\$}L{\$}, penalty {\$}J{\$}) pairs which give piecewise linear coefficient paths. Such pairs allow for efficient generation of the full regularized coefficient paths. We investigate the nature of efficient path following algorithms which arise. We use our results to suggest robust versions of the LASSO for regression and classification, and to develop new, efficient algorithms for existing problems in the literature, including Mammen and van de Geer's locally adaptive regression splines.},
 author = {Rosset, Saharon and Zhu, Ji},
 doi = {10.1214/009053606000001370},
 issn = {00905364},
 journal = {Annals of Statistics},
-keywords = {Polynomial splines,Regularization,Solution paths,Sparsity,Total variation,ℓ1-norm penalty},
+keywords = {Polynomial splines,Regularization,Solution paths,Sparsity,Total variation,l1-norm penalty},
 number = {3},
 pages = {1012--1030},
 title = {{Piecewise linear regularized solution paths}},
