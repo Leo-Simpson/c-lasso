@@ -8,15 +8,28 @@ tags:
   - Lasso
   - Huber function
   - convex optimization
+  - perspective function
 authors:
-  - name: Leo Simpson
+  - name: Léo Simpson
     affiliation: 1
+  - name: Patrick L. Combettes
+    affiliation: 2
+  - name: Christian L. Müller
+    orcid: 0000-0002-3821-7083
+    affiliation: "3,4,5"
 
 affiliations:
-  - name: Technische Universitaet Muenchen
+  - name: Technische Universität Muenchen
     index: 1
- 
-   
+  - name: Department of Mathematics, North Carolina State University
+    index: 2
+  - name: Center for Computational Mathematics, Flatiron Institute, New York
+    index: 3
+  - name: Institute of Computational Biology, Helmholtz Zentrum München
+    index: 4
+  - name: Department of Statistics, Ludwig-Maximilians-Universität München
+    index: 5
+
 date: 09 October 2020
 bibliography: paper.bib
 
