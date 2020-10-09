@@ -50,7 +50,7 @@ regression with compositional data $X$, leading to the constraint $\sum_{i=1}^d 
 problems (see, e.g, [@James:2020], Example 3). The `c-lasso` package provides several estimators for inferring unknown coefficients and scale (i.e., perspective M-estimators [@Combettes:2020a]) of the form:
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R_{0}} f\left(X\beta - y,{\sigma} \right) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \arg \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R_{0}}} f\left(X\beta - y,{\sigma} \right) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
 This includes the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints.
@@ -133,7 +133,7 @@ problem.formulation.classification = False
 ### *R3* Contrained scaled Lasso regression: {#R3}
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \arg \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R_{0}}} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
 This formulation is the default problem formulation in `c-lasso`. It is similar to [*R1*](#R1) but allows for joint estimation of the (constrained) $\beta$ vector and the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020a;@Combettes:2020b].
@@ -148,7 +148,7 @@ problem.formulation.classification = False
 ### *R4* Contrained sparse Huber regression with concomitant scale estimation: {#R4}       
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \arg \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R_{0}}} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
 This formulation combines [*R2*](#R2) and [*R3*](#R3) allowing robust joint estimation of the (constrained) $\beta$ vector and 
@@ -333,7 +333,6 @@ are stored in ```problem.solution``` and can be directly acccessed for each mode
 ```python
 # Access to the estimated coefficient vector at a fixed lambda 
 problem.solution.LAMfixed.beta
-
 ```
 
 Note that the run time for this $d=100$-dimensional example for a single path computation is about 0.5 seconds on a standard Laptop.
