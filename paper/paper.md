@@ -136,7 +136,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-This formulation is the default problem formulation in `c-lasso`. It is similar to [*R1*](#R1) but allows for joint estimation of the (constrained) $\beta$ vector and the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020a; @Combettes:2020b].
+This formulation is the default problem formulation in `c-lasso`. It is similar to [*R1*](#R1) but allows for joint estimation of the (constrained) $\beta$ vector and the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020a;@Combettes:2020b].
 
 ```python
 # formulation R3
@@ -152,7 +152,7 @@ $$
 $$
 
 This formulation combines [*R2*](#R2) and [*R3*](#R3) allowing robust joint estimation of the (constrained) $\beta$ vector and 
-the scale $\sigma$ in a concomitant fashion [@Combettes:2020a; @Combettes:2020b].
+the scale $\sigma$ in a concomitant fashion [@Combettes:2020a;@Combettes:2020b].
 
 ```python
 # formulation R4
@@ -212,7 +212,7 @@ This algorithm follows the proposal in [@Gaines:2018;Jeon:2020]) and uses the fa
 
 - Douglas-Rachford-type splitting method (*DR*): 
 This algorithm can solve all regression problems *R1-R4*. It is based on Doulgas-Rachford splitting in a higher-dimensional product space and 
-makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020a; @Combettes:2020b]. The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem with mean shift vector [@Mishra:2019] and thus solved in (n + d) dimensions.
+makes use of the proximity operators of the perspective of the LS objective [@Combettes:2020a;@Combettes:2020b]. The Huber problem with concomitant scale *R4* is reformulated as scaled Lasso problem with mean shift vector [@Mishra:2019] and thus solved in (n + d) dimensions.
 
 - Projected primal-dual splitting method (*P-PDS*): 
 This algorithm is derived from [@Briceno:2020] and belongs to the class of proximal splitting algorithms, extending the classical Forward-Backward (FB) 
@@ -330,11 +330,13 @@ Relevant variables  : [43 47 74 79 84]
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
 For this tuned example, the solutions at the fixed lambda and with stability selection recover the oracle solution. The solution vectors
-are stored in ```problem.solution``` and can be directly acccessed for each mode/model selection. 
+are stored in  and can be directly acccessed for each mode/model selection. 
 
 ```python
+
 # Access to the estimated coefficient vector at a fixed lambda 
 problem.solution.LAMfixed.beta
+
 ```
 
 Note that the run time for this $d=100$-dimensional example for a single path computation is about 0.5 seconds on a standard Laptop.
