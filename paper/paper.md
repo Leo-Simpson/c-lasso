@@ -327,8 +327,8 @@ Relevant variables  : [43 47 74 79 84]
    Running time :  5.3s
 ```
 
-`c-lasso` allows standard visualization of the computed solutions, e.g., coefficient plots at fixed $\lambda$, the solution path, the stability selection profile
-at the selected $\lambda$, and the stability selection profile across the entire path. 
+`c-lasso` allows standard visualization of the computed solutions, e.g., coefficient plots at fixed $\lambda$, the solution path, the stability selection 
+profile at the selected $\lambda$, and the stability selection profile across the entire path. 
 
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
@@ -344,8 +344,55 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
-We next illustrate the application of the `c-lasso` package on a microbiome dataset, considered in [@Lin:2014;@Shi:2016;@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $p=45$ relative abundances of bacterial genera. 
+We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. 
 
+```python
+from classo import
+
+# Load microbiome genus data X0
+X0  = csv_to_mat('data/GeneraCounts.csv',begin=0).astype(float)
+
+# Load covariate data
+X_C = csv_to_mat('data/CaloriData.csv',begin=0).astype(float)
+X_F = csv_to_mat('data/FatData.csv',begin=0).astype(float)
+
+# Load BMI measurements
+y   = csv_to_mat('data/BMI.csv',begin=0).astype(float)[:,0]
+
+# Load genus names
+labels  = csv_to_mat('data/GeneraPhylo.csv').astype(str)[:,-1]
+
+# Normalize/transform data
+y   = y - np.mean(y) #BMI data (n=96)
+X_C = X_C - np.mean(X_C, axis=0)  #Covariate data (Calorie)
+X_F = X_F - np.mean(X_F, axis=0)  #Covariate data (Fat)
+X0 = clr(X0, 1 / 2).T
+
+# Set up design matrix and zero-sum constraints for 45 genera
+X      = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis=1) # Joint microbiome and covariate data and offset
+label = np.concatenate([labels,np.array(['Calorie','Fat','Biais'])])
+C = np.ones((1,len(X[0])))
+C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
+
+# Set up c-lassso problem
+problem = classo_problem(X,y,C, label=label)
+
+# Use formulation R2
+problem.formulation.concomitant = True
+
+# Use stability selection with theoretical lambda [Combettes & Müller, 2020b]
+problem.model_selection.StabSel                       = True
+problem.model_selection.StabSelparameters.method      = 'lam'
+problem.solve()
+
+# Use formulation R4
+problem.formulation.huber = True
+problem.formulation.concomitant = True
+
+problem.solve()
+
+```
+[comment]![Stability selection profiles for R2/R4](figures/*.png)
 
 ## Calling `c-lasso` in R 
 
