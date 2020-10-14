@@ -80,7 +80,7 @@ This function compute the the solution for a given path of lam : by calling the 
 def pathlasso_R4(pb,path,n_active=False):
     n = pb.dim[0]
     BETA,SIGMA,tol = [],[],pb.tol
-
+    pb.type = 'DR'
     save_init = pb.init   
     pb.regpath = True
     pb.compute_param()
