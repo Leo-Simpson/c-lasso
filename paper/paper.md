@@ -344,7 +344,7 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
-We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here]().
+We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here]().
 
 ```python
 from classo import *
