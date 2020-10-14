@@ -344,35 +344,25 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
-We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. 
+We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here]().
 
 ```python
-from classo import
+from classo import *
 
-# Load microbiome genus data X0
-X0  = csv_to_mat('data/GeneraCounts.csv',begin=0).astype(float)
+# Load microbiome and covariate data X
+...
 
-# Load covariate data
-X_C = csv_to_mat('data/CaloriData.csv',begin=0).astype(float)
-X_F = csv_to_mat('data/FatData.csv',begin=0).astype(float)
+# Load BMI measurements y
+...
 
-# Load BMI measurements
-y   = csv_to_mat('data/BMI.csv',begin=0).astype(float)[:,0]
-
-# Load genus names
-labels  = csv_to_mat('data/GeneraPhylo.csv').astype(str)[:,-1]
+# Load genus and covariate labels
+...
 
 # Normalize/transform data
-y   = y - np.mean(y) #BMI data (n=96)
-X_C = X_C - np.mean(X_C, axis=0)  #Covariate data (Calorie)
-X_F = X_F - np.mean(X_F, axis=0)  #Covariate data (Fat)
-X0 = clr(X0, 1 / 2).T
+...
 
 # Set up design matrix and zero-sum constraints for 45 genera
-X      = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis=1) # Joint microbiome and covariate data and offset
-label = np.concatenate([labels,np.array(['Calorie','Fat','Biais'])])
-C = np.ones((1,len(X[0])))
-C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
+...
 
 # Set up c-lassso problem
 problem = classo_problem(X,y,C, label=label)
