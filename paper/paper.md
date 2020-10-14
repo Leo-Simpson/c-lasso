@@ -392,7 +392,6 @@ The `c-lasso` package can also be conveniently integrated into `R` using the `R`
 The code snippet below shows how `c-lasso` is called in `R` to perform regression at a fixed $\lambda$ $\lambda = 0.1\lambda_{\max}$. In `R`, X and C should be of ```matrix``` type, and y of ```array``` type.
 
 ```r
-...
 problem <- classo$classo_problem(X=X,C=C,y=y) 
 problem$model_selection$LAMfixed <- TRUE
 problem$model_selection$StabSel <- FALSE
