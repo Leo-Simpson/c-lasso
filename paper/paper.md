@@ -344,14 +344,8 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
-<<<<<<< HEAD
-
 We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, absolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example%20notebook.ipynb).
-=======
-We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here]().
 
-We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014; @Shi:2016; @Combettes:2020], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here]().
->>>>>>> 2a0af869098582c998b947dc73ab924511baa90a
 
 ```python
 from classo import *
@@ -361,7 +355,6 @@ X0  = csv_to_mat('GeneraFilteredCounts.csv',begin=0).astype(float)
 X_C = csv_to_mat('CaloriData.csv',begin=0).astype(float)
 X_F = csv_to_mat('FatData.csv',begin=0).astype(float)
 
-C_filtered = sio.loadmat('CFiltered.mat')
 
 # Load BMI measurements y
 y   = csv_to_mat('BMI.csv',begin=0).astype(float)[:,0]
@@ -370,10 +363,16 @@ y   = csv_to_mat('BMI.csv',begin=0).astype(float)[:,0]
 labels  = csv_to_mat('GeneraPhylo.csv').astype(str)[:,-1]
 
 # Normalize/transform data
-...
+y   = y - np.mean(y)
+X_C = X_C - np.mean(X_C, axis=0)  #Covariate data (Calorie)
+X_F = X_F - np.mean(X_F, axis=0)  #Covariate data (Fat)
+X0 = clr(X0, 1 / 2).T
 
 # Set up design matrix and zero-sum constraints for 45 genera
-...
+X = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis=1)
+label = np.concatenate([labels,np.array(['Calorie','Fat','Bias'])])
+C = np.ones((1,len(X[0])))
+C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
 
 # Set up c-lassso problem
 problem = classo_problem(X,y,C, label=label)
@@ -393,7 +392,8 @@ problem.formulation.concomitant = True
 problem.solve()
 
 ```
-[comment]![Stability selection profiles for R2/R4](figures/*.png)
+![Stability selection profiles for R3/R4](figures/StabSelFilteredCOMBO.png)
+
 
 ## Calling `c-lasso` in R 
 

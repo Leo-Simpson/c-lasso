@@ -1,8 +1,0 @@
-include README-for-pypi.md
-
-graft examples
-
-global-exclude *.pyc
-global-exclude *.pyo
-global-exclude *.so
-global-exclude .*.swp
