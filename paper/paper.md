@@ -389,7 +389,7 @@ problem.solve()
 The `c-lasso` package can also be conveniently integrated into `R` using the `R` package [`reticulate`](https://rstudio.github.io/reticulate/). We refer to 
 `reticulate`'s manual for technical details about connecting `python` environments and `R`. A successful interfacing is available in the `R` package [`trac`](https://github.com/jacobbien/trac) [@Bien:2020].
 
-The code snippet below shows how `c-lasso` is called in `R` to perform regression at a fixed &lambda $\lambda = 0.1\lambda_{\max}$. In `R`, X and C should be of ```matrix``` type, and y of ```array``` type.
+The code snippet below shows how `c-lasso` is called in `R` to perform regression at a fixed $\lambda$ $\lambda = 0.1\lambda_{\max}$. In `R`, X and C should be of ```matrix``` type, and y of ```array``` type.
 
 ```r
 ...
