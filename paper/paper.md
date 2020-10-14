@@ -327,8 +327,8 @@ Relevant variables  : [43 47 74 79 84]
    Running time :  5.3s
 ```
 
-`c-lasso` allows standard visualization of the computed solutions, e.g., coefficient plots at fixed $\lambda$, the solution path, the stability selection profile
-at the selected $\lambda$, and the stability selection profile across the entire path. 
+`c-lasso` allows standard visualization of the computed solutions, e.g., coefficient plots at fixed $\lambda$, the solution path, the stability selection 
+profile at the selected $\lambda$, and the stability selection profile across the entire path. 
 
 ![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
 
@@ -344,25 +344,63 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
-We next illustrate the application of the `c-lasso` package on a microbiome dataset, considered in [@Lin:2014;@Shi:2016;@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $p=45$ relative abundances of bacterial genera. 
+We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here]().
 
+```python
+from classo import *
+
+# Load microbiome and covariate data X
+...
+
+# Load BMI measurements y
+...
+
+# Load genus and covariate labels
+...
+
+# Normalize/transform data
+...
+
+# Set up design matrix and zero-sum constraints for 45 genera
+...
+
+# Set up c-lassso problem
+problem = classo_problem(X,y,C, label=label)
+
+# Use formulation R2
+problem.formulation.concomitant = True
+
+# Use stability selection with theoretical lambda [Combettes & Müller, 2020b]
+problem.model_selection.StabSel                       = True
+problem.model_selection.StabSelparameters.method      = 'lam'
+problem.solve()
+
+# Use formulation R4
+problem.formulation.huber = True
+problem.formulation.concomitant = True
+
+problem.solve()
+
+```
+[comment]![Stability selection profiles for R2/R4](figures/*.png)
 
 ## Calling `c-lasso` in R 
 
-The `c-lasso` package can be conveniently integrated in `R` using the `R` package ```reticulate```. A successful interfacing is already in use in the 
-R package [`trac`](https://github.com/jacobbien/trac) [@Bien:2020].
+The `c-lasso` package can also be conveniently integrated into `R` using the `R` package [`reticulate`](https://rstudio.github.io/reticulate/). We refer to 
+`reticulate`'s manual for technical details about connecting `python` environments and `R`. A successful interfacing is available in the `R` package [`trac`](https://github.com/jacobbien/trac) [@Bien:2020].
 
-The code snippet below shows how `c-lasso` is called in R to perform regression at a fixed lambda $\lambda = 0.1\lambda_{\max}$. In `R`, X and C should be of ```matrix``` type, and y of ```array``` type.
+The code snippet below shows how `c-lasso` is called in `R` to perform regression at a fixed &lambda $\lambda = 0.1\lambda_{\max}$. In `R`, X and C should be of ```matrix``` type, and y of ```array``` type.
 
 ```r
-problem<- classo$classo_problem(X=X,C=C,y=y)) 
+...
+problem <- classo$classo_problem(X=X,C=C,y=y) 
 problem$model_selection$LAMfixed <- TRUE
 problem$model_selection$StabSel <- FALSE
 problem$model_selection$LAMfixedparameters$rescaled_lam <- TRUE
 problem$model_selection$LAMfixedparameters$lam <- 0.1
 problem$solve()
 
-# extract coefficent vector 
+# Extract coefficent vector 
 beta <- as.matrix(map_dfc(problem$solution$LAMfixed$beta, as.numeric))
 ```
 
