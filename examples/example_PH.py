@@ -3,8 +3,8 @@ from CLasso import *
 import numpy as np
 from copy import deepcopy as dc
 
-pH = sio.loadmat('data/pHData.mat')
-tax = sio.loadmat('data/taxTablepHData.mat')['None'][0]
+pH = sio.loadmat('pH_data/pHData.mat')
+tax = sio.loadmat('pH_data/taxTablepHData.mat')['None'][0]
 
 X,Y_uncent = pH['X'],pH['Y'].T[0]
 y = Y_uncent-np.mean(Y_uncent) # Center Y
