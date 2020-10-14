@@ -87,7 +87,7 @@ problem  = classo_problem(X,y,C)
 # Solve the specified problem instance
 problem.solve()
 
-# Show the problem specficiation and the corresponding solution
+# Show the problem specification and the corresponding solution
 print(problem)
 print(problem.solution)
 ```
@@ -125,7 +125,7 @@ This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Hube
 for robust model fitting with an $L_1$ penalty and linear equality constraints on the $\beta$ vector. The default parameter $\rho$ is set to $1.345$ [@Huber:1981].
 
 ```python
-# formulation R2
+# Formulation R2
 problem.formulation.huber = True
 problem.formulation.concomitant = False
 problem.formulation.classification = False
@@ -156,7 +156,7 @@ This formulation combines [*R2*](#R2) and [*R3*](#R3) allowing robust joint esti
 the scale $\sigma$ in a concomitant fashion [@Combettes:2020a;@Combettes:2020b].
 
 ```python
-# formulation R4
+# Formulation R4
 problem.formulation.huber = True
 problem.formulation.concomitant = True
 problem.formulation.classification = False
@@ -177,7 +177,7 @@ $$
 This formulation is similar to [*R1*](#R1) but adapted for classification tasks, i.e, $y \in {-1,1}^n$ using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
 
 ```python
-# formulation C1
+# Formulation C1
 problem.formulation.huber = False
 problem.formulation.concomitant = False
 problem.formulation.classification = True
@@ -198,7 +198,7 @@ $$
 This formulation is similar to [*C1*](#C1) but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007].
 
 ```python
-# formulation C2
+# Formulation C2
 problem.formulation.huber = True
 problem.formulation.concomitant = False
 problem.formulation.classification = True
@@ -344,7 +344,11 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
+<<<<<<< HEAD
 We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here]().
+=======
+We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014; @Shi:2016; @Combettes:2020], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here]().
+>>>>>>> c272ba5cdffcff66cfd6b6b4db5dcced11035b3a
 
 ```python
 from classo import *
@@ -367,7 +371,7 @@ from classo import *
 # Set up c-lassso problem
 problem = classo_problem(X,y,C, label=label)
 
-# Use formulation R2
+# Use formulation R3
 problem.formulation.concomitant = True
 
 # Use stability selection with theoretical lambda [Combettes & Müller, 2020b]
