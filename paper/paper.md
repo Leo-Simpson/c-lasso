@@ -330,7 +330,7 @@ Relevant variables  : [43 47 74 79 84]
 `c-lasso` allows standard visualization of the computed solutions, e.g., coefficient plots at fixed $\lambda$, the solution path, the stability selection 
 profile at the selected $\lambda$, and the stability selection profile across the entire path. 
 
-![Graphics plotted after calling problem.solution ](figures/_figure-concat.png)
+![Visualizations after calling problem.solution](figures/_figure-concat.png)
 
 For this tuned example, the solutions at the fixed lambda and with stability selection recover the oracle solution. The solution vectors
 are stored in ```problem.solution``` and can be directly acccessed for each mode/model selection. 
@@ -344,8 +344,14 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
+<<<<<<< HEAD
 
 We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, absolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example%20notebook.ipynb).
+=======
+We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here]().
+
+We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014; @Shi:2016; @Combettes:2020], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, abolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here]().
+>>>>>>> 2a0af869098582c998b947dc73ab924511baa90a
 
 ```python
 from classo import *
