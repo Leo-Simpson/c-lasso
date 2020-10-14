@@ -386,20 +386,21 @@ problem.solve()
 
 ## Calling `c-lasso` in R 
 
-The `c-lasso` package can be conveniently integrated in `R` using the `R` package ```reticulate```. A successful interfacing is already in use in the 
-R package [`trac`](https://github.com/jacobbien/trac) [@Bien:2020].
+The `c-lasso` package can also be conveniently integrated into `R` using the `R` package [`reticulate`](https://rstudio.github.io/reticulate/). We refer to 
+`reticulate`'s manual for technical details about connecting `python` environments and `R`. A successful interfacing is available in the `R` package [`trac`](https://github.com/jacobbien/trac) [@Bien:2020].
 
-The code snippet below shows how `c-lasso` is called in R to perform regression at a fixed lambda $\lambda = 0.1\lambda_{\max}$. In `R`, X and C should be of ```matrix``` type, and y of ```array``` type.
+The code snippet below shows how `c-lasso` is called in `R` to perform regression at a fixed &lambda $\lambda = 0.1\lambda_{\max}$. In `R`, X and C should be of ```matrix``` type, and y of ```array``` type.
 
 ```r
-problem<- classo$classo_problem(X=X,C=C,y=y)) 
+...
+problem <- classo$classo_problem(X=X,C=C,y=y) 
 problem$model_selection$LAMfixed <- TRUE
 problem$model_selection$StabSel <- FALSE
 problem$model_selection$LAMfixedparameters$rescaled_lam <- TRUE
 problem$model_selection$LAMfixedparameters$lam <- 0.1
 problem$solve()
 
-# extract coefficent vector 
+# Extract coefficent vector 
 beta <- as.matrix(map_dfc(problem$solution$LAMfixed$beta, as.numeric))
 ```
 
