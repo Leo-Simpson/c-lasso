@@ -745,7 +745,10 @@ class solution_StabSel:
 
         string = "\n STABILITY SELECTION : "
 
-        D, Dpath, selected = self.distribution, self.distribution_path, self.selected_param
+        ntop = min(len(self.beta),200) 
+        top = np.argpartition(means, -ntop)[-ntop:]
+
+        D, Dpath, selected = self.distribution[top], self.distribution_path, self.selected_param[top]
         unselected = [not i for i in selected]
         Dselected, Dunselected  = np.zeros(len(D)), np.zeros(len(D))
         Dselected[selected], Dunselected[unselected] = D[selected], D[unselected]
@@ -754,7 +757,7 @@ class solution_StabSel:
         plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected coefficients')
         plt.axhline(y=self.threshold, color='g',label='Threshold : thresh = '+ str(self.threshold))
 
-        plt.xticks(ticks = np.where(self.to_label)[0], labels = self.label[self.to_label], rotation=30)
+        plt.xticks(ticks = np.where(self.to_label)[0], labels = self.label[top][self.to_label[top]], rotation=30)
         plt.xlabel(StabSel_graph["xlabel"]), plt.ylabel(StabSel_graph["ylabel"]), plt.title(StabSel_graph["title"] + self.method + " using " + self.formulation), plt.legend()
 
         if (type(self.save1) == str): plt.savefig(self.save1)
@@ -766,7 +769,7 @@ class solution_StabSel:
         if (type(Dpath) != str):
             lambdas = self.lambdas_path
             N = len(lambdas)
-            for i in range(len(selected)):
+            for i in top:
                 if selected[i]: c='r'
                 else :          c='b'
                 plt.plot(lambdas, [Dpath[j][i] for j in range(N)], c)
@@ -853,11 +856,15 @@ class solution_LAMfixed:
 
         string = "\n LAMBDA FIXED : "
 
+        ntop = min(len(self.beta),200) 
+        top = np.argpartition(means, -ntop)[-ntop:]
 
-        plt.bar(range(len(self.beta)), self.beta), plt.title(LAM_beta["title"] + str(round(self.lam,3) ) ), plt.xlabel(LAM_beta["xlabel"]),plt.ylabel(LAM_beta["ylabel"])
-        plt.xticks(np.where(self.selected_param)[0],self.label[self.selected_param], rotation=30)
+        plt.bar(range(len(self.beta[top])), self.beta[top]), plt.title(LAM_beta["title"] + str(round(self.lam,3) ) ), plt.xlabel(LAM_beta["xlabel"]),plt.ylabel(LAM_beta["ylabel"])
+        plt.xticks(np.where(self.selected_param[top])[0],self.label[self.selected_param[top]], rotation=30)
+        
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
+        
         if(self.formulation.concomitant) : 
             string += "\n   Sigma  =  " + str(round(self.sigma, 3))
           

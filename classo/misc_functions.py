@@ -4,7 +4,7 @@ colo = ['red','orange','g','b','pink','y','c','m','purple',
         'sienna', 'sandybrown','olive', 'cadetblue','lawngreen',
         'palevioletred','papayawhip','turquoise', 'teal',
         'khaki','peru','indianred','brown', 'slategrey']
-colo = colo*100
+
 import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
@@ -341,10 +341,10 @@ def plot_betai(labels,l_index,path,BETAS):
         if(j<len(l_index) and i==l_index[j]):
             if not (type(labels)==bool): leg = 'Coefficient '+str(labels[i])
             else : leg = 'Coefficient '+str(i)
-            plt.plot(path,BETAS[:,i],label=leg,color=colo[j])
+            plt.plot(path,BETAS[:,i],label=leg,color=colo[j%len(colo)])
             j+=1
         else:
-            plt.plot(path, BETAS[:, i], color=colo[i+j])
+            plt.plot(path, BETAS[:, i], color=colo[(i+j)%len(colo)])
 
 def influence(BETAS,ntop):
     means = np.mean(abs(BETAS),axis=0)
