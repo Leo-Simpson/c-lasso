@@ -164,8 +164,8 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg
         BETA = np.array([ [means[1] - means[0].dot(beta) ]+list(beta) for beta in BETA] )
 
 
-    if(typ in ['R3','R4'] and return_sigm): return(BETA,real_path,S)
-    return(BETA,real_path)
+    if(typ in ['R3','R4'] and return_sigm): return(np.array(BETA),real_path,S)
+    return(np.array(BETA),real_path)
  
     
 

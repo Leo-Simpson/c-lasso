@@ -560,9 +560,12 @@ class solution_PATH:
     def __repr__(self):
 
         string = "\n PATH COMPUTATION : "
+        if len(self.BETAS[0])>100: 
+            top = np.argpartition(np.mean(abs(np.array(self.BETAS)),axis=0), -100)[-100:]
+        else : 
+            top = np.arange(len(self.BETAS[0]))
 
-
-        affichage(self.BETAS, self.LAMBDAS, labels=self.label, naffichage=5,
+        affichage(self.BETAS[:,top], self.LAMBDAS, labels=self.label, naffichage=5,
                   title=PATH_beta_path["title"] + self.formulation.name(),xlabel=PATH_beta_path["xlabel"],ylabel=PATH_beta_path["ylabel"])
         if (type(self.save) == str): plt.savefig(self.save + 'Beta-path')
         plt.show()
@@ -643,11 +646,18 @@ class solution_CV:
     def __repr__(self):
 
         string = "\n CROSS VALIDATION : "
+        d = len(self.refit)
+        if d>100: 
+            top = np.argpartition(abs(self.refit)+np.random.randn(d)*1e-5, -100)[-100:]
+            top = np.sort(top)
+        else : 
+            top = np.arange(d)
 
-        plt.bar(range(len(self.refit)), self.refit), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
-        plt.xticks(np.where(self.selected_param)[0],self.label[self.selected_param], rotation=30)
+        plt.bar(range(len(self.refit[top])), self.refit[top]), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
+        plt.xticks(np.where(self.selected_param[top])[0],self.label[top][self.selected_param[top]], rotation=30)
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
+        self.graphic()
         
         string += "\n   Selected variables :  " 
         for i in np.where(self.selected_param)[0] :
@@ -730,7 +740,8 @@ class solution_StabSel:
         self.distribution = distribution
         self.distribution_path = distribution_path
         self.lambdas_path = lambdas
-        self.selected_param, self.to_label = selected_param(self.distribution, param.threshold,param.threshold_label)
+        self.selected_param = self.distribution > param.threshold
+        self.threshold_label = param.threshold_label
         self.threshold = param.threshold
         self.refit = min_LS(matrices, self.selected_param,  intercept=param.formulation.intercept)
         self.save1 = False
@@ -745,10 +756,15 @@ class solution_StabSel:
 
         string = "\n STABILITY SELECTION : "
 
-        ntop = min(len(self.beta),200) 
-        top = np.argpartition(means, -ntop)[-ntop:]
+        d = len(self.distribution)
+        if d>100: 
+            top = np.argpartition(self.distribution+np.random.randn(d)*1e-5, -100)[-100:]
+            top = np.sort(top)
+        else : 
+            top = np.arange(d)
 
-        D, Dpath, selected = self.distribution[top], self.distribution_path, self.selected_param[top]
+        self.to_label = self.distribution > self.threshold_label
+        D, Dpath, selected = self.distribution[top], self.distribution_path, np.array(self.selected_param)[top]
         unselected = [not i for i in selected]
         Dselected, Dunselected  = np.zeros(len(D)), np.zeros(len(D))
         Dselected[selected], Dunselected[unselected] = D[selected], D[unselected]
@@ -757,7 +773,7 @@ class solution_StabSel:
         plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected coefficients')
         plt.axhline(y=self.threshold, color='g',label='Threshold : thresh = '+ str(self.threshold))
 
-        plt.xticks(ticks = np.where(self.to_label)[0], labels = self.label[top][self.to_label[top]], rotation=30)
+        plt.xticks(ticks = np.where(self.to_label[top])[0], labels = self.label[top][self.to_label[top]], rotation=30)
         plt.xlabel(StabSel_graph["xlabel"]), plt.ylabel(StabSel_graph["ylabel"]), plt.title(StabSel_graph["title"] + self.method + " using " + self.formulation), plt.legend()
 
         if (type(self.save1) == str): plt.savefig(self.save1)
@@ -769,10 +785,10 @@ class solution_StabSel:
         if (type(Dpath) != str):
             lambdas = self.lambdas_path
             N = len(lambdas)
-            for i in top:
-                if selected[i]: c='r'
+            for i1,i2 in enumerate(top):
+                if selected[i1]: c='r'
                 else :          c='b'
-                plt.plot(lambdas, [Dpath[j][i] for j in range(N)], c)
+                plt.plot(lambdas, [Dpath[j][i2] for j in range(N)], c)
             p1 = mpatches.Patch(color='red', label='selected coefficients')
             p2 = mpatches.Patch(color='blue',label='unselected coefficients')
             p3 = mpatches.Patch(color='green',label='Threshold : thresh = '+ str(self.threshold))
@@ -782,9 +798,9 @@ class solution_StabSel:
             if (type(self.save2)==str):plt.savefig(self.save2)
             plt.show()
 
-        plt.bar(range(len(self.refit)), self.refit)
+        plt.bar(range(len(self.refit[top])), self.refit[top])
         plt.xlabel(StabSel_beta["xlabel"]), plt.ylabel(StabSel_beta["ylabel"]), plt.title(StabSel_beta["title"])
-        plt.xticks(np.where(self.selected_param)[0],self.label[self.selected_param], rotation=30)
+        plt.xticks(np.where(self.selected_param[top])[0],self.label[top][self.selected_param[top]], rotation=30)
         if (type(self.save3) == str): plt.savefig(self.save3)
         plt.show()
 
@@ -855,12 +871,15 @@ class solution_LAMfixed:
     def __repr__(self):
 
         string = "\n LAMBDA FIXED : "
-
-        ntop = min(len(self.beta),200) 
-        top = np.argpartition(means, -ntop)[-ntop:]
+        d=len(self.beta)
+        if d>100: 
+            top = np.argpartition(abs(self.beta)+np.random.randn(d)*1e-5, -100)[-100:]
+            top = np.sort(top)
+        else : 
+            top = np.arange(d)
 
         plt.bar(range(len(self.beta[top])), self.beta[top]), plt.title(LAM_beta["title"] + str(round(self.lam,3) ) ), plt.xlabel(LAM_beta["xlabel"]),plt.ylabel(LAM_beta["ylabel"])
-        plt.xticks(np.where(self.selected_param[top])[0],self.label[self.selected_param[top]], rotation=30)
+        plt.xticks(np.where(self.selected_param[top])[0],self.label[top][self.selected_param[top]], rotation=30)
         
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
@@ -911,7 +930,7 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
 
         else:
             if not method in ['Path-Alg', 'DR', 'P-PDS', 'PF-PDS']:
-                if (lam > 0.1):
+                if (lam > 0.05):
                     return 'Path-Alg'
                 else:
                     return 'DR'
@@ -957,7 +976,7 @@ CV_graph            = {
                             "xlabel" : r"$\lambda / \lambda_{max}$" ,
                             "ylabel" : r"Mean-Squared Error (MSE) "}
 LAM_beta            = {
-                            "title"  : r"Coefficients at theoretical $\lambda$ = " ,
+                            "title"  : r"Coefficients at $\lambda$ = " ,
                             "xlabel" : r"Coefficient index $i$" ,
                             "ylabel" : r"Coefficients $\beta_i$ "}
 PATH_beta_path      = {

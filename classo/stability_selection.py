@@ -121,7 +121,7 @@ def selected_param(distribution,threshold,threshold_label):
     for i in range(len(distribution)):
         if (distribution[i] > threshold): selected[i]=True
         if (distribution[i] > threshold_label): to_label[i]=True
-    return(selected, to_label)
+    return(np.array(selected), np.array(to_label))
 
 
 # submatrices associated to this subset
