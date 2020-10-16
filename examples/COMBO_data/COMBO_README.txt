@@ -28,7 +28,7 @@ p=87 bacterial genera (processed, no primary OTU data available)
 
 GeneraPhylo.csv		p x 7 matrix of bacterial phylogenic identity
 			OTU_i ’Domain','Phylum','Class','Order','Family','Genus' 
-GeneraCounts.csv	p x n matrix of Genera (OTU counts) 
+GeneraCounts.csv	p x n matrix of Genera counts 
 
 
 The folder `filtered_data` is the data used in the Shi et al. study and contains:
@@ -39,7 +39,7 @@ pf=45 bacterial genera (processed, subset of previous data)
 
 GeneraFilteredPhylo.csv		pf x 7 matrix of bacterial phylogenic identity
 			 	OTU_j ’Domain','Phylum','Class','Order','Family','Genus' 
-GeneraFilteredCounts.csv	pf x n matrix of Genera (OTU counts)
+GeneraFilteredCounts.csv	pf x n matrix of Genera counts
 
 C_Filtered.csv			pf+1 x 5 binary matrix: First column Genera Name, First row: Phylum 
 				Remaining matrix comprises the constraint matrix C 
