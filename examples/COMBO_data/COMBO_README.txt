@@ -37,16 +37,13 @@ n=96 samples (patients)
 pf=45 bacterial genera (processed, subset of previous data)  
 
 
-GeneraFilteredPhylo.csv	pf x 7 matrix of bacterial phylogenic identity
+GeneraFilteredPhylo.csv		pf x 7 matrix of bacterial phylogenic identity
 			 	OTU_j ’Domain','Phylum','Class','Order','Family','Genus' 
 GeneraFilteredCounts.csv	pf x n matrix of Genera (OTU counts)
 
-MappedIndices.csv		Indices containing the mapping of genera from full data to filtered data
-
-
 C_Filtered.csv			pf+1 x 5 binary matrix: First column Genera Name, First row: Phylum 
-				Remaining matrix comprises matrix C used in Shi et al in Sec. 5.2 					
-				(Subcompositional regression)			
+				Remaining matrix comprises the constraint matrix C 
+				used in Shi et al in Sec. 5.2 for `Subcompositional regression`.			
 
 
 
