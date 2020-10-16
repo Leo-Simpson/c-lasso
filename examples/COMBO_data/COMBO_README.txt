@@ -21,7 +21,7 @@ BMI.csv		Outcome:  	nx1 vector of Body Mass Index
 CaloriData.csv	Covariate 1: 	nx1 vector of calorie intake
 FatData.csv	Covariate 2:	nx1 vector of fat intake
 
-The folder `Unfiltered data` contains:
+The folder `complete_data` contains:
 
 n=96 samples (patients)
 p=87 bacterial genera (processed, no primary OTU data available)  
@@ -31,7 +31,7 @@ GeneraPhylo.csv		p x 7 matrix of bacterial phylogenic identity
 GeneraCounts.csv	p x n matrix of Genera (OTU counts) 
 
 
-The folder `Filtered data` is the data used in the Shi et al. study and contains:
+The folder `filtered_data` is the data used in the Shi et al. study and contains:
 
 n=96 samples (patients)
 pf=45 bacterial genera (processed, subset of previous data)  
