@@ -1,4 +1,4 @@
-Description of subset of COMBO data 
+Description of the contents of the COMBO_data folder
 
 The present data is a subset of the COMBO study which was first analyzed in: 
 
@@ -15,30 +15,35 @@ Pixu Shi, Anru Zhang, and Hongzhe Li
 Regression analysis for microbiome compositional data
 Ann. Appl. Stat., Volume 10, Number 2 (2016), 1019-1040.
 
-The folder contains the following files and description:  
+The folder contains the following files and subfolders:  
 
-Unfiltered data
+BMI.csv		Outcome:  	nx1 vector of Body Mass Index 	   
+CaloriData.csv	Covariate 1: 	nx1 vector of calorie intake
+FatData.csv	Covariate 2:	nx1 vector of fat intake
+
+The folder `complete_data` contains:
 
 n=96 samples (patients)
 p=87 bacterial genera (processed, no primary OTU data available)  
 
-BMI.csv		Outcome:  	nx1 vector of Body Mass Index 	   CaloriData.csv	Covariate 1: 	nx1 vector of calorie intakeFatData.csv	Covariate 2:	nx1 vector of fat intake
-
 GeneraPhylo.csv		p x 7 matrix of bacterial phylogenic identity
 			OTU_i ’Domain','Phylum','Class','Order','Family','Genus' 
-GeneraCounts.csv	p x n matrix of Genera (OTU counts) Filtered data used in Shi et al. study
+GeneraCounts.csv	p x n matrix of Genera counts 
+
+
+The folder `filtered_data` is the data used in the Shi et al. study and contains:
 
 n=96 samples (patients)
 pf=45 bacterial genera (processed, subset of previous data)  
-GeneraFilteredPhylo.csv	pf x 7 matrix of bacterial phylogenic identity
+
+
+GeneraFilteredPhylo.csv		pf x 7 matrix of bacterial phylogenic identity
 			 	OTU_j ’Domain','Phylum','Class','Order','Family','Genus' 
-GeneraFilteredCounts.csv	pf x n matrix of Genera (OTU counts)
-
-MappedIndices.csv		Indices containing the mapping of genera from full data to filtered data
-
+GeneraFilteredCounts.csv	pf x n matrix of Genera counts
 
 C_Filtered.csv			pf+1 x 5 binary matrix: First column Genera Name, First row: Phylum 
-				Remaining matrix comprises matrix C used in Shi et al in Sec. 5.2 					(Subcompositional regression)			
+				Remaining matrix comprises the constraint matrix C 
+				used in Shi et al in Sec. 5.2 for `Subcompositional regression`.			
 
 
 
