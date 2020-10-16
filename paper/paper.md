@@ -394,7 +394,7 @@ problem.solve()
 ```
 ![Stability selection profiles of problems R3/R4 on the COMBO data](figures/StabSelFilteredCOMBO.png)
 
-Stability selection profiles of [formulation](#formulations)[*R3*](#R3) (left) and [*R4*](#R4)(right) on the COMBO dataset, reproducing Figure 5a in [@Combettes:2020b].
+Stability selection profiles of [formulation](#formulations) [*R3*](#R3) (left) and [*R4*](#R4)(right) on the COMBO dataset, reproducing Figure 5a in [@Combettes:2020b].
 
 ## Calling `c-lasso` in R 
 
