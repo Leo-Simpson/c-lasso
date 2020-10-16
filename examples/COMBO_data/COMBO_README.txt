@@ -1,4 +1,4 @@
-Description of subset of COMBO data 
+Description of the contents of the COMBO_data folder
 
 The present data is a subset of the COMBO study which was first analyzed in: 
 
