@@ -109,7 +109,7 @@ This is the standard Lasso problem with linear equality constraints on the $\bet
 The objective function combines Least-Squares (LS) for model fitting with the $L_1$-norm penalty for sparsity.   
 
 ```python
-# formulation R1
+# Formulation R1
 problem.formulation.huber = False
 problem.formulation.concomitant = False
 problem.formulation.classification = False
@@ -140,7 +140,7 @@ $$
 This formulation is the default problem formulation in `c-lasso`. It is similar to [*R1*](#R1) but allows for joint estimation of the (constrained) $\beta$ vector and the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020a;@Combettes:2020b].
 
 ```python
-# formulation R3
+# Formulation R3
 problem.formulation.huber = False
 problem.formulation.concomitant = True
 problem.formulation.classification = False
@@ -344,7 +344,7 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
-We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. We consider the computational approach described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, absolute calorie and fat intake measurments. Below are code snippets of this examples, also available [here](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example%20notebook.ipynb).
+We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. We consider the computational approaches described in [@Combettes:2020b]. The task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, absolute calorie and fat intake measurments. Below is the code snippet for this example, also included [here](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example%20notebook.ipynb).
 
 
 ```python
@@ -392,9 +392,9 @@ problem.formulation.concomitant = True
 problem.solve()
 
 ```
-![Stability selection profiles for R3/R4](figures/StabSelFilteredCOMBO.png)
+![Stability selection profiles of problems R3/R4 on the COMBO data](figures/StabSelFilteredCOMBO.png)
 
-Stability profiles for this microbiome example ([formulation](#formulations) [*R3*](#R3) on the left and [formulation](#formulations) [*R4*](#R4) on the right)
+Stability selection profiles of [formulation](#formulations)[*R3*](#R3) (left) and [*R4*](#R4)(right) on the COMBO dataset, reproducing Figure 5a in [@Combettes:2020b].
 
 ## Calling `c-lasso` in R 
 
