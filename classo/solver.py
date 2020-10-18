@@ -565,7 +565,7 @@ class solution_PATH:
         else : 
             top = np.arange(len(self.BETAS[0]))
 
-        affichage(self.BETAS[:,top], self.LAMBDAS, labels=self.label, naffichage=5,
+        affichage(self.BETAS[:,top], self.LAMBDAS, labels=self.label[top], naffichage=5,
                   title=PATH_beta_path["title"] + self.formulation.name(),xlabel=PATH_beta_path["xlabel"],ylabel=PATH_beta_path["ylabel"])
         if (type(self.save) == str): plt.savefig(self.save + 'Beta-path')
         plt.show()
@@ -647,14 +647,17 @@ class solution_CV:
 
         string = "\n CROSS VALIDATION : "
         d = len(self.refit)
-        if d>100: 
-            top = np.argpartition(abs(self.refit)+np.random.randn(d)*1e-5, -100)[-100:]
+        nb_select = sum(self.selected_param)
+        if nb_select>10 : 
+            top = np.argpartition(abs(self.refit[self.selected_param]), -10)[-10:]
             top = np.sort(top)
         else : 
-            top = np.arange(d)
+            top = np.arange(nb_select)
 
-        plt.bar(range(len(self.refit[top])), self.refit[top]), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
-        plt.xticks(np.where(self.selected_param[top])[0],self.label[top][self.selected_param[top]], rotation=30)
+
+        plt.bar(range(nb_select), self.refit[self.selected_param]), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
+        plt.xticks(top,self.label[self.selected_param][top], rotation=30)
+
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
         self.graphic()
@@ -878,7 +881,7 @@ class solution_LAMfixed:
         else : 
             top = np.arange(d)
 
-        plt.bar(range(len(self.beta[top])), self.beta[top]), plt.title(LAM_beta["title"] + str(round(self.lam,3) ) ), plt.xlabel(LAM_beta["xlabel"]),plt.ylabel(LAM_beta["ylabel"])
+        plt.bar(range(len(top)), self.beta[top]), plt.title(LAM_beta["title"] + str(round(self.lam,3) ) ), plt.xlabel(LAM_beta["xlabel"]),plt.ylabel(LAM_beta["ylabel"])
         plt.xticks(np.where(self.selected_param[top])[0],self.label[top][self.selected_param[top]], rotation=30)
         
         if(type(self.save)==str): plt.savefig(self.save)

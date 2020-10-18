@@ -16,7 +16,7 @@ Classo and pathlasso are the main functions, they can call every algorithm acord
 
 def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False, true_lam=False, e=None, rho_classification=-1., w = None, intercept = False):
 
-    if not w is None : matrices = (  matrix[0]/w, matrix[1],matrix[2] )
+    if not w is None : matrices = (  matrix[0]/w, matrix[1]/w,matrix[2] )
     else : matrices = matrix
     if intercept : 
         means = (np.mean(matrices[0],axis=0), np.mean(matrices[2]) )
@@ -101,8 +101,9 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg
     else: lambdass = np.linspace(1.,lamin,80)
 
 
-    if not w is None : matrices = (  matrix[0]/(w+1e-3), matrix[1],matrix[2] )
+    if not w is None : matrices = (  matrix[0]/w, matrix[1]/w,matrix[2] )
     else : matrices = matrix
+    
     if intercept : 
         means = (np.mean(matrices[0],axis=0), np.mean(matrices[2]) )
         matrices = (matrices[0]-means[0],matrices[1],matrices[2]-means[1])
@@ -168,6 +169,12 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg
     return(np.array(BETA),real_path)
  
     
+
+
+
+
+
+
 
 '''
 # Cost fucntions for the three 'easiest' problems. Useful for test, to compare two solutions slightly different
