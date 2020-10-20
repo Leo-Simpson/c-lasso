@@ -656,7 +656,7 @@ class solution_CV:
 
 
         plt.bar(range(nb_select), self.refit[self.selected_param]), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
-        plt.xticks(top,self.label[self.selected_param][top], rotation=30)
+        plt.xticks(top,self.label[self.selected_param][top], rotation=90)
 
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
@@ -669,15 +669,17 @@ class solution_CV:
         string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
         return string
 
-    def graphic(self, se_max=5,save=None, logScale= False):
+    def graphic(self, se_max=None,save=None, logScale= False, errorevery=5):
         ''' Method to plot the graphic showing mean squared error over along lambda path once cross validation is computed. 
 
         Args:
             ratio_mse_max (float): float thanks to which the graphic will not show the lambdas from which MSE(lambda)> min(MSE) + ratio * Standard_error(lambda_min) .
-                this parameter is useful to plot a graph that zooms in the interesting part
-                Default value : 5
+                this parameter is useful to plot a graph that zooms in the interesting part. 
+                Default value : None
             logScale (bool) : input that tells to plot the mean square error as a function of lambda, or log10(lambda)
                 Default value : False
+            errorevery (int) : parameter input of matplotlib.pyplot.errorbar that gives the frequency of the error bars appearence. 
+                Default value : 5
             save (string) : path to the file where the figure should be saved. If None, then the figure will not be saved. 
                 Default Value : None
 
@@ -686,15 +688,16 @@ class solution_CV:
         i_min, i_1SE = self.index_min, self.index_1SE
         y_max = self.yGraph[i_min] + se_max * self.standard_error[i_min]
         j = 0
-        while(j < i_1SE or self.yGraph[j] > y_max) : j+=1
+        if not se_max is None : 
+            while(j < i_1SE and self.yGraph[j] > y_max) : j+=1
 
         if logScale : 
-            plt.errorbar(np.log10(self.xGraph[j:]), self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = 10 )
+            plt.errorbar(np.log10(self.xGraph[j:]), self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = errorevery )
             plt.xlabel(r"log_{10} $\lambda / \lambda_{max}$")
             plt.axvline(x=np.log10(self.xGraph[i_min]), color='k', label=r'$\lambda$ (min MSE)')
             plt.axvline(x=np.log10(self.xGraph[i_1SE]),color='r',label=r'$\lambda$ (1SE) ')
         else:
-            plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = 10 )
+            plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = errorevery )
             plt.xlabel(r"$\lambda / \lambda_{max}$")
             plt.axvline(x=self.xGraph[i_min], color='k', label=r'$\lambda$ (min MSE)')
             plt.axvline(x=self.xGraph[i_1SE],color='r',label=r'$\lambda$ (1SE) ')
