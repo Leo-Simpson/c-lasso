@@ -60,6 +60,3 @@ problem.solution.StabSel.save1 = path+'R1-StabSel'
 problem.solution.StabSel.save3 = path+'R1-StabSel-beta'
 print(problem, problem.solution)
 
-
-
-
