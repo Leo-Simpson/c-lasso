@@ -117,12 +117,18 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 
 class problem_R4 :
     
-    def __init__(self,data,algo,rho):
+    def __init__(self,data,algo,rho, intercept=False):
         self.N = 500000
         
         (A,C,y), self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
         self.matrix = (A,C,y)
         
+        self.intercept = intercept
+        
+        if intercept:
+            raise ValueError("The classo package does not perform formulation R4 (Contrained sparse Huber regression with concomitant scale estimation) with an intercept")
+
+
         (m,d,k) = self.dim
         self.weights = np.ones(d)
         self.tol = 1e-3

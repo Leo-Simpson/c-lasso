@@ -669,18 +669,38 @@ class solution_CV:
         string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
         return string
 
-    def graphic(self, ratio_mse_max=1.,save=False):
-        i_min, i_1SE = self.index_min, self.index_1SE
-        mse_max = ratio_mse_max * self.standard_error[i_min]
-        j = 0
-        while(j < i_1SE - 30  and self.yGraph[j] > mse_max) : j+=1
+    def graphic(self, se_max=5,save=None, logScale= False):
+        ''' Method to plot the graphic showing mean squared error over along lambda path once cross validation is computed. 
 
-        plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = 10 )
-        plt.axvline(x=self.xGraph[i_min], color='k', label=r'$\lambda$ (min MSE)')
-        plt.axvline(x=self.xGraph[i_1SE],color='r',label=r'$\lambda$ (1SE) ')
-        plt.title(CV_graph["title"]), plt.xlabel(CV_graph["xlabel"]),plt.ylabel(CV_graph["ylabel"])
+        Args:
+            ratio_mse_max (float): float thanks to which the graphic will not show the lambdas from which MSE(lambda)> min(MSE) + ratio * Standard_error(lambda_min) .
+                this parameter is useful to plot a graph that zooms in the interesting part
+                Default value : 5
+            logScale (bool) : input that tells to plot the mean square error as a function of lambda, or log10(lambda)
+                Default value : False
+            save (string) : path to the file where the figure should be saved. If None, then the figure will not be saved. 
+                Default Value : None
+
+        '''
+        
+        i_min, i_1SE = self.index_min, self.index_1SE
+        y_max = self.yGraph[i_min] + se_max * self.standard_error[i_min]
+        j = 0
+        while(j < i_1SE or self.yGraph[j] > y_max) : j+=1
+
+        if logScale : 
+            plt.errorbar(np.log10(self.xGraph[j:]), self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = 10 )
+            plt.xlabel(r"log_{10} $\lambda / \lambda_{max}$")
+            plt.axvline(x=np.log10(self.xGraph[i_min]), color='k', label=r'$\lambda$ (min MSE)')
+            plt.axvline(x=np.log10(self.xGraph[i_1SE]),color='r',label=r'$\lambda$ (1SE) ')
+        else:
+            plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = 10 )
+            plt.xlabel(r"$\lambda / \lambda_{max}$")
+            plt.axvline(x=self.xGraph[i_min], color='k', label=r'$\lambda$ (min MSE)')
+            plt.axvline(x=self.xGraph[i_1SE],color='r',label=r'$\lambda$ (1SE) ')
+        plt.title(CV_graph["title"]), plt.ylabel(CV_graph["ylabel"])
         plt.legend()
-        if(type(save)==str) : plt.savefig(save)
+        if not save is None: plt.savefig(save)
         plt.show()
 
 #Here, the main function used is stability ; from the file stability selection

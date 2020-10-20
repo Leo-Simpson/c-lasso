@@ -18,12 +18,17 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
 
     if not w is None : matrices = (  matrix[0]/w, matrix[1]/w,matrix[2] )
     else : matrices = matrix
-    if intercept : 
-        means = (np.mean(matrices[0],axis=0), np.mean(matrices[2]) )
-        matrices = (matrices[0]-means[0],matrices[1],matrices[2]-means[1])
 
+    X,C,y = matrices
     
+
     if(typ=='R3'):
+        if intercept :         
+            # here we use the fact that for R1 and R3, the intercept is simple beta0 = ybar-Xbar .vdot(beta) so by changing the X to X-Xbar and y to y-ybar we can solve standard problem
+            Xbar, ybar = np.mean(X,axis=0), np.mean(y)  
+            matrices = (X-Xbar,C,y-ybar)
+
+
         if not meth in ['Path-Alg', 'DR']: meth='DR'
         if e is None or e == len(matrices[0])/2: 
             r = 1.
@@ -36,14 +41,20 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
         else : beta, s = Classo_R3(pb, lam)
         s = s/np.sqrt(e)
 
+        if intercept : 
+            betaO = ybar - Xbar.vdot(beta)
+            beta = np.array([betaO]+list(beta))
+
+
+
     elif(typ=='R4'):
         if not meth in ['Path-Alg', 'DR']: meth='DR'
         if e is None or e == len(matrices[0]): 
             r = 1.
-            pb = problem_R4(matrices,meth,rho)
+            pb = problem_R4(matrices,meth,rho, intercept=intercept)
         else: 
             r = np.sqrt(e/len(matrices[0]))
-            pb = problem_R4((matrices[0]*r,matrices[1],matrices[2]*r),meth,rho/r)
+            pb = problem_R4((matrices[0]*r,matrices[1],matrices[2]*r),meth,rho/r,intercept=intercept)
 
         lambdamax = pb.lambdamax
         if (true_lam): beta,s = Classo_R4(pb,lam/lambdamax)
@@ -52,7 +63,7 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
 
     elif(typ=='R2'):
         if not meth in ['Path-Alg', 'P-PDS' , 'PF-PDS' , 'DR']: meth = 'ODE'
-        pb = problem_R2(matrices,meth,rho)
+        pb = problem_R2(matrices,meth,rho, intercept=intercept)
         lambdamax = pb.lambdamax
         if (true_lam): beta = Classo_R2(pb,lam/lambdamax)
         else : beta = Classo_R2(pb, lam)
@@ -71,17 +82,25 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
 
 
     else: # LS
+        if intercept : 
+            # here we use the fact that for R1 and R3, the intercept is simple beta0 = ybar-Xbar .vdot(beta) so by changing the X to X-Xbar and y to y-ybar we can solve standard problem
+            Xbar, ybar = np.mean(X,axis=0), np.mean(y)
+            matrices = (X-Xbar,C,y-ybar)
+
+
         if not meth in ['Path-Alg', 'P-PDS' , 'PF-PDS' , 'DR']: meth='DR'
         pb = problem_R1(matrices,meth)
         lambdamax = pb.lambdamax
         if (true_lam) : beta = Classo_R1(pb,lam/lambdamax)
         else : beta = Classo_R1(pb,lam)
 
+        if intercept : 
+            betaO = ybar - Xbar.vdot(beta)
+            beta = np.array([betaO]+list(beta))
+
 
     if not w is None : beta = beta / w
-    if intercept : 
-        betaO = means[1] - means[0].dot(beta)
-        beta = np.array([betaO]+list(beta))
+
 
     if (typ  in ['R3','R4']):
         if (get_lambdamax): return(lambdamax,beta,s)
