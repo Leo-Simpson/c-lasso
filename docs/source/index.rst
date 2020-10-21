@@ -6,21 +6,19 @@
 Welcome to classo's documentation!
 ==================================
 
-First example.:: 
+c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality constraints on the model parameters. 
 
-    problem = problem_classo(X,y)
-    problem
-    >> informations about the problem
+The package is available on `https://github.com/Leo-Simpson/c-lasso`.
 
-
-Guide
-^^^^^
 
 .. toctree::
-
    :maxdepth: 2
+   :caption: Contents:
+
    license
    help
+
+
 
 
 

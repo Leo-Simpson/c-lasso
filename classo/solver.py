@@ -277,8 +277,17 @@ class PATHparameters:
         n_active (int): if it is higher than 0, then the algo stop computing the path when n_active variables are actives. then the solution does not change from this point.
             Dafault value : 0
 
-        lambdas (numpy.ndarray) : list of lambdas for computinf lasso-path for cross validation on lambda.
-            Default value : np.array([10**(-delta * float(i) / Nlam) for i in range(0,Nlam) ] ) with delta=2. and Nlam = 40
+        lambdas (numpy.ndarray) : list of rescaled lambdas for computing lasso-path
+            Default value : None, which means line space between 1 and lamin and Nlam points, with logarithm scale or not depending on logscale
+
+        Nlam (int) : number of points in the lambda-path if lambdas is still None
+            Default value : 80
+
+        lamin (float) : lambda minimum if lambdas is still None
+            Default value : 1e-3
+
+        logscale (bool): when lambdas is set to None (default), this parameters tells if it should be set with log scale or not
+            Default value : True
 
         plot_sigma (bool) : if True then the print method of the solution will also show sigma if it is computed (formulation R3 or R4)
             Default value : True
@@ -290,20 +299,29 @@ class PATHparameters:
         self.formulation = 'not specified'
         self.numerical_method = method
         self.n_active = 0
-        lamin= 1e-2
-        Nlam = 40
-        self.lambdas = np.array([10**(np.log10(lamin) * float(i) / (Nlam+1)) for i in range(0,Nlam) ] )
+        self.Nlam = 80
+        self.lamin = 1e-3
+        self.logscale = True
+        self.lambdas = None
         self.plot_sigma = True
 
     def __repr__(self): 
-        string  = '\n     numerical_method : ' + str(self.numerical_method)
-        string += '\n     Npath = ' + str(len(self.lambdas))
-        string += '\n     lamin = ' + str(round(self.lambdas[-1],3))
-        string += '\n     lamax = ' + str(round(self.lambdas[0],3))
-        
-        if self.n_active > 0 : 
-            string += '\n     n_active = ' + str(self.n_active)
+        if not self.lambdas is None : 
+            self.Nlam = len(self.lambdas)
+            self.lamin = min(self.lambdas)
+            typ = ' '
+        else :
+            if self.logscale: typ = " with log-scale"
+            else : typ = " with linear-scale"
+            
 
+        string  = '\n     numerical_method : ' + str(self.numerical_method)
+        string += '\n     lamin = ' + str(self.lamin)
+        string += '\n     Nlam = ' + str(self.Nlam)
+        string += '\n'+typ
+        if self.n_active > 0 : 
+            string += '\n     maximum active variables = ' + str(self.n_active)
+        
         return string
                                 
 
@@ -318,8 +336,17 @@ class CVparameters:
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
             Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
-        lambdas (numpy.ndarray) : list of lambdas for computinf lasso-path for cross validation on lambda.
-            Default value : None 
+        lambdas (numpy.ndarray) : list of rescaled lambdas for computing lasso-path for cross validation on lambda.
+            Default value : None, which means line space between 1 and lamin and Nlam points, with logarithm scale or not depending on logscale
+
+        Nlam (int) : number of points in the lambda-path if lambdas is still None
+            Default value : 80
+
+        lamin (float) : lambda minimum if lambdas is still None
+            Default value : 1e-3
+
+        logscale (bool): when lambdas is set to None (default), this parameters tells if it should be set with log scale or not
+            Default value : True
 
         oneSE (bool) : if set to True, the selected lambda if computed with method 'one-standard-error'
             Default value : True
@@ -332,18 +359,29 @@ class CVparameters:
         self.seed = 0
         self.formulation = 'not specified'
         self.numerical_method = method
-
         self.Nsubset = 5  # Number of subsets used
         self.Nlam = 80
+        self.lamin = 1e-3
+        self.logscale = True
         self.lambdas = None
         self.oneSE = True
 
     def __repr__(self): 
+        if not self.lambdas is None : 
+            self.Nlam = len(self.lambdas)
+            self.lamin = min(self.lambdas)
+            typ = ' '
+        else :
+            if self.logscale: typ = " with log-scale"
+            else : typ = " with linear-scale"
+            
+
         string  = '\n     numerical_method : ' + str(self.numerical_method)
         string += '\n     one-SE method : ' + str(self.oneSE)
         string += '\n     Nsubset = ' + str(self.Nsubset)
-        string += '\n     lamin = ' + str(self.lambdas[-1])
-        string += '\n     Nlam = ' + str(len(self.lambdas))
+        string += '\n     lamin = ' + str(self.lamin)
+        string += '\n     Nlam = ' + str(self.Nlam)
+        string += '\n'+typ
         
         
         return string
@@ -540,6 +578,11 @@ class solution_PATH:
         numerical_method = choose_numerical_method(param.numerical_method, 'PATH', param.formulation)
         param.numerical_method = numerical_method
         # Compute the solution and is the formulation is concomitant, it also compute sigma
+        if param.lambdas is None : 
+            if param.logscale : 
+                param.lambdas = np.array([param.lamin**(i/(param.Nlam-1)) for i in range(param.Nlam)])
+            else : 
+                np.linspace(1.,param.lamin,param.Nlam)
 
         out = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
                                                 typ=name_formulation, meth=numerical_method, return_sigm=True,
@@ -560,10 +603,25 @@ class solution_PATH:
     def __repr__(self):
 
         string = "\n PATH COMPUTATION : "
-        if len(self.BETAS[0])>100: 
-            top = np.argpartition(np.mean(abs(np.array(self.BETAS)),axis=0), -100)[-100:]
+        d = len(self.BETAS[0])
+
+        if d>100:  # this trick is to plot only the biggest value, excluding the intercept
+            avg_betas = np.mean(abs(np.array(self.BETAS)),axis=0)
+            if self.formulation.intercept :
+                avg_betas[0]= 0 # trick to exclude intercept in the graph
+                string+="\n There is also an intercept.  "
+            top = np.argpartition(avg_betas, -100)[-100:]
+       
         else : 
-            top = np.arange(len(self.BETAS[0]))
+            if self.formulation.intercept :
+                top =np.arange(1,d)
+                string+="\n There is also an intercept.  "
+            else:
+                top = np.arange(d)
+
+
+            
+
 
         affichage(self.BETAS[:,top], self.LAMBDAS, labels=self.label[top], naffichage=5,
                   title=PATH_beta_path["title"] + self.formulation.name(),xlabel=PATH_beta_path["xlabel"],ylabel=PATH_beta_path["ylabel"])
@@ -616,7 +674,11 @@ class solution_CV:
         param.numerical_method = numerical_method
 
 
-        if param.lambdas is None : param.lambdas = np.linspace(1.,1e-3,param.Nlam)
+        if param.lambdas is None : 
+            if param.logscale : 
+                param.lambdas = np.array([param.lamin**(i/(param.Nlam-1)) for i in range(param.Nlam)])
+            else : 
+                np.linspace(1.,param.lamin,param.Nlam)
 
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         out, self.yGraph, self.standard_error, self.index_min, self.index_1SE = CV(matrices, param.Nsubset,
@@ -631,14 +693,15 @@ class solution_CV:
         self.xGraph = param.lambdas
         self.lambda_1SE = param.lambdas[self.index_1SE]
         self.lambda_min = param.lambdas[self.index_min]
+        self.formulation = param.formulation
 
-        if param.formulation.concomitant:
+        if self.formulation.concomitant:
             self.beta, self.sigma = out
         else:
             self.beta = out
 
-        self.selected_param = abs(self.beta) > 1e-3  # boolean array, false iff beta_i =0
-        self.refit = min_LS(matrices, self.selected_param, intercept=param.formulation.intercept)
+        self.selected_param = abs(self.beta) > 1e-5  # boolean array, false iff beta_i =0
+        self.refit = min_LS(matrices, self.selected_param, intercept=self.formulation.intercept)
         self.time = time() - t0
         self.save=False
         self.label = label
@@ -647,16 +710,21 @@ class solution_CV:
 
         string = "\n CROSS VALIDATION : "
         d = len(self.refit)
-        nb_select = sum(self.selected_param)
+        selected = self.selected_param[:] 
+        if self.formulation.intercept : # this trick is done to plot only selected parameters, excluding intercept
+            selected[0]=False
+            string+="\n Intercept : " + str(self.refit[0])
+
+        nb_select = sum(selected)
         if nb_select>10 : 
-            top = np.argpartition(abs(self.refit[self.selected_param]), -10)[-10:]
+            top = np.argpartition(abs(self.refit[selected]), -10)[-10:]
             top = np.sort(top)
         else : 
             top = np.arange(nb_select)
 
 
-        plt.bar(range(nb_select), self.refit[self.selected_param]), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
-        plt.xticks(top,self.label[self.selected_param][top], rotation=90)
+        plt.bar(range(nb_select), self.refit[selected]), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
+        plt.xticks(top,self.label[selected][top], rotation=90)
 
         if(type(self.save)==str): plt.savefig(self.save)
         plt.show()
@@ -669,13 +737,13 @@ class solution_CV:
         string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
         return string
 
-    def graphic(self, se_max=None,save=None, logScale= False, errorevery=5):
+    def graphic(self, se_max=10,save=None, logScale= False, errorevery=5):
         ''' Method to plot the graphic showing mean squared error over along lambda path once cross validation is computed. 
 
         Args:
             ratio_mse_max (float): float thanks to which the graphic will not show the lambdas from which MSE(lambda)> min(MSE) + ratio * Standard_error(lambda_min) .
                 this parameter is useful to plot a graph that zooms in the interesting part. 
-                Default value : None
+                Default value : 10
             logScale (bool) : input that tells to plot the mean square error as a function of lambda, or log10(lambda)
                 Default value : False
             errorevery (int) : parameter input of matplotlib.pyplot.errorbar that gives the frequency of the error bars appearence. 
@@ -687,18 +755,20 @@ class solution_CV:
         
         i_min, i_1SE = self.index_min, self.index_1SE
         
-        j = 0
+        jmin,jmax = 0,len(self.yGraph)-1
         if not se_max is None : 
+            # jmin and jmax are the bounds on the xaxis to know where to zoom in in the lambda path
             y_max = self.yGraph[i_min] + se_max * self.standard_error[i_min]
-            while(j < i_1SE and self.yGraph[j] > y_max) : j+=1
+            while(jmin < i_1SE and self.yGraph[jmin] > y_max) : jmin+=1
+            while(jmax > i_min and self.yGraph[jmax] > y_max) : jmax-=1
 
         if logScale : 
-            plt.errorbar(np.log10(self.xGraph[j:]), self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = errorevery )
-            plt.xlabel(r"log_{10} $\lambda / \lambda_{max}$")
+            plt.errorbar(np.log10(self.xGraph[jmin:jmax+1]), self.yGraph[jmin:jmax+1], self.standard_error[jmin:jmax+1], label='mean over the k groups of data', errorevery = errorevery )
+            plt.xlabel(r"$ \log_{10} \lambda / \lambda_{max}$")
             plt.axvline(x=np.log10(self.xGraph[i_min]), color='k', label=r'$\lambda$ (min MSE)')
             plt.axvline(x=np.log10(self.xGraph[i_1SE]),color='r',label=r'$\lambda$ (1SE) ')
         else:
-            plt.errorbar(self.xGraph[j:], self.yGraph[j:], self.standard_error[j:], label='mean over the k groups of data', errorevery = errorevery )
+            plt.errorbar(self.xGraph[jmin:], self.yGraph[jmin:], self.standard_error[jmin:], label='mean over the k groups of data', errorevery = errorevery )
             plt.xlabel(r"$\lambda / \lambda_{max}$")
             plt.axvline(x=self.xGraph[i_min], color='k', label=r'$\lambda$ (min MSE)')
             plt.axvline(x=self.xGraph[i_1SE],color='r',label=r'$\lambda$ (1SE) ')

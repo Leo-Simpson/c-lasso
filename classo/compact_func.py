@@ -42,7 +42,7 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
         s = s/np.sqrt(e)
 
         if intercept : 
-            betaO = ybar - Xbar.vdot(beta)
+            betaO = ybar - np.vdot(Xbar,beta)
             beta = np.array([betaO]+list(beta))
 
 
@@ -111,11 +111,14 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
         else : beta = Classo_R1(pb,lam)
 
         if intercept : 
-            betaO = ybar - Xbar.vdot(beta)
+            betaO = ybar - np.vdot(Xbar,beta)
             beta = np.array([betaO]+list(beta))
 
 
-    if not w is None : beta = beta / w
+    if not w is None : 
+        if intercept : beta[1:] = beta[1:] / w
+        else : beta = beta/w
+        
 
 
     if (typ  in ['R3','R4']):
@@ -214,7 +217,11 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg
 
     real_path = [lam*lambdamax for lam in lambdass]
 
-    if not w is None : BETA = np.array([beta / (w+1e-3) for beta in BETA])
+    if not w is None : 
+        if intercept : ww = np.array([1]+list(w))
+        else : ww = w
+
+        BETA = np.array([beta / ww for beta in BETA])
 
 
     if(typ in ['R3','R4'] and return_sigm): return(np.array(BETA),real_path,S)
