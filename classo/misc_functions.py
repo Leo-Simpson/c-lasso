@@ -158,7 +158,7 @@ def tree_to_matrix(tree,label, with_repr = False):
 
 
 '''functions required in init() : 
-random_data, csv_to_mat, mat_to_np, clr, theoretical_lam, to_zarr
+random_data, csv_to_np, mat_to_np, clr, theoretical_lam, to_zarr
 '''
 
 
@@ -227,7 +227,7 @@ def random_data(n,d,d_nonzero,k,sigma,zerosum=False,seed=False, classification =
     if exp : return (np.exp(X), C, y), sol
     return (X,C,y),sol 
 
-def csv_to_mat(file,begin = 1, header=None):
+def csv_to_np(file,begin = 1, header=None):
     ''' Function to read a csv file and to create an ndarray with this
 
     Args:

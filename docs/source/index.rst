@@ -12,11 +12,14 @@ The package is available on `https://github.com/Leo-Simpson/c-lasso`.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Contents:
 
-   license
-   help
+   problem_classo
+   misc-functions
+
+   additional/license
+   additional/help
 
 
 

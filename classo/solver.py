@@ -1,3 +1,21 @@
+"""
+The package is organised as follow : 
+    There is a main class called classo_problem, that contains a lot of informations about the problem, and once the problem is solved, it will also contains the solution. 
+
+    Here is the global structure of the problem instance : 
+    
+        A classo_problem instance contains a Data instance, a Formulation instance, a Model_selection instance and a Solution instance.
+
+
+        A Model_selection instance contains the instances : PATHparameters, CVparameters, StabSelparameters, LAMfixedparameters.
+
+
+        A Solution instance, once is computed, contains the instances : solution_PATH, solution_CV, solution_StabSel, solution_LAMfixed
+
+"""
+
+
+
 from time import time
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,20 +30,21 @@ import matplotlib.patches as mpatches
 class classo_problem:
     ''' Class that contains all the information about the problem
         
-        Args:
+    Args:
         X (ndarray): Matrix representing the data of the problem
         y (ndarray): Vector representing the output of the problem
         C (str or ndarray, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
-        Default value to 'zero-sum'
+            Default value : 'zero-sum'
         rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem.
-        Default value is 'False'
-        label (list) : list of the labels of each variable. If None, then label or just int
-        
-        Attributes:
-        data (classo_data) :  object containing the data of the problem.
-        formulation (classo_formulation) : object containing the info about the formulation of the minimization problem we solve.
-        model_selection (classo_model_selection) : object giving the parameters we need to do variable selection.
-        solution (classo_solution) : object giving caracteristics of the solution of the model_selection that is asked.
+            Default value : 'False'
+        label (list,optional) : list of the labels of each variable. If None, then label or just int
+            Default value : None
+    
+    Attributes:
+        data (Data) :  object containing the data of the problem.
+        formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
+        model_selection (Model_selection) : object giving the parameters we need to do variable selection.
+        solution (Solution) : object giving caracteristics of the solution of the model_selection that is asked.
             Before using the method solve() , its componant are empty/null.
         numerical_method (str) : name of the numerical method that is used, it can be :
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
@@ -33,20 +52,20 @@ class classo_problem:
         
         '''
     def __init__(self, X, y, C=None,Tree = None, label=None, rescale=False):  # zero sum constraint by default, but it can be any matrix
-        self.data = classo_data(X, y, C,Tree=Tree, rescale=rescale, label = label)
-        self.formulation = classo_formulation()
-        self.model_selection = classo_model_selection()
-        self.solution = classo_solution()
+        self.data = Data(X, y, C,Tree=Tree, rescale=rescale, label = label)
+        self.formulation = Formulation()
+        self.model_selection = Model_selection()
+        self.solution = Solution()
         self.numerical_method = "not specified"
     
     
-    # This method is the way to solve the model selections contained in the object model_selection, with the formulation of 'formulation' and the data.
+    # This method is the way to solve the model selections contained in the object Model_selection, with the formulation of 'formulation' and the data.
     def solve(self):
         ''' Method that solve every model required in the attributes of the problem and update the attribute :obj:`problem.solution` with the characteristics of the solution.
             '''
         data = self.data
+        self.solution = Solution()
         matrices = (data.X, data.C, data.y)
-        solution = classo_solution()
         n, d = len(data.X), len(data.X[0])
         if self.formulation.classification :
             self.formulation.concomitant = False
@@ -68,18 +87,18 @@ class classo_problem:
             if min(self.formulation.w) < 1e-8 : 
                 raise ValueError("w has to be positive weights, here it has a value smaller than 1e-8")
 
-        if self.formulation.intercept : 
+        if self.formulation.intercept and data.label[0] != 'intercept': 
             data.label = np.array(['intercept']+list(data.label))
         
         label = data.label
 
         # Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
         if self.model_selection.PATH:
-            solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, self.numerical_method, label)
+            self.solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, self.numerical_method, label)
         
         # Compute the cross validation thanks to the class solution_CV which contains directely the computation in the initialisation
         if self.model_selection.CV:
-            solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation, self.numerical_method, label)
+            self.solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation, self.numerical_method, label)
     
         # Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
         if self.model_selection.StabSel:
@@ -87,16 +106,15 @@ class classo_problem:
             param.theoretical_lam = theoretical_lam(int(n * param.percent_nS), d)
             if not param.rescaled_lam : param.theoretical_lam = param.theoretical_lam*int(n * param.percent_nS)
             
-            solution.StabSel = solution_StabSel(matrices, param, self.formulation, self.numerical_method, label)
+            self.solution.StabSel = solution_StabSel(matrices, param, self.formulation, self.numerical_method, label)
         
         # Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
         if self.model_selection.LAMfixed:
             param = self.model_selection.LAMfixedparameters
             param.theoretical_lam = theoretical_lam(n, d)
             if not param.rescaled_lam: param.theoretical_lam = param.theoretical_lam*n
-            solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, self.numerical_method, label)
+            self.solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, self.numerical_method, label)
 
-        self.solution = solution
     
     def __repr__(self):
         print_parameters = ''
@@ -121,16 +139,18 @@ class classo_problem:
 
 
 
-class classo_data:
-    ''' Class containing the data of the problem
+class Data:
+    ''' Class that contains the data of the problem
 
     Args:
         X (ndarray): Matrix representing the data of the problem
         y (ndarray): Vector representing the output of the problem
         C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
         rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem
-        label (list) : list of the labels of each variable. If None, then label or just int
-        Tree (skbio.TreeNode) : taxonomic tree, if set it is not None, then the matrices X and C and the labels will be changed. 
+            Default value : False
+        label (list, optional) : list of the labels of each variable. If None, then label or just int
+            Default value : None
+        Tree (skbio.TreeNode, optional) : taxonomic tree, if set it is not None, then the matrices X and C and the labels will be changed. 
 
     Attributes:
         X (ndarray): Matrix representing the data of the problem
@@ -138,7 +158,7 @@ class classo_data:
         C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
         rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem
         label (list) : list of the labels of each variable. If None, then label or just int
-        tree (skbio.TreeNode) : taxonomic tree 
+        tree (skbio.TreeNode or None) : taxonomic tree 
 
     '''
 
@@ -157,8 +177,8 @@ class classo_data:
             self.X,self.y,self.C, self.label = X1.dot(A),y1,C1.dot(A), label2
             
        
-class classo_formulation:
-    ''' Class containing the data of the problem
+class Formulation:
+    ''' Class that contains the data of the problem
 
     Attributes:
         huber (bool) : True if the formulation of the problem should be robust
@@ -214,8 +234,8 @@ class classo_formulation:
     def __repr__(self):
         return (self.name())
 
-class classo_model_selection:
-    ''' Class containing the data of the problem
+class Model_selection:
+    ''' Class that contains the data of the problem
 
     Attributes:
         PATH (bool): True if path should be computed.
@@ -267,7 +287,7 @@ class classo_model_selection:
         return string
 
 class PATHparameters:
-    '''object parameters to compute the lasso-path.
+    '''Class that contains the parameters to compute the lasso-path.
     
     Attributes:
         numerical_method (str) : name of the numerical method that is used, it can be :
@@ -326,7 +346,7 @@ class PATHparameters:
                                 
 
 class CVparameters:
-    '''object parameters to compute the cross-validation.
+    '''Class that contains the parameters to compute the cross-validation.
 
     Attributes:
         seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random seed
@@ -387,7 +407,7 @@ class CVparameters:
         return string
 
 class StabSelparameters:
-    '''object parameters to compute the stability selection.
+    '''Class that contains the parameters to compute the stability selection.
 
     Attributes:
 
@@ -473,7 +493,7 @@ class StabSelparameters:
         return string
 
 class LAMfixedparameters:
-    '''object parameters to compute the lasso for a fixed lambda
+    '''Class that contains the parameters to compute the lasso for a fixed lambda
 
     Attributes:
         numerical_method (str) : name of the numerical method that is used, can be :
@@ -490,8 +510,8 @@ class LAMfixedparameters:
         theoretical_lam (float) : Theoretical lam
             Default value : 0.0 (once it is not computed yet, it is computed thanks to the function :func:`theoretical_lam` used in :meth:`classo_problem.solve`)
 
-        threshold (float) : Threshold such that the parameters i selected or the ones such as | beta_i | > threshold
-            If None, then it will be set to the average of the vector |beta|
+        threshold (float) : Threshold such that the parameters i selected or the ones such as the absolute value of beta[i] is greater than the threshold
+            If None, then it will be set to the average of the absolute value of beta
             Default value : None
     '''
     def __init__(self, method="not specified"):
@@ -515,8 +535,8 @@ class LAMfixedparameters:
         
         return string
 
-class classo_solution:
-    ''' Class giving characteristics of the solution of the model_selection that is asked.
+class Solution:
+    ''' Class that contains  characteristics of the solution of the model_selection that is asked.
                                       Before using the method solve() , its componant are empty/null.
 
 
@@ -551,7 +571,7 @@ class classo_solution:
 
 #Here, the main function used is pathlasso ; from the file compact_func
 class solution_PATH:
-    ''' Class giving characteristics of the lasso-path computed,
+    ''' Class that contains  characteristics of the lasso-path computed,
     which also contains a method _repr_ that plot the graphic of this lasso-path
 
     Attributes:
@@ -588,7 +608,7 @@ class solution_PATH:
                                                 typ=name_formulation, meth=numerical_method, return_sigm=True,
                                                 rho=rho, e=e,rho_classification=rho_classification, w=param.formulation.w, 
                                                 intercept = param.formulation.intercept)
-        if(formulation.concomitant): self.BETAS, self.LAMBDAS, self.SIGMAS = out
+        if formulation.concomitant : self.BETAS, self.LAMBDAS, self.SIGMAS = out
         else :
             self.BETAS, self.LAMBDAS = out
             self.SIGMAS = 'not computed'
@@ -605,12 +625,12 @@ class solution_PATH:
         string = "\n PATH COMPUTATION : "
         d = len(self.BETAS[0])
 
-        if d>100:  # this trick is to plot only the biggest value, excluding the intercept
+        if d>20:  # this trick is to plot only the biggest value, excluding the intercept
             avg_betas = np.mean(abs(np.array(self.BETAS)),axis=0)
             if self.formulation.intercept :
                 avg_betas[0]= 0 # trick to exclude intercept in the graph
                 string+="\n There is also an intercept.  "
-            top = np.argpartition(avg_betas, -100)[-100:]
+            top = np.argpartition(avg_betas, -20)[-20:]
        
         else : 
             if self.formulation.intercept :
@@ -638,7 +658,7 @@ class solution_PATH:
 
 #Here, the main function used is CV ; from the file cross_validation
 class solution_CV:
-    ''' Class giving characteristics of the cross validation computed,
+    ''' Class that contains  characteristics of the cross validation computed,
     which also contains a method _repr_() that plot the selected parameters and the solution of the not-sparse problem on the selected variables set
     It also contains a method gaphic(self, mse_max=1.,save=False) that computes the curve of validation error as a function of lambda
 
@@ -779,7 +799,7 @@ class solution_CV:
 
 #Here, the main function used is stability ; from the file stability selection
 class solution_StabSel:
-    ''' Class giving characteristics of the stability selection computed,
+    ''' Class that contains  characteristics of the stability selection computed,
     which also contains a method _repr_() that plot the selected parameters,
     the solution of the not-sparse problem on the selected variables set, the stability plot with the evolution of it with lambda if the used method is 'first'
 
@@ -854,8 +874,8 @@ class solution_StabSel:
         string = "\n STABILITY SELECTION : "
 
         d = len(self.distribution)
-        if d>100: 
-            top = np.argpartition(self.distribution+np.random.randn(d)*1e-5, -100)[-100:]
+        if d>20: 
+            top = np.argpartition(self.distribution+np.random.randn(d)*1e-5, -20)[-20:]
             top = np.sort(top)
         else : 
             top = np.arange(d)
@@ -911,7 +931,7 @@ class solution_StabSel:
 
 #Here, the main function used is Classo ; from the file compact_func
 class solution_LAMfixed:
-    ''' Class giving characteristics of the lasso computed
+    ''' Class that contains  characteristics of the lasso computed
     which also contains a method _repr_() that plot this solution.
 
     Attributes:
@@ -969,8 +989,8 @@ class solution_LAMfixed:
 
         string = "\n LAMBDA FIXED : "
         d=len(self.beta)
-        if d>100: 
-            top = np.argpartition(abs(self.beta)+np.random.randn(d)*1e-5, -100)[-100:]
+        if d>20: 
+            top = np.argpartition(abs(self.beta)+np.random.randn(d)*1e-5, -20)[-20:]
             top = np.sort(top)
         else : 
             top = np.arange(d)
@@ -1003,7 +1023,7 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
     Args:
         method (str) :
         model (str) :
-        formulation (classo_formulation) :
+        formulation (Formulation) :
         StabSelmethod (str, optional) :
         lam (float, optional) :
 
@@ -1012,7 +1032,7 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
 
     '''
 
-    if (formulation.classification): return ('Path-Alg')
+    if formulation.classification : return ('Path-Alg')
 
     # cases where we use classo at a fixed lambda    
     elif (model == 'LAM') or (model == 'StabSel' and StabSelmethod == 'lam'):

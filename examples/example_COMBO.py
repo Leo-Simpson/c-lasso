@@ -2,11 +2,11 @@ path = '/Users/lsimpson/Desktop/GitHub/Figures/exampleCOMBO/'
 from CLasso import *
 import numpy as np
 
-X0  = csv_to_mat('COMBO_data/GeneraCounts.csv',begin=0).astype(float)
-X_C = csv_to_mat('COMBO_data/CaloriData.csv',begin=0).astype(float)
-X_F = csv_to_mat('COMBO_data/FatData.csv',begin=0).astype(float)
-y   = csv_to_mat('COMBO_data/BMI.csv',begin=0).astype(float)[:,0]
-labels  = csv_to_mat('COMBO_data/GeneraPhylo.csv').astype(str)[:,-1]
+X0  = csv_to_np('COMBO_data/GeneraCounts.csv',begin=0).astype(float)
+X_C = csv_to_np('COMBO_data/CaloriData.csv',begin=0).astype(float)
+X_F = csv_to_np('COMBO_data/FatData.csv',begin=0).astype(float)
+y   = csv_to_np('COMBO_data/BMI.csv',begin=0).astype(float)[:,0]
+labels  = csv_to_np('COMBO_data/GeneraPhylo.csv').astype(str)[:,-1]
 
 y   = y - np.mean(y) #BMI data (n=96)
 X_C = X_C - np.mean(X_C, axis=0)  #Covariate data (Calorie)
