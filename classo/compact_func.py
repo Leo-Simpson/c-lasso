@@ -48,13 +48,17 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
 
 
     elif(typ=='R4'):
+
+        if intercept : 
+            raise ValueError("The classo package does not perform formulation R4 (Contrained sparse Huber regression with concomitant scale estimation) with an intercept")
+
         if not meth in ['Path-Alg', 'DR']: meth='DR'
         if e is None or e == len(matrices[0]): 
             r = 1.
-            pb = problem_R4(matrices,meth,rho, intercept=intercept)
+            pb = problem_R4(matrices,meth,rho)
         else: 
             r = np.sqrt(e/len(matrices[0]))
-            pb = problem_R4((matrices[0]*r,matrices[1],matrices[2]*r),meth,rho/r,intercept=intercept)
+            pb = problem_R4((matrices[0]*r,matrices[1],matrices[2]*r),meth,rho/r)
 
         lambdamax = pb.lambdamax
         if (true_lam): beta,s = Classo_R4(pb,lam/lambdamax)
@@ -62,6 +66,10 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
 
 
     elif(typ=='R2'):
+
+        if intercept : 
+            raise ValueError("The classo package does not perform formulation R2 (Contrained sparse Huber regression) with an intercept")
+
         if not meth in ['Path-Alg', 'P-PDS' , 'PF-PDS' , 'DR']: meth = 'ODE'
         pb = problem_R2(matrices,meth,rho, intercept=intercept)
         lambdamax = pb.lambdamax
@@ -69,12 +77,20 @@ def Classo(matrix,lam,typ = 'R1', meth='DR', rho = 1.345, get_lambdamax = False,
         else : beta = Classo_R2(pb, lam)
 
     elif (typ == 'C2'):
+
+        if intercept : 
+            raise ValueError("The classo package does not perform classification with an intercept")
+
         lambdamax = h_lambdamax(matrices[0],matrices[2],rho)
         if true_lam : BETA = solve_path(matrices, lam/lambdamax, False, rho_classification, 'huber_cl')[0]
         else : BETA = solve_path(matrices, lam, False, rho_classification, 'huber_cl')[0]
         beta = BETA[-1]
 
     elif (typ == 'C1'):
+
+        if intercept : 
+            raise ValueError("The classo package does not perform classification with an intercept")
+
         lambdamax = h_lambdamax(matrices[0],matrices[2],0)
         if (true_lam): BETA = solve_path(matrices,lam/lambdamax, False,0, 'cl')[0]
         else : BETA = solve_path(matrices,lam, False,0, 'cl')[0]
@@ -123,17 +139,21 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg
     if not w is None : matrices = (  matrix[0]/w, matrix[1]/w,matrix[2] )
     else : matrices = matrix
     
-    if intercept : 
-        means = (np.mean(matrices[0],axis=0), np.mean(matrices[2]) )
-        matrices = (matrices[0]-means[0],matrices[1],matrices[2]-means[1])
+    X,C,y = matrices
 
     if(typ=='R2'):
+        if intercept : 
+            raise ValueError("The classo package does not perform formulation R2 (Contrained sparse Huber regression) with an intercept")
         pb = problem_R2(matrices,meth,rho)
         lambdamax = pb.lambdamax
         if (true_lam): lambdass=[lamb/lambdamax for lamb in lambdass]
         BETA  = pathlasso_R2(pb,lambdass,n_active=Nactive)
 
     elif(typ=='R3'):
+        if intercept : 
+            # here we use the fact that for R1 and R3, the intercept is simple beta0 = ybar-Xbar .vdot(beta) so by changing the X to X-Xbar and y to y-ybar we can solve standard problem
+            Xbar, ybar = np.mean(X,axis=0), np.mean(y)  
+            matrices = (X-Xbar,C,y-ybar)
         if e is None or e == len(matrices[0])/2: 
             r = 1.
             pb = problem_R3(matrices,meth)
@@ -145,9 +165,13 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg
         BETA,S = pathlasso_R3(pb,lambdass,n_active=Nactive)
         S=np.array(S)/r**2
         BETA = np.array(BETA)
+        if intercept : 
+            BETA = np.array([ [ybar - Xbar.dot(beta) ]+list(beta) for beta in BETA] )
 
 
     elif(typ=='R4'):
+        if intercept : 
+            raise ValueError("The classo package does not perform formulation R4 (Contrained sparse Huber regression with concomitant scale estimation) with an intercept")
         if e is None or e == len(matrices[0]): 
             r = 1.
             pb = problem_R4(matrices,meth,rho)
@@ -162,26 +186,35 @@ def pathlasso(matrix,lambdas=False,n_active=0,lamin=1e-2,typ='R1',meth='Path-Alg
         BETA = np.array(BETA)
         
     elif(typ == 'C2'):
+        if intercept : 
+            raise ValueError("The classo package does not perform classification with an intercept")
         lambdamax = h_lambdamax(matrices[0],matrices[2],rho)
         if (true_lam): lambdas=[lamb/lambdamax for lamb in lambdass]
         BETA = pathalgo_general(matrices, lambdass, 'huber_cl', n_active=Nactive, rho=rho_classification)
 
     elif (typ == 'C1'):
+        if intercept : 
+            raise ValueError("The classo package does not perform classification with an intercept")
         lambdamax = h_lambdamax(matrices[0],matrices[2],0)
         if (true_lam): lambdass = [lamb / lambdamax for lamb in lambdass]
         BETA = pathalgo_general(matrices, lambdass, 'cl', n_active=Nactive)
 
-    else:
+    else: # R1
+        if intercept : 
+            # here we use the fact that for R1 and R3, the intercept is simple beta0 = ybar-Xbar .vdot(beta) so by changing the X to X-Xbar and y to y-ybar we can solve standard problem
+            Xbar, ybar = np.mean(X,axis=0), np.mean(y)  
+            matrices = (X-Xbar,C,y-ybar)
         pb = problem_R1(matrices,meth)
         lambdamax = pb.lambdamax
         if (true_lam): lambdass=[lamb/lambdamax for lamb in lambdass]
         BETA = pathlasso_R1(pb,lambdass,n_active=n_active)
 
+        if intercept : 
+            BETA = np.array([ [ybar - Xbar.dot(beta) ]+list(beta) for beta in BETA] )
+
     real_path = [lam*lambdamax for lam in lambdass]
 
     if not w is None : BETA = np.array([beta / (w+1e-3) for beta in BETA])
-    if intercept : 
-        BETA = np.array([ [means[1] - means[0].dot(beta) ]+list(beta) for beta in BETA] )
 
 
     if(typ in ['R3','R4'] and return_sigm): return(np.array(BETA),real_path,S)

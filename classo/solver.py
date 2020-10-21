@@ -65,8 +65,8 @@ class classo_problem:
                                                                 #          mean of initial y )
 
         if not self.formulation.w is None : 
-            if min(self.formulation.w) < 1e-3 : 
-                raise ValueError("w has to be positive weights, here it has a value smaller than 1e-3")
+            if min(self.formulation.w) < 1e-8 : 
+                raise ValueError("w has to be positive weights, here it has a value smaller than 1e-8")
 
         if self.formulation.intercept : 
             data.label = np.array(['intercept']+list(data.label))
@@ -592,7 +592,7 @@ class solution_CV:
         index_1SE (int) : index on xGraph of the selected lambda with 1-standard-error method
         lambda_min (float) : selected lambda without 1-standard-error method
         lambda_oneSE (float) : selected lambda with 1-standard-error method
-        beta (numpy.ndarray) : solution beta of classo at lambda_oneSE
+        beta (numpy.ndarray) : solution beta of classo at lambda_oneSE/lambda_min depending on CVparameters.oneSE
         sigma (float) : solution sigma of classo at lambda_oneSE when formulation is 'R2' or 'R4'
         selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected
         refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
@@ -686,9 +686,10 @@ class solution_CV:
         '''
         
         i_min, i_1SE = self.index_min, self.index_1SE
-        y_max = self.yGraph[i_min] + se_max * self.standard_error[i_min]
+        
         j = 0
         if not se_max is None : 
+            y_max = self.yGraph[i_min] + se_max * self.standard_error[i_min]
             while(j < i_1SE and self.yGraph[j] > y_max) : j+=1
 
         if logScale : 

@@ -177,15 +177,10 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 
 class problem_R2 :
     
-    def __init__(self,data,algo,rho, intercept=False):
+    def __init__(self,data,algo,rho):
         self.N = 500000
         
         self.matrix, self.dim = data, (data[0].shape[0],data[0].shape[1],data[1].shape[0])
-
-        self.intercept = interecept
-
-        if intercept:
-            raise ValueError("The classo package does not perform formulation R2 (Contrained sparse Huber regression) with an intercept")
         
         (m,d,k) = self.dim
         self.weights = np.ones(d)
