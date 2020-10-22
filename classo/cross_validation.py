@@ -206,11 +206,11 @@ def hub(r, rho):
 
 
 def hinge(A, y, beta):
-    return sum(np.max(0, 1 - y * A.dot(beta)) ** 2)
+    return sum(np.maximum(0, 1 - y * A.dot(beta)) ** 2)
 
 
 def huber_hinge(A, y, beta, rho):
-    h = np.max(0, 1 - y * A.dot(beta))
+    h = np.maximum(0, 1 - y * A.dot(beta))
     s = 0
     for i in range(len(h)):
         if h[i] < rho:
