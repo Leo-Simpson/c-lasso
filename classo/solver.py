@@ -1,26 +1,33 @@
 """
-The package is organised as follow : 
-    There is a main class called classo_problem, that contains a lot of informations about the problem, and once the problem is solved, it will also contains the solution. 
+The package is organised as follow :
+    There is a main class called classo_problem, that contains a lot of informations about the problem,
+    and once the problem is solved, it will also contains the solution.
 
-    Here is the global structure of the problem instance : 
-    
+    Here is the global structure of the problem instance:
+
         A classo_problem instance contains a Data instance, a Formulation instance, a Model_selection instance and a Solution instance.
 
 
         A Model_selection instance contains the instances : PATHparameters, CVparameters, StabSelparameters, LAMfixedparameters.
 
 
-        A Solution instance, once is computed, contains the instances : solution_PATH, solution_CV, solution_StabSel, solution_LAMfixed
+        A Solution instance, once is computed, contains the instances : solution_PATH, solution_CV, solution_StabSel, solution_LAMfixed.
 
 """
-
 
 
 from time import time
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .misc_functions import rescale, theoretical_lam, min_LS, affichage, check_size, tree_to_matrix
+from .misc_functions import (
+    rescale,
+    theoretical_lam,
+    min_LS,
+    affichage,
+    check_size,
+    tree_to_matrix,
+)
 from .compact_func import Classo, pathlasso
 from .cross_validation import CV
 from .stability_selection import stability, selected_param
@@ -28,8 +35,8 @@ import matplotlib.patches as mpatches
 
 
 class classo_problem:
-    ''' Class that contains all the information about the problem
-        
+    """Class that contains all the information about the problem
+
     Args:
         X (ndarray): Matrix representing the data of the problem
         y (ndarray): Vector representing the output of the problem
@@ -39,7 +46,7 @@ class classo_problem:
             Default value : 'False'
         label (list,optional) : list of the labels of each variable. If None, then label or just int
             Default value : None
-    
+
     Attributes:
         data (Data) :  object containing the data of the problem.
         formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
@@ -49,98 +56,150 @@ class classo_problem:
         numerical_method (str) : name of the numerical method that is used, it can be :
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
             Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
-        
-        '''
-    def __init__(self, X, y, C=None,Tree = None, label=None, rescale=False):  # zero sum constraint by default, but it can be any matrix
-        self.data = Data(X, y, C,Tree=Tree, rescale=rescale, label = label)
+
+    """
+
+    def __init__(
+        self, X, y, C=None, Tree=None, label=None, rescale=False
+    ):  # zero sum constraint by default, but it can be any matrix
+        self.data = Data(X, y, C, Tree=Tree, rescale=rescale, label=label)
         self.formulation = Formulation()
         self.model_selection = Model_selection()
         self.solution = Solution()
         self.numerical_method = "not specified"
-    
-    
+
     # This method is the way to solve the model selections contained in the object Model_selection, with the formulation of 'formulation' and the data.
     def solve(self):
-        ''' Method that solve every model required in the attributes of the problem and update the attribute :obj:`problem.solution` with the characteristics of the solution.
-            '''
+        """Method that solve every model required in the attributes of the problem and update the attribute :obj:`problem.solution` with the characteristics of the solution."""
         data = self.data
         self.solution = Solution()
         matrices = (data.X, data.C, data.y)
         n, d = len(data.X), len(data.X[0])
-        if self.formulation.classification :
+        if self.formulation.classification:
             self.formulation.concomitant = False
-        
-        if(type(self.formulation.e) == str):
-            if (self.formulation.e == 'n/2'): self.formulation.e = n/2  #useful to be able to write e='n/2' as it is in the default parameters
-            elif(self.formulation.e == 'n'): self.formulation.e = n     # same
-            else :
-                if (self.formulation.huber): self.formulation.e = n
-                else                       : self.formulation.e = n / 2
-        
+
+        if type(self.formulation.e) == str:
+            if self.formulation.e == "n/2":
+                self.formulation.e = (
+                    n / 2
+                )  # useful to be able to write e='n/2' as it is in the default parameters
+            elif self.formulation.e == "n":
+                self.formulation.e = n  # same
+            else:
+                if self.formulation.huber:
+                    self.formulation.e = n
+                else:
+                    self.formulation.e = n / 2
+
         if data.rescale:
             matrices, data.scaling = rescale(matrices)  # SCALING contains  :
-                                                                # (list of initial norms of A-colomns,
-                                                                #         initial norm of centered y,
-                                                                #          mean of initial y )
+            # (list of initial norms of A-colomns,
+            #         initial norm of centered y,
+            #          mean of initial y )
 
-        if not self.formulation.w is None : 
-            if min(self.formulation.w) < 1e-8 : 
-                raise ValueError("w has to be positive weights, here it has a value smaller than 1e-8")
+        if self.formulation.w is not None:
+            if min(self.formulation.w) < 1e-8:
+                raise ValueError(
+                    "w has to be positive weights, here it has a value smaller than 1e-8"
+                )
 
-        if self.formulation.intercept and data.label[0] != 'intercept': 
-            data.label = np.array(['intercept']+list(data.label))
-        
+        if len(data.label) > d:
+            sup = len(data.label) - d
+            data.label = data.label[sup:]
+            print("too many labels, there for the labels {} have been deleted".format(data.label[:sup]))
+
+        elif len(data.label) < d:
+            missing = d - len(data.label)
+            print(" too few labels, therefore {} labels have been inserted in the end".format(missing))
+            data.label = np.array(list(data.label)+['missing '+str(i) for i in range(missing)])
+
+        if self.formulation.intercept:
+            data.label = np.array(["intercept"] + list(data.label))
+
         label = data.label
 
         # Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
         if self.model_selection.PATH:
-            self.solution.PATH = solution_PATH(matrices, self.model_selection.PATHparameters, self.formulation, self.numerical_method, label)
-        
+            self.solution.PATH = solution_PATH(
+                matrices,
+                self.model_selection.PATHparameters,
+                self.formulation,
+                self.numerical_method,
+                label,
+            )
+
         # Compute the cross validation thanks to the class solution_CV which contains directely the computation in the initialisation
         if self.model_selection.CV:
-            self.solution.CV = solution_CV(matrices, self.model_selection.CVparameters, self.formulation, self.numerical_method, label)
-    
+            self.solution.CV = solution_CV(
+                matrices,
+                self.model_selection.CVparameters,
+                self.formulation,
+                self.numerical_method,
+                label,
+            )
+
         # Compute the Stability Selection thanks to the class solution_SS which contains directely the computation in the initialisation
         if self.model_selection.StabSel:
             param = self.model_selection.StabSelparameters
             param.theoretical_lam = theoretical_lam(int(n * param.percent_nS), d)
-            if not param.rescaled_lam : param.theoretical_lam = param.theoretical_lam*int(n * param.percent_nS)
-            
-            self.solution.StabSel = solution_StabSel(matrices, param, self.formulation, self.numerical_method, label)
-        
+            if not param.rescaled_lam:
+                param.theoretical_lam = param.theoretical_lam * int(
+                    n * param.percent_nS
+                )
+
+            self.solution.StabSel = solution_StabSel(
+                matrices, param, self.formulation, self.numerical_method, label
+            )
+
         # Compute the c-lasso problem at a fixed lam thanks to the class solution_LAMfixed which contains directely the computation in the initialisation
         if self.model_selection.LAMfixed:
             param = self.model_selection.LAMfixedparameters
             param.theoretical_lam = theoretical_lam(n, d)
-            if not param.rescaled_lam: param.theoretical_lam = param.theoretical_lam*n
-            self.solution.LAMfixed = solution_LAMfixed(matrices, param, self.formulation, self.numerical_method, label)
+            if not param.rescaled_lam:
+                param.theoretical_lam = param.theoretical_lam * n
+            self.solution.LAMfixed = solution_LAMfixed(
+                matrices, param, self.formulation, self.numerical_method, label
+            )
 
-    
     def __repr__(self):
-        print_parameters = ''
-        if (self.model_selection.LAMfixed):
-            print_parameters += '\n \nLAMBDA FIXED PARAMETERS: ' + self.model_selection.LAMfixedparameters.__repr__()
-        
-        if (self.model_selection.PATH):
-            print_parameters += '\n \nPATH PARAMETERS: ' + self.model_selection.PATHparameters.__repr__()
-        
-        if (self.model_selection.CV):
-            print_parameters += '\n \nCROSS VALIDATION PARAMETERS: ' + self.model_selection.CVparameters.__repr__()
-        
-        if (self.model_selection.StabSel):
-            print_parameters += '\n \nSTABILITY SELECTION PARAMETERS: ' + self.model_selection.StabSelparameters.__repr__()
+        print_parameters = ""
+        if self.model_selection.LAMfixed:
+            print_parameters += (
+                "\n \nLAMBDA FIXED PARAMETERS: "
+                + self.model_selection.LAMfixedparameters.__repr__()
+            )
 
-        return (' \n \nFORMULATION: ' + self.formulation.__repr__()
-                + '\n \n' +
-                'MODEL SELECTION COMPUTED:  ' + self.model_selection.__repr__()
-                + print_parameters + '\n'
-                )
+        if self.model_selection.PATH:
+            print_parameters += (
+                "\n \nPATH PARAMETERS: "
+                + self.model_selection.PATHparameters.__repr__()
+            )
 
+        if self.model_selection.CV:
+            print_parameters += (
+                "\n \nCROSS VALIDATION PARAMETERS: "
+                + self.model_selection.CVparameters.__repr__()
+            )
 
+        if self.model_selection.StabSel:
+            print_parameters += (
+                "\n \nSTABILITY SELECTION PARAMETERS: "
+                + self.model_selection.StabSelparameters.__repr__()
+            )
+
+        return (
+            " \n \nFORMULATION: "
+            + self.formulation.__repr__()
+            + "\n \n"
+            + "MODEL SELECTION COMPUTED:  "
+            + self.model_selection.__repr__()
+            + print_parameters
+            + "\n"
+        )
 
 
 class Data:
-    ''' Class that contains the data of the problem
+    """Class that contains the data of the problem
 
     Args:
         X (ndarray): Matrix representing the data of the problem
@@ -150,7 +209,7 @@ class Data:
             Default value : False
         label (list, optional) : list of the labels of each variable. If None, then label or just int
             Default value : None
-        Tree (skbio.TreeNode, optional) : taxonomic tree, if set it is not None, then the matrices X and C and the labels will be changed. 
+        Tree (skbio.TreeNode, optional) : taxonomic tree, if set it is not None, then the matrices X and C and the labels will be changed.
 
     Attributes:
         X (ndarray): Matrix representing the data of the problem
@@ -158,27 +217,34 @@ class Data:
         C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
         rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem
         label (list) : list of the labels of each variable. If None, then label or just int
-        tree (skbio.TreeNode or None) : taxonomic tree 
+        tree (skbio.TreeNode or None) : taxonomic tree
 
-    '''
+    """
 
     def __init__(self, X, y, C, Tree=None, rescale=False, label=None):
         self.rescale = rescale  # booleen to know if we rescale the matrices
-        X1,y1,C1 = check_size(X,y,C)
+        X1, y1, C1 = check_size(X, y, C)
 
-        if Tree is None : 
-            if (label is None): self.label = np.array([str(i) for i in range(len(X[0]))])
-            else : self.label = np.array(label)
-            self.X,self.y,self.C, self.tree = X1,y1,C1, None
+        if Tree is None:
+            if label is None:
+                self.label = np.array([str(i) for i in range(len(X[0]))])
+            else:
+                self.label = np.array(label)
+            self.X, self.y, self.C, self.tree = X1, y1, C1, None
 
-        else : 
-            A, label2, subtree = tree_to_matrix(Tree,label, with_repr=True)
+        else:
+            A, label2, subtree = tree_to_matrix(Tree, label, with_repr=True)
             self.tree = subtree
-            self.X,self.y,self.C, self.label = X1.dot(A),y1,C1.dot(A), label2
-            
-       
+            self.X, self.y, self.C, self.label = (
+                X1.dot(A),
+                y1,
+                C1.dot(A),
+                np.array(label2),
+            )
+
+
 class Formulation:
-    ''' Class that contains the data of the problem
+    """Class that contains the data of the problem
 
     Attributes:
         huber (bool) : True if the formulation of the problem should be robust
@@ -206,15 +272,15 @@ class Formulation:
         intercept (bool)  : set to true if we should use an intercept
             Default value : False
 
-    '''
+    """
 
     def __init__(self):
         self.huber = False
         self.concomitant = True
         self.classification = False
         self.rho = 1.345
-        self.rho_classification = -1.
-        self.e = 'not specified'
+        self.rho_classification = -1.0
+        self.e = "not specified"
         self.w = None
         self.intercept = False
 
@@ -222,20 +288,24 @@ class Formulation:
         if self.classification:
             if self.huber:
                 return "C2"
-            else : return "C1"
+            else:
+                return "C1"
         if self.concomitant:
             if self.huber:
                 return "R4"
-            else : return "R3"
+            else:
+                return "R3"
         if self.huber:
             return "R2"
-        else : return "R1"
+        else:
+            return "R1"
 
     def __repr__(self):
-        return (self.name())
+        return self.name()
+
 
 class Model_selection:
-    ''' Class that contains the data of the problem
+    """Class that contains the data of the problem
 
     Attributes:
         PATH (bool): True if path should be computed.
@@ -260,35 +330,41 @@ class Model_selection:
 
         LAMfixedparameters (LAMparameters):  object parameters to compute the lasso for a fixed lambda
 
-    '''
-    def __init__(self, method = "not specified"):
+    """
+
+    def __init__(self, method="not specified"):
 
         # Model selection variables
 
         self.PATH = False
-        self.PATHparameters = PATHparameters(method=method) 
+        self.PATHparameters = PATHparameters(method=method)
 
         self.CV = False
         self.CVparameters = CVparameters(method=method)
 
-        self.StabSel = True            # Only model selection that is used by default
+        self.StabSel = True  # Only model selection that is used by default
         self.StabSelparameters = StabSelparameters(method=method)
 
         self.LAMfixed = False
         self.LAMfixedparameters = LAMfixedparameters(method=method)
 
     def __repr__(self):
-        string = ''
-        if self.LAMfixed: string += '\n     Lambda fixed'
-        if self.PATH: string +=     '\n     Path'
-        if self.CV: string +=       '\n     Cross Validation'
-        if self.StabSel: string +=  '\n     Stability selection'
-        
+        string = ""
+        if self.LAMfixed:
+            string += "\n     Lambda fixed"
+        if self.PATH:
+            string += "\n     Path"
+        if self.CV:
+            string += "\n     Cross Validation"
+        if self.StabSel:
+            string += "\n     Stability selection"
+
         return string
 
+
 class PATHparameters:
-    '''Class that contains the parameters to compute the lasso-path.
-    
+    """Class that contains the parameters to compute the lasso-path.
+
     Attributes:
         numerical_method (str) : name of the numerical method that is used, it can be :
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
@@ -313,10 +389,11 @@ class PATHparameters:
             Default value : True
 
         label (numpy.ndarray of str) : labels on each coefficients
-    
-    '''
+
+    """
+
     def __init__(self, method="not specified"):
-        self.formulation = 'not specified'
+        self.formulation = "not specified"
         self.numerical_method = method
         self.n_active = 0
         self.Nlam = 80
@@ -325,28 +402,29 @@ class PATHparameters:
         self.lambdas = None
         self.plot_sigma = True
 
-    def __repr__(self): 
-        if not self.lambdas is None : 
+    def __repr__(self):
+        if self.lambdas is not None:
             self.Nlam = len(self.lambdas)
             self.lamin = min(self.lambdas)
-            typ = ' '
-        else :
-            if self.logscale: typ = " with log-scale"
-            else : typ = " with linear-scale"
-            
+            typ = " "
+        else:
+            if self.logscale:
+                typ = " with log-scale"
+            else:
+                typ = " with linear-scale"
 
-        string  = '\n     numerical_method : ' + str(self.numerical_method)
-        string += '\n     lamin = ' + str(self.lamin)
-        string += '\n     Nlam = ' + str(self.Nlam)
-        string += '\n'+typ
-        if self.n_active > 0 : 
-            string += '\n     maximum active variables = ' + str(self.n_active)
-        
+        string = "\n     numerical_method : " + str(self.numerical_method)
+        string += "\n     lamin = " + str(self.lamin)
+        string += "\n     Nlam = " + str(self.Nlam)
+        string += "\n" + typ
+        if self.n_active > 0:
+            string += "\n     maximum active variables = " + str(self.n_active)
+
         return string
-                                
+
 
 class CVparameters:
-    '''Class that contains the parameters to compute the cross-validation.
+    """Class that contains the parameters to compute the cross-validation.
 
     Attributes:
         seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random seed
@@ -374,10 +452,11 @@ class CVparameters:
         Nsubset (int): number of subset in the cross validation method
             Dafault value : 5
 
-    '''
-    def __init__(self,method = "not specified"):
+    """
+
+    def __init__(self, method="not specified"):
         self.seed = 0
-        self.formulation = 'not specified'
+        self.formulation = "not specified"
         self.numerical_method = method
         self.Nsubset = 5  # Number of subsets used
         self.Nlam = 80
@@ -386,28 +465,29 @@ class CVparameters:
         self.lambdas = None
         self.oneSE = True
 
-    def __repr__(self): 
-        if not self.lambdas is None : 
+    def __repr__(self):
+        if self.lambdas is not None:
             self.Nlam = len(self.lambdas)
             self.lamin = min(self.lambdas)
-            typ = ' '
-        else :
-            if self.logscale: typ = " with log-scale"
-            else : typ = " with linear-scale"
-            
+            typ = " "
+        else:
+            if self.logscale:
+                typ = " with log-scale"
+            else:
+                typ = " with linear-scale"
 
-        string  = '\n     numerical_method : ' + str(self.numerical_method)
-        string += '\n     one-SE method : ' + str(self.oneSE)
-        string += '\n     Nsubset = ' + str(self.Nsubset)
-        string += '\n     lamin = ' + str(self.lamin)
-        string += '\n     Nlam = ' + str(self.Nlam)
-        string += '\n'+typ
-        
-        
+        string = "\n     numerical_method : " + str(self.numerical_method)
+        string += "\n     one-SE method : " + str(self.oneSE)
+        string += "\n     Nsubset = " + str(self.Nsubset)
+        string += "\n     lamin = " + str(self.lamin)
+        string += "\n     Nlam = " + str(self.Nlam)
+        string += "\n" + typ
+
         return string
 
+
 class StabSelparameters:
-    '''Class that contains the parameters to compute the stability selection.
+    """Class that contains the parameters to compute the stability selection.
 
     Attributes:
 
@@ -454,46 +534,49 @@ class StabSelparameters:
         threshold_label (float) : threshold to know when the label should be plot on the graph.
             Default value : 0.4
 
-    '''
+    """
+
     def __init__(self, method="not specified"):
         self.seed = 123
-        self.formulation = 'not specified'
+        self.formulation = "not specified"
         self.numerical_method = method
 
-        self.method = 'first'  # Can be 'first' ; 'max' or 'lam'
+        self.method = "first"  # Can be 'first' ; 'max' or 'lam'
         self.B = 50
         self.q = 10
         self.percent_nS = 0.5
-        self.Nlam = 50      # for path computation
-        self.lamin = 1e-2   # the lambda where one stop for 'max' method
-        self.hd = False     # if set to True, then the 'max' will stop when it reaches n-k actives variables
-        self.lam = 'theoretical'  # can also be a float, for the 'lam' method
+        self.Nlam = 50  # for path computation
+        self.lamin = 1e-2  # the lambda where one stop for 'max' method
+        self.hd = False  # if set to True, then the 'max' will stop when it reaches n-k actives variables
+        self.lam = "theoretical"  # can also be a float, for the 'lam' method
         self.rescaled_lam = True
         self.threshold = 0.7
         self.threshold_label = 0.4
         self.theoretical_lam = 0.0
 
-    def __repr__(self): 
-        string  = '\n     numerical_method : ' + str(self.numerical_method)
-        string += '\n     method : ' + str(self.method)
-        string += '\n     B = ' + str(self.B)
-        string += '\n     q = ' + str(self.q)
-        string += '\n     percent_nS = ' + str(self.percent_nS)
-        string += '\n     threshold = ' + str(self.threshold)
-        
+    def __repr__(self):
+        string = "\n     numerical_method : " + str(self.numerical_method)
+        string += "\n     method : " + str(self.method)
+        string += "\n     B = " + str(self.B)
+        string += "\n     q = " + str(self.q)
+        string += "\n     percent_nS = " + str(self.percent_nS)
+        string += "\n     threshold = " + str(self.threshold)
 
-        if self.method == 'lam': 
-            string += '\n     lam = ' + str(self.lam)
-            if self.theoretical_lam != 0.  :
-                string += '\n     theoretical_lam = ' + str(round(self.theoretical_lam, 4))
-        else : 
-            string += '\n     lamin = ' + str(self.lamin) 
-            string += '\n     Nlam = '+ str(self.Nlam)
+        if self.method == "lam":
+            string += "\n     lam = " + str(self.lam)
+            if self.theoretical_lam != 0.0:
+                string += "\n     theoretical_lam = " + str(
+                    round(self.theoretical_lam, 4)
+                )
+        else:
+            string += "\n     lamin = " + str(self.lamin)
+            string += "\n     Nlam = " + str(self.Nlam)
 
         return string
 
+
 class LAMfixedparameters:
-    '''Class that contains the parameters to compute the lasso for a fixed lambda
+    """Class that contains the parameters to compute the lasso for a fixed lambda
 
     Attributes:
         numerical_method (str) : name of the numerical method that is used, can be :
@@ -513,30 +596,33 @@ class LAMfixedparameters:
         threshold (float) : Threshold such that the parameters i selected or the ones such as the absolute value of beta[i] is greater than the threshold
             If None, then it will be set to the average of the absolute value of beta
             Default value : None
-    '''
+    """
+
     def __init__(self, method="not specified"):
-        self.lam = 'theoretical'
-        self.formulation = 'not specified'
+        self.lam = "theoretical"
+        self.formulation = "not specified"
         self.numerical_method = method
         self.rescaled_lam = True
         self.theoretical_lam = 0.0
         self.threshold = None
 
-    def __repr__(self): 
-        string  = '\n     numerical_method = ' + str(self.numerical_method)
-        string += '\n     rescaled lam : ' + str(self.rescaled_lam)
-        string += '\n     threshold = ' + str(round(self.threshold,3))
-        if type(self.lam) is str : string += '\n     lam : ' + self.lam
-        else : string += '\n     lam = ' + str(round(self.lam,3))
-        
-        
-        if self.theoretical_lam != 0.  :
-            string += '\n     theoretical_lam = ' + str(round(self.theoretical_lam, 4))
-        
+    def __repr__(self):
+        string = "\n     numerical_method = " + str(self.numerical_method)
+        string += "\n     rescaled lam : " + str(self.rescaled_lam)
+        string += "\n     threshold = " + str(round(self.threshold, 3))
+        if type(self.lam) is str:
+            string += "\n     lam : " + self.lam
+        else:
+            string += "\n     lam = " + str(round(self.lam, 3))
+
+        if self.theoretical_lam != 0.0:
+            string += "\n     theoretical_lam = " + str(round(self.theoretical_lam, 4))
+
         return string
 
+
 class Solution:
-    ''' Class that contains  characteristics of the solution of the model_selection that is asked.
+    """Class that contains  characteristics of the solution of the model_selection that is asked.
                                       Before using the method solve() , its componant are empty/null.
 
 
@@ -546,32 +632,33 @@ class Solution:
         StabelSel (solution_StabSel): Solution components of the model StabSel
         LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
 
-    '''
+    """
+
     def __init__(self):
-        self.PATH = 'not computed' #this will be filled with an object of the class 'solution_PATH' when the method solve() will be used.
-        self.CV = 'not computed'  # will be an object of the class 'solution_PATH'
-        self.StabSel = 'not computed' # will be an object of the class 'solution_StabSel'
-        self.LAMfixed = 'not computed'
+        self.PATH = "not computed"  # this will be filled with an object of the class 'solution_PATH' when the method solve() will be used.
+        self.CV = "not computed"  # will be an object of the class 'solution_PATH'
+        self.StabSel = (
+            "not computed"  # will be an object of the class 'solution_StabSel'
+        )
+        self.LAMfixed = "not computed"
 
     def __repr__(self):
-        string = ''
-        if not type(self.LAMfixed) is str : 
-            string  += self.LAMfixed.__repr__()  +  '\n'
-        if not type(self.PATH) is str : 
-            string  += self.PATH.__repr__()  +  '\n'
-        if not type(self.CV) is str : 
-            string  += self.CV.__repr__()  +  '\n'
-        if not type(self.StabSel) is str : 
-            string  += self.StabSel.__repr__()  +  '\n'
-
-
+        string = ""
+        if not type(self.LAMfixed) is str:
+            string += self.LAMfixed.__repr__() + "\n"
+        if not type(self.PATH) is str:
+            string += self.PATH.__repr__() + "\n"
+        if not type(self.CV) is str:
+            string += self.CV.__repr__() + "\n"
+        if not type(self.StabSel) is str:
+            string += self.StabSel.__repr__() + "\n"
 
         return string
 
 
-#Here, the main function used is pathlasso ; from the file compact_func
+# Here, the main function used is pathlasso ; from the file compact_func
 class solution_PATH:
-    ''' Class that contains  characteristics of the lasso-path computed,
+    """Class that contains  characteristics of the lasso-path computed,
     which also contains a method _repr_ that plot the graphic of this lasso-path
 
     Attributes:
@@ -583,35 +670,52 @@ class solution_PATH:
         formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
         time (float) : running time of this action
 
-    '''
+    """
+
     def __init__(self, matrices, param, formulation, numerical_method, label):
         t0 = time()
 
         # Formulation choosing
-        if param.formulation == 'not specified': param.formulation = formulation
-        if param.numerical_method == "not specified" : param.numerical_method = numerical_method
+        if param.formulation == "not specified":
+            param.formulation = formulation
+        if param.numerical_method == "not specified":
+            param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
         rho = param.formulation.rho
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Algorithmic method choosing
-        numerical_method = choose_numerical_method(param.numerical_method, 'PATH', param.formulation)
+        numerical_method = choose_numerical_method(
+            param.numerical_method, "PATH", param.formulation
+        )
         param.numerical_method = numerical_method
         # Compute the solution and is the formulation is concomitant, it also compute sigma
-        if param.lambdas is None : 
-            if param.logscale : 
-                param.lambdas = np.array([param.lamin**(i/(param.Nlam-1)) for i in range(param.Nlam)])
-            else : 
-                np.linspace(1.,param.lamin,param.Nlam)
+        if param.lambdas is None:
+            if param.logscale:
+                param.lambdas = np.array(
+                    [param.lamin ** (i / (param.Nlam - 1)) for i in range(param.Nlam)]
+                )
+            else:
+                np.linspace(1.0, param.lamin, param.Nlam)
 
-        out = pathlasso(matrices, lambdas=param.lambdas, n_active=param.n_active,
-                                                typ=name_formulation, meth=numerical_method, return_sigm=True,
-                                                rho=rho, e=e,rho_classification=rho_classification, w=param.formulation.w, 
-                                                intercept = param.formulation.intercept)
-        if formulation.concomitant : self.BETAS, self.LAMBDAS, self.SIGMAS = out
-        else :
+        out = pathlasso(
+            matrices,
+            lambdas=param.lambdas,
+            n_active=param.n_active,
+            typ=name_formulation,
+            meth=numerical_method,
+            return_sigm=True,
+            rho=rho,
+            e=e,
+            rho_classification=rho_classification,
+            w=param.formulation.w,
+            intercept=param.formulation.intercept,
+        )
+        if formulation.concomitant:
+            self.BETAS, self.LAMBDAS, self.SIGMAS = out
+        else:
             self.BETAS, self.LAMBDAS = out
-            self.SIGMAS = 'not computed'
+            self.SIGMAS = "not computed"
 
         self.formulation = formulation
         self.plot_sigma = param.plot_sigma
@@ -625,40 +729,50 @@ class solution_PATH:
         string = "\n PATH COMPUTATION : "
         d = len(self.BETAS[0])
 
-        if d>20:  # this trick is to plot only the biggest value, excluding the intercept
-            avg_betas = np.mean(abs(np.array(self.BETAS)),axis=0)
-            if self.formulation.intercept :
-                avg_betas[0]= 0 # trick to exclude intercept in the graph
-                string+="\n There is also an intercept.  "
+        if (
+            d > 20
+        ):  # this trick is to plot only the biggest value, excluding the intercept
+            avg_betas = np.mean(abs(np.array(self.BETAS)), axis=0)
+            if self.formulation.intercept:
+                avg_betas[0] = 0  # trick to exclude intercept in the graph
+                string += "\n There is also an intercept.  "
             top = np.argpartition(avg_betas, -20)[-20:]
-       
-        else : 
-            if self.formulation.intercept :
-                top =np.arange(1,d)
-                string+="\n There is also an intercept.  "
+
+        else:
+            if self.formulation.intercept:
+                top = np.arange(1, d)
+                string += "\n There is also an intercept.  "
             else:
                 top = np.arange(d)
 
-
-            
-
-
-        affichage(self.BETAS[:,top], self.LAMBDAS, labels=self.label[top], naffichage=5,
-                  title=PATH_beta_path["title"] + self.formulation.name(),xlabel=PATH_beta_path["xlabel"],ylabel=PATH_beta_path["ylabel"])
-        if (type(self.save) == str): plt.savefig(self.save + 'Beta-path')
+        affichage(
+            self.BETAS[:, top],
+            self.LAMBDAS,
+            labels=self.label[top],
+            naffichage=5,
+            title=PATH_beta_path["title"] + self.formulation.name(),
+            xlabel=PATH_beta_path["xlabel"],
+            ylabel=PATH_beta_path["ylabel"],
+        )
+        if type(self.save) == str:
+            plt.savefig(self.save + "Beta-path")
         plt.show()
-        if(type(self.SIGMAS)!=str and self.plot_sigma):
-            plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel(PATH_sigma_path["ylabel"]), plt.xlabel(PATH_sigma_path["xlabel"])
+        if type(self.SIGMAS) != str and self.plot_sigma:
+            plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel(
+                PATH_sigma_path["ylabel"]
+            ), plt.xlabel(PATH_sigma_path["xlabel"])
             plt.title(PATH_sigma_path["title"] + self.formulation.name())
-            if (type(self.save)==str) : plt.savefig(self.save + 'Sigma-path')
+            if type(self.save) == str:
+                plt.savefig(self.save + "Sigma-path")
             plt.show()
 
-        string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
+        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
         return string
 
-#Here, the main function used is CV ; from the file cross_validation
+
+# Here, the main function used is CV ; from the file cross_validation
 class solution_CV:
-    ''' Class that contains  characteristics of the cross validation computed,
+    """Class that contains  characteristics of the cross validation computed,
     which also contains a method _repr_() that plot the selected parameters and the solution of the not-sparse problem on the selected variables set
     It also contains a method gaphic(self, mse_max=1.,save=False) that computes the curve of validation error as a function of lambda
 
@@ -677,38 +791,50 @@ class solution_CV:
         formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
         time (float) : running time of this action
 
-    '''
+    """
+
     def __init__(self, matrices, param, formulation, numerical_method, label):
         t0 = time()
 
         # Formulation choosing
-        if param.formulation == 'not specified': param.formulation = formulation
-        if param.numerical_method == "not specified" : param.numerical_method = numerical_method
+        if param.formulation == "not specified":
+            param.formulation = formulation
+        if param.numerical_method == "not specified":
+            param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
 
         rho = param.formulation.rho
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Algorithmic method choosing
-        numerical_method = choose_numerical_method(param.numerical_method, 'CV', param.formulation)
+        numerical_method = choose_numerical_method(
+            param.numerical_method, "CV", param.formulation
+        )
         param.numerical_method = numerical_method
 
-
-        if param.lambdas is None : 
-            if param.logscale : 
-                param.lambdas = np.array([param.lamin**(i/(param.Nlam-1)) for i in range(param.Nlam)])
-            else : 
-                np.linspace(1.,param.lamin,param.Nlam)
+        if param.lambdas is None:
+            if param.logscale:
+                param.lambdas = np.array(
+                    [param.lamin ** (i / (param.Nlam - 1)) for i in range(param.Nlam)]
+                )
+            else:
+                np.linspace(1.0, param.lamin, param.Nlam)
 
         # Compute the solution and is the formulation is concomitant, it also compute sigma
-        out, self.yGraph, self.standard_error, self.index_min, self.index_1SE = CV(matrices, param.Nsubset,
-                                                                                   typ=name_formulation,
-                                                                                   num_meth=numerical_method,
-                                                                                   lambdas=param.lambdas,
-                                                                                   seed=param.seed, rho=rho,
-                                                                                   rho_classification=rho_classification,
-                                                                                   oneSE=param.oneSE, e=e, w=param.formulation.w,
-                                                                                   intercept = param.formulation.intercept)
+        (out, self.yGraph, self.standard_error, self.index_min, self.index_1SE,) = CV(
+            matrices,
+            param.Nsubset,
+            typ=name_formulation,
+            num_meth=numerical_method,
+            lambdas=param.lambdas,
+            seed=param.seed,
+            rho=rho,
+            rho_classification=rho_classification,
+            oneSE=param.oneSE,
+            e=e,
+            w=param.formulation.w,
+            intercept=param.formulation.intercept,
+        )
 
         self.xGraph = param.lambdas
         self.lambda_1SE = param.lambdas[self.index_1SE]
@@ -720,139 +846,205 @@ class solution_CV:
         else:
             self.beta = out
 
-        self.selected_param = abs(self.beta) > 1e-5  # boolean array, false iff beta_i =0
-        self.refit = min_LS(matrices, self.selected_param, intercept=self.formulation.intercept)
+        self.selected_param = (
+            abs(self.beta) > 1e-5
+        )  # boolean array, false iff beta_i =0
+        self.refit = min_LS(
+            matrices, self.selected_param, intercept=self.formulation.intercept
+        )
         self.time = time() - t0
-        self.save=False
+        self.save = False
         self.label = label
 
     def __repr__(self):
 
         string = "\n CROSS VALIDATION : "
         d = len(self.refit)
-        selected = self.selected_param[:] 
-        if self.formulation.intercept : # this trick is done to plot only selected parameters, excluding intercept
-            selected[0]=False
-            string+="\n Intercept : " + str(self.refit[0])
+        selected = self.selected_param[:]
+        if (
+            self.formulation.intercept
+        ):  # this trick is done to plot only selected parameters, excluding intercept
+            selected[0] = False
+            string += "\n Intercept : " + str(self.refit[0])
 
         nb_select = sum(selected)
-        if nb_select>10 : 
+        if nb_select > 10:
             top = np.argpartition(abs(self.refit[selected]), -10)[-10:]
             top = np.sort(top)
-        else : 
+        else:
             top = np.arange(nb_select)
 
+        plt.bar(range(nb_select), self.refit[selected]), plt.title(
+            CV_beta["title"]
+        ), plt.xlabel(CV_beta["xlabel"]), plt.ylabel(CV_beta["ylabel"])
+        plt.xticks(top, self.label[selected][top], rotation=90)
 
-        plt.bar(range(nb_select), self.refit[selected]), plt.title(CV_beta["title"]), plt.xlabel(CV_beta["xlabel"]),plt.ylabel(CV_beta["ylabel"])
-        plt.xticks(top,self.label[selected][top], rotation=90)
-
-        if(type(self.save)==str): plt.savefig(self.save)
+        if type(self.save) == str:
+            plt.savefig(self.save)
         plt.show()
         self.graphic()
-        
-        string += "\n   Selected variables :  " 
-        for i in np.where(self.selected_param)[0] :
+
+        string += "\n   Selected variables :  "
+        for i in np.where(self.selected_param)[0]:
             string += self.label[i] + "    "
 
-        string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
+        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
         return string
 
-    def graphic(self, se_max=10,save=None, logScale= False, errorevery=5):
-        ''' Method to plot the graphic showing mean squared error over along lambda path once cross validation is computed. 
+    def graphic(self, se_max=10, save=None, logScale=False, errorevery=5):
+        """Method to plot the graphic showing mean squared error over along lambda path once cross validation is computed.
 
         Args:
-            ratio_mse_max (float): float thanks to which the graphic will not show the lambdas from which MSE(lambda)> min(MSE) + ratio * Standard_error(lambda_min) .
-                this parameter is useful to plot a graph that zooms in the interesting part. 
+            ratio_mse_max (float): float thanks to which the graphic will not show the lambdas from which MSE(lambda)> min(MSE) + ratio * Standard_error(lambda_min).
+                this parameter is useful to plot a graph that zooms in the interesting part.
                 Default value : 10
             logScale (bool) : input that tells to plot the mean square error as a function of lambda, or log10(lambda)
                 Default value : False
-            errorevery (int) : parameter input of matplotlib.pyplot.errorbar that gives the frequency of the error bars appearence. 
+            errorevery (int) : parameter input of matplotlib.pyplot.errorbar that gives the frequency of the error bars appearence.
                 Default value : 5
-            save (string) : path to the file where the figure should be saved. If None, then the figure will not be saved. 
+            save (string) : path to the file where the figure should be saved. If None, then the figure will not be saved.
                 Default Value : None
 
-        '''
-        
+        """
+
         i_min, i_1SE = self.index_min, self.index_1SE
-        
-        jmin,jmax = 0,len(self.yGraph)-1
-        if not se_max is None : 
+
+        jmin, jmax = 0, len(self.yGraph) - 1
+        if se_max is not None:
             # jmin and jmax are the bounds on the xaxis to know where to zoom in in the lambda path
             y_max = self.yGraph[i_min] + se_max * self.standard_error[i_min]
-            while(jmin < i_1SE and self.yGraph[jmin] > y_max) : jmin+=1
-            while(jmax > i_min and self.yGraph[jmax] > y_max) : jmax-=1
+            while jmin < i_1SE and self.yGraph[jmin] > y_max:
+                jmin += 1
+            while jmax > i_min and self.yGraph[jmax] > y_max:
+                jmax -= 1
 
-        if logScale : 
-            plt.errorbar(np.log10(self.xGraph[jmin:jmax+1]), self.yGraph[jmin:jmax+1], self.standard_error[jmin:jmax+1], label='mean over the k groups of data', errorevery = errorevery )
+        if logScale:
+            plt.errorbar(
+                np.log10(self.xGraph[jmin : jmax + 1]),
+                self.yGraph[jmin : jmax + 1],
+                self.standard_error[jmin : jmax + 1],
+                label="mean over the k groups of data",
+                errorevery=errorevery,
+            )
             plt.xlabel(r"$ \log_{10} \lambda / \lambda_{max}$")
-            plt.axvline(x=np.log10(self.xGraph[i_min]), color='k', label=r'$\lambda$ (min MSE)')
-            plt.axvline(x=np.log10(self.xGraph[i_1SE]),color='r',label=r'$\lambda$ (1SE) ')
+            plt.axvline(
+                x=np.log10(self.xGraph[i_min]),
+                color="k",
+                label=r"$\lambda$ (min MSE)",
+            )
+            plt.axvline(
+                x=np.log10(self.xGraph[i_1SE]),
+                color="r",
+                label=r"$\lambda$ (1SE) ",
+            )
         else:
-            plt.errorbar(self.xGraph[jmin:], self.yGraph[jmin:], self.standard_error[jmin:], label='mean over the k groups of data', errorevery = errorevery )
+            plt.errorbar(
+                self.xGraph[jmin:],
+                self.yGraph[jmin:],
+                self.standard_error[jmin:],
+                label="mean over the k groups of data",
+                errorevery=errorevery,
+            )
             plt.xlabel(r"$\lambda / \lambda_{max}$")
-            plt.axvline(x=self.xGraph[i_min], color='k', label=r'$\lambda$ (min MSE)')
-            plt.axvline(x=self.xGraph[i_1SE],color='r',label=r'$\lambda$ (1SE) ')
+            plt.axvline(x=self.xGraph[i_min], color="k", label=r"$\lambda$ (min MSE)")
+            plt.axvline(x=self.xGraph[i_1SE], color="r", label=r"$\lambda$ (1SE) ")
         plt.title(CV_graph["title"]), plt.ylabel(CV_graph["ylabel"])
         plt.legend()
-        if not save is None: plt.savefig(save)
+        if save is not None:
+            plt.savefig(save)
         plt.show()
 
-#Here, the main function used is stability ; from the file stability selection
+
+# Here, the main function used is stability ; from the file stability selection
 class solution_StabSel:
-    ''' Class that contains  characteristics of the stability selection computed,
+    """Class that contains  characteristics of the stability selection computed,
     which also contains a method _repr_() that plot the selected parameters,
-    the solution of the not-sparse problem on the selected variables set, the stability plot with the evolution of it with lambda if the used method is 'first'
+    the solution of the not-sparse problem on the selected variables set,
+    the stability plot with the evolution of it with lambda if the used method is 'first'
 
     Attributes:
         distribution (array) : d array of stability rations.
         lambdas_path (array or string) : for 'first' method : Nlam array of the lambdas used. Other cases : 'not used'
-        distribution_path (array or string) : for 'first' method :  Nlam x d array with stability ratios as a function of lambda. Other cases : 'not computed'
+        distribution_path (array or string) : for 'first' method :  Nlam x d array with stability ratios as a function of lambda.
+        Other cases : 'not computed'
         threshold (float) : threshold for StabSel, ie for a variable i, stability ratio that is needed to get selected
-        save1,save2,save3 (bool or string) : if a string is given, the corresponding graph will be saved with the given name of the file (save1 is for stability plot ; save2 for path-stability plot; and save3 for refit beta-solution)
+        save1,save2,save3 (bool or string) : if a string is given,
+        the corresponding graph will be saved with the given name of the file
+        (save1 is for stability plot ; save2 for path-stability plot; and save3 for refit beta-solution)
         selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected
         to_label (numpy.ndarray) : boolean arrays of size d with True when the name of the variable should be seen on the graph
         refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
         formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
         time (float) : running time of this action
 
-    '''
+    """
+
     def __init__(self, matrices, param, formulation, numerical_method, label):
         t0 = time()
 
         # Formulation choosing
-        if param.formulation == 'not specified': param.formulation = formulation
-        if param.numerical_method == "not specified" : param.numerical_method = numerical_method
+        if param.formulation == "not specified":
+            param.formulation = formulation
+        if param.numerical_method == "not specified":
+            param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
 
         rho = param.formulation.rho
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Compute the theoretical lam if necessary
-        if param.lam == 'theoretical':
+        if param.lam == "theoretical":
             lam = param.theoretical_lam
         else:
             lam = param.lam
 
         # Algorithmic method choosing
-        numerical_method = choose_numerical_method(param.numerical_method, 'StabSel', param.formulation,
-                                                   StabSelmethod=param.method, lam=lam)
+        numerical_method = choose_numerical_method(
+            param.numerical_method,
+            "StabSel",
+            param.formulation,
+            StabSelmethod=param.method,
+            lam=lam,
+        )
         param.numerical_method = numerical_method
 
-        # verify the method 
-        if not param.method in ['first','max','lam']:
-            raise ValueError("name of the stability selection method should be one of those : 'first' , 'max' , 'lam'     not {}".format(param.method))
+        # verify the method
+        if param.method not in ["first", "max", "lam"]:
+            raise ValueError(
+                "name of the stability selection method should be one of those : 'first' , 'max' , 'lam'     not {}".format(
+                    param.method
+                )
+            )
 
         # Compute the distribution
-        output = stability(matrices, StabSelmethod=param.method, numerical_method=numerical_method, lamin=param.lamin,
-                           lam=lam,Nlam=param.Nlam, q=param.q, B=param.B, percent_nS=param.percent_nS,
-                           formulation=name_formulation, seed=param.seed, rho=rho,
-                           rho_classification=rho_classification,
-                           true_lam= not param.rescaled_lam, e=e, w=param.formulation.w, intercept = param.formulation.intercept)
+        output = stability(
+            matrices,
+            StabSelmethod=param.method,
+            numerical_method=numerical_method,
+            lamin=param.lamin,
+            lam=lam,
+            Nlam=param.Nlam,
+            q=param.q,
+            B=param.B,
+            percent_nS=param.percent_nS,
+            formulation=name_formulation,
+            seed=param.seed,
+            rho=rho,
+            rho_classification=rho_classification,
+            true_lam=not param.rescaled_lam,
+            e=e,
+            w=param.formulation.w,
+            intercept=param.formulation.intercept,
+        )
 
-        if (param.method == 'first'):
+        if param.method == "first":
             distribution, distribution_path, lambdas = output
         else:
-            distribution, distribution_path, lambdas = output, 'not computed', 'not used'
+            distribution, distribution_path, lambdas = (
+                output,
+                "not computed",
+                "not used",
+            )
 
         self.distribution = distribution
         self.distribution_path = distribution_path
@@ -860,7 +1052,11 @@ class solution_StabSel:
         self.selected_param = self.distribution > param.threshold
         self.threshold_label = param.threshold_label
         self.threshold = param.threshold
-        self.refit = min_LS(matrices, self.selected_param,  intercept=param.formulation.intercept)
+        self.refit = min_LS(
+            matrices,
+            self.selected_param,
+            intercept=param.formulation.intercept,
+        )
         self.save1 = False
         self.save2 = False
         self.save3 = False
@@ -874,64 +1070,111 @@ class solution_StabSel:
         string = "\n STABILITY SELECTION : "
 
         d = len(self.distribution)
-        if d>20: 
-            top = np.argpartition(self.distribution+np.random.randn(d)*1e-5, -20)[-20:]
+        if d > 20:
+            top = np.argpartition(self.distribution + np.random.randn(d) * 1e-5, -20)[
+                -20:
+            ]
             top = np.sort(top)
-        else : 
+        else:
             top = np.arange(d)
 
         self.to_label = self.distribution > self.threshold_label
-        D, Dpath, selected = self.distribution[top], self.distribution_path, np.array(self.selected_param)[top]
+        D, Dpath, selected = (
+            self.distribution[top],
+            self.distribution_path,
+            np.array(self.selected_param)[top],
+        )
         unselected = [not i for i in selected]
-        Dselected, Dunselected  = np.zeros(len(D)), np.zeros(len(D))
-        Dselected[selected], Dunselected[unselected] = D[selected], D[unselected]
-        
-        plt.bar(range(len(Dselected)), Dselected, color='r', label='selected coefficients')
-        plt.bar(range(len(Dunselected)), Dunselected, color='b', label='unselected coefficients')
-        plt.axhline(y=self.threshold, color='g',label='Threshold : thresh = '+ str(self.threshold))
+        Dselected, Dunselected = np.zeros(len(D)), np.zeros(len(D))
+        Dselected[selected], Dunselected[unselected] = (
+            D[selected],
+            D[unselected],
+        )
 
-        plt.xticks(ticks = np.where(self.to_label[top])[0], labels = self.label[top][self.to_label[top]], rotation=30)
-        plt.xlabel(StabSel_graph["xlabel"]), plt.ylabel(StabSel_graph["ylabel"]), plt.title(StabSel_graph["title"] + self.method + " using " + self.formulation), plt.legend()
+        plt.bar(
+            range(len(Dselected)),
+            Dselected,
+            color="r",
+            label="selected coefficients",
+        )
+        plt.bar(
+            range(len(Dunselected)),
+            Dunselected,
+            color="b",
+            label="unselected coefficients",
+        )
+        plt.axhline(
+            y=self.threshold,
+            color="g",
+            label="Threshold : thresh = " + str(self.threshold),
+        )
 
-        if (type(self.save1) == str): plt.savefig(self.save1)
+        plt.xticks(
+            ticks=np.where(self.to_label[top])[0],
+            labels=self.label[top][self.to_label[top]],
+            rotation=30,
+        )
+        plt.xlabel(StabSel_graph["xlabel"]), plt.ylabel(
+            StabSel_graph["ylabel"]
+        ), plt.title(
+            StabSel_graph["title"] + self.method + " using " + self.formulation
+        ), plt.legend()
+
+        if type(self.save1) == str:
+            plt.savefig(self.save1)
 
         plt.show()
-        
 
-
-        if (type(Dpath) != str):
+        if type(Dpath) != str:
             lambdas = self.lambdas_path
             N = len(lambdas)
-            for i1,i2 in enumerate(top):
-                if selected[i1]: c='r'
-                else :          c='b'
+            for i1, i2 in enumerate(top):
+                if selected[i1]:
+                    c = "r"
+                else:
+                    c = "b"
                 plt.plot(lambdas, [Dpath[j][i2] for j in range(N)], c)
-            p1 = mpatches.Patch(color='red', label='selected coefficients')
-            p2 = mpatches.Patch(color='blue',label='unselected coefficients')
-            p3 = mpatches.Patch(color='green',label='Threshold : thresh = '+ str(self.threshold))
+            p1 = mpatches.Patch(color="red", label="selected coefficients")
+            p2 = mpatches.Patch(color="blue", label="unselected coefficients")
+            p3 = mpatches.Patch(
+                color="green",
+                label="Threshold : thresh = " + str(self.threshold),
+            )
             plt.legend(handles=[p1, p2, p3], loc=1)
-            plt.axhline(y=self.threshold,color='g')
-            plt.xlabel(StabSel_path["xlabel"]), plt.ylabel(StabSel_path["ylabel"]), plt.title(StabSel_path["title"] +  self.method + " using " + self.formulation)
-            if (type(self.save2)==str):plt.savefig(self.save2)
+            plt.axhline(y=self.threshold, color="g")
+            plt.xlabel(StabSel_path["xlabel"]), plt.ylabel(
+                StabSel_path["ylabel"]
+            ), plt.title(
+                StabSel_path["title"] + self.method + " using " + self.formulation
+            )
+            if type(self.save2) == str:
+                plt.savefig(self.save2)
             plt.show()
 
         plt.bar(range(len(self.refit[top])), self.refit[top])
-        plt.xlabel(StabSel_beta["xlabel"]), plt.ylabel(StabSel_beta["ylabel"]), plt.title(StabSel_beta["title"])
-        plt.xticks(np.where(self.selected_param[top])[0],self.label[top][self.selected_param[top]], rotation=30)
-        if (type(self.save3) == str): plt.savefig(self.save3)
+        plt.xlabel(StabSel_beta["xlabel"]), plt.ylabel(
+            StabSel_beta["ylabel"]
+        ), plt.title(StabSel_beta["title"])
+        plt.xticks(
+            np.where(self.selected_param[top])[0],
+            self.label[top][self.selected_param[top]],
+            rotation=30,
+        )
+        if type(self.save3) == str:
+            plt.savefig(self.save3)
         plt.show()
 
-
-        string += "\n   Selected variables :  " 
-        for i in np.where(selected)[0] :
+        string += "\n   Selected variables :  "
+        for i in np.where(selected)[0]:
             string += self.label[i] + "    "
 
-        string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
+        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
         return string
 
-#Here, the main function used is Classo ; from the file compact_func
+
+# Here, the main function used is Classo ; from the file compact_func
 class solution_LAMfixed:
-    ''' Class that contains  characteristics of the lasso computed
+    """Class that contains  characteristics of the lasso computed
     which also contains a method _repr_() that plot this solution.
 
     Attributes:
@@ -945,42 +1188,62 @@ class solution_LAMfixed:
         formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
         time (float) : running time of this action
 
-    '''
+    """
+
     def __init__(self, matrices, param, formulation, numerical_method, label):
         t0 = time()
         self.formulation = formulation
         # Formulation choosing
-        if param.formulation == 'not specified': param.formulation = formulation
-        if param.numerical_method == "not specified" : param.numerical_method = numerical_method
+        if param.formulation == "not specified":
+            param.formulation = formulation
+        if param.numerical_method == "not specified":
+            param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
 
         rho = param.formulation.rho
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Compute the theoretical lam if necessary
-        if param.lam == 'theoretical' or param.lam < 0:
+        if param.lam == "theoretical" or param.lam < 0:
             self.lam = param.theoretical_lam
         else:
             self.lam = param.lam
 
         # Algorithmic method choosing
-        numerical_method = choose_numerical_method(param.numerical_method, 'LAM', param.formulation, lam=self.lam)
+        numerical_method = choose_numerical_method(
+            param.numerical_method, "LAM", param.formulation, lam=self.lam
+        )
         param.numerical_method = numerical_method
         self.rescaled_lam = param.rescaled_lam
 
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         out = Classo(
-            matrices, self.lam, typ=name_formulation, meth=numerical_method, rho=rho,
-            get_lambdamax=True, true_lam= not self.rescaled_lam, e=e, rho_classification=rho_classification, w=param.formulation.w, intercept = param.formulation.intercept)
+            matrices,
+            self.lam,
+            typ=name_formulation,
+            meth=numerical_method,
+            rho=rho,
+            get_lambdamax=True,
+            true_lam=not self.rescaled_lam,
+            e=e,
+            rho_classification=rho_classification,
+            w=param.formulation.w,
+            intercept=param.formulation.intercept,
+        )
 
-        if param.formulation.concomitant: self.lambdamax, self.beta, self.sigma = out
-        else: self.lambdamax, self.beta = out
-        if param.threshold is None : 
+        if param.formulation.concomitant:
+            self.lambdamax, self.beta, self.sigma = out
+        else:
+            self.lambdamax, self.beta = out
+        if param.threshold is None:
             param.threshold = np.mean(abs(self.beta))
 
-        
         self.selected_param = abs(self.beta) > param.threshold
-        self.refit = min_LS(matrices, self.selected_param, intercept=param.formulation.intercept)
+        self.refit = min_LS(
+            matrices,
+            self.selected_param,
+            intercept=param.formulation.intercept,
+        )
         self.label = label
         self.time = time() - t0
         self.save = False
@@ -988,37 +1251,39 @@ class solution_LAMfixed:
     def __repr__(self):
 
         string = "\n LAMBDA FIXED : "
-        d=len(self.beta)
-        if d>20: 
-            top = np.argpartition(abs(self.beta)+np.random.randn(d)*1e-5, -20)[-20:]
+        d = len(self.beta)
+        if d > 20:
+            top = np.argpartition(abs(self.beta) + np.random.randn(d) * 1e-5, -20)[-20:]
             top = np.sort(top)
-        else : 
+        else:
             top = np.arange(d)
 
-        plt.bar(range(len(top)), self.beta[top]), plt.title(LAM_beta["title"] + str(round(self.lam,3) ) ), plt.xlabel(LAM_beta["xlabel"]),plt.ylabel(LAM_beta["ylabel"])
-        plt.xticks(np.where(self.selected_param[top])[0],self.label[top][self.selected_param[top]], rotation=30)
-        
-        if(type(self.save)==str): plt.savefig(self.save)
+        plt.bar(range(len(top)), self.beta[top]), plt.title(
+            LAM_beta["title"] + str(round(self.lam, 3))
+        ), plt.xlabel(LAM_beta["xlabel"]), plt.ylabel(LAM_beta["ylabel"])
+        plt.xticks(
+            np.where(self.selected_param[top])[0],
+            self.label[top][self.selected_param[top]],
+            rotation=30,
+        )
+
+        if type(self.save) == str:
+            plt.savefig(self.save)
         plt.show()
-        
-        if(self.formulation.concomitant) : 
+
+        if self.formulation.concomitant:
             string += "\n   Sigma  =  " + str(round(self.sigma, 3))
-          
-        string += "\n   Selected variables :  " 
-        for i in np.where(self.selected_param)[0] :
+
+        string += "\n   Selected variables :  "
+        for i in np.where(self.selected_param)[0]:
             string += self.label[i] + "    "
 
-        string += "\n   Running time :  "  + str(round(self.time, 3)) + "s"
+        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
         return string
 
 
-
-
-
-
-
 def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=None):
-    ''' Annex function in order to choose the right numerical method, if the given one is invalid
+    """Annex function in order to choose the right numerical method, if the given one is invalid
 
     Args:
         method (str) :
@@ -1030,90 +1295,85 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
     Returns :
         str : method that should be used.
 
-    '''
+    """
 
-    if formulation.classification : return ('Path-Alg')
+    if formulation.classification:
+        return "Path-Alg"
 
-    # cases where we use classo at a fixed lambda    
-    elif (model == 'LAM') or (model == 'StabSel' and StabSelmethod == 'lam'):
+    # cases where we use classo at a fixed lambda
+    elif (model == "LAM") or (model == "StabSel" and StabSelmethod == "lam"):
 
-        if formulation.concomitant :
-            if not method in ['Path-Alg', 'DR']:
-                if (lam > 0.05):
-                    return 'Path-Alg'
+        if formulation.concomitant:
+            if method not in ["Path-Alg", "DR"]:
+                if lam > 0.05:
+                    return "Path-Alg"
                 else:
-                    return 'DR'
-
+                    return "DR"
 
         else:
-            if not method in ['Path-Alg', 'DR', 'P-PDS', 'PF-PDS']:
-                if (lam > 0.05):
-                    return 'Path-Alg'
+            if method not in ["Path-Alg", "DR", "P-PDS", "PF-PDS"]:
+                if lam > 0.05:
+                    return "Path-Alg"
                 else:
-                    return 'DR'
-
-
+                    return "DR"
 
     # cases where we use pathlasso
     else:
         if formulation.classification:
-            if not method in ['Path-Alg', 'DR', 'P-PDS']: return 'Path-Alg'
+            if method not in ["Path-Alg", "DR", "P-PDS"]:
+                return "Path-Alg"
 
         elif formulation.concomitant:
-            if not method in ['Path-Alg', 'DR']: 
-                if formulation.huber : return 'DR'
-                else : return 'Path-Alg'
+            if method not in ["Path-Alg", "DR"]:
+                if formulation.huber:
+                    return "DR"
+                else:
+                    return "Path-Alg"
 
         else:
-            if not method in ['Path-Alg', 'DR', 'P-PDS', 'PF-PDS']: return 'Path-Alg'
+            if method not in ["Path-Alg", "DR", "P-PDS", "PF-PDS"]:
+                return "Path-Alg"
 
     return method
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-CV_beta             = {
-                            "title"  : r"Refitted coefficients after CV model selection" ,
-                            "xlabel" : r"Coefficient index $i$" ,
-                            "ylabel" : r"Coefficients $\beta_i$ "}
-CV_graph            = {
-                            "title"  : r" " ,
-                            "xlabel" : r"$\lambda / \lambda_{max}$" ,
-                            "ylabel" : r"Mean-Squared Error (MSE) "}
-LAM_beta            = {
-                            "title"  : r"Coefficients at $\lambda$ = " ,
-                            "xlabel" : r"Coefficient index $i$" ,
-                            "ylabel" : r"Coefficients $\beta_i$ "}
-PATH_beta_path      = {
-                            "title"  : r"Coefficients across $\lambda$-path using " ,
-                            "xlabel" : r"$\lambda$" ,
-                            "ylabel" : r"Coefficients $\beta_i$ "}
-PATH_sigma_path     = {
-                            "title"  : r"Scale estimate across $\lambda$-path using " ,
-                            "xlabel" : r"$\lambda$" ,
-                            "ylabel" : r"Scale $\sigma$ "}
-StabSel_graph       = {
-                            "title"  : r"Stability selection profile of type " ,
-                            "xlabel" : r"Coefficient index $i$" ,
-                            "ylabel" : r"Selection probability "}
-StabSel_path        = {
-                            "title"  : r"Stability selection profile across $\lambda$-path using " ,
-                            "xlabel" : r"$\lambda$" ,
-                            "ylabel" : r"Selection probability "}
-StabSel_beta        = {
-                            "title"  : r"Refitted coefficients after stability selection" ,
-                            "xlabel" : r"Coefficient index $i$" ,
-                            "ylabel" : r"Coefficients $\beta_i$ "}
-
+CV_beta = {
+    "title": r"Refitted coefficients after CV model selection",
+    "xlabel": r"Coefficient index $i$",
+    "ylabel": r"Coefficients $\beta_i$ ",
+}
+CV_graph = {
+    "title": r" ",
+    "xlabel": r"$\lambda / \lambda_{max}$",
+    "ylabel": r"Mean-Squared Error (MSE) ",
+}
+LAM_beta = {
+    "title": r"Coefficients at $\lambda$ = ",
+    "xlabel": r"Coefficient index $i$",
+    "ylabel": r"Coefficients $\beta_i$ ",
+}
+PATH_beta_path = {
+    "title": r"Coefficients across $\lambda$-path using ",
+    "xlabel": r"$\lambda$",
+    "ylabel": r"Coefficients $\beta_i$ ",
+}
+PATH_sigma_path = {
+    "title": r"Scale estimate across $\lambda$-path using ",
+    "xlabel": r"$\lambda$",
+    "ylabel": r"Scale $\sigma$ ",
+}
+StabSel_graph = {
+    "title": r"Stability selection profile of type ",
+    "xlabel": r"Coefficient index $i$",
+    "ylabel": r"Selection probability ",
+}
+StabSel_path = {
+    "title": r"Stability selection profile across $\lambda$-path using ",
+    "xlabel": r"$\lambda$",
+    "ylabel": r"Selection probability ",
+}
+StabSel_beta = {
+    "title": r"Refitted coefficients after stability selection",
+    "xlabel": r"Coefficient index $i$",
+    "ylabel": r"Coefficients $\beta_i$ ",
+}
