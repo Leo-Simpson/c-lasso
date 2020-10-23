@@ -13,18 +13,20 @@
     How the equation will look like :
     
     Let F = y * (Abeta+betaO) < 1
+    
+    Let m = mean(A[F,:], axis=0)
 
-    Let N  = A[activity,F]
+    Let N  = A[F,:] - m
     
-    betaO_dot =  - mean(N,axis=0)^t . beta_dot
+    betaO_dot =  - m. beta_dot and
     
-    2N.T.dot(N-mean(N,axis=0))   beta_dot      C.T v_dot = s[activity]      on active variables
+    2N.T.dot(N)  beta_dot      C.T v_dot = s     on active variables (beta_dot elsewhere)
     
-            C                   beta_dot      0   v_dot =    0
+            C    beta_dot      0   v_dot = 0
 
 
     and
-    (lambda s)_dot  = A[inactive].T (N-mean(N,axis=0)) beta_dot   + C[active].T v_dot              on inactive variables
+    (lambda s)_dot  = N.T.N beta_dot   + C.T v_dot              on inactive variables
 
 
 
