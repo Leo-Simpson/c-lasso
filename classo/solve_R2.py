@@ -33,7 +33,7 @@ def Classo_R2(pb, lam, compute=True):
     # here we compute the path algo until our lambda, and just take the last beta
 
     if pb_type == "Path-Alg":
-        beta = solve_path((A, C, y), lam, False, rho, "huber")[0]
+        beta = solve_path((A, C, y), lam, False, rho, 'R2')[0]
         return beta[-1]
 
     # 2 prox :
@@ -161,7 +161,7 @@ def pathlasso_R2(pb, path, n_active=False):
     n = pb.dim[0]
     BETA, tol = [], pb.tol
     if pb.type == "Path-Alg":
-        X, sp_path = solve_path(pb.matrix, path[-1], n_active, pb.rho, "huber")
+        X, sp_path = solve_path(pb.matrix, path[-1], n_active, pb.rho, 'R2')
         # we do a little manipulation to interpolated the value of beta between breaking points, as we know beta is affine between those those points.
         i = 0
         sp_path.append(path[-1]), X.append(X[-1])

@@ -110,35 +110,34 @@ def Classo(
 
         if intercept:
             raise ValueError(
-                "The classo package does not perform classification with an intercept"
+                "The classo package does not perform huber-classification with an intercept"
             )
 
-        lambdamax = h_lambdamax(matrices[0], matrices[2], rho)
+        lambdamax = h_lambdamax(matrices, rho, typ='C2', intercept=intercept)
         if true_lam:
             BETA = solve_path(
                 matrices,
                 lam / lambdamax,
                 False,
                 rho_classification,
-                "huber_cl",
+                'C2',
             )[0]
         else:
-            BETA = solve_path(matrices, lam, False, rho_classification, "huber_cl")[0]
+            BETA = solve_path(matrices, lam, False, rho_classification, 'C2',intercept=intercept)[0]
         beta = BETA[-1]
 
     elif typ == "C1":
 
-        if intercept:
-            raise ValueError(
-                "The classo package does not perform classification with an intercept"
-            )
-
-        lambdamax = h_lambdamax(matrices[0], matrices[2], 0)
+        lambdamax = h_lambdamax(matrices, 0, typ='C1',intercept=intercept)
         if true_lam:
-            BETA = solve_path(matrices, lam / lambdamax, False, 0, "cl")[0]
+            out = solve_path(matrices, lam / lambdamax, False, 0, 'C1',intercept=intercept)
         else:
-            BETA = solve_path(matrices, lam, False, 0, "cl")[0]
-        beta = BETA[-1]
+            out = solve_path(matrices, lam, False, 0, 'C1',intercept=intercept)
+        if intercept:
+            beta0,beta = out[0][-1], out[1][-1]
+            beta = np.array([beta0]+list(beta))
+        else:
+            beta = out[0][-1]
 
     else:  # LS
         if intercept:
@@ -270,28 +269,21 @@ def pathlasso(
     elif typ == "C2":
         if intercept:
             raise ValueError(
-                "The classo package does not perform classification with an intercept"
+                "The classo package does not perform huber classification with an intercept"
             )
-        lambdamax = h_lambdamax(matrices[0], matrices[2], rho)
+        lambdamax = h_lambdamax(matrices, rho, typ='C2',intercept=intercept)
         if true_lam:
             lambdas = [lamb / lambdamax for lamb in lambdass]
-        BETA = pathalgo_general(
-            matrices,
-            lambdass,
-            "huber_cl",
-            n_active=Nactive,
-            rho=rho_classification,
-        )
+        BETA = pathalgo_general(matrices,lambdass,'C2',n_active=Nactive,rho=rho_classification,intercept=intercept)
 
     elif typ == "C1":
-        if intercept:
-            raise ValueError(
-                "The classo package does not perform classification with an intercept"
-            )
-        lambdamax = h_lambdamax(matrices[0], matrices[2], 0)
+
+        lambdamax = h_lambdamax(matrices, 0, typ='C1',intercept=intercept)
         if true_lam:
             lambdass = [lamb / lambdamax for lamb in lambdass]
-        BETA = pathalgo_general(matrices, lambdass, "cl", n_active=Nactive)
+        BETA = pathalgo_general(matrices, lambdass, 'C1', n_active=Nactive,intercept=intercept)
+        
+        
 
     else:  # R1
         if intercept:

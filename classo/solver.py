@@ -949,9 +949,9 @@ class solution_CV:
             )
         else:
             plt.errorbar(
-                self.xGraph[jmin:],
-                self.yGraph[jmin:],
-                self.standard_error[jmin:],
+                self.xGraph[jmin:jmax],
+                self.yGraph[jmin:jmax],
+                self.standard_error[jmin:jmax],
                 label="mean over the k groups of data",
                 errorevery=errorevery,
             )
