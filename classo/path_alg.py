@@ -87,6 +87,23 @@ class parameters_for_update:
 
 # iteration of the function up to solve the path at each breaking points.
 def solve_path(matrices, lamin, n_active, rho, typ):
+    """
+    This functions will compute the path for all the breaking points :
+    beta is a piecewise linear function of lambda, and only value on the breaking points
+    is computed here
+
+    Args :
+        matrices : A (aka X),C,y the matrices of the problem
+        lamin : fraction of lambda that gives one criteria to stop : continue while lambda > lamin * lambda_max
+        n_active : another criteria to stop
+        rho : only useful for huber-classification
+        typ : can be 'LS', 'Conc', 'huber','huber_cl' or 'cl'
+
+    Return :
+        BETA : list of beta(lambda) for lambda in LAMBDA
+        LAMBDA : list of breaking points
+    """
+
     d = len(matrices[0][0])
     param = parameters_for_update(matrices, lamin, rho, typ)
     BETA, LAM = [param.beta], [param.lam]
@@ -106,6 +123,24 @@ def solve_path(matrices, lamin, n_active, rho, typ):
 
 
 def solve_path_Conc(matrices, stop, n_active=False, lassopath=True, true_lam=False):
+    """
+    This functions will compute the path for all the breaking points :
+    beta is a piecewise linear function of lambda, and only value on the breaking points
+    is computed here
+
+    Args :
+        matrices : A (aka X),C,y the matrices of the problem
+        stop : fraction of lambda_R3 that gives one criteria to stop :
+            continue while lambda_R3 > stop * lambda_R3_max
+            but this is the lambda of R3, which live in another space..
+        n_active : another criteria to stop
+
+    Return :
+        BETA : list of beta(lambda) for lambda in LAMBDA
+        LAM : list of breaking points
+        R : list of residuals rescaled
+    """
+
     (A, C, y) = matrices
     n, d, k = len(A), len(A[0]), len(C)
     # to compute r = (A beta - y)/||y|| more efficientely ; and we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
@@ -157,8 +192,10 @@ def solve_path_Conc(matrices, stop, n_active=False, lassopath=True, true_lam=Fal
     )
 
 
-# Functions to interpolate the solution path between the breaking points
 def pathalgo_general(matrix, path, typ, n_active=False, rho=0):
+    """
+    This function is only to interpolate the solution path between the breaking points
+    """
     BETA, i = [], 0
     X, sp_path = solve_path(matrix, path[-1], n_active, rho, typ)
     sp_path.append(path[-1]), X.append(X[-1])
@@ -179,6 +216,9 @@ def pathalgo_cl(matrix, path, n_active=False):
 
 
 def up(param):
+    """
+    Function to call to go from a breaking point to the next one
+    """
     formulation = param.formulation
     if formulation in ["LS", "Conc"]:
         up_LS(param)
@@ -190,8 +230,10 @@ def up(param):
         up_huber_cl(param)
 
 
-# function that search the next lambda where something happen, and update the solution Beta
 def up_LS(param):
+    """
+    Function to call to go from a breaking point to the next one
+    """
     lambdamax, lamin, M, C, eps_L2 = (
         param.lambdamax,
         param.lamin,
@@ -278,6 +320,9 @@ def up_LS(param):
 
 
 def up_huber(param):
+    """
+    Function to call to go from a breaking point to the next one
+    """
     lambdamax, lamin, A, y, C, rho, eps_L2 = (
         param.lambdamax,
         param.lamin,
@@ -391,6 +436,9 @@ def up_huber(param):
 
 
 def up_cl(param):
+    """
+    Function to call to go from a breaking point to the next one
+    """
     lambdamax, lamin, A, y, eps_L2 = (
         param.lambdamax,
         param.lamin,
@@ -503,6 +551,9 @@ def up_cl(param):
 
 
 def up_huber_cl(param):
+    """
+    Function to call to go from a breaking point to the next one
+    """
     lambdamax, lamin, A, y, rho, eps_L2 = (
         param.lambdamax,
         param.lamin,

@@ -115,9 +115,13 @@ def min_LS(matrices, selected, intercept=False):
     beta = np.zeros(len(selected))
 
     if intercept:
-        beta[selected] = unpenalized((X[:, selected[1:]], C[:, selected[1:]], y), intercept=selected[0])
+        beta[selected] = unpenalized(
+            (X[:, selected[1:]], C[:, selected[1:]], y), intercept=selected[0]
+        )
     else:
-        beta[selected] = unpenalized((X[:, selected], C[:, selected], y), intercept=False)
+        beta[selected] = unpenalized(
+            (X[:, selected], C[:, selected], y), intercept=False
+        )
 
     return beta
 

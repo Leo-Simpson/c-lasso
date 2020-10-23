@@ -106,12 +106,22 @@ class classo_problem:
         if len(data.label) > d:
             sup = len(data.label) - d
             data.label = data.label[sup:]
-            print("too many labels, there for the labels {} have been deleted".format(data.label[:sup]))
+            print(
+                "too many labels, there for the labels {} have been deleted".format(
+                    data.label[:sup]
+                )
+            )
 
         elif len(data.label) < d:
             missing = d - len(data.label)
-            print(" too few labels, therefore {} labels have been inserted in the end".format(missing))
-            data.label = np.array(list(data.label)+['missing '+str(i) for i in range(missing)])
+            print(
+                " too few labels, therefore {} labels have been inserted in the end".format(
+                    missing
+                )
+            )
+            data.label = np.array(
+                list(data.label) + ["missing " + str(i) for i in range(missing)]
+            )
 
         if self.formulation.intercept:
             data.label = np.array(["intercept"] + list(data.label))
