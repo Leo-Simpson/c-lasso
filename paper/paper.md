@@ -165,16 +165,16 @@ problem.formulation.classification = False
 ### *C1* Contrained sparse classification with Square Hinge loss: {#C1}
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-where the $x_i$ are the rows of $X$, $y_i \in {-1,1}$, and $l$ is defined as:
+where $x_i$ denotes the $ith$ row, $y_i \in {-1,1}$, and $l$ is defined as:
 
 $$
 l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-This formulation is similar to [*R1*](#R1) but adapted for classification tasks, i.e, $y \in {-1,1}^n$ using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
+This formulation is similar to [*R1*](#R1) but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
 
 ```python
 # Formulation C1
@@ -186,10 +186,10 @@ problem.formulation.classification = True
 ### *C2* Contrained sparse classification with Huberized Square Hinge loss: {#C2}       
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d}  \sum_{i=1}^n  l_{\rho}(y_i x_i\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \arg \min_{\beta \in \mathbb{R}^d}  \sum_{i=1}^n  l_{\rho}(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-where the $x_i$ are the rows of $X$ and $l_{\rho}$ is defined as :
+where $x_i$ is the $ith$ row of $X$ and $l_{\rho}$ is defined as :
 
 $$
 l_{\rho}(r) = \begin{cases} (1-r)^2 &if \quad \rho \leq r \leq 1 \\ (1-\rho)(1+\rho-2r) & if \quad r \leq \rho \\ 0 &if \quad r \geq 1 \end{cases}
