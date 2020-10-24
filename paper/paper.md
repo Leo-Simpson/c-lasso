@@ -19,7 +19,7 @@ authors:
     affiliation: "3,4,5"
 
 affiliations:
-  - name: Technische Universität Muenchen
+  - name: Technische Universität München
     index: 1
   - name: Department of Mathematics, North Carolina State University
     index: 2
@@ -165,10 +165,10 @@ problem.formulation.classification = False
 ### *C1* Contrained sparse classification with Square Hinge loss: {#C1}
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(r_i) l(y_i x_i\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-where the $x_i$ are the rows of $X$ and $l$ is defined as:
+where the $x_i$ are the rows of $X$, $y_i \in {-1,1}$, and $l$ is defined as:
 
 $$
 l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}
