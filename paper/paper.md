@@ -240,7 +240,7 @@ The following table summarizes the available algorithms and their recommended us
 The following Python snippet shows how to select a specific algorithm: 
 ```python
 problem.numerical_method = "Path-Alg" 
-# alternative options: "DR", "P-PDS", and "PF-PDS" 
+# Alternative options: "DR", "P-PDS", and "PF-PDS" 
 ```
 
 ## Computation modes and model selection {#model}
