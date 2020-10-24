@@ -168,7 +168,7 @@ $$
     \arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-where $x_i$ denotes the $ith$ row, $y_i \in {-1,1}$, and $l$ is defined as:
+where $x_i$ denotes the $ith$ row of $X$, $y_i \in {-1,1}$, and $l$ is defined as:
 
 $$
 l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}
@@ -186,16 +186,16 @@ problem.formulation.classification = True
 ### *C2* Contrained sparse classification with Huberized Square Hinge loss: {#C2}       
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d}  \sum_{i=1}^n  l_{\rho}(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \arg \min_{\beta \in \mathbb{R}^d}  \sum_{i=1}^n  l_{\rho}(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0 \,.
 $$
 
-where $x_i$ is the $ith$ row of $X$ and $l_{\rho}$ is defined as :
+This formulation is similar to [*C1*](#C1) but uses the Huberized Square Hinge loss $l_{\rho}$ for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007]:
 
 $$
 l_{\rho}(r) = \begin{cases} (1-r)^2 &if \quad \rho \leq r \leq 1 \\ (1-\rho)(1+\rho-2r) & if \quad r \leq \rho \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-This formulation is similar to [*C1*](#C1) but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007].
+This formulation can be activated in `c-lasso` as follows:
 
 ```python
 # Formulation C2
@@ -252,7 +252,7 @@ The default value is a scale-dependent tuning parameter that has been derived in
 
 - *Path Computation*: This setting allows the computation of a solution path for $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. The solution path is computed via the *Path-Alg* scheme or via warm-starts for other optimization schemes. 
 
-[comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts : starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
+[comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts: starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
 
 - *Cross Validation*: This setting allows the selection of the regularization parameter $\lambda$ via k-fold cross validation for $\lambda \in [\lambda_{\min}, \lambda_{\max}]$. Both the Minimum Mean Squared Error (or Deviance) (MSE)  and the "One-Standard-Error rule" (1SE) are available [@Hastie:2009].
 
