@@ -93,8 +93,8 @@ print(problem.solution)
 
 ## Statistical problem formulations {#formulations}
 
-Depending on the type of data and the prior assumptions on data, the noise $\epsilon$, and the model parameters, `c-lasso` allows 
-different estimation problem formulations. More specifically, the package can solve the following 
+Depending on the type of and the prior assumptions on the data, the noise $\epsilon$, and the model parameters, `c-lasso` allows 
+for different estimation problem formulations. More specifically, the package can solve the following 
 four regression-type and two classification-type formulations:
 
 
