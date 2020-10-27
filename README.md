@@ -223,11 +223,6 @@ at the theoretical &lambda;
 
 ![1.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/example1/StabSel.png)
 
-and the entire &lambda; path (as we have used the path algorithm for optimization). We can see that stability selection
-can identify the five true non-zero entries in the &beta; vector
-
-![StabSel-path](https://github.com/Leo-Simpson/Figures/blob/master/example1/StabSel-path.png)
-
 
 The refitted &beta; values on the selected support are also displayed in the next plot
 
