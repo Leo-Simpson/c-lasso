@@ -23,7 +23,7 @@ def Classo_R1(pb, lam):
     # ODE
     # here we compute the path algo until our lambda, and just take the last beta
     if pb_type == "Path-Alg":
-        BETA = solve_path(pb.matrix, lam, False, 0, 'R1')[0]
+        BETA = solve_path(pb.matrix, lam, False, 0, "R1")[0]
         return BETA[-1]
 
     regpath = pb.regpath
@@ -158,7 +158,7 @@ def pathlasso_R1(pb, path, n_active=False, return_sp_path=False):
     n = pb.dim[0]
     BETA, tol = [], pb.tol
     if pb.type == "Path-Alg":
-        beta, sp_path = solve_path(pb.matrix, path[-1], n_active, 0, 'R1')
+        beta, sp_path = solve_path(pb.matrix, path[-1], n_active, 0, "R1")
         if return_sp_path:
             return (
                 beta,

@@ -1,17 +1,17 @@
 """
 The package is organised as follow :
-    There is a main class called classo_problem, that contains a lot of informations about the problem,
+    There is a main class called :obj:`classo_problem`, that contains a lot of informations about the problem,
     and once the problem is solved, it will also contains the solution.
 
     Here is the global structure of the problem instance:
 
-        A classo_problem instance contains a Data instance, a Formulation instance, a Model_selection instance and a Solution instance.
+        A :obj:`classo_problem` instance contains a :obj:`Data` instance, a :obj:`Formulation` instance, a :obj:`Model_selection` instance and a :obj:`Solution` instance.
 
 
-        A Model_selection instance contains the instances : PATHparameters, CVparameters, StabSelparameters, LAMfixedparameters.
+        A :obj:`Model_selection` instance contains the instances : :obj:`PATHparameters`, :obj:`CVparameters`, :obj:`StabSelparameters`, :obj:`LAMfixedparameters`.
 
 
-        A Solution instance, once is computed, contains the instances : solution_PATH, solution_CV, solution_StabSel, solution_LAMfixed.
+        A :obj:`Solution` instance, once is computed, contains the instances : :obj:`solution_PATH`, :obj:`solution_CV`, :obj:`solution_StabSel`, :obj:`solution_LAMfixed`.
 
 """
 
@@ -35,16 +35,16 @@ import matplotlib.patches as mpatches
 
 
 class classo_problem:
-    """Class that contains all the information about the problem
+    """Class that contains all the information about the problem.
 
     Args:
-        X (ndarray): Matrix representing the data of the problem
-        y (ndarray): Vector representing the output of the problem
+        X (ndarray): Matrix representing the data of the problem.
+        y (ndarray): Vector representing the output of the problem.
         C (str or ndarray, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
             Default value : 'zero-sum'
         rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem.
             Default value : 'False'
-        label (list,optional) : list of the labels of each variable. If None, then label or just int
+        label (list,optional) : list of the labels of each variable. If None, then label or just int.
             Default value : None
 
     Attributes:
@@ -54,8 +54,8 @@ class classo_problem:
         solution (Solution) : object giving caracteristics of the solution of the model_selection that is asked.
             Before using the method solve() , its componant are empty/null.
         numerical_method (str) : name of the numerical method that is used, it can be :
-            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
-            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method).
+            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation.
 
     """
 
@@ -70,7 +70,8 @@ class classo_problem:
 
     # This method is the way to solve the model selections contained in the object Model_selection, with the formulation of 'formulation' and the data.
     def solve(self):
-        """Method that solve every model required in the attributes of the problem and update the attribute :obj:`problem.solution` with the characteristics of the solution."""
+        """Method that solves every model required in the attributes of the problem instance
+        and update the attribute :obj:`problem.solution` with the characteristics of the solution."""
         data = self.data
         self.solution = Solution()
         matrices = (data.X, data.C, data.y)
@@ -210,24 +211,25 @@ class classo_problem:
 
 class Data:
     """Class that contains the data of the problem
+    ie where matrices and labels are stored.
 
     Args:
-        X (ndarray): Matrix representing the data of the problem
-        y (ndarray): Vector representing the output of the problem
+        X (ndarray): Matrix representing the data of the problem.
+        y (ndarray): Vector representing the output of the problem.
         C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
-        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem
+        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem.
             Default value : False
-        label (list, optional) : list of the labels of each variable. If None, then label or just int
+        label (list, optional) : list of the labels of each variable. If None, then label or just int.
             Default value : None
         Tree (skbio.TreeNode, optional) : taxonomic tree, if set it is not None, then the matrices X and C and the labels will be changed.
 
     Attributes:
-        X (ndarray): Matrix representing the data of the problem
-        y (ndarray): Vector representing the output of the problem
+        X (ndarray): Matrix representing the data of the problem.
+        y (ndarray): Vector representing the output of the problem.
         C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
-        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem
-        label (list) : list of the labels of each variable. If None, then label or just int
-        tree (skbio.TreeNode or None) : taxonomic tree
+        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem.
+        label (list) : list of the labels of each variable. If None, then label or just int.
+        tree (skbio.TreeNode or None) : taxonomic tree.
 
     """
 
@@ -254,32 +256,34 @@ class Data:
 
 
 class Formulation:
-    """Class that contains the data of the problem
+    """Class that contains the information about the formulation of the problem
+    namely, the type of formulation (R1, R2, R3, R4, C1, C2)
+    and its parameters like rho, the weigths, the presence of an intercept. 
 
     Attributes:
-        huber (bool) : True if the formulation of the problem should be robust
-            Default value = False
+        huber (bool) : True if the formulation of the problem should be robust.
+            Default value : False
 
         concomitant (bool) : True if the formulation of the problem should be with an M-estimation of sigma.
-            Default value = True
+            Default value : True
 
-        classification (bool) : True if the formulation of the problem should be classification (if yes, then it will not be concomitant)
-            Default value = False
+        classification (bool) : True if the formulation of the problem should be classification (if yes, then it will not be concomitant).
+            Default value : False
 
         rho (float) : Value of rho for robust problem.
-            Default value = 1.345
+            Default value : 1.345
 
         rho_classification (float) : value of rho for huberized hinge loss function for classification (this parameter has to be negative).
-            Default value = -1.
+            Default value : 0.
 
         e (float or string)  : value of e in concomitant formulation.
             If 'n/2' then it becomes n/2 during the method solve(), same for 'n'.
             Default value : 'n' if huber formulation ; 'n/2' else
 
-        w (numpy ndarray) : array of size d with the weights of the L1 penalization
+        w (numpy ndarray) : array of size d with the weights of the L1 penalization.
             Default value : None (which makes it the 1,...,1 vector)
 
-        intercept (bool)  : set to true if we should use an intercept
+        intercept (bool)  : set to true if we should use an intercept.
             Default value : False
 
     """
@@ -289,7 +293,7 @@ class Formulation:
         self.concomitant = True
         self.classification = False
         self.rho = 1.345
-        self.rho_classification = -1.0
+        self.rho_classification = 0.0
         self.e = "not specified"
         self.w = None
         self.intercept = False
@@ -315,30 +319,32 @@ class Formulation:
 
 
 class Model_selection:
-    """Class that contains the data of the problem
+    """Class that contains information about the model selections to perform. 
+    It contains boolean that states which one will be computed. 
+    It also contains objects that contain parameters of each computation modes.
 
     Attributes:
         PATH (bool): True if path should be computed.
-            Default Value = False
+            Default value : False
 
         PATHparameters (PATHparameters): object parameters to compute the lasso-path.
 
 
         CV (bool):  True if Cross Validation should be computed.
-            Default Value = False
+            Default value : False
 
         CVparameters (CVparameters):  object parameters to compute the cross-validation.
 
 
         StabSel (boolean):  True if Stability Selection should be computed.
-            Default Value = True
+            Default value : True
 
         StabSelparameters (StabSelparameters):  object parameters to compute the stability selection.
 
         LAMfixed (boolean):  True if solution for a fixed lambda should be computed.
-            Default Value = False
+            Default value : False
 
-        LAMfixedparameters (LAMparameters):  object parameters to compute the lasso for a fixed lambda
+        LAMfixedparameters (LAMparameters):  object parameters to compute the lasso for a fixed lambda.
 
     """
 
@@ -377,28 +383,29 @@ class PATHparameters:
 
     Attributes:
         numerical_method (str) : name of the numerical method that is used, it can be :
-            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method),
+            'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method).
             Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
         n_active (int): if it is higher than 0, then the algo stop computing the path when n_active variables are actives. then the solution does not change from this point.
-            Dafault value : 0
+            Default value : 0
 
-        lambdas (numpy.ndarray) : list of rescaled lambdas for computing lasso-path
-            Default value : None, which means line space between 1 and lamin and Nlam points, with logarithm scale or not depending on logscale
+        lambdas (numpy.ndarray) : list of rescaled lambdas for computing lasso-path.
+            Default value : None, which means line space between 1 and lamin and Nlam points, with logarithm scale or not depending on logscale.
 
-        Nlam (int) : number of points in the lambda-path if lambdas is still None
+        Nlam (int) : number of points in the lambda-path if lambdas is still None.
             Default value : 80
 
-        lamin (float) : lambda minimum if lambdas is still None
+        lamin (float) : lambda minimum if lambdas is still None.
             Default value : 1e-3
 
-        logscale (bool): when lambdas is set to None (default), this parameters tells if it should be set with log scale or not
+        logscale (bool): when lambdas is set to None (default), this parameters tells if it should be set with log scale or not.
             Default value : True
 
-        plot_sigma (bool) : if True then the print method of the solution will also show sigma if it is computed (formulation R3 or R4)
+        plot_sigma (bool) : if True then the print method of the solution will also show sigma if it is computed (formulation R3 or R4).
             Default value : True
 
-        label (numpy.ndarray of str) : labels on each coefficients
+        label (numpy.ndarray of str) : labels on each coefficients.
 
     """
 
@@ -437,30 +444,31 @@ class CVparameters:
     """Class that contains the parameters to compute the cross-validation.
 
     Attributes:
-        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random seed
+        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random seed.
             Default value : 0
 
         numerical_method (str) : name of the numerical method that is used, can be :
-            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
-            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method),
+            'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method).
+            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation.
 
         lambdas (numpy.ndarray) : list of rescaled lambdas for computing lasso-path for cross validation on lambda.
-            Default value : None, which means line space between 1 and lamin and Nlam points, with logarithm scale or not depending on logscale
+            Default value : None, which means line space between 1 and lamin and Nlam points, with logarithm scale or not depending on logscale.
 
-        Nlam (int) : number of points in the lambda-path if lambdas is still None
+        Nlam (int) : number of points in the lambda-path if lambdas is still None.
             Default value : 80
 
-        lamin (float) : lambda minimum if lambdas is still None
+        lamin (float) : lambda minimum if lambdas is still None.
             Default value : 1e-3
 
-        logscale (bool): when lambdas is set to None (default), this parameters tells if it should be set with log scale or not
+        logscale (bool): when lambdas is set to None (default), this parameters tells if it should be set with log scale or not.
             Default value : True
 
-        oneSE (bool) : if set to True, the selected lambda if computed with method 'one-standard-error'
+        oneSE (bool) : if set to True, the selected lambda if computed with method 'one-standard-error'.
             Default value : True
 
-        Nsubset (int): number of subset in the cross validation method
-            Dafault value : 5
+        Nsubset (int): number of subset in the cross validation method.
+            Default value : 5
 
     """
 
@@ -501,15 +509,15 @@ class StabSelparameters:
 
     Attributes:
 
-        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random seed
+        seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False/None: pseudo-random seed.
             Default value : 123
 
         numerical_method (str) : name of the numerical method that is used, can be :
-            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
-            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method).
+            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation.
 
         lam (float or str) : (only used if :obj:`method` = 'lam') lam for which the lasso should be computed.
-            Default value : 'theoretical' which mean it will be equal to :obj:`theoretical_lam` once it is computed
+            Default value : 'theoretical' which mean it will be equal to :obj:`theoretical_lam` once it is computed.
 
         rescaled_lam (bool) : (only used if :obj:`method` = 'lam') False if lam = lambda, False if lam = lambda/lambdamax which is between 0 and 1.
             If False and lam = 'theoretical' , then it will takes the  value n*theoretical_lam.
@@ -517,7 +525,7 @@ class StabSelparameters:
 
 
         theoretical_lam (float) : (only used if :obj:`method` = 'lam') Theoretical lam.
-            Default value : 0.0 (once it is not computed yet, it is computed thanks to the function :func:`theoretical_lam` used in :meth:`classo_problem.solve`)
+            Default value : 0.0 (once it is not computed yet, it is computed thanks to the function :func:`theoretical_lam` used in :meth:`classo_problem.solve`).
 
 
         method (str) : 'first', 'lam' or 'max' depending on the type of stability selection we do.
@@ -529,16 +537,16 @@ class StabSelparameters:
         q (int) : number of selected variable per subsample.
             Default value : 10
 
-        percent_nS (float) : size of subsample relatively to the total amount of sample
+        percent_nS (float) : size of subsample relatively to the total amount of sample.
             Default value : 0.5
 
-        lamin (float) : lamin when computing the lasso-path for method 'max'
+        lamin (float) : lamin when computing the lasso-path for method 'max'.
             Default value : 1e-2
 
-        hd (bool) : if set to True, then the 'max' will stop when it reaches n-k actives variables
+        hd (bool) : if set to True, then the 'max' will stop when it reaches n-k actives variables.
             Default value : False
 
-        threshold (float) : threhold for stability selection
+        threshold (float) : threhold for stability selection.
             Default value : 0.7
 
         threshold_label (float) : threshold to know when the label should be plot on the graph.
@@ -586,11 +594,11 @@ class StabSelparameters:
 
 
 class LAMfixedparameters:
-    """Class that contains the parameters to compute the lasso for a fixed lambda
+    """Class that contains the parameters to compute the lasso for a fixed lambda.
 
     Attributes:
         numerical_method (str) : name of the numerical method that is used, can be :
-            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method)
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method).
             Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
 
         lam (float or str) : lam for which the lasso should be computed.
@@ -600,11 +608,11 @@ class LAMfixedparameters:
             If False and lam = 'theoretical' , then it will takes the  value n*theoretical_lam.
             Default value : True
 
-        theoretical_lam (float) : Theoretical lam
-            Default value : 0.0 (once it is not computed yet, it is computed thanks to the function :func:`theoretical_lam` used in :meth:`classo_problem.solve`)
+        theoretical_lam (float) : Theoretical lam.
+            Default value : 0.0 (once it is not computed yet, it is computed thanks to the function :func:`theoretical_lam` used in :meth:`classo_problem.solve`).
 
-        threshold (float) : Threshold such that the parameters i selected or the ones such as the absolute value of beta[i] is greater than the threshold
-            If None, then it will be set to the average of the absolute value of beta
+        threshold (float) : Threshold such that the parameters i selected or the ones such as the absolute value of beta[i] is greater than the threshold.
+            If None, then it will be set to the average of the absolute value of beta.
             Default value : None
     """
 
@@ -632,15 +640,15 @@ class LAMfixedparameters:
 
 
 class Solution:
-    """Class that contains  characteristics of the solution of the model_selection that is asked.
-                                      Before using the method solve() , its componant are empty/null.
+    """Class that contains  characteristics of the solution of the model_selections that are computed
+    Before using the method solve() , its componant are empty/null.
 
 
     Attributes:
-        PATH (solution_PATH): Solution components of the model PATH
-        CV (solution_CV):  Solution components of the model CV
-        StabelSel (solution_StabSel): Solution components of the model StabSel
-        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed
+        PATH (solution_PATH): Solution components of the model PATH.
+        CV (solution_CV):  Solution components of the model CV.
+        StabelSel (solution_StabSel): Solution components of the model StabSel.
+        LAMfixed (solution_LAMfixed): Solution components of the model LAMfixed.
 
     """
 
@@ -669,16 +677,16 @@ class Solution:
 # Here, the main function used is pathlasso ; from the file compact_func
 class solution_PATH:
     """Class that contains  characteristics of the lasso-path computed,
-    which also contains a method _repr_ that plot the graphic of this lasso-path
+    which also contains a method _repr_ that plot the graphic of this lasso-path.
 
     Attributes:
-        BETAS (numpy.ndarray) : array of size Npath x d with the solution beta for each lambda on each row
-        SIGMAS (numpy.ndarray) : array of size Npath with the solution sigma for each lambda when the formulation of the problem is R2 or R4
-        LAMBDAS (numpy.ndarray) : array of size Npath with the lambdas (real lambdas, not divided by lambda_max) for which the solution is computed
-        method (str) : name of the numerical method that has been used. It can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
-        save (bool or str) : if it is a str, then it gives the name of the file where the graphics has been/will be saved (after using print(solution) )
-        formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
-        time (float) : running time of this action
+        BETAS (numpy.ndarray) : array of size Npath x d with the solution beta for each lambda on each row.
+        SIGMAS (numpy.ndarray) : array of size Npath with the solution sigma for each lambda when the formulation of the problem is R2 or R4.
+        LAMBDAS (numpy.ndarray) : array of size Npath with the lambdas (real lambdas, not divided by lambda_max) for which the solution is computed.
+        method (str) : name of the numerical method that has been used. It can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'.
+        save (bool or str) : if it is a str, then it gives the name of the file where the graphics has been/will be saved (after using print(solution) ).
+        formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
+        time (float) : running time of this action.
 
     """
 
@@ -783,23 +791,22 @@ class solution_PATH:
 # Here, the main function used is CV ; from the file cross_validation
 class solution_CV:
     """Class that contains  characteristics of the cross validation computed,
-    which also contains a method _repr_() that plot the selected parameters and the solution of the not-sparse problem on the selected variables set
-    It also contains a method gaphic(self, mse_max=1.,save=False) that computes the curve of validation error as a function of lambda
+    which also contains a method _repr_() that plot the selected parameters and the solution of the not-sparse problem on the selected variables set.
 
     Attributes:
-        xGraph (numpy.ndarray) : array of size Nlam of the lambdas / lambda_max
-        yGraph (numpy.ndarray) : array of size Nlam of the average validation residual (over the K subsets)
-        standard_error (numpy.ndarray) : array of size Nlam of the standard error of the validation residual (over the K subsets)
-        index_min (int) : index on xGraph of the selected lambda without 1-standard-error method
-        index_1SE (int) : index on xGraph of the selected lambda with 1-standard-error method
-        lambda_min (float) : selected lambda without 1-standard-error method
-        lambda_oneSE (float) : selected lambda with 1-standard-error method
-        beta (numpy.ndarray) : solution beta of classo at lambda_oneSE/lambda_min depending on CVparameters.oneSE
-        sigma (float) : solution sigma of classo at lambda_oneSE when formulation is 'R2' or 'R4'
-        selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected
+        xGraph (numpy.ndarray) : array of size Nlam of the lambdas / lambda_max.
+        yGraph (numpy.ndarray) : array of size Nlam of the average validation residual (over the K subsets).
+        standard_error (numpy.ndarray) : array of size Nlam of the standard error of the validation residual (over the K subsets).
+        index_min (int) : index on xGraph of the selected lambda without 1-standard-error method.
+        index_1SE (int) : index on xGraph of the selected lambda with 1-standard-error method.
+        lambda_min (float) : selected lambda without 1-standard-error method.
+        lambda_oneSE (float) : selected lambda with 1-standard-error method.
+        beta (numpy.ndarray) : solution beta of classo at lambda_oneSE/lambda_min depending on CVparameters.oneSE.
+        sigma (float) : solution sigma of classo at lambda_oneSE when formulation is 'R2' or 'R4'.
+        selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected.
         refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
-        formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
-        time (float) : running time of this action
+        formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
+        time (float) : running time of this action.
 
     """
 
@@ -901,19 +908,19 @@ class solution_CV:
         string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
         return string
 
-    def graphic(self, se_max=10, save=None, logScale=False, errorevery=5):
+    def graphic(self, se_max=None, save=None, logScale=True, errorevery=5):
         """Method to plot the graphic showing mean squared error over along lambda path once cross validation is computed.
 
         Args:
             ratio_mse_max (float): float thanks to which the graphic will not show the lambdas from which MSE(lambda)> min(MSE) + ratio * Standard_error(lambda_min).
                 this parameter is useful to plot a graph that zooms in the interesting part.
-                Default value : 10
+                Default value : None
             logScale (bool) : input that tells to plot the mean square error as a function of lambda, or log10(lambda)
-                Default value : False
+                Default value : True
             errorevery (int) : parameter input of matplotlib.pyplot.errorbar that gives the frequency of the error bars appearence.
                 Default value : 5
             save (string) : path to the file where the figure should be saved. If None, then the figure will not be saved.
-                Default Value : None
+                Default value : None
 
         """
 
@@ -949,9 +956,9 @@ class solution_CV:
             )
         else:
             plt.errorbar(
-                self.xGraph[jmin:jmax],
-                self.yGraph[jmin:jmax],
-                self.standard_error[jmin:jmax],
+                self.xGraph[jmin : jmax + 1],
+                self.yGraph[jmin : jmax + 1],
+                self.standard_error[jmin : jmax + 1],
                 label="mean over the k groups of data",
                 errorevery=errorevery,
             )
@@ -968,24 +975,24 @@ class solution_CV:
 # Here, the main function used is stability ; from the file stability selection
 class solution_StabSel:
     """Class that contains  characteristics of the stability selection computed,
-    which also contains a method _repr_() that plot the selected parameters,
+    which also contains a method :func:`_repr_()` that plot the selected parameters,
     the solution of the not-sparse problem on the selected variables set,
-    the stability plot with the evolution of it with lambda if the used method is 'first'
+    and the stability plot.
 
     Attributes:
         distribution (array) : d array of stability rations.
-        lambdas_path (array or string) : for 'first' method : Nlam array of the lambdas used. Other cases : 'not used'
+        lambdas_path (array or string) : for 'first' method : Nlam array of the lambdas used. Other cases : 'not used'.
         distribution_path (array or string) : for 'first' method :  Nlam x d array with stability ratios as a function of lambda.
-        Other cases : 'not computed'
-        threshold (float) : threshold for StabSel, ie for a variable i, stability ratio that is needed to get selected
+        Other cases : 'not computed'.
+        threshold (float) : threshold for StabSel, ie for a variable i, stability ratio that is needed to get selected.
         save1,save2,save3 (bool or string) : if a string is given,
-        the corresponding graph will be saved with the given name of the file
-        (save1 is for stability plot ; save2 for path-stability plot; and save3 for refit beta-solution)
-        selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected
-        to_label (numpy.ndarray) : boolean arrays of size d with True when the name of the variable should be seen on the graph
+        the corresponding graph will be saved with the given name of the file.
+        (save1 is for stability plot ; save2 for path-stability plot; and save3 for refit beta-solution).
+        selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected.
+        to_label (numpy.ndarray) : boolean arrays of size d with True when the name of the variable should be seen on the graph.
         refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
-        formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
-        time (float) : running time of this action
+        formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
+        time (float) : running time of this action.
 
     """
 
@@ -1134,8 +1141,8 @@ class solution_StabSel:
             plt.savefig(self.save1)
 
         plt.show()
-
-        if type(Dpath) != str:
+        plot_path = False  # do not plot this graphic for now because it is confusing
+        if type(Dpath) != str and plot_path:
             lambdas = self.lambdas_path
             N = len(lambdas)
             for i1, i2 in enumerate(top):
@@ -1188,15 +1195,15 @@ class solution_LAMfixed:
     which also contains a method _repr_() that plot this solution.
 
     Attributes:
-        lambdamax (float) : lambda maximum for which the solution is non-null
-        rescaled_lam (bool) : if True, the problem had been computed for lambda*lambdamax (so lambda should be between 0 and 1)
-        lambda (float) : lambda for which the problem is solved
-        beta (numpy.ndarray) : solution beta of classo
-        sigma (float) : solution sigma of classo when formulation is 'R2' or 'R4'
-        selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected (which is the case when the i-th component solution of the classo is non-null)
+        lambdamax (float) : lambda maximum for which the solution is non-null.
+        rescaled_lam (bool) : if True, the problem had been computed for lambda*lambdamax (so lambda should be between 0 and 1).
+        lambda (float) : lambda for which the problem is solved.
+        beta (numpy.ndarray) : solution beta of classo.
+        sigma (float) : solution sigma of classo when formulation is 'R2' or 'R4'.
+        selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected (which is the case when the i-th component solution of the classo is non-null).
         refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
-        formulation (str) : can be 'R1' ; 'R2' ; 'R3' ; 'R4' ; 'C1' ; 'C2'
-        time (float) : running time of this action
+        formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
+        time (float) : running time of this action.
 
     """
 
@@ -1293,12 +1300,12 @@ class solution_LAMfixed:
 
 
 def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=None):
-    """Annex function in order to choose the right numerical method, if the given one is invalid
+    """Annex function in order to choose the right numerical method, if the given one is invalid.
 
     Args:
         method (str) :
         model (str) :
-        formulation (Formulation) :
+        formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
         StabSelmethod (str, optional) :
         lam (float, optional) :
 

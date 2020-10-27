@@ -54,25 +54,22 @@ def Classo_R3(pb, lam):
     Anorm = pb.Anorm
     tol = pb.tol * LA.norm(y) / Anorm  # tolerance rescaled
     Proj = proj_c(C, d)  # Proj = I - C^t . (C . C^t )^-1 . C
-    QA, Q1, Q2 = (
-        pb.QA,
-        pb.Q1,
-        pb.Q2,
-    )  # Save some matrix products already computed in problem.compute_param()
+    QA = pb.QA
+    Q1 = pb.Q1
+    Q2 = pb.Q2
+    # Save some matrix products already computed in problem.compute_param()
     gamma = pb.gam / (pb.Anorm2 * lam)  # Normalize gamma
-    w, zerod = lamb * gamma * pb.weights, np.zeros(
-        d
-    )  # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
+    w = lamb * gamma * pb.weights
+    zerod = np.zeros(d)
+    # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
     mu, c, root = pb.mu, pb.c, 0.0
     xs, nu, o, xbar, x = pb.init
 
     # 2prox
     if pb_type == "DR":
         for i in range(pb.N):
-            nv_b, nv_s = (
-                x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar),
-                (xs + nu) / 2,
-            )
+            nv_b = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar)
+            nv_s = (xs + nu) / 2
             if i > 0 and LA.norm(b - nv_b) + LA.norm(s - nv_s) / Anorm < 2 * tol:
                 if regpath:
                     return (b, (xs, nu, o, xbar, x), s)
@@ -82,20 +79,17 @@ def Classo_R3(pb, lam):
             s, b = nv_s, nv_b
             Ab = A.dot(b)
             p1, p2, root = prox_phi_1(xs, 2 * Ab - o - y, gamma / c, root)
-            sup = [
-                max(0, nu) - s,
-                p1 - s,
-                p2 + y - Ab,
-                prox(2 * b - xbar, w, zerod) - b,
-                Proj.dot(2 * b - x) - b,
-            ]
-            xs, nu, o, xbar, x = (
-                xs + mu * sup[0],
-                nu + mu * sup[1],
-                o + mu * sup[2],
-                xbar + mu * sup[3],
-                x + mu * sup[4],
-            )
+            sup1 = max(0, nu) - s
+            sup2 = p1 - s
+            sup3 = p2 + y - Ab
+            sup4 = prox(2 * b - xbar, w, zerod) - b
+            sup5 = Proj.dot(2 * b - x) - b
+
+            xs = xs + mu * sup1
+            nu = nu + mu * sup2
+            o = o + mu * sup3
+            xbar = xbar + mu * sup4
+            x = x + mu * sup5
 
             if LA.norm(b) + LA.norm(s) > 1e6:
                 raise ValueError("The algorithm of Doulgas Rachford diverges")
@@ -193,7 +187,7 @@ class problem_R3:
 
         (m, d, k) = self.dim
         self.weights = np.ones(d)
-        self.tol = 1e-4
+        self.tol = 1e-6
 
         self.regpath = False
         self.name = algo + " Concomitant"
@@ -213,10 +207,9 @@ class problem_R3:
         (A, C, y) = self.matrix
         m, d, k = self.dim
         self.Anorm = LA.norm(A, "fro")
-        self.Anorm2 = LA.norm(A, 2) ** 2
-        c = (
-            d ** 2 / self.Anorm2
-        )  # parameter for Concomitant problem : the matrix is scaled as c*A^2
+        self.Anorm2 = self.Anorm ** 2
+        c = (d / LA.norm(A, 2)) ** 2
+        # parameter for Concomitant problem : the matrix is scaled as c*A^2
         self.c = c
         self.Q1, self.Q2 = QQ(c, A)
         self.QA = self.Q1.dot(A)

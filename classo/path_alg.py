@@ -47,6 +47,11 @@ class parameters_for_update:
     """
 
     def __init__(self, matrices, lamin, rho, typ, eps_L2=1e-3, intercept=False):
+        if typ == "C2" and rho > 1:
+            raise ValueError(
+                "For huberized hinge, rho has to be smaller than 1, but here it is :",
+                rho,
+            )
 
         (self.A, self.C, self.y) = matrices
         self.lamin = lamin
@@ -60,27 +65,27 @@ class parameters_for_update:
         self.activity = [False] * d
         self.beta = np.zeros(d)
 
-        m = 0
-        if intercept:
-            self.F,self.beta0 = find_F(self.y, rho, intercept)
-            m = np.mean(self.A[self.F], axis=0)
-            P = self.A[self.F] - np.mean(self.A[self.F], axis=0)
-            AtA = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
-            if typ in ["R1", "R3"]:
-                raise ValueError("path_alg with intercept for R1 or R3 is useless")
-            elif typ in ["C1", "C2"]:
-                self.r = self.y * self.beta0
-            elif typ == "R2":
-                self.r = self.beta0 - self.y
+        if typ in ["C1", "C2"]:
+            r_func = lambda b0, y: y * b0
+            dr = self.y
         else:
-            self.F = find_F(self.y, rho, intercept)
-            AtA = 2 * self.A[self.F].T.dot(self.A[self.F]) + eps_L2 * np.eye(d)
-            if typ in ["C1", "C2"]:
-                self.r = np.zeros(len(self.y))
-            else:
-                self.r = -self.y
+            r_func = lambda b0, y: b0 - y
+            dr = 1.0
 
-        s = 2 * (self.A - m).T.dot(h_prime(self.y, rho))
+        if intercept:
+            self.beta0 = find_beta0(r_func, dr, self.y, rho, typ)
+            self.Abar = np.mean(self.A, axis=0)
+        else:
+            self.beta0 = 0.0
+
+        self.F = find_F(r_func(self.beta0, self.y), rho, typ)
+        P = self.A[self.F]
+        if intercept:
+            P = P - np.mean(P, axis=0)
+        AtA = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
+
+        self.r = r_func(self.beta0, self.y)
+        s = -2 * self.A.T.dot(dr * h_prime(rho, typ)(self.r))
         self.lambdamax = LA.norm(s, np.inf)
         self.lamin = lamin
         self.s = s / self.lambdamax
@@ -107,7 +112,6 @@ class parameters_for_update:
             )
 
         N = self.M[self.activity + self.idr, :][:, self.activity + self.idr]
-
         try:
             self.Xt = LA.inv(N)
         except LA.LinAlgError:
@@ -255,9 +259,8 @@ def pathalgo_general(matrix, path, typ, n_active=False, rho=0, intercept=False):
         if intercept:
             BETA0.append(B0[i] * (1 - teta) + B0[i + 1] * teta)
 
-    if intercept:   
-        BETA = np.array([[BETA0[i]] + list(BETA[i]) for i in range(len(BETA0))] )
-
+    if intercept:
+        BETA = np.array([[BETA0[i]] + list(BETA[i]) for i in range(len(BETA0))])
 
     return BETA
 
@@ -405,7 +408,7 @@ def up_huber(param):
             if abs(bi * di) > 1e-10 and bi * di > 0:
                 L[i] = bi / (di * lambdamax)
         else:
-            if abs(e - s0) < 1e-10 or abs(s0) > 1:
+            if abs(e + s0) < 1e-10 or abs(s0) > 1:
                 continue
             if e > s0:
                 dl = (1 + s0) / (1 + e)
@@ -417,7 +420,7 @@ def up_huber(param):
     huber_up = False
     ADl = -A.dot(beta_dot) * lambdamax
     if param.intercept:
-        ADl += np.vdot(np.mean(A, axis=0), beta_dot) * lambdamax
+        ADl += np.vdot(param.Abar, beta_dot) * lambdamax
 
     huber_up = False
     j_switch = None
@@ -533,7 +536,7 @@ def up_cl(param):
     j_switch = None
     yADl = -y * A.dot(beta_dot) * lambdamax
     if param.intercept:
-        yADl += y * np.vdot(np.mean(A, axis=0), beta_dot) * lambdamax
+        yADl += y * np.vdot(param.Abar, beta_dot) * lambdamax
     for j in range(len(r)):
         #     find if there is a  0< dl < dlamb such that F[j] and r[j]+yADl[j]*dl > 1
         # or  find if there is a  0< dl < dlamb such that not F[j] r[j]+yADl[j]*dl < 1
@@ -551,7 +554,8 @@ def up_cl(param):
     r = r + yADl * dlamb
     lam = lam - dlamb
     if param.intercept:
-        beta0_dot = -np.vdot(np.mean(A[F], axis=0), beta_dot)
+        AbarF = np.mean(A[F], axis=0)
+        beta0_dot = -np.vdot(AbarF, beta_dot)
         beta0 = param.beta0 - lambdamax * beta0_dot * dlamb
 
     if max_up:
@@ -658,7 +662,7 @@ def up_huber_cl(param):
     j_switch = None
     yADl = -y * A.dot(beta_dot) * lambdamax
     if param.intercept:
-        yADl += y * np.vdot(np.mean(A, axis=0), beta_dot) * lambdamax
+        yADl += y * np.vdot(param.Abar, beta_dot) * lambdamax
     for j in range(len(r)):
         #     find if there is a  0< dl < dlamb such that F[j] and r[j]+yADl[j]*dl > 1
         # or  find if there is a  0< dl < dlamb such that not F[j] r[j]+yADl[j]*dl < 1
@@ -684,7 +688,7 @@ def up_huber_cl(param):
     s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
     r = r + yADl * dlamb
     lam = lam - dlamb
-    if param.ceintercept:
+    if param.intercept:
         beta0_dot = -np.vdot(np.mean(A[F], axis=0), beta_dot)
         beta0 = param.beta0 - lambdamax * beta0_dot * dlamb
 
@@ -820,42 +824,70 @@ def h_lambdamax(matrices, rho, typ="R1", intercept=False):
 
 
 # Compute the derivative of the huber function, particulary useful for the computing of lambdamax
-def h_prime(y, rho):
-    if rho == 0:
-        return y
-    m = len(y)
-    lrho = rho * np.ones(m)
-    return np.maximum(lrho, -y) + np.minimum(y - lrho, 0)
-
-
-
-def find_F(y,rho,intercept):
-    """
-        Find initial value of F, and beta0 if intercept
-        F is the set of indices for which objective is quadratic
-    """
-    n = len(y)
-    F = [True] * n
-        
-    if rho > 0:
+def h_prime(rho, typ):
+    if rho > 0 and typ == "R2":
         # huber regress
-        # to do : smth, for intercept
-        for j in range(n):
-            if abs(y[j]) > rho:
-                F[j] = False
-    
-    elif rho < 0:
-        # huber classify
-        # to do : smth for intercept
-        for j in range(n):
-            if y[j] < rho:
-                F[j] = False
-        
-    if intercept:
-        return F, np.mean(y[F])
+        # where grad(h)(r) is :
+        # r if -rho<r<rho   ; -rho if r < -rho  ; rho if r > rho
+        return lambda r: np.minimum(r, rho) + np.maximum(r, -rho) - r
+
+    elif typ == "C2":
+        # huber classification
+        # where grad(h)(r) is :
+        # (r-1) if 1>r>rho   ;  (rho-1) if r<rho  ;  0  if r >1
+        # NF*beta0 = (1-rho)*Nminus + np.sum(y[F])
+        return lambda r: np.minimum(np.maximum(r, rho) - 1.0, 0.0)
+
+    elif typ == "C1":
+        # classification
+        # grad(h)(r) is :
+        # (r-1) if 1>r  ; 0  if r >1
+        return lambda r: np.minimum(r - 1, 0.0)
+
     else:
-        return F
-        
+        # R1 or R3
+        # grad(h)(r) is:
+        # r
+        return lambda r: r
+
+
+def find_F(y, rho, typ):
+    """
+    Find initial value of F, and beta0 if intercept
+    F is the set of indices for which objective is quadratic
+    """
+    if rho > 0 and typ == "R2":
+        # huber regress
+        return (y > -rho) & (y < rho)
+    elif typ == "C2":
+        # huber classify
+        return (y > rho) & (y < 1)
+    elif typ == "C1":
+        return y < 1
+    else:
+        # no huber
+        return np.ones(len(y), dtype=bool)
+
+
+def find_beta0(r, dbeta0, y, rho, typ):
+    gradh = lambda b0: np.sum(dbeta0 * h_prime(rho, typ)(r(b0, y)))
+    beta0 = binary_search(gradh, min(y), max(y))
+    return beta0
+
+
+def binary_search(f, a, b, tol=1e-8):
+    c = (a + b) / 2
+    if f(a) * f(b) > 0:
+        print("gradh(min(y)) = ", f(a))
+        print("gradh(max(y)) = ", f(b))
+        raise ValueError("Error in binary search for initial intercept")
+    while abs(f(c)) > tol:
+        if f(c) * f(a) < 0:
+            b = c
+        else:
+            a = c
+        c = (a + b) / 2
+    return c
 
 
 """

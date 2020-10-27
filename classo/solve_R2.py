@@ -1,4 +1,4 @@
-from .path_alg import solve_path
+from .path_alg import solve_path, pathalgo_general
 import numpy as np
 import numpy.linalg as LA
 from .solve_R1 import problem_R1, Classo_R1
@@ -24,31 +24,49 @@ def Classo_R2(pb, lam, compute=True):
     lamb, rho = lam * pb.lambdamax, pb.rho
 
     if lam == 0.0:
-        pb_type, compute = (
-            "DR",
-            True,
-        )  # here we simply refer to Classo_R1 that is called line 42.
+        pb_type = "DR"
+        compute = "True"
+        # here we simply refer to Classo_R1 that is called line 42.
 
-    # ODE
+    # Path-Alg
     # here we compute the path algo until our lambda, and just take the last beta
 
     if pb_type == "Path-Alg":
-        beta = solve_path((A, C, y), lam, False, rho, 'R2')[0]
-        return beta[-1]
+        if pb.intercept:
+            AA, CC = A[:, 1:], C[:, 1:]
+        else:
+            AA, CC = A[:, :], C[:, :]
+        out = solve_path((AA, CC, y), lam, False, rho, "R2", intercept=pb.intercept)
+        if pb.intercept:
+            beta0, beta = out[0][-1], out[1][-1]
+            beta = np.array([beta0] + list(beta))
+        else:
+            beta = out[0][-1]
 
-    # 2 prox :
+        return beta
+
+    # DR :
     regpath = pb.regpath
     r = lamb / (2 * rho)
     if pb_type == "DR":
         if compute:
             pb.init_R1(r=r)
-            return Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)[:d]
+            x = Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)
+            beta = x[:-m]
+            if pb.intercept:
+                betaO = pb.prob_R1.ybar - np.vdot(pb.prob_R1.Abar, x)
+                beta = np.array([betaO] + list(beta))
+            return beta
         else:
             pb.add_r(r=r)
             if len(pb.init) == 3:
                 pb.prob_R1.init = pb.init
             x, warm_start = Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)
-            return (x[:d], warm_start)
+            beta = x[:-m]
+            if pb.intercept:
+                betaO = pb.prob_R1.ybar - np.vdot(pb.prob_R1.Abar, x)
+                beta = np.array([betaO] + list(beta))
+            return (beta, warm_start)
 
     tol = pb.tol * LA.norm(y) / LA.norm(A, "fro")  # tolerance rescaled
 
@@ -161,16 +179,12 @@ def pathlasso_R2(pb, path, n_active=False):
     n = pb.dim[0]
     BETA, tol = [], pb.tol
     if pb.type == "Path-Alg":
-        X, sp_path = solve_path(pb.matrix, path[-1], n_active, pb.rho, 'R2')
-        # we do a little manipulation to interpolated the value of beta between breaking points, as we know beta is affine between those those points.
-        i = 0
-        sp_path.append(path[-1]), X.append(X[-1])
-        for lam in path:
-            while lam < sp_path[i + 1]:
-                i += 1
-            teta = (sp_path[i] - lam) / (sp_path[i] - sp_path[i + 1])
-            BETA.append(X[i] * (1 - teta) + X[i + 1] * teta)
-        return BETA
+        (A, C, y) = pb.matrix
+        if pb.intercept:
+            AA, CC = A[:, 1:], C[:, 1:]
+        else:
+            AA, CC = A[:, :], C[:, :]
+        return pathalgo_general((AA, CC, y), path, "R2", n_active, pb.rho, pb.intercept)
 
     # Now we are in the case where we have to do warm starts.
     save_init = pb.init
@@ -205,17 +219,28 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 
 
 class problem_R2:
-    def __init__(self, data, algo, rho):
+    def __init__(self, data, algo, rho, intercept=False):
         self.N = 500000
 
-        self.matrix, self.dim = data, (
-            data[0].shape[0],
-            data[0].shape[1],
-            data[1].shape[0],
-        )
+        (AA, CC, y) = data
+        A = AA[:, :]
+        C = CC[:, :]
+        self.weights = np.ones(A.shape[1])
+        self.intercept = intercept
+        if intercept:
+            # add a column of 1 in A, and change weight.
+            A = np.concatenate([np.ones((len(A), 1)), A], axis=1)
+            C = np.concatenate([np.zeros((len(C), 1)), C], axis=1)
+            self.weights = np.concatenate([[0.0], self.weights])
+            yy = y - np.mean(y)
 
+        self.dim = (
+            A.shape[0],
+            A.shape[1],
+            C.shape[0],
+        )
+        self.matrix = (A, C, y)
         (m, d, k) = self.dim
-        self.weights = np.ones(d)
         self.init = np.zeros(m), np.zeros(d), np.zeros(d), np.zeros(k)
         self.tol = 1e-4
         self.regpath = False
@@ -224,9 +249,9 @@ class problem_R2:
         self.rho = rho
         self.gam = 1.0
         self.tau = 0.5  # equation for the convergence of Noproj and LS algorithms : gam + tau < 1
-        self.lambdamax = 2 * LA.norm(
-            self.matrix[0].T.dot(h_prime(self.matrix[2], rho)), np.infty
-        )
+        if not intercept:
+            yy = y
+        self.lambdamax = 2 * LA.norm(AA.T.dot(h_prime(yy, rho)), np.infty)
 
     """
     this is a method of the class pb that is used to computed the expensive multiplications only once. (espacially usefull for warm start. )
@@ -246,30 +271,51 @@ class problem_R2:
         self.AtAnorm = LA.norm(self.AtA, 2)
 
     def init_R1(self, r=0.0):
+        (AA, CC, y) = self.matrix
+        A, C = AA[:, :], CC[:, :]
         (m, d, k) = self.dim
-        Ahuber = np.append(self.matrix[0], r * np.eye(m), 1)
-        Chuber = np.append(self.matrix[1], np.zeros((k, m)), 1)
-        matrices_huber = (Ahuber, Chuber, self.matrix[2])
+        if self.intercept:
+            A, C = A[:, 1:], C[:, 1:]
+
+        Ahuber = np.append(A, r * np.eye(m), 1)
+        Chuber = np.append(C, np.zeros((k, m)), 1)
+        yhuber = y
+        if self.intercept:
+            Abar = np.mean(Ahuber, axis=0)
+            ybar = np.mean(y)
+            Ahuber = Ahuber - Abar
+            yhuber = yhuber - ybar
+        matrices_huber = (Ahuber, Chuber, yhuber)
         prob = problem_R1(matrices_huber, self.type)
         prob.regpath = self.regpath
         prob.compute_param()
-
+        if self.intercept:
+            prob.Abar = Abar
+            prob.ybar = ybar
+            self.AAt = (A - np.mean(A, axis=0)).dot((A - np.mean(A, axis=0)).T)
+        else:
+            self.AAt = A.dot(A.T)
         self.prob_R1 = prob
 
     def add_r(self, r):
         prob = self.prob_R1
-        d = prob.dim[1] - prob.dim[0]
-        np.fill_diagonal(prob.matrix[0][:, d:], r)
-        np.fill_diagonal(prob.AtA[d:, d:], r ** 2)
+        A_r1 = prob.matrix[0]
+        m = A_r1.shape[0]
+        d = A_r1.shape[1] - m
         prob.AtA[d:, :d] = prob.matrix[0][:, :d] * r
         prob.AtA[:d, d:] = prob.AtA[d:, :d].T
-
         prob.Aty = np.append(prob.Aty[:d], prob.matrix[2] * r)
         prob.lambdamax = 2 * LA.norm(prob.Aty, np.infty)
+        extension = np.eye(m)
+        if self.intercept:
+            # self.init_R1(r=r)
+            extension = extension - np.mean(extension, axis=0)
+        extension = r * extension
+        A_r1[:, d:] = extension
+        right_bottom = extension.dot(extension)
+        prob.AtA[d:, d:] = right_bottom
+        prob.AAt = self.AAt + right_bottom
         prob.AtAnorm = LA.norm(prob.AtA, 2)
-
-        A = self.matrix[0]
-        prob.AAt = A.dot(A.T) + np.eye(A.shape[0]) * r ** 2
 
 
 # compute the prox of the function : f(b)= sum (wi * |bi| )

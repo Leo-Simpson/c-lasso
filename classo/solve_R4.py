@@ -18,7 +18,8 @@ We solve the problem without normalizing anything.
 def Classo_R4(pb, lam):
     pb_type = pb.type  # can be 'Path-Alg' or 'DR'
     (m, d, k), (A, C, y) = pb.dim, pb.matrix
-    lamb, rho = lam * pb.lambdamax, pb.rho
+    lamb = lam * pb.lambdamax
+    rho = pb.rho
     regpath = pb.regpath
 
     if lam == 0.0:
@@ -32,15 +33,26 @@ def Classo_R4(pb, lam):
     if pb_type == "Path-Alg":
         # trick of mean-shift formulation explained in the pdf "concomitant huber"
         # problem of e ==> same trick to do as explained as in the end of the file compact_func, with r = np.sqrt(2)
-        matrix_aug = (
-            np.sqrt(2) * np.concatenate((A, lamb / (2 * rho) * np.eye(m)), axis=1),
-            np.concatenate((C, np.zeros((k, m))), axis=1),
-            np.sqrt(2) * y,
-        )
-        pb_aug = problem_R3(matrix_aug, "Path-Alg")
-        beta, s = Classo_R3(pb_aug, lamb / pb_aug.lambdamax)
+
+        A_aug = np.sqrt(2) * np.concatenate((A, lamb / (2 * rho) * np.eye(m)), axis=1)
+        C_aug = np.concatenate((C, np.zeros((k, m))), axis=1)
+        y_aug = np.sqrt(2) * y
+
+        if pb.intercept:
+            A_aug = A_aug[:, 1:]
+            C_aug = C_aug[:, 1:]
+            Abar = np.mean(A_aug, axis=0)
+            ybar = np.mean(y_aug)
+            A_aug = A_aug - Abar
+            y_aug = y_aug - ybar
+
+        pb_aug = problem_R3((A_aug, C_aug, y_aug), "Path-Alg")
+        beta_aug, s = Classo_R3(pb_aug, lamb / pb_aug.lambdamax)
         s = s / 2
-        beta = beta[:d]
+        beta = beta_aug[:-m]
+        if pb.intercept:
+            betaO = ybar - np.vdot(Abar, beta)
+            beta = np.array([betaO] + list(beta))
         return beta, s
 
     # Else, we do simply doulgas rachford.
@@ -50,19 +62,19 @@ def Classo_R4(pb, lam):
 
     if not regpath:
         pb.compute_param()
-    proj_sigm, QA, Q1, Q2, Proj, Anorm = (
-        pb.proj_sigm,
-        pb.QA,
-        pb.Q1,
-        pb.Q2,
-        pb.Proj,
-        pb.Anorm,
-    )
+
+    proj_sigm = pb.proj_sigm
+    QA = pb.QA
+    Q1 = pb.Q1
+    Q2 = pb.Q2
+    Proj = pb.Proj
+    Anorm = pb.Anorm
+
     tol = pb.tol * LA.norm(y)  # tolerance rescaled
     gamma = LA.norm(y) * pb.gam / (Anorm ** 2)
-    w, zerod = lamb * gamma * pb.weights, np.zeros(
-        d
-    )  # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
+    # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
+    w = lamb * gamma * pb.weights
+    zerod = np.zeros(d)
     mu, c = pb.mu, pb.c
     root = [0.0] * len(y)
     xs, nu, o, xbar, x = pb.init
@@ -70,10 +82,8 @@ def Classo_R4(pb, lam):
     # 2prox
     if pb_type == "DR":
         for i in range(pb.N):
-            nv_b, nv_s = (
-                x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar),
-                (xs + nu) / 2,
-            )
+            nv_b = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar)
+            nv_s = (xs + nu) / 2
             if i > 0 and LA.norm(b - nv_b) * Anorm + LA.norm(s - nv_s) < 2 * tol:
                 if regpath:
                     return (
@@ -87,20 +97,19 @@ def Classo_R4(pb, lam):
             s, b = nv_s, nv_b
             Ab = A.dot(b)
             p1, p2, root = prox_phi_2(xs, 2 * Ab - o - y, gamma / c, root, rho)
-            sup = [
-                proj_sigm(nu) - s,
-                p1 - s,
-                p2 + y - Ab,
-                prox(2 * b - xbar, w, zerod) - b,
-                Proj.dot(2 * b - x) - b,
-            ]
-            xs, nu, o, xbar, x = (
-                xs + mu * sup[0],
-                nu + mu * sup[1],
-                o + mu * sup[2],
-                xbar + mu * sup[3],
-                x + mu * sup[4],
-            )
+
+            sup1 = proj_sigm(nu) - s
+            sup2 = p1 - s
+            sup3 = p2 + y - Ab
+            sup4 = prox(2 * b - xbar, w, zerod) - b
+            sup5 = Proj.dot(2 * b - x) - b
+
+            xs = xs + mu * sup1
+            nu = nu + mu * sup2
+            o = o + mu * sup3
+            xbar = xbar + mu * sup4
+            x = x + mu * sup5
+
             if LA.norm(b) + LA.norm(s) > 1e6:
                 raise ValueError("The algorithm of Doulgas Rachford diverges")
 
@@ -158,24 +167,34 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 
 
 class problem_R4:
-    def __init__(self, data, algo, rho):
+    def __init__(self, data, algo, rho, intercept=False):
         self.N = 500000
 
-        (A, C, y), self.dim = data, (
-            data[0].shape[0],
-            data[0].shape[1],
-            data[1].shape[0],
+        (AA, C, y) = data
+        A = AA[:, :]
+        self.weights = np.ones(A.shape[1])
+        self.intercept = intercept
+        if intercept:
+            # add a column of 1 in A, and change weight.
+            A = np.concatenate([np.ones((len(A), 1)), A], axis=1)
+            C = np.concatenate([np.ones((len(C), 1)), C], axis=1)
+            self.weights = np.concatenate([[0.0], self.weights])
+            # not exactly what it should be...
+            yy = y - np.mean(y)
+
+        self.dim = (
+            A.shape[0],
+            A.shape[1],
+            C.shape[0],
         )
         self.matrix = (A, C, y)
 
         (m, d, k) = self.dim
-        self.weights = np.ones(d)
         self.tol = 1e-3
 
         self.regpath = False
         self.name = algo + " Concomitant Huber"
         self.type = algo  # type of algorithm used
-        rho_max = LA.norm(y, np.inf)
         self.rho = rho
         self.mu = 1.95
 
@@ -184,13 +203,17 @@ class problem_R4:
         ) ** 2  # parameter for Concomitant problem : the matrix is scaled as c*A^2
         self.gam = np.sqrt(d)
 
-        sigmax = find_sigmax(y, rho, m)
-        # sigmax = LA.norm(y)/np.sqrt(m)
-        self.sigmax = sigmax
-        self.lambdamax = 2 * LA.norm((A.T).dot(h_prime(y / sigmax, rho)), np.infty)
+        if not intercept:
+            yy = y
+        # sigmax = LA.norm(yy)/np.sqrt(m)
+        self.sigmax = find_sigmax(yy, rho, m)
+        self.lambdamax = 2 * LA.norm(
+            (AA.T).dot(h_prime(yy / self.sigmax, rho)), np.infty
+        )
+
         self.init = (
-            sigmax * np.ones(m),
-            sigmax * np.ones(m),
+            self.sigmax * np.ones(m),
+            self.sigmax * np.ones(m),
             np.zeros(m),
             np.zeros(d),
             np.zeros(d),

@@ -26,7 +26,7 @@ def Classo(
     get_lambdamax=False,
     true_lam=False,
     e=None,
-    rho_classification=-1.0,
+    rho_classification=-0.0,
     w=None,
     intercept=False,
 ):
@@ -68,20 +68,18 @@ def Classo(
 
     elif typ == "R4":
 
-        if intercept:
-            raise ValueError(
-                "The classo package does not perform formulation R4 (Contrained sparse Huber regression with concomitant scale estimation) with an intercept"
-            )
-
         if meth not in ["Path-Alg", "DR"]:
             meth = "DR"
         if e is None or e == len(matrices[0]):
             r = 1.0
-            pb = problem_R4(matrices, meth, rho)
+            pb = problem_R4(matrices, meth, rho, intercept=intercept)
         else:
             r = np.sqrt(e / len(matrices[0]))
             pb = problem_R4(
-                (matrices[0] * r, matrices[1], matrices[2] * r), meth, rho / r
+                (matrices[0] * r, matrices[1], matrices[2] * r),
+                meth,
+                rho / r,
+                intercept=intercept,
             )
 
         lambdamax = pb.lambdamax
@@ -92,14 +90,9 @@ def Classo(
 
     elif typ == "R2":
 
-        if intercept:
-            raise ValueError(
-                "The classo package does not perform formulation R2 (Contrained sparse Huber regression) with an intercept"
-            )
-
         if meth not in ["Path-Alg", "P-PDS", "PF-PDS", "DR"]:
             meth = "ODE"
-        pb = problem_R2(matrices, meth, rho)
+        pb = problem_R2(matrices, meth, rho, intercept=intercept)
         lambdamax = pb.lambdamax
         if true_lam:
             beta = Classo_R2(pb, lam / lambdamax)
@@ -108,34 +101,33 @@ def Classo(
 
     elif typ == "C2":
 
-        if intercept:
-            raise ValueError(
-                "The classo package does not perform huber-classification with an intercept"
-            )
-
-        lambdamax = h_lambdamax(matrices, rho, typ='C2', intercept=intercept)
+        lambdamax = h_lambdamax(
+            matrices, rho_classification, typ="C2", intercept=intercept
+        )
         if true_lam:
-            BETA = solve_path(
-                matrices,
-                lam / lambdamax,
-                False,
-                rho_classification,
-                'C2',
-            )[0]
+            out = solve_path(matrices, lam / lambdamax, False, rho_classification, "C2")
         else:
-            BETA = solve_path(matrices, lam, False, rho_classification, 'C2',intercept=intercept)[0]
-        beta = BETA[-1]
+            out = solve_path(
+                matrices, lam, False, rho_classification, "C2", intercept=intercept
+            )
+        if intercept:
+            beta0, beta = out[0][-1], out[1][-1]
+            beta = np.array([beta0] + list(beta))
+        else:
+            beta = out[0][-1]
 
     elif typ == "C1":
 
-        lambdamax = h_lambdamax(matrices, 0, typ='C1',intercept=intercept)
+        lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept=intercept)
         if true_lam:
-            out = solve_path(matrices, lam / lambdamax, False, 0, 'C1',intercept=intercept)
+            out = solve_path(
+                matrices, lam / lambdamax, False, 0, "C1", intercept=intercept
+            )
         else:
-            out = solve_path(matrices, lam, False, 0, 'C1',intercept=intercept)
+            out = solve_path(matrices, lam, False, 0, "C1", intercept=intercept)
         if intercept:
-            beta0,beta = out[0][-1], out[1][-1]
-            beta = np.array([beta0]+list(beta))
+            beta0, beta = out[0][-1], out[1][-1]
+            beta = np.array([beta0] + list(beta))
         else:
             beta = out[0][-1]
 
@@ -189,7 +181,7 @@ def pathlasso(
     true_lam=False,
     e=None,
     return_sigm=False,
-    rho_classification=-1,
+    rho_classification=0.0,
     w=None,
     intercept=False,
 ):
@@ -215,11 +207,8 @@ def pathlasso(
     X, C, y = matrices
 
     if typ == "R2":
-        if intercept:
-            raise ValueError(
-                "The classo package does not perform formulation R2 (Contrained sparse Huber regression) with an intercept"
-            )
-        pb = problem_R2(matrices, meth, rho)
+
+        pb = problem_R2(matrices, meth, rho, intercept=intercept)
         lambdamax = pb.lambdamax
         if true_lam:
             lambdass = [lamb / lambdamax for lamb in lambdass]
@@ -246,17 +235,17 @@ def pathlasso(
             BETA = np.array([[ybar - Xbar.dot(beta)] + list(beta) for beta in BETA])
 
     elif typ == "R4":
-        if intercept:
-            raise ValueError(
-                "The classo package does not perform formulation R4 (Contrained sparse Huber regression with concomitant scale estimation) with an intercept"
-            )
+
         if e is None or e == len(matrices[0]):
             r = 1.0
-            pb = problem_R4(matrices, meth, rho)
+            pb = problem_R4(matrices, meth, rho, intercept=intercept)
         else:
             r = np.sqrt(e / len(matrices[0]))
             pb = problem_R4(
-                (matrices[0] * r, matrices[1], matrices[2] * r), meth, rho / r
+                (matrices[0] * r, matrices[1], matrices[2] * r),
+                meth,
+                rho / r,
+                intercept=intercept,
             )
 
         lambdamax = pb.lambdamax
@@ -267,23 +256,29 @@ def pathlasso(
         BETA = np.array(BETA)
 
     elif typ == "C2":
-        if intercept:
-            raise ValueError(
-                "The classo package does not perform huber classification with an intercept"
-            )
-        lambdamax = h_lambdamax(matrices, rho, typ='C2',intercept=intercept)
+
+        lambdamax = h_lambdamax(
+            matrices, rho_classification, typ="C2", intercept=intercept
+        )
         if true_lam:
             lambdas = [lamb / lambdamax for lamb in lambdass]
-        BETA = pathalgo_general(matrices,lambdass,'C2',n_active=Nactive,rho=rho_classification,intercept=intercept)
+        BETA = pathalgo_general(
+            matrices,
+            lambdass,
+            "C2",
+            n_active=Nactive,
+            rho=rho_classification,
+            intercept=intercept,
+        )
 
     elif typ == "C1":
 
-        lambdamax = h_lambdamax(matrices, 0, typ='C1',intercept=intercept)
+        lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept=intercept)
         if true_lam:
             lambdass = [lamb / lambdamax for lamb in lambdass]
-        BETA = pathalgo_general(matrices, lambdass, 'C1', n_active=Nactive,intercept=intercept)
-        
-        
+        BETA = pathalgo_general(
+            matrices, lambdass, "C1", n_active=Nactive, intercept=intercept
+        )
 
     else:  # R1
         if intercept:

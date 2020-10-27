@@ -7,34 +7,34 @@ Structure of problem instance
 
    .. autosummary::
 
-      classo.classo_problem
-      classo.classo_problem.solve
-      classo.Data
-      classo.solver.Formulation
-      classo.solver.Model_selection
-      classo.solver.PATHparameters
-      classo.solver.CVparameters
-      classo.solver.StabSelparameters
-      classo.solver.LAMfixedparameters
-      classo.solver.Solution
-      classo.solver.solution_PATH
-      classo.solver.solution_CV
-      classo.solver.solution_CV.graphic
-      classo.solver.solution_StabSel
-      classo.solver.solution_LAMfixed
+      classo_problem
+      classo_problem.solve
+      Data
+      Formulation
+      Model_selection
+      PATHparameters
+      CVparameters
+      StabSelparameters
+      LAMfixedparameters
+      Solution
+      solution_PATH
+      solution_CV
+      solution_CV.graphic
+      solution_StabSel
+      solution_LAMfixed
 
 
 Class classo_problem
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: classo.classo_problem
-.. automethod:: classo.classo_problem.solve
+.. autoclass:: classo.solver.classo_problem
+.. automethod:: classo.solver.classo_problem.solve
 
 
 Class Data
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: classo.Data
+.. autoclass:: classo.solver.Data
 
 Class Formulation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

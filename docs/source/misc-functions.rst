@@ -17,7 +17,11 @@ Miscellaneous functions
       theoretical_lam
 
 
-Numpy example
+More details
 ==============
 
-.. autofunction:: numpy.zeros
+.. autofunction:: random_data
+.. autofunction:: csv_to_np
+.. autofunction:: mat_to_np
+.. autofunction:: clr
+.. autofunction:: theoretical_lam
