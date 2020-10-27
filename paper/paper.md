@@ -19,7 +19,7 @@ authors:
     affiliation: "3,4,5"
 
 affiliations:
-  - name: Technische Universität Muenchen
+  - name: Technische Universität München
     index: 1
   - name: Department of Mathematics, North Carolina State University
     index: 2
@@ -47,8 +47,7 @@ $$
 
 Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general
 constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast
-regression with compositional data $X$, leading to the constraint $\sum_{i=1}^d \beta_i = 0$ (i.e., $C = 1_d^T$) [@Aitchison:1984] and Generalized Lasso-type
-problems (see, e.g, [@James:2020], Example 3). The `c-lasso` package provides several estimators for inferring unknown coefficients and scale (i.e., perspective M-estimators [@Combettes:2020a]) of the form
+regression with compositional data $X$,  requiring the constraint  $1_d^T \beta = 0$ [@Aitchison:1984] and the Generalized Lasso which is a *special case* of the described problem (see, e.g, [@James:2020], Example 3). The `c-lasso` package provides several estimators for inferring unknown coefficients and scale (i.e., perspective M-estimators [@Combettes:2020a]) of the form
 
 $$
     \arg \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R}_{0}} f\left(X\beta - y,{\sigma} \right) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
@@ -94,8 +93,8 @@ print(problem.solution)
 
 ## Statistical problem formulations {#formulations}
 
-Depending on the type of data and the prior assumptions on data, the noise $\epsilon$, and the model parameters, `c-lasso` allows 
-different estimation problem formulations. More specifically, the package can solve the following 
+Depending on the type of and the prior assumptions on the data, the noise $\epsilon$, and the model parameters, `c-lasso` allows 
+for different estimation problem formulations. More specifically, the package can solve the following 
 four regression-type and two classification-type formulations:
 
 
@@ -165,16 +164,16 @@ problem.formulation.classification = False
 ### *C1* Contrained sparse classification with Square Hinge loss: {#C1}
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(r_i) l(y_i x_i\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
-where the $x_i$ are the rows of $X$ and $l$ is defined as:
+where $x_i$ denotes the $i^{th}$ row of $X$, $y_i \in \{-1,1\}$, and $l$ is defined as:
 
 $$
 l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-This formulation is similar to [*R1*](#R1) but adapted for classification tasks, i.e, $y \in {-1,1}^n$ using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
+This formulation is similar to [*R1*](#R1) but adapted for classification tasks using the Square Hinge loss with (constrained) sparse $\beta$ vector estimation [@Lee:2013].
 
 ```python
 # Formulation C1
@@ -186,16 +185,16 @@ problem.formulation.classification = True
 ### *C2* Contrained sparse classification with Huberized Square Hinge loss: {#C2}       
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d}  \sum_{i=1}^n  l_{\rho}(y_i x_i\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \arg \min_{\beta \in \mathbb{R}^d}  \sum_{i=1}^n  l_{\rho}(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0 \,.
 $$
 
-where the $x_i$ are the rows of $X$ and $l_{\rho}$ is defined as :
+This formulation is similar to [*C1*](#C1) but uses the Huberized Square Hinge loss $l_{\rho}$ for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007]:
 
 $$
 l_{\rho}(r) = \begin{cases} (1-r)^2 &if \quad \rho \leq r \leq 1 \\ (1-\rho)(1+\rho-2r) & if \quad r \leq \rho \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-This formulation is similar to [*C1*](#C1) but uses the Huberized Square Hinge loss for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007].
+This formulation can be activated in `c-lasso` as follows:
 
 ```python
 # Formulation C2
@@ -209,7 +208,7 @@ problem.formulation.classification = True
 The problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. The `c-lasso` package implements four published algorithms with provable convergence guarantees. The package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. The following algorithmic schemes are implemented: 
 
 - Path algorithms (*Path-Alg*): 
-This algorithm follows the proposal in [@Gaines:2018;Jeon:2020]) and uses the fact that the solution path along &lambda; is piecewise-affine [@Rosset:2007]. We also provide a novel efficient procedure that allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
+This algorithm follows the proposal in [@Gaines:2018;@Jeon:2020] and uses the fact that the solution path along &lambda; is piecewise-affine [@Rosset:2007]. We also provide a novel efficient procedure that allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
 
 - Douglas-Rachford-type splitting method (*DR*): 
 This algorithm can solve all regression problems *R1-R4*. It is based on Doulgas-Rachford splitting in a higher-dimensional product space and 
@@ -220,7 +219,7 @@ This algorithm is derived from [@Briceno:2020] and belongs to the class of proxi
 (aka proximal gradient descent) algorithm to handle an additional linear equality constraint via projection. In the absence of a linear constraint, the method reduces to FB.
 
 - Projection-free primal-dual splitting method (*PF-PDS*):
-This algorithm is a special case of an algorithm proposed in [@Combettes:2011] (Eq.4.5) and also belongs to the class of 
+This algorithm is a special case of an algorithm proposed in [@Combettes:2012] (Eq.4.5) and also belongs to the class of 
 proximal splitting algorithms. The algorithm does not require projection operators which may be beneficial when C has a more complex structure. 
 In the absence of a linear constraint, the method reduces to the Forward-Backward-Forward scheme.
 
@@ -240,7 +239,7 @@ The following table summarizes the available algorithms and their recommended us
 The following Python snippet shows how to select a specific algorithm: 
 ```python
 problem.numerical_method = "Path-Alg" 
-# alternative options: "DR", "P-PDS", and "PF-PDS" 
+# Alternative options: "DR", "P-PDS", and "PF-PDS" 
 ```
 
 ## Computation modes and model selection {#model}
@@ -252,7 +251,7 @@ The default value is a scale-dependent tuning parameter that has been derived in
 
 - *Path Computation*: This setting allows the computation of a solution path for $\lambda$ parameters in an interval $[\lambda_{\min}, \lambda_{\max}]$. The solution path is computed via the *Path-Alg* scheme or via warm-starts for other optimization schemes. 
 
-[comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts : starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
+[comment]: <> (This can be done much faster than by computing separately the solution for each $\lambda$ of the grid, by using the Path-alg algorithm. One can also use warm starts: starting with $\beta_0 = 0$ for $\lambda_0 = \lambda_{\max}$, and then iteratvely compute $\beta_{k+1}$ using one of the optimization schemes with $\lambda = \lambda_{k+1} := \lambda_{k} - \epsilon$ and with a warm start set to $\beta_{k}$. )
 
 - *Cross Validation*: This setting allows the selection of the regularization parameter $\lambda$ via k-fold cross validation for $\lambda \in [\lambda_{\min}, \lambda_{\max}]$. Both the Minimum Mean Squared Error (or Deviance) (MSE)  and the "One-Standard-Error rule" (1SE) are available [@Hastie:2009].
 
