@@ -27,47 +27,47 @@ Structure of problem instance
 Class classo_problem
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: classo.solver.classo_problem
-.. automethod:: classo.solver.classo_problem.solve
+.. autoclass:: classo_problem
+.. automethod:: classo_problem.solve
 
 
 Class Data
 ^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: classo.solver.Data
+.. autoclass:: Data
 
 Class Formulation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: classo.solver.Formulation
+.. autoclass:: Formulation
 
 
 Class Model_selection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: classo.solver.Model_selection
+.. autoclass:: Model_selection
 
 Classes used in Model_selection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autoclass:: classo.solver.PATHparameters
-.. autoclass:: classo.solver.CVparameters
-.. autoclass:: classo.solver.StabSelparameters
-.. autoclass:: classo.solver.LAMfixedparameters
+.. autoclass:: PATHparameters
+.. autoclass:: CVparameters
+.. autoclass:: StabSelparameters
+.. autoclass:: LAMfixedparameters
 
 Class Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: classo.solver.Solution
+.. autoclass:: Solution
 
 
 Classes used in Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: classo.solver.solution_PATH
-.. autoclass:: classo.solver.solution_CV
-.. automethod:: classo.solver.solution_CV.graphic
-.. autoclass:: classo.solver.solution_StabSel
-.. autoclass:: classo.solver.solution_LAMfixed
+.. autoclass:: solution_PATH
+.. autoclass:: solution_CV
+.. automethod:: solution_CV.graphic
+.. autoclass:: solution_StabSel
+.. autoclass:: solution_LAMfixed
 
 
 

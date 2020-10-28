@@ -77,7 +77,7 @@ def rescale(matrices):
 
 
 def theoretical_lam(n, d):
-    """Theoretical lambda as a function of the dimension of the problem
+    """Theoretical lambda as a function of the dimensions of the problem
 
     This function returns (with :math:`\phi = erf`) :
 
@@ -237,26 +237,26 @@ def random_data(
 ):
     """Generation of random matrices as data such that y = X.sol + sigma. noise
 
-    The data X is generated as a normal matrix
+    The data X is generated as a normal matrix.
     The vector sol is generated randomly with a random support of size d_nonzero,
-    and componants are projected random intergers between -10  and 10 on the kernel of C restricted to the support
-    The vector y is then generated with X.dot(sol)+ sigma*noise , with noise a normal vector
+    and componants are projected random intergers between -10  and 10 on the kernel of C restricted to the support.
+    The vector y is then generated with X.dot(sol)+ sigma*noise, with noise a normal vector.
 
 
     Args:
-        n (int): Number of sample, dimension of y
-        d (int): Number of variables, dimension of sol
-        d_nonzero (int): Number of non null componant of sol
-        k (int) : Number of constraints, number of rows of C
-        sigma (float) : size of standard error
-        zerosum (bool, optional) : If True, then C is the all-one matrix with 1 row, independently of k
+        n (int): Number of samples, dimension of y.
+        d (int): Number of variables, dimension of sol.
+        d_nonzero (int): Number of non null componant of sol.
+        k (int) : Number of constraints, number of rows of C.
+        sigma (float) : size of the noise.
+        zerosum (bool, optional) : If True, then C is the all-one matrix with 1 row, independently of k.
         seed (bool or int, optional) : Seed for random values, for an equal seed, the result will be the same. If set to False: pseudo-random vectors
-        classification (bool, optional) : if True, then it returns sign(y) instead of y
-        A (numpy.ndarray) : matrix corresponding to a taxa tree, if it is given, then the problem should be y = X.A.g + eps , C.A.g = 0
+        classification (bool, optional) : if True, then it returns sign(y) instead of y.
+        A (numpy.ndarray) : matrix corresponding to a taxa tree, if it is given, then the problem should be y = X.A.g + eps , C.A.g = 0.
 
     Returns:
-        tuple : tuple of three ndarray that corresponds to the data :  (X,C,y)
-        ndarray : array corresponding to sol which is the real solution of the problem y = Xbeta + noise s.t. beta sparse and Cbeta = 0
+        tuple : tuple of three ndarray that corresponds to the data :  (X,C,y).
+        ndarray : array corresponding to sol which is the real solution of the problem y = Xbeta + noise s.t. beta sparse and Cbeta = 0.
     """
     if type(seed) == int:
         np.random.seed(seed)
@@ -342,7 +342,7 @@ def mat_to_np(file):
 def clr(array, coef=0.5):
     """Centered-Log-Ratio transformation
 
-    Set all negaitve or null entry to a constant coef. Then compute the log of each component. Then substract the mean of each colomn on each colomn.
+    Set all non positive entry to a constant coef. Then compute the log of each component. Then substract the mean of each column.
 
     Args:
         array (ndarray) : matrix nxd

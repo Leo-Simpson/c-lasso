@@ -15,6 +15,7 @@ Miscellaneous functions
       mat_to_np
       clr
       theoretical_lam
+      rescale
 
 
 More details
@@ -25,3 +26,5 @@ More details
 .. autofunction:: mat_to_np
 .. autofunction:: clr
 .. autofunction:: theoretical_lam
+.. autofunction:: rescale
+.. autofunction::choose_numerical_method
