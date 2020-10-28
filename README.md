@@ -45,7 +45,7 @@ c-lasso is available on pip. You can install the package
 in the shell using
 
 ```shell
-pip install c_lasso
+pip install c-lasso
 ```
 To use the c-lasso package in Python, type 
 
