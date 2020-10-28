@@ -27,4 +27,3 @@ More details
 .. autofunction:: clr
 .. autofunction:: theoretical_lam
 .. autofunction:: rescale
-.. autofunction::choose_numerical_method

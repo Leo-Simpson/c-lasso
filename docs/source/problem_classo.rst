@@ -29,6 +29,7 @@ Class classo_problem
 
 .. autoclass:: classo_problem
 .. automethod:: classo_problem.solve
+.. autofunction:: choose_numerical_method
 
 
 Class Data

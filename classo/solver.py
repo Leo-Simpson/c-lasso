@@ -297,8 +297,7 @@ class Formulation:
             If 'n/2' then it becomes n/2 during the method :func:`solve()`, same for 'n'.
             Default value : 'n' if huber formulation ; 'n/2' else
 
-        w (numpy ndarray) : array of size d with the weights of the L1 penalization.
-        This has to be positive.
+        w (numpy ndarray) : array of size d with the weights of the L1 penalization. This has to be positive.
             Default value : None (which makes it the 1,...,1 vector)
 
         intercept (bool)  : set to true if we should use an intercept.
