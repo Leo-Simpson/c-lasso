@@ -67,7 +67,7 @@ Currently, there is no Python package available that can solve these ubiquitous 
 `c-lasso` is available on pip and can be installed in the shell using
 
 ```shell
-pip install c_lasso
+pip install c-lasso
 ```
 
 Below is an example of the basic usage of `c-lasso` in Python. 
@@ -101,7 +101,7 @@ four regression-type and two classification-type formulations:
 ### *R1* Standard constrained Lasso regression: {#R1}           
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d} \left\lVert X\beta - y \right\rVert^2 + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \min_{\beta \in \mathbb{R}^d} \left\lVert X\beta - y \right\rVert^2 + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
 This is the standard Lasso problem with linear equality constraints on the $\beta$ vector. 
@@ -117,7 +117,7 @@ problem.formulation.classification = False
 ### *R2* Contrained sparse Huber regression: {#R2}                  
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d} h_{\rho} (X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \min_{\beta \in \mathbb{R}^d} h_{\rho} (X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) $h_{\rho}$ as objective function 
@@ -133,7 +133,7 @@ problem.formulation.classification = False
 ### *R3* Contrained scaled Lasso regression: {#R3}
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R}_{0}} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R}_{0}} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
 This formulation is the default problem formulation in `c-lasso`. It is similar to [*R1*](#R1) but allows for joint estimation of the (constrained) $\beta$ vector and the standard deviation $\sigma$ in a concomitant fashion [@Combettes:2020a;@Combettes:2020b].
@@ -148,7 +148,7 @@ problem.formulation.classification = False
 ### *R4* Contrained sparse Huber regression with concomitant scale estimation: {#R4}       
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d, \sigma \in  \mathbb{R}_{0}} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \min_{\beta \in \mathbb{R}^d, \sigma \in  \mathbb{R}_{0}} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
 This formulation combines [*R2*](#R2) and [*R3*](#R3) allowing robust joint estimation of the (constrained) $\beta$ vector and 
@@ -164,7 +164,7 @@ problem.formulation.classification = False
 ### *C1* Contrained sparse classification with Square Hinge loss: {#C1}
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
 $$
 
 where $x_i$ denotes the $i^{th}$ row of $X$, $y_i \in \{-1,1\}$, and $l$ is defined as:
@@ -185,7 +185,7 @@ problem.formulation.classification = True
 ### *C2* Contrained sparse classification with Huberized Square Hinge loss: {#C2}       
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d}  \sum_{i=1}^n  l_{\rho}(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0 \,.
+    \min_{\beta \in \mathbb{R}^d}  \sum_{i=1}^n  l_{\rho}(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0 \,.
 $$
 
 This formulation is similar to [*C1*](#C1) but uses the Huberized Square Hinge loss $l_{\rho}$ for robust classification with (constrained) sparse $\beta$ vector estimation [@Rosset:2007]:
