@@ -58,7 +58,7 @@ for several convex loss functions $f(\cdot,\cdot)$. This includes the constraine
 # Statement of need 
 
 Currently, there is no Python package available that can solve these ubiquitous statistical estimation problems in a fast and efficient manner. 
-`c-lasso` provides algorithmic strategies, including path and proximal splitting algorithms, to solve the underlying convex optimization problems with provable convergence guarantees. The `c-lasso` package is intended to fill the gap between popular Python tools such as [`scikit-learn`](https://scikit-learn.org/stable/) which <em>cannot</em> solve these constrained problems and general-purpose optimization solvers such as [`cvxpy`](https://www.cvxpy.org) that do not scale well for these problems and/or are inaccurate. `c-lasso` can solve the estimation problems at fixed regularization level and across an entire regularization path and includes three model selection strategies for determining model parameter regularization levels: a theoretically derived fixed regularization, k-fold cross-validation, and stability selection. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data, and highlight the seamless integration into `R` via [`reticulate`](https://rstudio.github.io/reticulate/).
+`c-lasso` provides algorithmic strategies, including path and proximal splitting algorithms, to solve the underlying convex optimization problems with provable convergence guarantees. The `c-lasso` package is intended to fill the gap between popular Python tools such as [`scikit-learn`](https://scikit-learn.org/stable/) which <em>cannot</em> solve these constrained problems and general-purpose optimization solvers such as [`cvxpy`](https://www.cvxpy.org) that do not scale well for these problems and/or are inaccurate. `c-lasso` can solve the estimation problems at a single regularization level, across an entire regularization path, and includes three model selection strategies for determining the regularization parameter: a theoretically-derived fixed regularization, k-fold cross-validation, and stability selection. We show several use cases of the package, including an application of sparse log-contrast regression tasks for compositional microbiome data, and highlight the seamless integration into `R` via [`reticulate`](https://rstudio.github.io/reticulate/).
 
 # Functionalities
 
@@ -197,10 +197,10 @@ problem.formulation.classification = True
 
 ## Optimization schemes {#method}
 
-The problem formulations *R1-C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. The `c-lasso` package implements four published algorithms with provable convergence guarantees. The package also includes novel algorithmic extensions to solve Huber-type problems efficiently using the mean-shift formulation [@Mishra:2019]. The following algorithmic schemes are implemented: 
+The problem formulations *R1*-*C2* require different algorithmic strategies for efficiently solving the underlying optimization problems. The `c-lasso` package implements four published algorithms with provable convergence guarantees. The package also includes novel algorithmic extensions to solve Huber-type problems using the mean-shift formulation [@Mishra:2019]. The following algorithmic schemes are implemented: 
 
 - Path algorithms (*Path-Alg*): 
-This algorithm follows the proposal in [@Gaines:2018;@Jeon:2020] and uses the fact that the solution path along &lambda; is piecewise-affine [@Rosset:2007]. We also provide a novel efficient procedure that allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
+This algorithm follows the proposal in [@Gaines:2018;@Jeon:2020] and uses the fact that the solution path along $$\lambda$$ is piecewise-affine [@Rosset:2007]. We also provide a novel efficient procedure that allows to derive the solution for the concomitant problem *R3* along the path with little computational overhead.
 
 - Douglas-Rachford-type splitting method (*DR*): 
 This algorithm can solve all regression problems *R1-R4*. It is based on Doulgas-Rachford splitting in a higher-dimensional product space and 
