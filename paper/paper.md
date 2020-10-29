@@ -211,7 +211,7 @@ This algorithm is derived from [@Briceno:2020] and belongs to the class of proxi
 (aka proximal gradient descent) algorithm to handle an additional linear equality constraint via projection. In the absence of a linear constraint, the method reduces to FB.
 
 - Projection-free primal-dual splitting method (*PF-PDS*):
-This algorithm is a special case of an algorithm proposed in [@Combettes:2012] (Eq.4.5) and also belongs to the class of 
+This algorithm is a special case of an algorithm proposed in [@Combettes:2012] (Eq. 4.5) and also belongs to the class of 
 proximal splitting algorithms. The algorithm does not require projection operators which may be beneficial when C has a more complex structure. 
 In the absence of a linear constraint, the method reduces to the Forward-Backward-Forward scheme.
 
