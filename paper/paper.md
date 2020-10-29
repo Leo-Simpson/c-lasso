@@ -42,7 +42,7 @@ We introduce `c-lasso`, a Python package that enables sparse and robust linear r
 The underlying statistical forward model is assumed to be of the following form:
 
 $$
-y = X \beta + \sigma \epsilon \qquad \textrm{s.t.} \qquad C\beta=0
+y = X \beta + \sigma \epsilon \qquad \textrm{subject to} \qquad C\beta=0
 $$
 
 Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general
@@ -50,7 +50,7 @@ constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficient
 regression with compositional data $X$,  requiring the constraint  $1_d^T \beta = 0$ [@Aitchison:1984] and the Generalized Lasso which is a *special case* of the described problem (see, e.g, [@James:2020], Example 3). The `c-lasso` package provides several estimators for inferring unknown coefficients and scale (i.e., perspective M-estimators [@Combettes:2020a]) of the form
 
 $$
-    \arg \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R}_{0}} f\left(X\beta - y,{\sigma} \right) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R}_{0}} f\left(X\beta - y,{\sigma} \right) + \lambda \left\lVert \beta\right\rVert_1 \qquad \textrm{subject to} \qquad  C\beta = 0
 $$
 
 for several convex loss functions $f(\cdot,\cdot)$. This includes the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints.
@@ -70,7 +70,7 @@ Currently, there is no Python package available that can solve these ubiquitous 
 pip install c-lasso
 ```
 
-The central object in the `c-lasso` package is the instantiation of the problem instance. 
+The central object in the `c-lasso` package is the instantiation of a `c-lasso` problem. 
 
 ```python
 # Import the main class of the package
@@ -81,7 +81,7 @@ from classo import classo_problem
 problem  = classo_problem(X,y,C)
 ```
 
-We next describe what problem instances are available and how to solve them.
+We next describe what type of problem instances are available and how to solve them.
 
 ## Statistical problem formulations {#formulations}
 
@@ -93,7 +93,7 @@ four regression-type and two classification-type formulations:
 ### *R1* Standard constrained Lasso regression: {#R1}           
 
 $$
-    \min_{\beta \in \mathbb{R}^d} \left\lVert X\beta - y \right\rVert^2 + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad  C\beta = 0
+    \min_{\beta \in \mathbb{R}^d} \left\lVert X\beta - y \right\rVert^2 + \lambda \left\lVert \beta\right\rVert_1 \qquad subject to \qquad  C\beta = 0
 $$
 
 This is the standard Lasso problem with linear equality constraints on the $\beta$ vector. 
