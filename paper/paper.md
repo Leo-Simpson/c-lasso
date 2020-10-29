@@ -45,8 +45,8 @@ $$
 y = X \beta + \sigma \epsilon \qquad \textrm{subject to} \qquad C\beta=0
 $$
 
-Here, $X \in R^{n\times d}$ is a given design matrix and the vector $y \in R^{n}$ is a continuous or binary response vector. The matrix $C$ is a general
-constraint matrix. The vector $\beta \in R^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast
+Here, $X \in \mathbb{R}^{n\times d}$ is a given design matrix and the vector $y \in \mathbb{R}^{n}$ is a continuous or binary response vector. The matrix $C$ is a general
+constraint matrix. The vector $\beta \in \mathbb{R}^{d}$ contains the unknown coefficients and $\sigma$ an unknown scale. Prominent use cases are (sparse) log-contrast
 regression with compositional data $X$,  requiring the constraint  $1_d^T \beta = 0$ [@Aitchison:1984] and the Generalized Lasso which is a *special case* of the described problem (see, e.g, [@James:2020], Example 3). The `c-lasso` package provides several estimators for inferring unknown coefficients and scale (i.e., perspective M-estimators [@Combettes:2020a]) of the form
 
 $$
@@ -159,7 +159,7 @@ $$
     \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad \textrm{subject to} \qquad  C\beta = 0
 $$
 
-where $x_i$ denotes the $i^{th}$ row of $X$, $y_i \in \{-1,1\}$, and $l(\cdot)$ is defined for $r \in \mathcal{R}$ as:
+where $x_i$ denotes the $i^{th}$ row of $X$, $y_i \in \{-1,1\}$, and $l(\cdot)$ is defined for $r \in \mathbb{R}$ as:
 
 $$
 l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}
@@ -186,7 +186,7 @@ $$
 l_{\rho}(r) = \begin{cases} (1-r)^2 &if \quad \rho \leq r \leq 1 \\ (1-\rho)(1+\rho-2r) & if \quad r \leq \rho \\ 0 &if \quad r \geq 1 \end{cases}
 $$
 
-This formulation can be activated in `c-lasso` as follows:
+This formulation can be selected in `c-lasso` as follows:
 
 ```python
 # Formulation C2
@@ -268,7 +268,7 @@ Each model selection procedure has additional meta-parameters that are described
 ## Toy example using synthetic data
 
 We illustrate the workflow of the `c-lasso` package on synthetic data using the built-in routine ```random_data``` which enables the generation of test 
-problem instances with normally distributed data $X$, sparse coefficient vectors $\beta$, and constraints $C \in R^{k\times d}$.
+problem instances with normally distributed data $X$, sparse coefficient vectors $\beta$, and constraints $C \in \mathbb{R}^{k\times d}$.
 
 Here, we use a problem instance with $n=100$, $d=100$, a $\beta$ with five non-zero components, $\sigma=0.5$, and a zero-sum contraint. 
 
