@@ -370,7 +370,6 @@ problem.solve()
 
 ![Stability selection profiles of problems R3/R4 on the COMBO data](https://github.com/Leo-Simpson/c-lasso/tree/master/paper/figures/StabSelFilteredCOMBO.png)
 
-
 ![Ex3.1](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-Beta-path.png)
 
 ![Ex3.2](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-Sigma-path.png)
@@ -387,6 +386,8 @@ problem.solve()
 
 ![Ex3.8](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R4-StabSel.png)
 
+
+#### pH prediction using the Central Park soil dataset 
 
 Here is now the result of running the file "example_PH" which uses microbiome data : 
 ```
