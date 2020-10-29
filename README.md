@@ -190,17 +190,9 @@ print(problem.solution)
 The command shows the running time(s) for the c-lasso problem instance, and the selected variables for sability selection
 
 ```
-SELECTED VARIABLES : 
-16
-44
-65
-90
-93
-Running time : 
-Running time for Path computation    : 'not computed'
-Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 1.561s
-Running time for Fixed LAM           : 'not computed'
+STABILITY SELECTION : 
+   Selected variables :  1    5    14    17    18    
+   Running time :  0.663s
 ```
 
 Here, we only used stability selection as *default* model selection strategy. 
@@ -397,7 +389,7 @@ Next part of the notebook, namely, the analysis of "pH data" :
 
 Here are the parameters of what we compute : 
 ```
-FORMULATION: R1
+FORMULATION: R3
  
 MODEL SELECTION COMPUTED:  
      Lambda fixed
@@ -432,26 +424,27 @@ And here is the result :
 
 ```
 LAMBDA FIXED : 
-   Selected variables :  18    19    39    43    62    85    93    94    102    107    
-   Running time :  0.01s
+   Sigma  =  0.198
+   Selected variables :  14    18    19    39    43    57    62    85    93    94    104    107    
+   Running time :  0.008s
 
  PATH COMPUTATION : 
-   Running time :  0.156s
+   Running time :  0.12s
 
  STABILITY SELECTION : 
-   Selected variables :  2    10    15    
-   Running time :  0.283s
+   Selected variables :  2    12    15    
+   Running time :  0.287s
 ```
 
-![Ex4.1](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R1-Beta-path.png)
+![Ex4.1](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-Beta-path.png)
 
-![Ex4.2](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R1-Sigma-path.png)
+![Ex4.2](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-Sigma-path.png)
 
-![Ex4.3](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R1-StabSel.png)
+![Ex4.3](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-StabSel.png)
 
-![Ex4.4](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R1-StabSel-beta.png)
+![Ex4.4](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-StabSel-beta.png)
 
-![Ex4.5](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R1-beta.png)
+![Ex4.5](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-beta.png)
 
 
 ## Optimization schemes

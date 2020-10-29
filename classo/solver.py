@@ -993,7 +993,7 @@ class solution_CV:
             plt.axvline(x=self.xGraph[i_1SE], color="r", label=r"$\lambda$ (1SE) ")
         plt.title(CV_graph["title"]), plt.ylabel(CV_graph["ylabel"])
         plt.legend()
-        if save is not None:
+        if save is not None and type(save)==str:
             plt.savefig(save)
         plt.show()
 
