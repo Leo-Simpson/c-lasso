@@ -368,6 +368,8 @@ problem.solve()
 
 ```
 
+![Stability selection profiles of problems R3/R4 on the COMBO data](figures/StabSelFilteredCOMBO.png)
+
 
 ![Ex3.1](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-Beta-path.png)
 
