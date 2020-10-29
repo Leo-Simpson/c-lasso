@@ -265,7 +265,7 @@ Each model selection procedure has additional meta-parameters that are described
 
 # Computational examples  
 
-## Basic workflow using synthetic data
+## Toy example using synthetic data
 
 We illustrate the workflow of the `c-lasso` package on synthetic data using the built-in routine ```random_data``` which enables the generation of test 
 problem instances with normally distributed data $X$, sparse coefficient vectors $\beta$, and constraints $C \in R^{k\times d}$.
@@ -330,54 +330,8 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
-We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. Here, the task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, and absolute calorie and fat intake measurements. Below is the code snippet for this example, also included [here](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example-notebook.ipynb).
+We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. Here, the task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, and absolute calorie and fat intake measurements. The code snippet for this example is available in the [`README.md`] (https://github.com/Leo-Simpson/c-lasso/README.md) and the [example notebook](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example-notebook.ipynb).
 
-
-```python
-from classo import *
-
-# Load microbiome and covariate data X
-X0  = csv_to_mat('GeneraFilteredCounts.csv',begin=0).astype(float)
-X_C = csv_to_mat('CaloriData.csv',begin=0).astype(float)
-X_F = csv_to_mat('FatData.csv',begin=0).astype(float)
-
-
-# Load BMI measurements y
-y   = csv_to_mat('BMI.csv',begin=0).astype(float)[:,0]
-
-# Load genus and covariate labels
-labels  = csv_to_mat('GeneraPhylo.csv').astype(str)[:,-1]
-
-# Normalize/transform data
-y   = y - np.mean(y)
-X_C = X_C - np.mean(X_C, axis=0)  #Covariate data (Calorie)
-X_F = X_F - np.mean(X_F, axis=0)  #Covariate data (Fat)
-X0 = clr(X0, 1 / 2).T
-
-# Set up design matrix and zero-sum constraints for 45 genera
-X = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis=1)
-label = np.concatenate([labels,np.array(['Calorie','Fat','Bias'])])
-C = np.ones((1,len(X[0])))
-C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
-
-# Set up c-lassso problem
-problem = classo_problem(X,y,C, label=label)
-
-# Use formulation R3
-problem.formulation.concomitant = True
-
-# Use stability selection with theoretical lambda [Combettes & Müller, 2020b]
-problem.model_selection.StabSel                       = True
-problem.model_selection.StabSelparameters.method      = 'lam'
-problem.solve()
-
-# Use formulation R4
-problem.formulation.huber = True
-problem.formulation.concomitant = True
-
-problem.solve()
-
-```
 ![Stability selection profiles of problems R3/R4 on the COMBO data](figures/StabSelFilteredCOMBO.png)
 
 Stability selection profiles using [formulation](#formulations) [*R3*](#R3) (left) and [*R4*](#R4)(right) on the COMBO dataset, reproducing Figure 5a in [@Combettes:2020b].
@@ -385,7 +339,7 @@ Stability selection profiles using [formulation](#formulations) [*R3*](#R3) (lef
 ## Calling `c-lasso` in R 
 
 The `c-lasso` package also integrates with `R` via the `R` package [`reticulate`](https://rstudio.github.io/reticulate/). We refer to 
-`reticulate`'s manual for technical details about connecting `python` environments and `R`. A successful interfacing is available in the `R` package [`trac`](https://github.com/jacobbien/trac) [@Bien:2020], enabling tree-structured aggregation of predictors when features are rare.
+`reticulate`'s manual for technical details about connecting `python` environments and `R`. A successful use case of `c-lasso` is available in the `R` package [`trac`](https://github.com/jacobbien/trac) [@Bien:2020], enabling tree-structured aggregation of predictors when features are rare.
 
 The code snippet below shows how `c-lasso` is called in `R` to perform regression at a fixed $\lambda$ $\lambda = 0.1\lambda_{\max}$. 
 In `R`, X and C need to be of ```matrix``` type, and y of ```array``` type.
