@@ -247,7 +247,7 @@ The default value is a scale-dependent tuning parameter that has been derived in
 
 - *Cross Validation*: This setting allows the selection of the regularization parameter $\lambda$ via k-fold cross validation for $\lambda \in [\lambda_{\min}, \lambda_{\max}]$. Both the Minimum Mean Squared Error (or Deviance) (MSE)  and the "One-Standard-Error rule" (1SE) are available [@Hastie:2009].
 
-- *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Meinshausen:2010;@Lin:2014;@Combettes:2020b]. Three modes are available: selection at a fixed $\lambda$ [@Combettes:2020b], selection of the q first variables entering the path (the default setting in `c-lasso`), and selection of the q largest coefficients (in absolute value) across the path [@Meinshausen:2010].
+- *Stability Selection*: This setting allows the selection of the $\lambda$ via stability selection [@Meinshausen:2010;@Lin:2014;@Combettes:2020b]. Three modes are available: selection at a fixed $\lambda$ [@Combettes:2020b], selection of the q *first* variables entering the path (default setting), and of the q *largest coefficients* (in absolute value) across the path [@Meinshausen:2010].
 
 The Python syntax to use a specific computation mode and model selection is exemplified below:
 
