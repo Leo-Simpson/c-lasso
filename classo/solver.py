@@ -828,6 +828,8 @@ class solution_CV:
         sigma (float) : solution sigma of classo at lambda_oneSE when formulation is 'R2' or 'R4'.
         selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected.
         refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
+        save1,save2 (bool or string) : if a string is given, the corresponding graph will be saved with the given name of the file.
+            save1 is for CV curve ; and save2 for refit beta-solution.
         formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
         time (float) : running time of this action.
 
@@ -893,7 +895,8 @@ class solution_CV:
             matrices, self.selected_param, intercept=self.formulation.intercept
         )
         self.time = time() - t0
-        self.save = False
+        self.save1 = False
+        self.save2 = False
         self.label = label
 
     def __repr__(self):
@@ -901,11 +904,12 @@ class solution_CV:
         string = "\n CROSS VALIDATION : "
         d = len(self.refit)
         selected = self.selected_param[:]
-        if (
-            self.formulation.intercept
-        ):  # this trick is done to plot only selected parameters, excluding intercept
+        # this trick is done to plot only selected parameters, excluding intercept
+        if self.formulation.intercept:
             selected[0] = False
             string += "\n Intercept : " + str(self.refit[0])
+
+        self.graphic(save=self.save1)
 
         nb_select = sum(selected)
         if nb_select > 10:
@@ -914,15 +918,14 @@ class solution_CV:
         else:
             top = np.arange(nb_select)
 
-        plt.bar(range(nb_select), self.refit[selected]), plt.title(
-            CV_beta["title"]
-        ), plt.xlabel(CV_beta["xlabel"]), plt.ylabel(CV_beta["ylabel"])
+        plt.bar(range(nb_select), self.refit[selected])
+        plt.title(CV_beta["title"])
+        plt.xlabel(CV_beta["xlabel"]), plt.ylabel(CV_beta["ylabel"])
         plt.xticks(top, self.label[selected][top], rotation=90)
 
-        if type(self.save) == str:
-            plt.savefig(self.save)
+        if type(self.save2) == str:
+            plt.savefig(self.save2)
         plt.show()
-        self.graphic()
 
         string += "\n   Selected variables :  "
         for i in np.where(self.selected_param)[0]:
@@ -1007,8 +1010,8 @@ class solution_StabSel:
         lambdas_path (array or string) : for 'first' method : Nlam array of the lambdas used. Other cases : 'not used'.
         distribution_path (array or string) : for 'first' method :  Nlam x d array with stability ratios as a function of lambda.
         threshold (float) : threshold for StabSel, ie for a variable i, stability ratio that is needed to get selected.
-        save1,save2,save3 (bool or string) : if a string is given, the corresponding graph will be saved with the given name of the file.
-        save1 is for stability plot ; save2 for path-stability plot; and save3 for refit beta-solution.
+        save1,save2 (bool or string) : if a string is given, the corresponding graph will be saved with the given name of the file.
+            save1 is for stability plot ; and save2 for refit beta-solution.
         selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected.
         to_label (numpy.ndarray) : boolean arrays of size d with True when the name of the variable should be seen on the graph.
         refit (numpy.ndarray) : solution beta after solving unsparse problem over the set of selected variables.
@@ -1097,7 +1100,6 @@ class solution_StabSel:
         )
         self.save1 = False
         self.save2 = False
-        self.save3 = False
         self.method = param.method
         self.formulation = name_formulation
         self.label = label
@@ -1180,13 +1182,11 @@ class solution_StabSel:
             )
             plt.legend(handles=[p1, p2, p3], loc=1)
             plt.axhline(y=self.threshold, color="g")
-            plt.xlabel(StabSel_path["xlabel"]), plt.ylabel(
-                StabSel_path["ylabel"]
-            ), plt.title(
+            plt.xlabel(StabSel_path["xlabel"])
+            plt.ylabel(StabSel_path["ylabel"])
+            plt.title(
                 StabSel_path["title"] + self.method + " using " + self.formulation
             )
-            if type(self.save2) == str:
-                plt.savefig(self.save2)
             plt.show()
 
         plt.bar(range(len(self.refit[top])), self.refit[top])
@@ -1198,8 +1198,8 @@ class solution_StabSel:
             self.label[top][self.selected_param[top]],
             rotation=30,
         )
-        if type(self.save3) == str:
-            plt.savefig(self.save3)
+        if type(self.save2) == str:
+            plt.savefig(self.save2)
         plt.show()
 
         string += "\n   Selected variables :  "

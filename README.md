@@ -123,14 +123,16 @@ with (constrained) sparse &beta; vector estimation.
 
 ## Getting started
 
-#### Basic example             
+#### Basic example
 
-We begin with a basic example that shows how to run c-lasso on synthetic data. The c-lasso package includes
+We begin with a basic example that shows how to run c-lasso on synthetic data. This example and the next one can be found on the notebook 'Synthetic data Notebook.ipynb'
+
+The c-lasso package includes
 the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
 
 ```python
-n,d,d_nonzero,k,sigma =100,100,5,1,0.5
-(X,C,y),sol = random_data(n,d,d_nonzero,k,sigma,zerosum=True)
+m,d,d_nonzero,k,sigma =100,200,5,1,0.5
+(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True,seed=1)
 ```
 This code snippet generates a problem instance with sparse &beta; in dimension
 d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples generated from an i.i.d standard normal
@@ -151,37 +153,20 @@ print(problem)
 This gives you a summary of the form:
 
 ```
-FORMULATION : R3
+FORMULATION: R3
  
-MODEL SELECTION COMPUTED :  Stability selection
+MODEL SELECTION COMPUTED:  
+     Stability selection
  
 STABILITY SELECTION PARAMETERS: 
-     method = first
-     lamin = 0.01
-     lam = theoretical
+     numerical_method : not specified
+     method : first
      B = 50
      q = 10
      percent_nS = 0.5
      threshold = 0.7
-     numerical_method = Path-Alg
-
-FORMULATION : Concomitant
- 
-MODEL SELECTION COMPUTED :  Stability selection, 
- 
-STABILITY SELECTION PARAMETERS: method = first;  lamin = 0.01;  lam = theoretical;  B = 50;  q = 10;  percent_nS = 0.5;  threshold = 0.7;  numerical_method = Path-Alg
-
-SELECTED VARIABLES : 
-16
-44
-65
-90
-93
-Running time : 
-Running time for Path computation    : 'not computed'
-Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 5.831s
-Running time for Fixed LAM           : 'not computed'
+     lamin = 0.01
+     Nlam = 50
 ```
 As we have not specified any problem, algorithm, or model selection settings, this problem instance
 represents the *default* settings for a c-lasso instance: 
@@ -222,12 +207,12 @@ Here, we only used stability selection as *default* model selection strategy.
 The command also allows you to inspect the computed stability profile for all variables 
 at the theoretical &lambda; 
 
-![1.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/example1/StabSel.png)
+![1.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/basic/StabSel.png)
 
 
 The refitted &beta; values on the selected support are also displayed in the next plot
 
-![beta](https://github.com/Leo-Simpson/Figures/blob/master/example1/StabSel-beta.png)
+![beta](https://github.com/Leo-Simpson/Figures/blob/master/basic/beta.png)
 
 
 #### Advanced example             
@@ -236,116 +221,136 @@ In the next example, we show how one can specify different aspects of the proble
 formulation and model selection strategy.
 
 ```python
-from CLasso import *
-m,d,d_nonzero,k,sigma =100,100,5,1,0.5
-(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True, seed = 4 )
+m,d,d_nonzero,k,sigma =100,200,5,0,0.5
+(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True,seed=4)
 problem                                     = classo_problem(X,y,C)
-problem.formulation.huber                   = False
-problem.formulation.concomitant             = True
+problem.formulation.huber                   = True
+problem.formulation.concomitant             = False
 problem.model_selection.CV                  = True
 problem.model_selection.LAMfixed            = True
 problem.model_selection.PATH                = True
 problem.model_selection.StabSelparameters.method = 'max'
+problem.model_selection.CVparameters.seed = 1
+problem.model_selection.LAMfixedparameters.rescaled_lam = True
+problem.model_selection.LAMfixedparameters.lam = .1
 
 problem.solve()
 print(problem)
 
 print(problem.solution)
 
-problem.solution.CV.graphic(mse_max = 1.,save=path+'CV-graph')
 ```
 
 Results : 
 ```
-FORMULATION: R3
+FORMULATION: R2
  
 MODEL SELECTION COMPUTED:  
+     Lambda fixed
      Path
      Cross Validation
      Stability selection
-     Lambda fixed
+ 
+LAMBDA FIXED PARAMETERS: 
+     numerical_method = Path-Alg
+     rescaled lam : True
+     threshold = 0.106
+     lam = 0.1
+     theoretical_lam = 0.224
+ 
+PATH PARAMETERS: 
+     numerical_method : Path-Alg
+     lamin = 0.001
+     Nlam = 80
+ 
  
 CROSS VALIDATION PARAMETERS: 
+     numerical_method : Path-Alg
+     one-SE method : True
      Nsubset = 5
      lamin = 0.001
-     n_lam = 500
-     numerical_method = Path-Alg
+     Nlam = 80
+ 
  
 STABILITY SELECTION PARAMETERS: 
-     method = max
-     lamin = 0.01
-     lam = theoretical
+     numerical_method : Path-Alg
+     method : max
      B = 50
      q = 10
      percent_nS = 0.5
      threshold = 0.7
-     numerical_method = Path-Alg
- 
-LAMBDA FIXED PARAMETERS: 
-     lam = theoretical
-     theoretical_lam = 19.9396
-     numerical_method = Path-Alg
- 
-PATH PARAMETERS: 
-     Npath = 40
-     n_active = False
-     lamin = 0.011220184543019636
-     numerical_method = Path-Alg
+     lamin = 0.01
+     Nlam = 50
 
-SELECTED VARIABLES : 
-16
-44
-65
-90
-93
-SIGMA FOR LAMFIXED  :  0.8447319814672424
-Running time : 
-Running time for Path computation    : 0.247s
-Running time for Cross Validation    : 0.835s
-Running time for Stability Selection : 5.995s
-Running time for Fixed LAM           : 0.047s
+
+ LAMBDA FIXED : 
+   Selected variables :  17    59    76    123    137    
+   Running time :  0.234s
+
+ PATH COMPUTATION : 
+   Running time :  0.557s
+
+ CROSS VALIDATION : 
+   Selected variables :  16    17    57    59    64    73    74    76    93    115    123    134    137    181    
+   Running time :  1.751s
+
+ STABILITY SELECTION : 
+   Selected variables :  1    3    7    12    
+   Running time :  8.391s
+
 ```
 
 
-![2.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/example2/StabSel.png)
 
-![2.StabSel-beta](https://github.com/Leo-Simpson/Figures/blob/master/example2/StabSel-beta.png)
 
-![2.CV-beta](https://github.com/Leo-Simpson/Figures/blob/master/example2/CV-beta.png)
 
-![2.CV-graph](https://github.com/Leo-Simpson/Figures/blob/master/example2/CV-graph.png)
 
-![2.LAM-beta](https://github.com/Leo-Simpson/Figures/blob/master/example2/LAM-beta.png)
+![2.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/advanced/StabSel.png)
+
+![2.StabSel-beta](https://github.com/Leo-Simpson/Figures/blob/master/advanced/StabSel-beta.png)
+
+![2.CV-beta](https://github.com/Leo-Simpson/Figures/blob/master/advanced/CVbeta.png)
+
+![2.CV-graph](https://github.com/Leo-Simpson/Figures/blob/master/advanced/CV.png)
+
+![2.LAM-beta](https://github.com/Leo-Simpson/Figures/blob/master/advanced/beta.png)
+
+![2.Path](https://github.com/Leo-Simpson/Figures/blob/master/advanced/Beta-path.png)
 
 
 ## Log-contrast regression for microbiome data
 
+A couple of datasets have been studied here. One can find this analysis on the jupyter notebook "example-notebook.ipynb". Some examples taken from this notebook are presented below.
+
 #### BMI prediction using the COMBO dataset 
 
-Here is now the result of running the file "example_COMBO" which uses microbiome data :  
+Here is now the main results from the COMBO data analysis taken from the notebook "example-notebook.ipynb",
+at the section " Filtered Combo data".
+
 ```python
 from classo import *
 
 # Load microbiome and covariate data X
-X0  = csv_to_mat('GeneraFilteredCounts.csv',begin=0).astype(float)
-X_C = csv_to_mat('CaloriData.csv',begin=0).astype(float)
-X_F = csv_to_mat('FatData.csv',begin=0).astype(float)
+X_C = csv_to_np('COMBO_data/CaloriData.csv',begin=0).astype(float)
+X_F = csv_to_np('COMBO_data/FatData.csv',begin=0).astype(float)
+X0  = csv_to_np('COMBO_data/filtered_data/GeneraFilteredCounts.csv',begin=0).astype(float)
 
 
 # Load BMI measurements y
-y   = csv_to_mat('BMI.csv',begin=0).astype(float)[:,0]
+y   = csv_to_np('COMBO_data/BMI.csv',begin=0).astype(float)[:,0]
 
 # Load genus and covariate labels
-labels  = csv_to_mat('GeneraPhylo.csv').astype(str)[:,-1]
+labels  = csv_to_np('COMBO_data/filtered_data/GeneraFilteredPhylo.csv').astype(str)[:,-1]
+
 
 # Normalize/transform data
-y   = y - np.mean(y)
+y   = y - np.mean(y) #BMI data (n=96)
 X_C = X_C - np.mean(X_C, axis=0)  #Covariate data (Calorie)
 X_F = X_F - np.mean(X_F, axis=0)  #Covariate data (Fat)
 X0 = clr(X0, 1 / 2).T
 
 # Set up design matrix and zero-sum constraints for 45 genera
-X = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis=1)
+X      = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis=1) # Joint microbiome and covariate data and offset
 label = np.concatenate([labels,np.array(['Calorie','Fat','Bias'])])
 C = np.ones((1,len(X[0])))
 C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
@@ -360,56 +365,34 @@ problem.formulation.concomitant = True
 problem.model_selection.StabSel                       = True
 problem.model_selection.StabSelparameters.method      = 'lam'
 problem.solve()
+print(problem)
+print(problem.solution)
 
 # Use formulation R4
 problem.formulation.huber = True
 problem.formulation.concomitant = True
 
 problem.solve()
+print(problem)
+print(problem.solution)
 
 ```
 
-![Stability selection profiles of problems R3/R4 on the COMBO data](https://github.com/Leo-Simpson/c-lasso/tree/master/paper/figures/StabSelFilteredCOMBO.png)
+![Stability profile R3](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R3-StabSel.png)
 
-![Ex3.1](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-Beta-path.png)
+![Beta solution R3](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R3-StabSel-beta.png)
 
-![Ex3.2](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-Sigma-path.png)
+![Stability profile R4](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R4-StabSel.png)
 
-![Ex3.3](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-StabSel-beta.png)
+![Beta solution R4](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R4-StabSel-beta.png)
 
-![Ex3.4](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R3-StabSel.png)
-
-![Ex3.5](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R4-Beta-path.png)
-
-![Ex3.6](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R4-Sigma-path.png)
-
-![Ex3.7](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R4-StabSel-beta.png)
-
-![Ex3.8](https://github.com/Leo-Simpson/Figures/blob/master/exampleCOMBO/R4-StabSel.png)
 
 
 #### pH prediction using the Central Park soil dataset 
 
+Next part of the notebook, namely, the analysis of pH data : 
+
 Here is now the result of running the file "example_PH" which uses microbiome data : 
-```
-FORMULATION : Concomitant
-
-MODEL SELECTION COMPUTED :  Path,  Stability selection, Lambda fixed
-
-STABILITY SELECTION PARAMETERS: method = lam;  lamin = 0.01;  lam = theoritical;  B = 50;  q = 10;  percent_nS = 0.5;  threshold = 0.7;  numerical_method = ODE
-
-LAMBDA FIXED PARAMETERS: lam = theoritical;  theoritical_lam = 19.1991;  numerical_method = ODE
-
-PATH PARAMETERS: Npath = 500  n_active = False  lamin = 0.05  n_lam = 500;  numerical_method = ODE
-
-
-SIGMA FOR LAMFIXED  :  0.7473015322224758
-SPEEDNESS : 
-Running time for Path computation    : 0.08s
-Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 1.374s
-Running time for Fixed LAM           : 0.024s
-```
 
 ![Ex4.1](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-Beta-path.png)
 
