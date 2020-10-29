@@ -53,8 +53,7 @@ To use the c-lasso package in Python, type
 from classo import *
 ```
 
-The c-lasso package depends on several standard Python packages. 
-The dependencies are included in the package. Those are, namely : 
+The `c-lasso` package depends on the following Python packages:
 
 `numpy` ; 
 `matplotlib` ; 
