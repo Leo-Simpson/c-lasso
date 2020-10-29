@@ -393,9 +393,7 @@ print(problem.solution)
 
 #### pH prediction using the Central Park soil dataset 
 
-Next part of the notebook, namely, the analysis of pH data : 
-
-Here is now the result of running the file "example_PH" which uses microbiome data : 
+Next part of the notebook, namely, the analysis of "pH data" : 
 
 ![Ex4.1](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-Beta-path.png)
 
