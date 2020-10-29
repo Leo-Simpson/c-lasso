@@ -1,3 +1,5 @@
+<img src="https://i.imgur.com/Ei8KgYG.png" alt="TREX" height="150" align="right"/>
+
 # c-lasso: a Python package for constrained sparse regression and classification 
 =========
 
