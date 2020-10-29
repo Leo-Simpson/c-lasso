@@ -1,7 +1,6 @@
 <img src="https://i.imgur.com/2nGwlux.png" alt="c-lasso" height="150" align="right"/>
 
 # c-lasso: a Python package for constrained sparse regression and classification 
-=========
 
 
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
