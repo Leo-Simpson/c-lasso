@@ -395,21 +395,64 @@ print(problem.solution)
 
 Next part of the notebook, namely, the analysis of "pH data" : 
 
-![Ex4.1](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-Beta-path.png)
+Here are the parameters of what we compute : 
+```
+FORMULATION: R1
+ 
+MODEL SELECTION COMPUTED:  
+     Lambda fixed
+     Path
+     Stability selection
+ 
+LAMBDA FIXED PARAMETERS: 
+     numerical_method = Path-Alg
+     rescaled lam : True
+     threshold = 0.004
+     lam : theoretical
+     theoretical_lam = 0.2182
+ 
+PATH PARAMETERS: 
+     numerical_method : Path-Alg
+     lamin = 0.001
+     Nlam = 80
+ 
+ 
+STABILITY SELECTION PARAMETERS: 
+     numerical_method : Path-Alg
+     method : lam
+     B = 50
+     q = 10
+     percent_nS = 0.5
+     threshold = 0.7
+     lam = theoretical
+     theoretical_lam = 0.3085
+```
 
-![Ex4.2](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-Sigma-path.png)
+And here is the result : 
 
-![Ex4.3](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-StabSel-beta.png)
+```
+LAMBDA FIXED : 
+   Selected variables :  18    19    39    43    62    85    93    94    102    107    
+   Running time :  0.01s
 
-![Ex4.4](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-StabSel.png)
+ PATH COMPUTATION : 
+   Running time :  0.156s
 
-![Ex4.5](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R4-Beta-path.png)
+ STABILITY SELECTION : 
+   Selected variables :  2    10    15    
+   Running time :  0.283s
+```
 
-![Ex4.6](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R4-Sigma-path.png)
+![Ex4.1](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R1-Beta-path.png)
 
-![Ex4.7](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R4-StabSel-beta.png)
+![Ex4.2](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R1-Sigma-path.png)
 
-![Ex4.8](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R4-StabSel.png)
+![Ex4.3](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R1-StabSel.png)
+
+![Ex4.4](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R1-StabSel-beta.png)
+
+![Ex4.5](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R1-beta.png)
+
 
 ## Optimization schemes
 
