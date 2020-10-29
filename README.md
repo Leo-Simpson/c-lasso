@@ -358,12 +358,15 @@ C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
 # Set up c-lassso problem
 problem = classo_problem(X,y,C, label=label)
 
-# Use formulation R3
-problem.formulation.concomitant = True
 
 # Use stability selection with theoretical lambda [Combettes & Müller, 2020b]
 problem.model_selection.StabSel                       = True
 problem.model_selection.StabSelparameters.method      = 'lam'
+problem.model_selection.StabSelparameters.seed        = 2
+
+# Use formulation R3
+problem.formulation.concomitant = True
+
 problem.solve()
 print(problem)
 print(problem.solution)
@@ -378,13 +381,13 @@ print(problem.solution)
 
 ```
 
-![Stability profile R3](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R3-StabSel.png)
+![3.Stability profile R3](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R3-StabSel.png)
 
-![Beta solution R3](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R3-StabSel-beta.png)
+![3.Beta solution R3](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R3-StabSel-beta.png)
 
-![Stability profile R4](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R4-StabSel.png)
+![3.Stability profile R4](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R4-StabSel.png)
 
-![Beta solution R4](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R4-StabSel-beta.png)
+![3.Beta solution R4](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R4-StabSel-beta.png)
 
 
 
