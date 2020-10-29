@@ -62,7 +62,7 @@ Currently, there is no Python package available that can solve these ubiquitous 
 
 # Functionalities
 
-## Installation and basic usage {#gettingstarted}
+## Installation and problem instantiation {#gettingstarted}
 
 `c-lasso` is available on pip and can be installed in the shell using
 
