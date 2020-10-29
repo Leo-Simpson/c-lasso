@@ -252,19 +252,16 @@ The default value is a scale-dependent tuning parameter that has been derived in
 The Python syntax to use a specific computation mode and model selection is exemplified below:
 
 ```python
-# Example how to do only cross-validation and path computation:
+# Example how to perform ath computation and cross-validation:
 problem.model_selection.LAMfixed = False
 problem.model_selection.PATH = True
 problem.model_selection.CV = True
 problem.model_selection.StabSel = False
 
-# c-lasso allows to specify multiple model selection schemes, 
-# e.g., adding stability selection
+# Example how to add stability selection to the problem instance
 problem.model_selection.StabSel = True
 ```
-
 Each model selection procedure has additional meta-parameters that are described in the [Documentation](https://c-lasso.readthedocs.io/en/latest/).
-
 
 # Computational examples  
 
