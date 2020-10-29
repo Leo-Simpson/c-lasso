@@ -330,7 +330,7 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
-We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. Here, the task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, and absolute calorie and fat intake measurements. The code snippet for this example is available in the [`README.md`] (https://github.com/Leo-Simpson/c-lasso/README.md) and the [example notebook](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example-notebook.ipynb).
+We next illustrate the application of `c-lasso` on the `COMBO` microbiome dataset [@Lin:2014;@Shi:2016;@Combettes:2020b], available in `c-lasso`'s data folder. Here, the task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, and absolute calorie and fat intake measurements. The code snippet for this example is available in the [`README.md`](https://github.com/Leo-Simpson/c-lasso/README.md) and the [example notebook](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example-notebook.ipynb).
 
 ![Stability selection profiles of problems R3/R4 on the COMBO data](figures/StabSelFilteredCOMBO.png)
 
