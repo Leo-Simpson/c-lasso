@@ -159,7 +159,7 @@ $$
     \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad \textrm{subject to} \qquad  C\beta = 0
 $$
 
-where $x_i$ denotes the $i^{th}$ row of $X$, $y_i \in \{-1,1\}$, and $l$ is defined as:
+where $x_i$ denotes the $i^{th}$ row of $X$, $y_i \in \{-1,1\}$, and $l(\cdot)$ is defined for $r \in \mathcal{R}$ as:
 
 $$
 l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}
