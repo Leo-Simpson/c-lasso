@@ -319,84 +319,53 @@ Running time for Fixed LAM           : 0.047s
 
 ## Log-contrast regression for microbiome data
 
-
-
 #### BMI prediction using the COMBO dataset 
 
 Here is now the result of running the file "example_COMBO" which uses microbiome data :  
-```
-FORMULATION: R3
- 
-MODEL SELECTION COMPUTED:  
-     Path
-     Stability selection
-     Lambda fixed
- 
-STABILITY SELECTION PARAMETERS: 
-     method = lam
-     lamin = 0.01
-     lam = theoretical
-     B = 50
-     q = 10
-     percent_nS = 0.5
-     threshold = 0.7
-     numerical_method = Path-Alg
- 
-LAMBDA FIXED PARAMETERS: 
-     lam = theoretical
-     theoretical_lam = 19.1709
-     numerical_method = Path-Alg
- 
-PATH PARAMETERS: 
-     Npath = 40
-     n_active = False
-     lamin = 0.011220184543019636
-     numerical_method = Path-Alg
- SELECTED VARIABLES : 
- Clostridium
- Acidaminococcus
-SIGMA FOR LAMFIXED  :  8.43571426081596
-Running time : 
-Running time for Path computation    : 0.072s
-Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 0.627s
-Running time for Fixed LAM           : 0.013s
- 
- 
-FORMULATION: R4
- 
-MODEL SELECTION COMPUTED:  
-     Path
-     Stability selection
-     Lambda fixed
- 
-STABILITY SELECTION PARAMETERS: 
-     method = lam
-     lamin = 0.01
-     lam = theoretical
-     B = 50
-     q = 10
-     percent_nS = 0.5
-     threshold = 0.7
-     numerical_method = Path-Alg
- 
-LAMBDA FIXED PARAMETERS: 
-     lam = theoretical
-     theoretical_lam = 19.1709
-     numerical_method = Path-Alg
- 
-PATH PARAMETERS: 
-     Npath = 40
-     n_active = False
-     lamin = 0.011220184543019636
-     numerical_method = Path-Alg
- SELECTED VARIABLES : 
-SIGMA FOR LAMFIXED  :  6.000336772926475
-Running time : 
-Running time for Path computation    : 19.064s
-Running time for Cross Validation    : 'not computed'
-Running time for Stability Selection : 3.133s
-Running time for Fixed LAM           : 0.03s
+```python
+from classo import *
+
+# Load microbiome and covariate data X
+X0  = csv_to_mat('GeneraFilteredCounts.csv',begin=0).astype(float)
+X_C = csv_to_mat('CaloriData.csv',begin=0).astype(float)
+X_F = csv_to_mat('FatData.csv',begin=0).astype(float)
+
+
+# Load BMI measurements y
+y   = csv_to_mat('BMI.csv',begin=0).astype(float)[:,0]
+
+# Load genus and covariate labels
+labels  = csv_to_mat('GeneraPhylo.csv').astype(str)[:,-1]
+
+# Normalize/transform data
+y   = y - np.mean(y)
+X_C = X_C - np.mean(X_C, axis=0)  #Covariate data (Calorie)
+X_F = X_F - np.mean(X_F, axis=0)  #Covariate data (Fat)
+X0 = clr(X0, 1 / 2).T
+
+# Set up design matrix and zero-sum constraints for 45 genera
+X = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis=1)
+label = np.concatenate([labels,np.array(['Calorie','Fat','Bias'])])
+C = np.ones((1,len(X[0])))
+C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
+
+# Set up c-lassso problem
+problem = classo_problem(X,y,C, label=label)
+
+# Use formulation R3
+problem.formulation.concomitant = True
+
+# Use stability selection with theoretical lambda [Combettes & Müller, 2020b]
+problem.model_selection.StabSel                       = True
+problem.model_selection.StabSelparameters.method      = 'lam'
+problem.solve()
+
+# Use formulation R4
+problem.formulation.huber = True
+problem.formulation.concomitant = True
+
+problem.solve()
+
 ```
 
 
@@ -507,7 +476,7 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 
 * [4] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
 
-* [5] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), arXiv, 2019.
+* [5] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), Statistics in Bioscience, 2020.
 
 * [6] A. Mishra and C. L. Müller, [Robust regression with compositional covariates](https://arxiv.org/abs/1909.04990), arXiv, 2019.
 
