@@ -21,7 +21,7 @@ authors:
 affiliations:
   - name: Technische Universität München
     index: 1
-  - name: Department of Mathematics, North Carolina State University
+  - name: Department of Mathematics, North Carolina State University, Raleigh
     index: 2
   - name: Center for Computational Mathematics, Flatiron Institute, New York
     index: 3
@@ -70,7 +70,7 @@ Currently, there is no Python package available that can solve these ubiquitous 
 pip install c-lasso
 ```
 
-Below is an example of the basic usage of `c-lasso` in Python. 
+The central object in the `c-lasso` package is the instantiation of the problem instance. 
 
 ```python
 # Import the main class of the package
@@ -79,17 +79,9 @@ from classo import classo_problem
 # Define a c-lasso problem instance with default setting, 
 # given data X, y, and constraints C.
 problem  = classo_problem(X,y,C)
-
-# Add possible modifications of the problem instance 
-...
-
-# Solve the specified problem instance
-problem.solve()
-
-# Show the problem specification and the corresponding solution
-print(problem)
-print(problem.solution)
 ```
+
+We next describe what problem instances are available and how to solve them.
 
 ## Statistical problem formulations {#formulations}
 
