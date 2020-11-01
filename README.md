@@ -381,6 +381,7 @@ print(problem.solution)
 ![3.Beta solution R4](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R4-StabSel-beta.png)
 
 
+<img src="https://i.imgur.com/8tFmM8T.png" alt="Central Park Soil Microbiome" height="150" align="right"/>
 
 #### pH prediction using the Central Park soil dataset 
 
