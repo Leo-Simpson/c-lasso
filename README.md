@@ -307,7 +307,7 @@ STABILITY SELECTION PARAMETERS:
 
 ## Log-contrast regression for microbiome data
 
-In the [the accompanying notebook](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example-notebook.ipynb) we study several microbiome data sets. We showcase two examples below.
+In the [the accompanying notebook](./examples/example-notebook.ipynb) we study several microbiome data sets. We showcase two examples below.
 
 #### BMI prediction using the COMBO dataset 
 
@@ -384,7 +384,7 @@ The next microbiome example considers the [Central Park Soil dataset](https://ro
 The task is to predict pH concentration in the soil from microbial abundance data. This example 
 was also used as an example in [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1).
 
-Code to run this example is available in [the accompanying notebook](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example-notebook.ipynb) under `pH data`. Below is a summary of a `c-lasso` model instantiation for formulation R3.
+Code to run this example is available in [the accompanying notebook](./examples/example-notebook.ipynb) under `pH data`. Below is a summary of a `c-lasso` model instantiation for formulation R3.
  
 ```
 FORMULATION: R3
