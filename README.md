@@ -504,4 +504,6 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 
 * [7] S. Rosset and J. Zhu, [Piecewise linear regularized solution paths](https://projecteuclid.org/euclid.aos/1185303996), Ann. Stat., vol. 35, no. 3, pp. 1012–1030, 2007.
 
+* [8] J. Bien, X. Yan, L. Simpsons, and C. L. Müller,   [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1), biorxiv, 2020.
+
 
