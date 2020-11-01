@@ -292,10 +292,6 @@ STABILITY SELECTION PARAMETERS:
 ```
 
 
-
-
-
-
 ![2.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/advanced/StabSel.png)
 
 ![2.StabSel-beta](https://github.com/Leo-Simpson/Figures/blob/master/advanced/StabSel-beta.png)
@@ -311,12 +307,11 @@ STABILITY SELECTION PARAMETERS:
 
 ## Log-contrast regression for microbiome data
 
-A couple of datasets have been studied here. One can find this analysis on the jupyter notebook "example-notebook.ipynb". Some examples taken from this notebook are presented below.
+In the [the accompanying notebook](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example-notebook.ipynb) we study several microbiome data sets. We showcase two examples below.
 
 #### BMI prediction using the COMBO dataset 
 
-Here is now the main results from the COMBO data analysis taken from the notebook "example-notebook.ipynb",
-at the section " Filtered Combo data".
+We first consider the [COMBO data set](./examples/COMBO_data) and show how to predict Body Mass Index (BMI) from microbial genus abundances and two non-compositional covariates  using "filtered_data".
 
 ```python
 from classo import *
@@ -389,8 +384,7 @@ The next microbiome example considers the [Central Park Soil dataset](https://ro
 The task is to predict pH concentration in the soil from microbial abundance data. This example 
 was also used as an example in [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1).
 
-Code to run this example is available in [the accompanying notebook](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example-notebook.ipynb)
-under `pH data`. Below is a summary of the model output.
+Code to run this example is available in [the accompanying notebook](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example-notebook.ipynb) under `pH data`. Below is a summary of a `c-lasso` model instantiation for formulation R3.
  
 ```
 FORMULATION: R3
@@ -424,7 +418,7 @@ STABILITY SELECTION PARAMETERS:
      theoretical_lam = 0.3085
 ```
 
-And here is the result : 
+The corresponding `c-lasso` output reads:
 
 ```
 LAMBDA FIXED : 
