@@ -25,7 +25,7 @@ This package is intended to fill the gap between popular python tools such as [s
 Below we show several use cases of the package, including an application of sparse *log-contrast*
 regression tasks for *compositional* microbiome data.
 
-The code builds on results from several papers which can be found in the [References](#references).
+The code builds on results from several papers which can be found in the [References](#references). We also refer to the accompanying [JOSS-style paper submission](https://github.com/Leo-Simpson/c-lasso/blob/master/paper/paper.md).
 
 ## Table of Contents
 
@@ -56,11 +56,11 @@ from classo import *
 
 The `c-lasso` package depends on the following Python packages:
 
-`numpy` ; 
-`matplotlib` ; 
-`scipy` ; 
-`pandas` ; 
-`h5py` .
+- `numpy`; 
+- `matplotlib`; 
+- `scipy`; 
+- `pandas`; 
+- `h5py`.
 
 ##  Regression and classification problems
 
