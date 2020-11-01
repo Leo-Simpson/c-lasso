@@ -381,10 +381,9 @@ print(problem.solution)
 #### pH prediction using the Central Park soil dataset 
 
 The next microbiome example considers the [Central Park Soil dataset](./examples/pH_data) from [Ramirez et al.](https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988). The sample locations are shown in the Figure on the right.
-The task is to predict pH concentration in the soil from microbial abundance data. This example 
-was also used as an example in [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1).
+The task is to predict pH concentration in the soil from microbial abundance data. This task was also considered in [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1).
 
-Code to run this example is available in [the accompanying notebook](./examples/example-notebook.ipynb) under `pH data`. Below is a summary of a `c-lasso` model instantiation for formulation R3.
+Code to run this application is available in [the accompanying notebook](./examples/example-notebook.ipynb) under `pH data`. Below is a summary of a c-lasso problem instance (using the R3 formulation).
  
 ```
 FORMULATION: R3
@@ -418,7 +417,7 @@ STABILITY SELECTION PARAMETERS:
      theoretical_lam = 0.3085
 ```
 
-The corresponding `c-lasso` output reads:
+The c-lasso estimation results are summarized below:
 
 ```
 LAMBDA FIXED : 
