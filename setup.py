@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='c-lasso',
-      version='0.3.1.77',
+      version='1.0',
       license='MIT',
       author='Leo Simpson',
       url='https://github.com/Leo-Simpson/CLasso',
