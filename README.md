@@ -1,7 +1,6 @@
 <img src="https://i.imgur.com/2nGwlux.png" alt="c-lasso" height="150" align="right"/>
 
 # c-lasso: a Python package for constrained sparse regression and classification 
-=========
 
 
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality
@@ -26,7 +25,7 @@ This package is intended to fill the gap between popular python tools such as [s
 Below we show several use cases of the package, including an application of sparse *log-contrast*
 regression tasks for *compositional* microbiome data.
 
-The code builds on results from several papers which can be found in the [References](#references).
+The code builds on results from several papers which can be found in the [References](#references). We also refer to the accompanying [JOSS-style paper submission](https://github.com/Leo-Simpson/c-lasso/blob/master/paper/paper.md).
 
 ## Table of Contents
 
@@ -57,11 +56,11 @@ from classo import *
 
 The `c-lasso` package depends on the following Python packages:
 
-`numpy` ; 
-`matplotlib` ; 
-`scipy` ; 
-`pandas` ; 
-`h5py` .
+- `numpy`; 
+- `matplotlib`; 
+- `scipy`; 
+- `pandas`; 
+- `h5py`.
 
 ##  Regression and classification problems
 
@@ -293,10 +292,6 @@ STABILITY SELECTION PARAMETERS:
 ```
 
 
-
-
-
-
 ![2.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/advanced/StabSel.png)
 
 ![2.StabSel-beta](https://github.com/Leo-Simpson/Figures/blob/master/advanced/StabSel-beta.png)
@@ -312,12 +307,11 @@ STABILITY SELECTION PARAMETERS:
 
 ## Log-contrast regression for microbiome data
 
-A couple of datasets have been studied here. One can find this analysis on the jupyter notebook "example-notebook.ipynb". Some examples taken from this notebook are presented below.
+In the [the accompanying notebook](./examples/example-notebook.ipynb) we study several microbiome data sets. We showcase two examples below.
 
 #### BMI prediction using the COMBO dataset 
 
-Here is now the main results from the COMBO data analysis taken from the notebook "example-notebook.ipynb",
-at the section " Filtered Combo data".
+We first consider the [COMBO data set](./examples/COMBO_data) and show how to predict Body Mass Index (BMI) from microbial genus abundances and two non-compositional covariates  using "filtered_data".
 
 ```python
 from classo import *
@@ -382,12 +376,15 @@ print(problem.solution)
 ![3.Beta solution R4](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R4-StabSel-beta.png)
 
 
+<img src="https://i.imgur.com/8tFmM8T.png" alt="Central Park Soil Microbiome" height="250" align="right"/>
 
 #### pH prediction using the Central Park soil dataset 
 
-Next part of the notebook, namely, the analysis of "pH data" : 
+The next microbiome example considers the [Central Park Soil dataset](./examples/pH_data) from [Ramirez et al.](https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988). The sample locations are shown in the Figure on the right.
+The task is to predict pH concentration in the soil from microbial abundance data. This task was also considered in [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1).
 
-Here are the parameters of what we compute : 
+Code to run this application is available in [the accompanying notebook](./examples/example-notebook.ipynb) under `pH data`. Below is a summary of a c-lasso problem instance (using the R3 formulation).
+ 
 ```
 FORMULATION: R3
  
@@ -420,7 +417,7 @@ STABILITY SELECTION PARAMETERS:
      theoretical_lam = 0.3085
 ```
 
-And here is the result : 
+The c-lasso estimation results are summarized below:
 
 ```
 LAMBDA FIXED : 
@@ -505,5 +502,7 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 * [6] A. Mishra and C. L. Müller, [Robust regression with compositional covariates](https://arxiv.org/abs/1909.04990), arXiv, 2019.
 
 * [7] S. Rosset and J. Zhu, [Piecewise linear regularized solution paths](https://projecteuclid.org/euclid.aos/1185303996), Ann. Stat., vol. 35, no. 3, pp. 1012–1030, 2007.
+
+* [8] J. Bien, X. Yan, L. Simpsons, and C. L. Müller,   [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1), biorxiv, 2020.
 
 
