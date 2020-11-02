@@ -1,5 +1,5 @@
 ---
-title: 'c-lasso - a package for constrained sparse and robust regression and classification in Python'
+title: 'c-lasso - a Python package for constrained sparse and robust regression and classification'
 tags:
   - Python
   - regression
