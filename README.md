@@ -25,7 +25,7 @@ This package is intended to fill the gap between popular python tools such as [s
 Below we show several use cases of the package, including an application of sparse *log-contrast*
 regression tasks for *compositional* microbiome data.
 
-The code builds on results from several papers which can be found in the [References](#references). We also refer to the accompanying [JOSS-style paper submission](https://github.com/Leo-Simpson/c-lasso/blob/master/paper/paper.md).
+The code builds on results from several papers which can be found in the [References](#references). We also refer to the accompanying [JOSS paper submission](https://github.com/Leo-Simpson/c-lasso/blob/master/paper/paper.md), also available on [arXiv](https://arxiv.org/abs/2011.00898).
 
 ## Table of Contents
 
