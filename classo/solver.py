@@ -909,7 +909,7 @@ class solution_CV:
             selected[0] = False
             string += "\n Intercept : " + str(self.refit[0])
 
-        self.graphic(save=self.save1)
+        self.graphic(save=self.save1,logscale=param.logscale)
 
         nb_select = sum(selected)
         if nb_select > 10:
@@ -934,7 +934,7 @@ class solution_CV:
         string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
         return string
 
-    def graphic(self, se_max=None, save=None, logScale=True, errorevery=5):
+    def graphic(self, se_max=None, save=None, logscale=True, errorevery=5):
         """Method to plot the graphic showing mean squared error over along lambda path once cross validation is computed.
 
         Args:
@@ -961,7 +961,7 @@ class solution_CV:
             while jmax > i_min and self.yGraph[jmax] > y_max:
                 jmax -= 1
 
-        if logScale:
+        if logscale:
             plt.errorbar(
                 np.log10(self.xGraph[jmin : jmax + 1]),
                 self.yGraph[jmin : jmax + 1],
@@ -991,7 +991,11 @@ class solution_CV:
             plt.xlabel(r"$\lambda / \lambda_{max}$")
             plt.axvline(x=self.xGraph[i_min], color="k", label=r"$\lambda$ (min MSE)")
             plt.axvline(x=self.xGraph[i_1SE], color="r", label=r"$\lambda$ (1SE) ")
-        plt.title(CV_graph["title"]), plt.ylabel(CV_graph["ylabel"])
+        plt.title(CV_graph["title"])
+        if self.formulation.classification:
+            plt.ylabel(CV_graph["ylabel_classification"])
+        else:
+            plt.ylabel(CV_graph["ylabel"])
         plt.legend()
         if save is not None and type(save)==str:
             plt.savefig(save)
@@ -1392,6 +1396,7 @@ CV_graph = {
     "title": r" ",
     "xlabel": r"$\lambda / \lambda_{max}$",
     "ylabel": r"Mean-Squared Error (MSE) ",
+    "ylabel_classify": r"Miss classification rate "
 }
 LAM_beta = {
     "title": r"Coefficients at $\lambda$ = ",

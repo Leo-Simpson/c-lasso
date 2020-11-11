@@ -219,6 +219,10 @@ def huber_hinge(A, y, beta, rho):
             s += h[i] ** 2
     return s
 
+def misclassification_rate(X,y,beta):
+    yhat = np.sign(X.dot(beta))
+    return np.sum(y != yhat) / len(y)
+
 
 def accuracy_func(
     A, y, beta, typ="R1", rho=1.345, rho_classification=-1.0, intercept=False
@@ -233,9 +237,7 @@ def accuracy_func(
 
     if typ == "R2":
         return hub(Aprime.dot(beta) - y, rho) / n
-    elif typ == "C1":
-        return hinge(Aprime, y, beta) / n
-    elif typ == "C2":
-        return huber_hinge(Aprime, y, beta, rho_classification) / n
+    elif typ in ["C1","C2"]:
+        return misclassification_rate(Aprime, y, beta)
     else:
         return LA.norm(Aprime.dot(beta) - y, 2) ** 2 / n

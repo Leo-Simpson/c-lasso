@@ -154,22 +154,23 @@ def affichage(
 
 
 def check_size(X, y, C):
-    samples, n_features = min(len(y), len(X)), len(X[0])
+    samples, d_in_x = min(len(y), len(X)), len(X[0])
     X2, y2 = X[:samples], y[:samples]
     # if len(y)   >samples   : print("More outputs than features ! ")
     # elif len(X) > samples  : print("More features than outputs !")
 
     if C is None:
-        C2 = np.ones((1, n_features))
+        C2 = np.ones((1, d_in_x))
     else:
         k = len(C)
-        if len(C[0]) == n_features:
+        d_in_c = len(C[0])
+        if d_in_c == d_in_x:
             C2 = C
-        elif len(C) > n_features:
-            C2 = C[:, :n_features]
+        elif d_in_c > d_in_x:
+            C2 = C[:, :d_in_x]
         else:
-            C2 = np.zeros((k, n_features))
-            C2[:, : len(C)] = C
+            C2 = np.zeros((k, d_in_x ))
+            C2[:, : d_in_c] = C
 
     return X2, y2, C2
 
