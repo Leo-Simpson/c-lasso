@@ -1123,11 +1123,10 @@ class solution_StabSel:
             top = np.arange(d)
 
         self.to_label = self.distribution > self.threshold_label
-        D, Dpath, selected = (
-            self.distribution[top],
-            self.distribution_path,
-            np.array(self.selected_param)[top],
-        )
+        D = self.distribution[top]
+        Dpath = self.distribution_path,
+        selected = self.selected_param[top]
+
         unselected = [not i for i in selected]
         Dselected, Dunselected = np.zeros(len(D)), np.zeros(len(D))
         Dselected[selected], Dunselected[unselected] = (
@@ -1198,8 +1197,8 @@ class solution_StabSel:
             StabSel_beta["ylabel"]
         ), plt.title(StabSel_beta["title"])
         plt.xticks(
-            np.where(self.selected_param[top])[0],
-            self.label[top][self.selected_param[top]],
+            np.where(selected)[0],
+            self.label[top][selected],
             rotation=30,
         )
         if type(self.save2) == str:
@@ -1207,7 +1206,7 @@ class solution_StabSel:
         plt.show()
 
         string += "\n   Selected variables :  "
-        for i in np.where(selected)[0]:
+        for i in np.where(self.selected_param)[0]:
             string += self.label[i] + "    "
 
         string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
