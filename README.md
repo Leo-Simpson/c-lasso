@@ -1,3 +1,5 @@
+![arXiv](https://img.shields.io/badge/arXiv-<INDEX>-<COLOR>.svg)](https://arxiv.org/abs/2011.00898)
+ 
 <img src="https://i.imgur.com/2nGwlux.png" alt="c-lasso" height="150" align="right"/>
 
 # c-lasso: a Python package for constrained sparse regression and classification 
