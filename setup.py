@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
-setup(name='c_lasso',
-      version='0.3.0.17',
+setup(name='c-lasso',
+      version='1.0.0.6',
       license='MIT',
       author='Leo Simpson',
       url='https://github.com/Leo-Simpson/CLasso',
@@ -13,8 +13,8 @@ setup(name='c_lasso',
                           'matplotlib',
                           'pandas',
                           'h5py',
-                          'scipy',
+                          'scipy'
                     ],
       long_description_content_type = 'text/markdown',
-      long_description=open('README-for-pypi.md').read(),
+      long_description=open('README.md').read(),
       zip_safe=False)

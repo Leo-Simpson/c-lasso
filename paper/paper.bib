@@ -1,24 +1,34 @@
-% Our citations
+% c-lasso references
 
+@article{Aitchison:1984,
+    author = {Aitchion, J. and Bacon-Shone, J.},
+    title = {Log contrast models for experiments with mixtures},
+    journal = {Biometrika},
+    volume = {71},
+    number = {2},
+    pages = {323-330},
+    year = {1984},
+    month = {08},
+    abstract = "{A new form of expected response function involving log contrasts of the proportions is introduced for experiments with mixtures. The advantages and disadvantages of log contrast models are discussed and illustrated in applications. In particular, the parameters of the model are related to certain useful hypotheses about mixtures and some relevant contrasts are identified.}",
+    issn = {0006-3444},
+    doi = {10.1093/biomet/71.2.323},
+    url = {https://doi.org/10.1093/biomet/71.2.323},
+    eprint = {https://academic.oup.com/biomet/article-pdf/71/2/323/635145/71-2-323.pdf},
+}
 
-@article{Aigner:1976,
- ISSN = {00206598, 14682354},
- URL = {http://www.jstor.org/stable/2525708},
- author = {D. J. Aigner and T. Amemiya and D. J. Poirier},
- journal = {International Economic Review},
- number = {2},
- pages = {377--396},
- publisher = {[Economics Department of the University of Pennsylvania, Wiley, Institute of Social and Economic Research, Osaka University]},
- title = {On the Estimation of Production Frontiers: Maximum Likelihood Estimation of the Parameters of a Discontinuous Density Function},
- volume = {17},
- year = {1976}
+@article{Bien:2020,
+author = {Bien, Jacob and Yan, Xiaohan and Simpson, L{\'{e}}o and M{\"{u}}ller, Christian L},
+doi = {10.1101/2020.09.01.277632},
+journal = {bioRxiv},
+publisher = {Cold Spring Harbor Laboratory},
+title = {{Tree-Aggregated Predictive Modeling of Microbiome Data}},
+url = {https://www.biorxiv.org/content/early/2020/09/01/2020.09.01.277632},
+year = {2020}
 }
 
 
-used
 @article{Briceno:2020,
-	Abstract = {In this paper, we provide an algorithm for solving constrained composite primal--dual monotone inclusions, i.e., monotone inclusions in which a priori information on primal--dual solutions is represented via closed and convex sets. The proposed algorithm incorporates a projection step onto the a priori information sets and generalizes methods proposed in the literature for solving monotone inclusions. Moreover, under the presence of strong monotonicity, we derive an accelerated scheme inspired on the primal--dual algorithm applied to the more general context of constrained monotone inclusions. In the particular case of convex optimization, our algorithm generalizes several primal--dual optimization methods by allowing a priori information on solutions. In addition, we provide an accelerated scheme under strong convexity. An application of our approach with a priori information is constrained convex optimization problems, in which available primal--dual methods impose constraints via Lagrange multiplier updates, usually leading to slow algorithms with unfeasible primal iterates. The proposed modification forces primal iterates to satisfy a selection of constraints onto which we can project, obtaining a faster method as numerical examples exhibit. The obtained results extend and improve several results in the literature.},
-	Author = {Brice{\~n}o-Arias, Luis and L{\'o}pez Rivera, Sergio},
+	author = {Brice{\~n}o-Arias, Luis and L{\'o}pez Rivera, Sergio},
 	Da = {2019/03/01},
 	Date-Added = {2020-07-07 14:32:14 +0200},
 	Date-Modified = {2020-07-07 14:32:14 +0200},
@@ -33,40 +43,35 @@ used
 	Url = {https://doi.org/10.1007/s10957-018-1430-2},
 	Volume = {180},
 	Year = {2019},
-	Bdsk-Url-1 = {https://doi.org/10.1007/s10957-018-1430-2}
 }
 
-used
-@article{Combettes:2011,
-  author = {Combettes, Patrick and Pesquet, Jean-Christophe},
-  year = {2011},
+@article{Combettes:2012,
+  author = {Combettes, Patrick L. and Pesquet, Jean-Christophe},
+  year = {2012},
   month = {06},
-  pages = {1-24},
+  pages = {307--320},
   title = {Primal-Dual Splitting Algorithm for Solving Inclusions with Mixtures of Composite, Lipschitzian, and Parallel-Sum Type Monotone Operators},
   volume = {20},
   journal = {Set-Valued and Variational Analysis},
   doi = {10.1007/s11228-011-0191-y}
   }
 
-used
-@article{Combettes:2020.1,
-author = "Combettes, Patrick L. and Müller, Christian L.",
-doi = "10.1214/19-EJS1662",
-fjournal = "Electronic Journal of Statistics",
-journal = "Electron. J. Statist.",
-number = "1",
-pages = "207--238",
-publisher = "The Institute of Mathematical Statistics and the Bernoulli Society",
-title = "Perspective maximum likelihood-type estimation via proximal decomposition",
-url = "https://doi.org/10.1214/19-EJS1662",
-volume = "14",
-year = "2020"
+@article{Combettes:2020a,
+author = {Patrick L. Combettes and M{\"u}ller, Christian L.},
+doi = {10.1214/19-EJS1662},
+fjournal = {Electronic Journal of Statistics},
+journal = {Electron. J. Statist.},
+number = {1},
+pages = {207--238},
+publisher = {The Institute of Mathematical Statistics and the Bernoulli Society},
+title = {Perspective maximum likelihood-type estimation via proximal decomposition},
+url = {https://doi.org/10.1214/19-EJS1662},
+volume = {14},
+year = {2020}
 }
 
-used
-@article{Combettes:2020.2,
-    Abstract = {Compositional data sets are ubiquitous in science, including geology, ecology, and microbiology. In microbiome research, compositional data primarily arise from high-throughput sequence-based profiling experiments. These data comprise microbial compositions in their natural habitat and are often paired with covariate measurements that characterize physicochemical habitat properties or the physiology of the host. Inferring parsimonious statistical associations between microbial compositions and habitat- or host-specific covariate data is an important step in exploratory data analysis. A standard statistical model linking compositional covariates to continuous outcomes is the linear log-contrast model. This model describes the response as a linear combination of log-ratios of the original compositions and has been extended to the high-dimensional setting via regularization. In this contribution, we propose a general convex optimization model for linear log-contrast regression which includes many previous proposals as special cases. We introduce a proximal algorithm that solves the resulting constrained optimization problem exactly with rigorous convergence guarantees. We illustrate the versatility of our approach by investigating the performance of several model instances on soil and gut microbiome data analysis tasks.},
-    Author = {Combettes, Patrick L. and M{\"u}ller, Christian L.},
+@article{Combettes:2020b,
+    author = {Patrick L. Combettes and M{\"u}ller, Christian L.},
     Da = {2020/06/19},
     Date-Added = {2020-07-07 12:02:54 +0000},
     Date-Modified = {2020-07-07 12:02:54 +0000},
@@ -81,7 +86,6 @@ used
     Bdsk-Url-1 = {https://doi.org/10.1007/s12561-020-09283-2}
 }
 
-used
 @article{Gaines:2018,
     author = {Brian R. Gaines and Juhyun Kim and Hua Zhou},
     title = {Algorithms for Fitting the Constrained Lasso},
@@ -97,7 +101,7 @@ used
 }
 
 
-@article{Gareth:2020,
+@article{James:2020,
     author = {Gareth M. James and Courtney Paulson and Paat Rusmevichientong},
     title = {Penalized and Constrained Optimization: An Application to High-Dimensional Website Advertising},
     journal = {Journal of the American Statistical Association},
@@ -110,7 +114,8 @@ used
     URL = {https://doi.org/10.1080/01621459.2019.1609970},
     eprint = { https://doi.org/10.1080/01621459.2019.1609970}
 }
-used
+
+
 @book{Hastie:2009,
   title={The Elements of Statistical Learning: Data Mining, Inference, and Prediction},
   author={Hastie, T. and Tibshirani, R. and Friedman, J.H.},
@@ -118,23 +123,31 @@ used
   lccn={2008941148},
   series={Springer series in statistics},
   url={https://books.google.fr/books?id=eBSgoAEACAAJ},
+  doi={10.1007/bf02985802},
   year={2009},
   publisher={Springer}
 }
 
+@book{Huber:1981,
+	annote = {Wiley Series in Probability and Mathematical Statistics},
+	author = {Huber, P},
+	isbn = {0-471-41805-6},
+	publisher = {John Wiley {\&} Sons Inc.},
+	title = {{Robust statistics}},
+	year = {1981}
+}
+
 @article{Jeon:2020,
-    title = "Primal path algorithm for compositional data analysis",
-    journal = "Computational Statistics & Data Analysis",
-    volume = "148",
-    pages = "106958",
-    year = "2020",
-    issn = "0167-9473",
-    doi = "https://doi.org/10.1016/j.csda.2020.106958",
-    url = "http://www.sciencedirect.com/science/article/pii/S0167947320300499",
-    author = "Jong-June Jeon and Yongdai Kim and Sungho Won and Hosik Choi",
-    keywords = "Penalized regression, Constraint, Solution path algorithm, Microbiome data",
-    abstract = 
-            "We consider the LASSO estimator for compositional data in which covariates are nonnegative, and their sum is always one. Due to the linear constraint of the regression coefficients caused by the sum to one condition, standard algorithms for LASSO cannot be applied directly to compositional data. Hence, a specific regularized regression model with linear constraints is commonly used. However, linear constraints incur additional computational time, which becomes severe in high-dimensional cases. Additionally, the exact computation for the regression is not investigated under existing methods. In this paper, we first propose an exact solution path algorithm for a l1 regularized regression with high-dimensional compositional data and extend to a classification model. We also compare its computational speed with that of previously developed algorithms and then apply the proposed algorithm to analyzing income inequality data in economics and human gut microbiome data in biology. By analyzing simulated and real data sets, we illustrate that our specialized algorithm is significantly more efficient than the generalized LASSO algorithm for compositional data."
+author = {Jeon, Jong-June and Kim, Yongdai and Won, Sungho and Choi, Hosik},
+doi = {10.1016/j.csda.2020.106958},
+issn = {0167-9473},
+journal = {Computational Statistics {\&} Data Analysis},
+keywords = { Constraint, Microbiome data, Solution path algorithm,Penalized regression},
+pages = {106958},
+title = {{Primal path algorithm for compositional data analysis}},
+url = {http://www.sciencedirect.com/science/article/pii/S0167947320300499},
+volume = {148},
+year = {2020}
 }
 
 @article{Lee:2013,
@@ -148,21 +161,19 @@ journal = {Neural computation},
 doi = {10.1162/NECO_a_00434}
 }
 
-
 @article{Lin:2014,
- ISSN = {00063444},
- URL = {http://www.jstor.org/stable/43304688},
- abstract = {Motivated by research problems arising in the analysis of gut microbiome and metagenomic data, we consider variable selection and estimation in high-dimensional regression with compositional covariates. We propose an ℓ₁ regularization method for the linear log-contrast model that respects the unique features of compositional data. We formulate the proposed procedure as a constrained convex optimization problem and introduce a coordinate descent method of multipliers for efficient computation. In the high-dimensional setting where the dimensionality grows at most exponentially with the sample size, model selection consistency and ℓ∞ bounds for the resulting estimator are established under conditions that are mild and interpretable for compositional data. The numerical performance of our method is evaluated via simulation studies and its usefulness is illustrated by an application to a microbiome study relating human body mass index to gut microbiome composition.},
- author = {WEI LIN and PIXU SHI and RUI FENG and HONGZHE LI},
- journal = {Biometrika},
- number = {4},
- pages = {785--797},
- publisher = {[Oxford University Press, Biometrika Trust]},
- title = {Variable selection in regression with compositional covariates},
- volume = {101},
- year = {2014}
+author = {Lin, Wei and Shi, Pixu and Feng, Rui and Li, Hongzhe},
+doi = {10.1093/biomet/asu031},
+issn = {14643510},
+journal = {Biometrika},
+keywords = {Compositional data,Coordinate descent method of multipliers,High-dimensional regression,Lasso,Log-contrast model,Model selection,Regularization,Sparsity},
+mendeley-groups = {StatsInBiosciences},
+number = {4},
+pages = {785--797},
+title = {{Variable selection in regression with compositional covariates}},
+volume = {101},
+year = {2014}
 }
-
 
 @article{Meinshausen:2010,
   author = {Meinshausen, Nicolai and Bühlmann, Peter},
@@ -177,47 +188,45 @@ doi = {10.1162/NECO_a_00434}
   eprint = {https://rss.onlinelibrary.wiley.com/doi/pdf/10.1111/j.1467-9868.2010.00740.x},
   abstract = {Summary.  Estimation of structure, such as in variable selection, graphical modelling or cluster analysis, is notoriously difficult, especially for high dimensional data. We introduce stability selection. It is based on subsampling in combination with (high dimensional) selection algorithms. As such, the method is extremely general and has a very wide range of applicability. Stability selection provides finite sample control for some error rates of false discoveries and hence a transparent principle to choose a proper amount of regularization for structure estimation. Variable selection and structure estimation improve markedly for a range of selection methods if stability selection is applied. We prove for the randomized lasso that stability selection will be variable selection consistent even if the necessary conditions for consistency of the original lasso method are violated. We demonstrate stability selection for variable selection and Gaussian graphical modelling, using real and simulated data.},
   year = {2010}
-  }
-
+}
 
 @article{Mishra:2019,
-    author = {Mishra, Aditya and Müller, Christian},
-    year = {2019},
-    month = {09},
-    pages = {},
-    title = {Robust Regression with Compositional Covariates}
-    }
+archivePrefix = {arXiv},
+arxivId = {1909.04990},
+author = {Mishra, Aditya and M\"uller, Christian L.},
+eprint = {1909.04990},
+title = {{Robust regression with compositional covariates}},
+url = {http://arxiv.org/abs/1909.04990},
+year = {2019}
+}
 
 @article{Rosset:2007,
-    author = "Rosset, Saharon and Zhu, Ji",
-    doi = "10.1214/009053606000001370",
-    fjournal = "Annals of Statistics",
-    journal = "Ann. Statist.",
-    month = "07",
-    number = "3",
-    pages = "1012--1030",
-    publisher = "The Institute of Mathematical Statistics",
-    title = "Piecewise linear regularized solution paths",
-    url = "https://doi.org/10.1214/009053606000001370",
-    volume = "35",
-    year = "2007"
-    }
+author = {Rosset, Saharon and Zhu, Ji},
+doi = {10.1214/009053606000001370},
+issn = {00905364},
+journal = {Annals of Statistics},
+keywords = {Polynomial splines,Regularization,Solution paths,Sparsity,Total variation,l1-norm penalty},
+number = {3},
+pages = {1012--1030},
+title = {{Piecewise linear regularized solution paths}},
+volume = {35},
+year = {2007}
+}
 
 
 @article{Shi:2016,
-    author = "Shi, Pixu and Zhang, Anru and Li, Hongzhe",
-    doi = "10.1214/16-AOAS928",
-    fjournal = "Annals of Applied Statistics",
-    journal = "Ann. Appl. Stat.",
-    month = "06",
-    number = "2",
-    pages = "1019--1040",
-    publisher = "The Institute of Mathematical Statistics",
-    title = "Regression analysis for microbiome compositional data",
-    url = "https://doi.org/10.1214/16-AOAS928",
-    volume = "10",
-    year = "2016"
-    }
-
-
-
+abstract = {One important problem in microbiome analysis is to identify the bacterial taxa that are associated with a response, where the microbiome data are summarized as the composition of the bacterial taxa at different taxonomic levels. This paper considers regression analysis with such compositional data as covariates. In order to satisfy the subcompositional coherence of the results, linear models with a set of linear constraints on the regression coefficients are introduced. Such models allow regression analysis for subcompositions and include the log-contrast model for compositional covariates as a special case. A penalized estimation procedure for estimating the regression coefficients and for selecting variables under the linear constraints is developed. A method is also proposed to obtain debiased estimates of the regression coefficients that are asymptotically unbiased and have a joint asymptotic multivariate normal distribution. This provides valid confidence intervals of the regression coefficients and can be used to obtain the p-values. Simulation results show the validity of the confidence intervals and smaller variances of the debiased estimates when the linear constraints are imposed. The proposed methods are applied to a gut microbiome data set and identify four bacterial genera that are associated with the body mass index after adjusting for the total fat and caloric intakes.},
+archivePrefix = {arXiv},
+arxivId = {1603.00974},
+author = {Shi, Pixu and Zhang, Anru and Li, Hongzhe},
+doi = {10.1214/16-AOAS928},
+eprint = {1603.00974},
+issn = {19417330},
+journal = {Annals of Applied Statistics},
+keywords = {Compositional coherence,Coordinate descent method of multipliers,High dimension,Log-contrast model,Model selection,Regularization},
+number = {2},
+pages = {1019--1040},
+title = {{Regression analysis for microbiome compositional data}},
+volume = {10},
+year = {2016}
+}
