@@ -188,7 +188,7 @@ def pathlasso_R1(pb, path, n_active=False, return_sp_path=False):
         pb.init = X[1]
 
         if (
-            sum([(abs(X[0][i]) > 1e-1) for i in range(len(X[0]))]) >= n_act
+            sum([(abs(X[0][i]) > 1e-5) for i in range(len(X[0]))]) >= n_act
             or type(X[1]) == str
         ):
             pb.init = save_init

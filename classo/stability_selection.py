@@ -72,7 +72,7 @@ def stability(
                 )[0]
             )
 
-            distr_path = distr_path + (abs(BETA) >= 1e-1)
+            distr_path = distr_path + (abs(BETA) >= 1e-5)
             # to do : output, instead of lambdas, the average aciv
             """
                 distr_path(lambda)_i = 1/B number of time where i is  (among the q-first & activated before lambda) 
