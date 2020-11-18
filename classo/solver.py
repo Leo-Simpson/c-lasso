@@ -705,6 +705,7 @@ class solution_PATH:
         BETAS (numpy.ndarray) : array of size Npath x d with the solution beta for each lambda on each row.
         SIGMAS (numpy.ndarray) : array of size Npath with the solution sigma for each lambda when the formulation of the problem is R2 or R4.
         LAMBDAS (numpy.ndarray) : array of size Npath with the lambdas (real lambdas, not divided by lambda_max) for which the solution is computed.
+        logscale (bool): whether or not the path should be plotted with a logscale.
         method (str) : name of the numerical method that has been used. It can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'.
         save (bool or str) : if it is a str, then it gives the name of the file where the graphics has been/will be saved (after using print(solution) ).
         formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
@@ -737,6 +738,8 @@ class solution_PATH:
                 )
             else:
                 np.linspace(1.0, param.lamin, param.Nlam)
+
+        self.logscale = param.logscale
 
         out = pathlasso(
             matrices,
@@ -785,13 +788,20 @@ class solution_PATH:
             else:
                 top = np.arange(d)
 
+        if self.logscale:
+            xGraph = -np.log10(self.LAMBDAS)
+            xlabel = r"$ \log_{10} \lambda $"
+        else:
+            xGraph = self.LAMBDAS
+            xlabel = PATH_beta_path["xlabel"]
+
         affichage(
             self.BETAS[:, top],
-            self.LAMBDAS,
+            xGraph,
             labels=self.label[top],
             naffichage=5,
             title=PATH_beta_path["title"] + self.formulation.name(),
-            xlabel=PATH_beta_path["xlabel"],
+            xlabel=xlabel,
             ylabel=PATH_beta_path["ylabel"],
         )
         if type(self.save) == str:

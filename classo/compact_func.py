@@ -261,7 +261,7 @@ def pathlasso(
             matrices, rho_classification, typ="C2", intercept=intercept
         )
         if true_lam:
-            lambdas = [lamb / lambdamax for lamb in lambdass]
+            lambdass = [lamb / lambdamax for lamb in lambdass]
         BETA = pathalgo_general(
             matrices,
             lambdass,
