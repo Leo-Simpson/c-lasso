@@ -830,6 +830,7 @@ class solution_CV:
         xGraph (numpy.ndarray) : array of size Nlam of the lambdas / lambda_max.
         yGraph (numpy.ndarray) : array of size Nlam of the average validation residual (over the K subsets).
         standard_error (numpy.ndarray) : array of size Nlam of the standard error of the validation residual (over the K subsets).
+        logscale (bool): whether or not the path should be plotted with a logscale.
         index_min (int) : index on xGraph of the selected lambda without 1-standard-error method.
         index_1SE (int) : index on xGraph of the selected lambda with 1-standard-error method.
         lambda_min (float) : selected lambda without 1-standard-error method.
@@ -871,6 +872,8 @@ class solution_CV:
                 )
             else:
                 np.linspace(1.0, param.lamin, param.Nlam)
+
+        self.logscale = param.logscale
 
         # Compute the solution and is the formulation is concomitant, it also compute sigma
         (out, self.yGraph, self.standard_error, self.index_min, self.index_1SE,) = CV(
@@ -919,7 +922,7 @@ class solution_CV:
             selected[0] = False
             string += "\n Intercept : " + str(self.refit[0])
 
-        self.graphic(save=self.save1,logscale=param.logscale)
+        self.graphic(save=self.save1,logscale=self.logscale)
 
         nb_select = sum(selected)
         if nb_select > 10:

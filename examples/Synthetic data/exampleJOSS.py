@@ -1,3 +1,4 @@
+# here is the path of the directory where one wants to save its figures
 path = '/Users/lsimpson/Desktop/GitHub/c-lasso/paper/figures/'
 import numpy
 from classo import classo_problem, random_data
