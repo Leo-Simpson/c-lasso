@@ -1,5 +1,5 @@
 black
-c-lasso>=1.0.1
+c-lasso
 h5py
 matplotlib 
 numpy
