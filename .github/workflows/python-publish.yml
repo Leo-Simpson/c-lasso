@@ -12,7 +12,6 @@ jobs:
 
     runs-on: ubuntu-latest
 
-
     - name: Build and publish
       env:
         TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
