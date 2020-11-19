@@ -78,7 +78,7 @@ from classo import classo_problem
 
 # Define a c-lasso problem instance with default setting, 
 # given data X, y, and constraints C.
-problem  = classo_problem(X,y,C)
+problem  = classo_problem(X, y, C)
 ```
 
 We next describe what type of problem instances are available and how to solve them.
