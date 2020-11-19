@@ -2,7 +2,7 @@ import numpy as np
 import numpy.linalg as LA
 from .solve_R3 import problem_R3, Classo_R3
 
-"""
+r"""
 Problem    :   min h_rho((Ab - y)/sigma)sigma + simga + lambda ||b||1 with C.b= 0, sigma>0
 
 Dimensions :   A : m*d  ;  y : m  ;  b : d   ; C : k*d

@@ -77,7 +77,7 @@ def rescale(matrices):
 
 
 def theoretical_lam(n, d):
-    """Theoretical lambda as a function of the dimensions of the problem
+    r"""Theoretical lambda as a function of the dimensions of the problem
 
     This function returns (with :math:`\phi = erf`) :
 

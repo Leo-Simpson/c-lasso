@@ -3,7 +3,7 @@ import numpy as np
 import numpy.linalg as LA
 from .solve_R1 import problem_R1, Classo_R1
 
-"""
+r"""
 Problem    :   min h_rho(Ab - y) + lambda ||b||1 with C.b= 0 <=>   min ||Ab - y - r*o||^2 + lambda ||b,o||1 with C.b= 0, o in R^m
                                                                                         r = lambda / 2rho
 Dimensions :   A : m*d  ;  y : m  ;  b : d   ; C : k*d

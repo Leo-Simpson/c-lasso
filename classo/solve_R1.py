@@ -3,7 +3,7 @@ import numpy as np
 import numpy.linalg as LA
 from .misc_functions import unpenalized
 
-"""
+r"""
 Problem    :   min ||Ab - y||^2 + lambda ||b||1 with C.b= 0
 
 Dimensions :   A : m*d  ;  y : m  ;  b : d   ; C : k*d

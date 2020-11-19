@@ -1,0 +1,14 @@
+[run]
+branch = True
+omit =
+    */tests*
+    */__init__.py
+    classo/_version.py
+    versioneer.py
+
+[report]
+omit =
+    */tests*
+    */__init__.py
+    classo/_version.py
+    versioneer.py

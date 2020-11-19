@@ -30,7 +30,7 @@ def stability(
     q=10,
     B=50,
     percent_nS=0.5,
-    formulation="LS",
+    formulation="R1",
     seed=1,
     rho=1.345,
     rho_classification=-1.0,
@@ -139,6 +139,7 @@ Auxilaries functions that are used in the main function which is stability
 
 # returns the list of the q highest componants of an array, using the fact that it is probably sparse.
 def biggest_indexes(array, q):
+    array = abs(array)
     qbiggest = []
     nonnul = non_nul_indices(array)
     reduc_array = array[nonnul]
