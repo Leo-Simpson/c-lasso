@@ -1,7 +1,8 @@
 path = "/Users/lsimpson/Desktop/GitHub/Figures/examplePH/"
-from CLasso import *
+from classo import classo_problem
 import numpy as np
 from copy import deepcopy as dc
+import scipy.io as sio
 
 pH = sio.loadmat("pH_data/pHData.mat")
 tax = sio.loadmat("pH_data/taxTablepHData.mat")["None"][0]
