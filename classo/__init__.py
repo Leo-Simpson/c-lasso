@@ -26,3 +26,7 @@ from .solver import (
     solution_LAMfixed,
     choose_numerical_method,
 )
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

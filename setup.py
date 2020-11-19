@@ -1,7 +1,9 @@
 from setuptools import setup, find_packages
+import versioneer
 
 setup(name='c-lasso',
-      version='1.0.0.9',
+      version=versioneer.get_version(),
+      cmdclass=versioneer.get_cmdclass(),
       license='MIT',
       author='Leo Simpson',
       url='https://github.com/Leo-Simpson/CLasso',
