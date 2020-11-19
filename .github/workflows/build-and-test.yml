@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8]
+        python-version: '3.6'
 
     steps:
     - uses: actions/checkout@v2
@@ -39,4 +39,4 @@ jobs:
         pip install pytest
         pip install pytest-cov
         pytest
-        pytest --cov=classo --cov-report=html
+        pytest --cov-report=html
