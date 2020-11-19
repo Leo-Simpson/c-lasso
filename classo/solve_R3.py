@@ -67,6 +67,7 @@ def Classo_R3(pb, lam):
 
     # 2prox
     if pb_type == "DR":
+        b, s = 0., 0. # just for flake8 purpose.
         for i in range(pb.N):
             nv_b = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar)
             nv_s = (xs + nu) / 2

@@ -281,7 +281,7 @@ def random_data(
     else:
         if k == 0:
             sol[list_i] = sol_reduc
-            y = X.dot(A.dot(sol)) + np.random.randn(m) * sigma
+            y = X.dot(A.dot(sol)) + np.random.randn(n) * sigma
             return ((X, np.zeros((0, d1)), y), sol)
 
         while True:
