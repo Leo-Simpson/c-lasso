@@ -1,5 +1,5 @@
 path = "/Users/lsimpson/Desktop/GitHub/Figures/exampleCOMBO/"
-from classo import csv_to_np, classo_problem
+from classo import csv_to_np, classo_problem, clr
 import numpy as np
 
 X0 = csv_to_np("COMBO_data/GeneraCounts.csv", begin=0).astype(float)
