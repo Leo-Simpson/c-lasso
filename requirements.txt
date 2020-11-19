@@ -1,13 +1,13 @@
-black>=20.8b1
-c-lasso>=1.0.0.9
-h5py>=2.10.0
-matplotlib @ file:///opt/concourse/worker/volumes/live/8bf90420-8b2f-40f2-5cf1-001960d57523/volume/matplotlib-base_1592846055555/work
-numpy>=1.17.3
-pandas @ file:///opt/concourse/worker/volumes/live/4a78f420-de57-4d97-543f-8ecd5647e338/volume/pandas_1602088155642/work
-pep8>=1.7.1
-pycodestyle>=2.6.0
-scipy @ file:///opt/concourse/worker/volumes/live/5de63de1-ebe3-42a0-667e-ce551df4774f/volume/scipy_1592940143707/work
-Sphinx>=2.4.0
-twine>=3.1.1
-zarr>=2.3.2
+black
+c-lasso>=1.0.1
+h5py
+matplotlib 
+numpy
+pandas
+pep8
+pycodestyle
+scipy 
+Sphinx
+twine
+zarr
 versioneer
