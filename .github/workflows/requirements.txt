@@ -10,3 +10,4 @@ scipy @ file:///opt/concourse/worker/volumes/live/5de63de1-ebe3-42a0-667e-ce551d
 Sphinx>=2.4.0
 twine>=3.1.1
 zarr>=2.3.2
+versioneer
