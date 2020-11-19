@@ -130,8 +130,8 @@ The c-lasso package includes
 the routine ```random_data``` that allows you to generate problem instances using normally distributed data.
 
 ```python
-m,d,d_nonzero,k,sigma =100,200,5,1,0.5
-(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True,seed=1)
+m, d, d_nonzero, k, sigma = 100, 200, 5, 1, 0.5
+(X, C, y), sol = random_data(m, d, d_nonzero, k, sigma, zerosum=True, seed=1)
 ```
 This code snippet generates a problem instance with sparse &beta; in dimension
 d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples generated from an i.i.d standard normal
@@ -141,7 +141,7 @@ and the regression vector &beta; is then generated to satisfy the given constrai
 
 Next we can define a default c-lasso problem instance with the generated data:
 ```python
-problem = classo_problem(X,y,C) 
+problem = classo_problem(X, y, C) 
 ```
 You can look at the generated problem instance by typing:
 
@@ -212,9 +212,9 @@ In the next example, we show how one can specify different aspects of the proble
 formulation and model selection strategy.
 
 ```python
-m,d,d_nonzero,k,sigma =100,200,5,0,0.5
-(X,C,y),sol = random_data(m,d,d_nonzero,k,sigma,zerosum=True,seed=4)
-problem                                     = classo_problem(X,y,C)
+m,  d,  d_nonzero,  k, sigma = 100, 200, 5, 0, 0.5
+(X, C, y), sol = random_data(m, d, d_nonzero, k, sigma, zerosum = True, seed = 4)
+problem                                     = classo_problem(X, y, C)
 problem.formulation.huber                   = True
 problem.formulation.concomitant             = False
 problem.model_selection.CV                  = True
@@ -317,38 +317,35 @@ We first consider the [COMBO data set](./examples/COMBO_data) and show how to pr
 from classo import *
 
 # Load microbiome and covariate data X
-X_C = csv_to_np('COMBO_data/CaloriData.csv',begin=0).astype(float)
-X_F = csv_to_np('COMBO_data/FatData.csv',begin=0).astype(float)
-X0  = csv_to_np('COMBO_data/filtered_data/GeneraFilteredCounts.csv',begin=0).astype(float)
-
+X0  = csv_to_np('COMBO_data/complete_data/GeneraCounts.csv', begin = 0).astype(float)
+X_C = csv_to_np('COMBO_data/CaloriData.csv', begin = 0).astype(float)
+X_F = csv_to_np('COMBO_data/FatData.csv', begin = 0).astype(float)
 
 # Load BMI measurements y
-y   = csv_to_np('COMBO_data/BMI.csv',begin=0).astype(float)[:,0]
-
-# Load genus and covariate labels
-labels  = csv_to_np('COMBO_data/filtered_data/GeneraFilteredPhylo.csv').astype(str)[:,-1]
+y   = csv_to_np('COMBO_data/BMI.csv', begin = 0).astype(float)[:, 0]
+labels = csv_to_np('COMBO_data/complete_data/GeneraPhylo.csv').astype(str)[:, -1]
 
 
 # Normalize/transform data
-y   = y - np.mean(y) #BMI data (n=96)
-X_C = X_C - np.mean(X_C, axis=0)  #Covariate data (Calorie)
-X_F = X_F - np.mean(X_F, axis=0)  #Covariate data (Fat)
+y   = y - np.mean(y) #BMI data (n = 96)
+X_C = X_C - np.mean(X_C, axis = 0)  #Covariate data (Calorie)
+X_F = X_F - np.mean(X_F, axis = 0)  #Covariate data (Fat)
 X0 = clr(X0, 1 / 2).T
 
 # Set up design matrix and zero-sum constraints for 45 genera
-X      = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis=1) # Joint microbiome and covariate data and offset
-label = np.concatenate([labels,np.array(['Calorie','Fat','Bias'])])
-C = np.ones((1,len(X[0])))
-C[0,-1],C[0,-2],C[0,-3] = 0.,0.,0.
+X     = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis = 1) # Joint microbiome and covariate data and offset
+label = np.concatenate([labels, np.array(['Calorie', 'Fat', 'Bias'])])
+C = np.ones((1, len(X[0])))
+C[0, -1], C[0, -2], C[0, -3] = 0., 0., 0.
+
 
 # Set up c-lassso problem
 problem = classo_problem(X,y,C, label=label)
 
 
 # Use stability selection with theoretical lambda [Combettes & Müller, 2020b]
-problem.model_selection.StabSel                       = True
 problem.model_selection.StabSelparameters.method      = 'lam'
-problem.model_selection.StabSelparameters.seed        = 2
+problem.model_selection.StabSelparameters.threshold_label = 0.5
 
 # Use formulation R3
 problem.formulation.concomitant = True
