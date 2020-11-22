@@ -11,9 +11,7 @@ One can contribute either by reporting  an error, either
 Reporting errors
 ================
 
-Any errors or general problems can be reported on GitHub's Issue tracker:
-
-   https://github.com/Leo-Simpson/c-lasso/issues
+Any errors or general problems can be reported on `GitHub's Issue tracker <https://github.com/Leo-Simpson/c-lasso/issues>`_
 
 The quickest way resolve a problem is to go through the following steps:
 
