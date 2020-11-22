@@ -22,22 +22,22 @@ There is three different stability selection methods implemented here : 'first' 
 
 def stability(
     matrix,
-    StabSelmethod="first",
-    numerical_method="Path-Alg",
-    Nlam=100,
-    lamin=1e-2,
-    lam=0.1,
-    q=10,
-    B=50,
-    percent_nS=0.5,
-    formulation="R1",
-    seed=1,
-    rho=1.345,
-    rho_classification=-1.0,
-    true_lam=False,
-    e=1.0,
-    w=None,
-    intercept=False,
+    StabSelmethod = "first",
+    numerical_method = "Path-Alg",
+    Nlam = 100,
+    lamin = 1e-2,
+    lam = 0.1,
+    q = 10,
+    B = 50,
+    percent_nS = 0.5,
+    formulation = "R1",
+    seed = 1,
+    rho = 1.345,
+    rho_classification = -1.0,
+    true_lam = False,
+    e = 1.0,
+    w = None,
+    intercept = False,
 ):
 
     rd.seed(seed)
@@ -59,16 +59,16 @@ def stability(
             BETA = np.array(
                 pathlasso(
                     submatrix,
-                    lambdas=lambdas,
-                    n_active=q + 1,
-                    lamin=0,
-                    typ=formulation,
-                    meth=numerical_method,
-                    rho=rho,
-                    rho_classification=rho_classification,
-                    e=e * percent_nS,
-                    w=w,
-                    intercept=intercept,
+                    lambdas = lambdas,
+                    n_active = q + 1,
+                    lamin = 0,
+                    typ = formulation,
+                    meth = numerical_method,
+                    rho = rho,
+                    rho_classification = rho_classification,
+                    e = e * percent_nS,
+                    w = w,
+                    intercept = intercept,
                 )[0]
             )
 
@@ -88,14 +88,14 @@ def stability(
             regress = Classo(
                 submatrix,
                 lam,
-                typ=formulation,
-                meth=numerical_method,
-                rho=rho,
-                rho_classification=rho_classification,
-                e=e * percent_nS,
-                true_lam=true_lam,
-                w=w,
-                intercept=intercept,
+                typ = formulation,
+                meth = numerical_method,
+                rho = rho,
+                rho_classification = rho_classification,
+                e = e * percent_nS,
+                true_lam = true_lam,
+                w = w,
+                intercept = intercept,
             )
             if type(regress) == tuple:
                 beta = regress[0]
@@ -113,17 +113,17 @@ def stability(
             # compute the path until n_active = q, and only take the last Beta
             BETA = pathlasso(
                 submatrix,
-                n_active=0,
-                lambdas=lambdas,
-                typ=formulation,
-                meth=numerical_method,
-                rho=rho,
-                rho_classification=rho_classification,
-                e=e * percent_nS,
-                w=w,
-                intercept=intercept,
+                n_active = 0,
+                lambdas = lambdas,
+                typ = formulation,
+                meth = numerical_method,
+                rho = rho,
+                rho_classification = rho_classification,
+                e = e * percent_nS,
+                w = w,
+                intercept = intercept,
             )[0]
-            betamax = np.amax(abs(np.array(BETA)), axis=0)
+            betamax = np.amax(abs(np.array(BETA)), axis = 0)
             qmax = biggest_indexes(betamax, q)
             for i in qmax:
                 distribution[i] += 1

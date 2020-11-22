@@ -129,20 +129,20 @@ def min_LS(matrices, selected, intercept=False):
 def affichage(
     LISTE_BETA,
     path,
-    title=" ",
-    labels=False,
-    pix=False,
-    xlabel=" ",
-    ylabel=" ",
-    naffichage=10,
+    title = " ",
+    labels = False,
+    pix = False,
+    xlabel = " ",
+    ylabel = " ",
+    naffichage = 10,
 ):
     BETAS = np.array(LISTE_BETA)
     l_index = influence(BETAS, naffichage)
-    plt.figure(figsize=(10, 3), dpi=80)
+    plt.figure(figsize = (10, 3), dpi = 80)
     if pix == "path":
         plt.plot(path, [0] * len(path), "r+")
     plot_betai(labels, l_index, path, BETAS)
-    plt.title(title), plt.legend(loc=4, borderaxespad=0.0)
+    plt.title(title), plt.legend(loc = 4, borderaxespad = 0.0)
     plt.xlabel(xlabel), plt.ylabel(ylabel)
     if type(pix) == bool and pix:
         plt.matshow(
@@ -175,7 +175,7 @@ def check_size(X, y, C):
     return X2, y2, C2
 
 
-def tree_to_matrix(tree, label, with_repr=False):
+def tree_to_matrix(tree, label, with_repr = False):
     # to do here : given a skbio tree and the beta-labels in a given order, return the matrix A and the new labels corresponding
     dicti = dict()
     d = len(label)
@@ -227,14 +227,14 @@ def random_data(
     d_nonzero,
     k,
     sigma,
-    zerosum=False,
-    seed=False,
-    classification=False,
-    exp=False,
-    A=None,
-    lb_beta=3,
-    ub_beta=10,
-    intercept=None,
+    zerosum = False,
+    seed = False,
+    classification = False,
+    exp = False,
+    A = None,
+    lb_beta = 3,
+    ub_beta = 10,
+    intercept = None,
 ):
     """Generation of random matrices as data such that y = X.sol + sigma. noise
 
@@ -272,7 +272,7 @@ def random_data(
     sol, list_i = np.zeros(d1), np.random.randint(d1, size=d_nonzero)
 
     # sol reduc is random int between lb_beta and ub_beta with a random sign.
-    sol_reduc = np.random.randint(low=lb_beta, high=ub_beta + 1, size=d_nonzero) * (
+    sol_reduc = np.random.randint(low = lb_beta, high = ub_beta + 1, size = d_nonzero) * (
         np.random.randint(2, size=d_nonzero) * 2 - 1
     )
 
@@ -285,7 +285,7 @@ def random_data(
             return ((X, np.zeros((0, d1)), y), sol)
 
         while True:
-            C = np.random.randint(low=-1, high=1, size=(k, d))
+            C = np.random.randint(low = -1, high = 1, size = (k, d))
             if LA.matrix_rank(C) == k:
                 break
 
@@ -293,7 +293,7 @@ def random_data(
         # building a sparse solution such that C.A sol = 0
         C_reduc = C.dot(A)[:, list_i]
         if LA.matrix_rank(C_reduc) < k:
-            list_i = np.random.randint(d1, size=d_nonzero)
+            list_i = np.random.randint(d1, size = d_nonzero)
             continue
         proj = proj_c(C_reduc, d_nonzero).dot(sol_reduc)
         sol[list_i] = proj
@@ -309,7 +309,7 @@ def random_data(
     return (X, C, y), sol
 
 
-def csv_to_np(file, begin=1, header=None):
+def csv_to_np(file, begin = 1, header = None):
     """Function to read a csv file and to create an ndarray with this
 
     Args:
@@ -320,7 +320,7 @@ def csv_to_np(file, begin=1, header=None):
     Returns:
         ndarray : matrix of the csv file
     """
-    tab1 = pd.read_csv(file, header=header)
+    tab1 = pd.read_csv(file, header = header)
     return np.array(tab1)[:, begin:]
 
 
@@ -340,7 +340,7 @@ def mat_to_np(file):
     return arrays
 
 
-def clr(array, coef=0.5):
+def clr(array, coef = 0.5):
     """Centered-Log-Ratio transformation
 
     Set all non positive entry to a constant coef. Then compute the log of each component. Then substract the mean of each column.
@@ -357,10 +357,10 @@ def clr(array, coef=0.5):
     null_set = M <= 0.0
     M[null_set] = np.ones(M[null_set].shape) * coef
     M = np.log(M)
-    return M - np.mean(M, axis=0)
+    return M - np.mean(M, axis = 0)
 
 
-def to_zarr(obj, name, root, first=True):
+def to_zarr(obj, name, root, first = True):
 
     if type(obj) == dict:
         if first:
@@ -369,10 +369,10 @@ def to_zarr(obj, name, root, first=True):
             zz = root.create_group(name)
 
         for key, value in obj.items():
-            to_zarr(value, key, zz, first=False)
+            to_zarr(value, key, zz, first = False)
 
     elif type(obj) in [np.ndarray, pd.DataFrame]:
-        root.create_dataset(name, data=obj, shape=obj.shape)
+        root.create_dataset(name, data = obj, shape = obj.shape)
 
     elif type(obj) == np.float64:
         root.attrs[name] = float(obj)
@@ -384,13 +384,13 @@ def to_zarr(obj, name, root, first=True):
         if name == "tree":
             root.attrs[name] = obj
         else:
-            to_zarr(np.array(obj), name, root, first=False)
+            to_zarr(np.array(obj), name, root, first = False)
 
     elif obj is None or type(obj) in [str, bool, float, int]:
         root.attrs[name] = obj
 
     else:
-        to_zarr(obj.__dict__, name, root, first=first)
+        to_zarr(obj.__dict__, name, root, first = first)
 
 
 """
@@ -398,7 +398,7 @@ misc of compact func
 """
 
 
-def unpenalized(matrix, eps=1e-3, intercept=False):
+def unpenalized(matrix, eps = 1e-3, intercept = False):
 
     if intercept:
         A1, C1, y = matrix
@@ -439,7 +439,7 @@ def plot_betai(labels, l_index, path, BETAS):
 
 
 def influence(BETAS, ntop):
-    means = np.mean(abs(BETAS), axis=0)
+    means = np.mean(abs(BETAS), axis = 0)
     top = np.argpartition(means, -ntop)[-ntop:]
     return np.sort(top)
 

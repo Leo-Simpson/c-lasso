@@ -11,7 +11,7 @@ Dimensions :   A : m*d  ;  y : m  ;  b : d   ; C : k*d
 The first function compute a solution of a Lasso problem for a given lambda.
 The parameters are lam (lambda/lambdamax, \in [0,1]) and pb, which has to be a 'problem_LS type',
 which is defined bellow in order to contain all the important parameters of the problem.
-One can initialise it this way : pb = class_of_problem.problem(data=(A,C,y),type_of_algo).
+One can initialise it this way : pb = class_of_problem.problem(data = (A,C,y),type_of_algo).
 We solve the problem without normalizing anything.
 """
 
@@ -30,11 +30,11 @@ def Classo_R3(pb, lam):
     # here we compute the path algo until our lambda, and just take the last beta
 
     # here we use our path algorithm for concomitant problem, and then only takes the last beta.
-    # Actually, the function solve_path_Conc has the argument concomitant= 'fix_lam' so it means it will directly stop when it has to.
+    # Actually, the function solve_path_Conc has the argument concomitant = 'fix_lam' so it means it will directly stop when it has to.
     # Then we only have to finc the solution between the last beta computed and the one before.
     if pb_type == "Path-Alg":
         (beta1, beta2), (s1, s2), (r1, r2) = solve_path_Conc(
-            (A, C, y), lam, lassopath=False
+            (A, C, y), lam, lassopath = False
         )
         dr, ds = r1 - r2, s1 - s2
         teta = root_2(
@@ -110,7 +110,7 @@ and then to evaluate it in the given finite path.
 """
 
 
-def pathlasso_R3(pb, path, n_active=False):
+def pathlasso_R3(pb, path, n_active = False):
     n, d, k = pb.dim
     BETA, SIGMA, tol = [], [], pb.tol
 

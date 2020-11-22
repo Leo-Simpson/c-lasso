@@ -20,7 +20,7 @@ label = np.concatenate([labels, np.array(["Calorie", "Fat", "Biais"])])
 C = np.ones((1, len(X[0])))
 C[0, -1], C[0, -2], C[0, -3] = 0.0, 0.0, 0.0
 
-problem = classo_problem(X, y, C, label=label)
+problem = classo_problem(X, y, C, label = label)
 
 # Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
 problem.model_selection.LAMfixed = True

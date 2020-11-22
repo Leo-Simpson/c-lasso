@@ -4,19 +4,19 @@ import numpy.linalg as LA
 from .solve_R1 import problem_R1, Classo_R1
 
 r"""
-Problem    :   min h_rho(Ab - y) + lambda ||b||1 with C.b= 0 <=>   min ||Ab - y - r*o||^2 + lambda ||b,o||1 with C.b= 0, o in R^m
+Problem    :   min h_rho(Ab - y) + lambda ||b||1 with C.b = 0 <=>   min ||Ab - y - r*o||^2 + lambda ||b,o||1 with C.b = 0, o in R^m
                                                                                         r = lambda / 2rho
 Dimensions :   A : m*d  ;  y : m  ;  b : d   ; C : k*d
 
 The first function compute a solution of a Lasso problem for a given lambda.
 The parameters are lam (lambda/lambdamax, \in [0,1]) and pb, which has to be a 'problem_LS type',
 which is defined bellow in order to contain all the important parameters of the problem.
-One can initialise it this way : pb = class_of_problem.problem(data=(A,C,y),type_of_algo).
+One can initialise it this way : pb = class_of_problem.problem(data = (A,C,y),type_of_algo).
 We solve the problem without normalizing anything.
 """
 
 
-def Classo_R2(pb, lam, compute=True):
+def Classo_R2(pb, lam, compute = True):
 
     pb_type = pb.type  # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
@@ -50,7 +50,7 @@ def Classo_R2(pb, lam, compute=True):
     r = lamb / (2 * rho)
     if pb_type == "DR":
         if compute:
-            pb.init_R1(r=r)
+            pb.init_R1(r = r)
             x = Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)
             beta = x[:-m]
             if pb.intercept:
@@ -58,7 +58,7 @@ def Classo_R2(pb, lam, compute=True):
                 beta = np.array([betaO] + list(beta))
             return beta
         else:
-            pb.add_r(r=r)
+            pb.add_r(r = r)
             if len(pb.init) == 3:
                 pb.prob_R1.init = pb.init
             x, warm_start = Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)
@@ -175,7 +175,7 @@ and then to evaluate it in the given finite path.
 """
 
 
-def pathlasso_R2(pb, path, n_active=False):
+def pathlasso_R2(pb, path, n_active = False):
     n = pb.dim[0]
     BETA, tol = [], pb.tol
     if pb.type == "Path-Alg":
@@ -196,7 +196,7 @@ def pathlasso_R2(pb, path, n_active=False):
     else:
         n_act = n
     for lam in path:
-        X = Classo_R2(pb, lam, compute=False)
+        X = Classo_R2(pb, lam, compute = False)
         BETA.append(X[0])
         pb.init = X[1]
         if (
@@ -219,7 +219,7 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 
 
 class problem_R2:
-    def __init__(self, data, algo, rho, intercept=False):
+    def __init__(self, data, algo, rho, intercept = False):
         self.N = 500000
 
         (AA, CC, y) = data
@@ -229,8 +229,8 @@ class problem_R2:
         self.intercept = intercept
         if intercept:
             # add a column of 1 in A, and change weight.
-            A = np.concatenate([np.ones((len(A), 1)), A], axis=1)
-            C = np.concatenate([np.zeros((len(C), 1)), C], axis=1)
+            A = np.concatenate([np.ones((len(A), 1)), A], axis = 1)
+            C = np.concatenate([np.zeros((len(C), 1)), C], axis = 1)
             self.weights = np.concatenate([[0.0], self.weights])
             yy = y - np.mean(y)
 
@@ -270,7 +270,7 @@ class problem_R2:
         self.tauN = self.tau / self.Cnorm
         self.AtAnorm = LA.norm(self.AtA, 2)
 
-    def init_R1(self, r=0.0):
+    def init_R1(self, r = 0.0):
         (AA, CC, y) = self.matrix
         A, C = AA[:, :], CC[:, :]
         (m, d, k) = self.dim
@@ -281,7 +281,7 @@ class problem_R2:
         Chuber = np.append(C, np.zeros((k, m)), 1)
         yhuber = y
         if self.intercept:
-            Abar = np.mean(Ahuber, axis=0)
+            Abar = np.mean(Ahuber, axis = 0)
             ybar = np.mean(y)
             Ahuber = Ahuber - Abar
             yhuber = yhuber - ybar
@@ -292,7 +292,7 @@ class problem_R2:
         if self.intercept:
             prob.Abar = Abar
             prob.ybar = ybar
-            self.AAt = (A - np.mean(A, axis=0)).dot((A - np.mean(A, axis=0)).T)
+            self.AAt = (A - np.mean(A, axis = 0)).dot((A - np.mean(A, axis = 0)).T)
         else:
             self.AAt = A.dot(A.T)
         self.prob_R1 = prob
@@ -309,7 +309,7 @@ class problem_R2:
         extension = np.eye(m)
         if self.intercept:
             # self.init_R1(r=r)
-            extension = extension - np.mean(extension, axis=0)
+            extension = extension - np.mean(extension, axis = 0)
         extension = r * extension
         A_r1[:, d:] = extension
         right_bottom = extension.dot(extension)
@@ -318,7 +318,7 @@ class problem_R2:
         prob.AtAnorm = LA.norm(prob.AtA, 2)
 
 
-# compute the prox of the function : f(b)= sum (wi * |bi| )
+# compute the prox of the function : f(b) = sum (wi * |bi| )
 def prox(b, w, zeros):
     return np.minimum(b + w, zeros) + np.maximum(b - w, zeros)
 

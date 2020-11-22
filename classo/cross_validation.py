@@ -49,14 +49,14 @@ def training(
     mat = (A[training_set], C, y[training_set])
     sol = pathlasso(
         mat,
-        lambdas=lambdas,
-        typ=typ,
-        meth=num_meth,
-        rho=rho,
-        e=e,
-        rho_classification=rho_classification,
-        w=w,
-        intercept=intercept,
+        lambdas = lambdas,
+        typ = typ,
+        meth = num_meth,
+        rho = rho,
+        e = e,
+        rho_classification = rho_classification,
+        w = w,
+        intercept = intercept,
     )[0]
     return sol
 
@@ -95,9 +95,9 @@ def test_i(
             matrices[2][test_set],
             BETA[j],
             typ,
-            rho=rho,
-            rho_classification=rho_classification,
-            intercept=intercept,
+            rho = rho,
+            rho_classification = rho_classification,
+            intercept = intercept,
         )
 
     return residual
@@ -132,8 +132,8 @@ def average_test(
             w,
             intercept,
         )
-    MSE = np.mean(RESIDUAL, axis=0)
-    SE = np.std(RESIDUAL, axis=0) / np.sqrt(k)
+    MSE = np.mean(RESIDUAL, axis = 0)
+    SE = np.std(RESIDUAL, axis = 0) / np.sqrt(k)
     return (MSE, SE)
 
 
@@ -142,16 +142,16 @@ def CV(
     k,
     typ="R1",
     num_meth="Path-Alg",
-    test=0.0,
-    seed=1,
-    rho=1.345,
-    rho_classification=-1.0,
-    e=1.0,
-    lambdas=None,
-    Nlam=100,
-    oneSE=True,
-    w=None,
-    intercept=False,
+    test = 0.0,
+    seed = 1,
+    rho = 1.345,
+    rho_classification = -1.0,
+    e = 1.0,
+    lambdas = None,
+    Nlam = 100,
+    oneSE = True,
+    w = None,
+    intercept = False,
 ):
 
     if lambdas is None:
@@ -181,13 +181,13 @@ def CV(
     out = Classo(
         (A[idx_train], C, y[idx_train]),
         lam,
-        typ=typ,
-        meth=num_meth,
-        rho=rho,
-        e=e,
-        rho_classification=rho_classification,
-        w=w,
-        intercept=intercept,
+        typ = typ,
+        meth = num_meth,
+        rho = rho,
+        e = e,
+        rho_classification = rho_classification,
+        w = w,
+        intercept = intercept,
     )
     return (out, MSE, SE, i, i_1SE)
 
@@ -229,7 +229,7 @@ def accuracy_func(
 ):
 
     if intercept:
-        Aprime = np.concatenate([np.ones((len(A), 1)), A], axis=1)
+        Aprime = np.concatenate([np.ones((len(A), 1)), A], axis = 1)
     else:
         Aprime = A[:, :]
 

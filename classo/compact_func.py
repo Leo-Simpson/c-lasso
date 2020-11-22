@@ -20,15 +20,15 @@ to the method and formulation required
 def Classo(
     matrix,
     lam,
-    typ="R1",
-    meth="DR",
-    rho=1.345,
-    get_lambdamax=False,
-    true_lam=False,
-    e=None,
-    rho_classification=-0.0,
-    w=None,
-    intercept=False,
+    typ = "R1",
+    meth = "DR",
+    rho = 1.345,
+    get_lambdamax = False,
+    true_lam = False,
+    e = None,
+    rho_classification = -0.0,
+    w = None,
+    intercept = False,
 ):
 
     if w is not None:
@@ -44,7 +44,7 @@ def Classo(
             # the intercept is simple beta0 = ybar-Xbar .vdot(beta)
             # so by changing the X to X-Xbar and y to y-ybar
             #  we can solve standard problem
-            Xbar, ybar = np.mean(X, axis=0), np.mean(y)
+            Xbar, ybar = np.mean(X, axis = 0), np.mean(y)
             matrices = (X - Xbar, C, y - ybar)
 
         if meth not in ["Path-Alg", "DR"]:
@@ -72,14 +72,14 @@ def Classo(
             meth = "DR"
         if e is None or e == len(matrices[0]):
             r = 1.0
-            pb = problem_R4(matrices, meth, rho, intercept=intercept)
+            pb = problem_R4(matrices, meth, rho, intercept = intercept)
         else:
             r = np.sqrt(e / len(matrices[0]))
             pb = problem_R4(
                 (matrices[0] * r, matrices[1], matrices[2] * r),
                 meth,
                 rho / r,
-                intercept=intercept,
+                intercept = intercept,
             )
 
         lambdamax = pb.lambdamax
@@ -92,7 +92,7 @@ def Classo(
 
         if meth not in ["Path-Alg", "P-PDS", "PF-PDS", "DR"]:
             meth = "ODE"
-        pb = problem_R2(matrices, meth, rho, intercept=intercept)
+        pb = problem_R2(matrices, meth, rho, intercept = intercept)
         lambdamax = pb.lambdamax
         if true_lam:
             beta = Classo_R2(pb, lam / lambdamax)
@@ -102,13 +102,13 @@ def Classo(
     elif typ == "C2":
 
         lambdamax = h_lambdamax(
-            matrices, rho_classification, typ="C2", intercept=intercept
+            matrices, rho_classification, typ="C2", intercept = intercept
         )
         if true_lam:
             out = solve_path(matrices, lam / lambdamax, False, rho_classification, "C2")
         else:
             out = solve_path(
-                matrices, lam, False, rho_classification, "C2", intercept=intercept
+                matrices, lam, False, rho_classification, "C2", intercept = intercept
             )
         if intercept:
             beta0, beta = out[0][-1], out[1][-1]
@@ -118,13 +118,13 @@ def Classo(
 
     elif typ == "C1":
 
-        lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept=intercept)
+        lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept = intercept)
         if true_lam:
             out = solve_path(
-                matrices, lam / lambdamax, False, 0, "C1", intercept=intercept
+                matrices, lam / lambdamax, False, 0, "C1", intercept = intercept
             )
         else:
-            out = solve_path(matrices, lam, False, 0, "C1", intercept=intercept)
+            out = solve_path(matrices, lam, False, 0, "C1", intercept = intercept)
         if intercept:
             beta0, beta = out[0][-1], out[1][-1]
             beta = np.array([beta0] + list(beta))
@@ -137,7 +137,7 @@ def Classo(
             #  the intercept is simple beta0 = ybar-Xbar .vdot(beta)
             #  so by changing the X to X-Xbar and y to y-ybar
             #  we can solve standard problem
-            Xbar, ybar = np.mean(X, axis=0), np.mean(y)
+            Xbar, ybar = np.mean(X, axis = 0), np.mean(y)
             matrices = (X - Xbar, C, y - ybar)
 
         if meth not in ["Path-Alg", "P-PDS", "PF-PDS", "DR"]:
@@ -172,18 +172,18 @@ def Classo(
 
 def pathlasso(
     matrix,
-    lambdas=False,
-    n_active=0,
-    lamin=1e-2,
-    typ="R1",
-    meth="Path-Alg",
-    rho=1.345,
-    true_lam=False,
-    e=None,
-    return_sigm=False,
-    rho_classification=0.0,
-    w=None,
-    intercept=False,
+    lambdas = False,
+    n_active = 0,
+    lamin = 1e-2,
+    typ = "R1",
+    meth = "Path-Alg",
+    rho = 1.345,
+    true_lam = False,
+    e = None,
+    return_sigm = False,
+    rho_classification = 0.0,
+    w = None,
+    intercept = False,
 ):
 
     Nactive = n_active
@@ -208,16 +208,16 @@ def pathlasso(
 
     if typ == "R2":
 
-        pb = problem_R2(matrices, meth, rho, intercept=intercept)
+        pb = problem_R2(matrices, meth, rho, intercept = intercept)
         lambdamax = pb.lambdamax
         if true_lam:
             lambdass = [lamb / lambdamax for lamb in lambdass]
-        BETA = pathlasso_R2(pb, lambdass, n_active=Nactive)
+        BETA = pathlasso_R2(pb, lambdass, n_active = Nactive)
 
     elif typ == "R3":
         if intercept:
             # here we use the fact that for R1 and R3, the intercept is simple beta0 = ybar-Xbar .vdot(beta) so by changing the X to X-Xbar and y to y-ybar we can solve standard problem
-            Xbar, ybar = np.mean(X, axis=0), np.mean(y)
+            Xbar, ybar = np.mean(X, axis = 0), np.mean(y)
             matrices = (X - Xbar, C, y - ybar)
         if e is None or e == len(matrices[0]) / 2:
             r = 1.0
@@ -228,7 +228,7 @@ def pathlasso(
         lambdamax = pb.lambdamax
         if true_lam:
             lambdass = [lamb / lambdamax for lamb in lambdass]
-        BETA, S = pathlasso_R3(pb, lambdass, n_active=Nactive)
+        BETA, S = pathlasso_R3(pb, lambdass, n_active = Nactive)
         S = np.array(S) / r ** 2
         BETA = np.array(BETA)
         if intercept:
@@ -238,27 +238,27 @@ def pathlasso(
 
         if e is None or e == len(matrices[0]):
             r = 1.0
-            pb = problem_R4(matrices, meth, rho, intercept=intercept)
+            pb = problem_R4(matrices, meth, rho, intercept = intercept)
         else:
             r = np.sqrt(e / len(matrices[0]))
             pb = problem_R4(
                 (matrices[0] * r, matrices[1], matrices[2] * r),
                 meth,
                 rho / r,
-                intercept=intercept,
+                intercept = intercept,
             )
 
         lambdamax = pb.lambdamax
         if true_lam:
             lambdass = [lamb / lambdamax for lamb in lambdass]
-        BETA, S = pathlasso_R4(pb, lambdass, n_active=Nactive)
+        BETA, S = pathlasso_R4(pb, lambdass, n_active = Nactive)
         S = np.array(S) / r ** 2
         BETA = np.array(BETA)
 
     elif typ == "C2":
 
         lambdamax = h_lambdamax(
-            matrices, rho_classification, typ="C2", intercept=intercept
+            matrices, rho_classification, typ="C2", intercept = intercept
         )
         if true_lam:
             lambdass = [lamb / lambdamax for lamb in lambdass]
@@ -266,18 +266,18 @@ def pathlasso(
             matrices,
             lambdass,
             "C2",
-            n_active=Nactive,
-            rho=rho_classification,
-            intercept=intercept,
+            n_active = Nactive,
+            rho = rho_classification,
+            intercept = intercept,
         )
 
     elif typ == "C1":
 
-        lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept=intercept)
+        lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept = intercept)
         if true_lam:
             lambdass = [lamb / lambdamax for lamb in lambdass]
         BETA = pathalgo_general(
-            matrices, lambdass, "C1", n_active=Nactive, intercept=intercept
+            matrices, lambdass, "C1", n_active = Nactive, intercept = intercept
         )
 
     else:  # R1
@@ -286,13 +286,13 @@ def pathlasso(
             #  the intercept is simple beta0 = ybar-Xbar .vdot(beta)
             #  so by changing the X to X-Xbar and y to y-ybar
             #  we can solve standard problem
-            Xbar, ybar = np.mean(X, axis=0), np.mean(y)
+            Xbar, ybar = np.mean(X, axis = 0), np.mean(y)
             matrices = (X - Xbar, C, y - ybar)
         pb = problem_R1(matrices, meth)
         lambdamax = pb.lambdamax
         if true_lam:
             lambdass = [lamb / lambdamax for lamb in lambdass]
-        BETA = pathlasso_R1(pb, lambdass, n_active=n_active)
+        BETA = pathlasso_R1(pb, lambdass, n_active = n_active)
 
         if intercept:
             BETA = np.array([[ybar - Xbar.dot(beta)] + list(beta) for beta in BETA])

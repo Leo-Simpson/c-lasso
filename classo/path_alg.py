@@ -46,7 +46,7 @@ class parameters_for_update:
 
     """
 
-    def __init__(self, matrices, lamin, rho, typ, eps_L2=1e-3, intercept=False):
+    def __init__(self, matrices, lamin, rho, typ, eps_L2 = 1e-3, intercept = False):
         if typ == "C2" and rho > 1:
             raise ValueError(
                 "For huberized hinge, rho has to be smaller than 1, but here it is :",
@@ -119,7 +119,7 @@ class parameters_for_update:
 
 
 # iteration of the function up to solve the path at each breaking points.
-def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
+def solve_path(matrices, lamin, n_active, rho, typ, intercept = False):
     """
     This functions will compute the path for all the breaking points :
     beta is a piecewise linear function of lambda, and only value on the breaking points
@@ -165,7 +165,7 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
     )
 
 
-def solve_path_Conc(matrices, stop, n_active=False, lassopath=True, true_lam=False):
+def solve_path_Conc(matrices, stop, n_active = False, lassopath = True, true_lam = False):
     """
     This functions will compute the path for all the breaking points :
     beta is a piecewise linear function of lambda, and only value on the breaking points
@@ -235,7 +235,7 @@ def solve_path_Conc(matrices, stop, n_active=False, lassopath=True, true_lam=Fal
     )
 
 
-def pathalgo_general(matrix, path, typ, n_active=False, rho=0, intercept=False):
+def pathalgo_general(matrix, path, typ, n_active = False, rho = 0, intercept = False):
     """
     This function is only to interpolate the solution path between the breaking points
     """
@@ -265,13 +265,13 @@ def pathalgo_general(matrix, path, typ, n_active=False, rho=0, intercept=False):
     return BETA
 
 
-def pathalgo_huber_cl(matrix, path, rho, n_active=False, intercept=False):
+def pathalgo_huber_cl(matrix, path, rho, n_active = False, intercept = False):
     return pathalgo_general(
         matrix, path, "C2", n_active=n_active, rho=rho, intercept=intercept
     )
 
 
-def pathalgo_cl(matrix, path, n_active=False, intercept=False):
+def pathalgo_cl(matrix, path, n_active = False, intercept = False):
     return pathalgo_general(matrix, path, "C1", n_active, intercept=intercept)
 
 
@@ -818,7 +818,7 @@ def next_inv(Xt, B, al, ligne):
     return np.concatenate((col1, np.array([col]).T, col2), axis=1)
 
 
-def h_lambdamax(matrices, rho, typ="R1", intercept=False):
+def h_lambdamax(matrices, rho, typ = "R1", intercept=False):
     param = parameters_for_update(matrices, 0.0, rho, typ, intercept=intercept)
     return param.lambdamax
 
@@ -875,7 +875,7 @@ def find_beta0(r, dbeta0, y, rho, typ):
     return beta0
 
 
-def binary_search(f, a, b, tol=1e-8):
+def binary_search(f, a, b, tol = 1e-8):
     c = (a + b) / 2
     if f(a) * f(b) > 0:
         print("gradh(min(y)) = ", f(a))

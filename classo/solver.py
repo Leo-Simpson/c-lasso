@@ -61,9 +61,9 @@ class classo_problem:
     """
 
     def __init__(
-        self, X, y, C=None, Tree=None, label=None, rescale=False
+        self, X, y, C = None, Tree = None, label = None, rescale = False
     ):  # zero sum constraint by default, but it can be any matrix
-        self.data = Data(X, y, C, Tree=Tree, rescale=rescale, label=label)
+        self.data = Data(X, y, C, Tree = Tree, rescale = rescale, label = label)
         self.formulation = Formulation()
         self.model_selection = Model_selection()
         self.solution = Solution()
@@ -84,7 +84,7 @@ class classo_problem:
             if self.formulation.e == "n/2":
                 self.formulation.e = (
                     n / 2
-                )  # useful to be able to write e='n/2' as it is in the default parameters
+                )  # useful to be able to write e = 'n/2' as it is in the default parameters
             elif self.formulation.e == "n":
                 self.formulation.e = n  # same
             else:
@@ -234,7 +234,7 @@ class Data:
 
     """
 
-    def __init__(self, X, y, C, Tree=None, rescale=False, label=None):
+    def __init__(self, X, y, C, Tree = None, rescale = False, label = None):
         self.rescale = rescale  # booleen to know if we rescale the matrices
         X1, y1, C1 = check_size(X, y, C)
 
@@ -246,7 +246,7 @@ class Data:
             self.X, self.y, self.C, self.tree = X1, y1, C1, None
 
         else:
-            A, label2, subtree = tree_to_matrix(Tree, label, with_repr=True)
+            A, label2, subtree = tree_to_matrix(Tree, label, with_repr = True)
             self.tree = subtree
             self.X, self.y, self.C, self.label = (
                 X1.dot(A),
@@ -365,21 +365,21 @@ class Model_selection:
 
     """
 
-    def __init__(self, method="not specified"):
+    def __init__(self, method = "not specified"):
 
         # Model selection variables
 
         self.PATH = False
-        self.PATHparameters = PATHparameters(method=method)
+        self.PATHparameters = PATHparameters(method = method)
 
         self.CV = False
-        self.CVparameters = CVparameters(method=method)
+        self.CVparameters = CVparameters(method = method)
 
         self.StabSel = True  # Only model selection that is used by default
-        self.StabSelparameters = StabSelparameters(method=method)
+        self.StabSelparameters = StabSelparameters(method = method)
 
         self.LAMfixed = False
-        self.LAMfixedparameters = LAMfixedparameters(method=method)
+        self.LAMfixedparameters = LAMfixedparameters(method = method)
 
     def __repr__(self):
         string = ""
@@ -428,7 +428,7 @@ class PATHparameters:
 
     """
 
-    def __init__(self, method="not specified"):
+    def __init__(self, method = "not specified"):
         self.formulation = "not specified"
         self.numerical_method = method
         self.n_active = 0
@@ -492,7 +492,7 @@ class CVparameters:
 
     """
 
-    def __init__(self, method="not specified"):
+    def __init__(self, method = "not specified"):
         self.seed = 0
         self.formulation = "not specified"
         self.numerical_method = method
@@ -575,7 +575,7 @@ class StabSelparameters:
 
     """
 
-    def __init__(self, method="not specified"):
+    def __init__(self, method = "not specified"):
         self.seed = 123
         self.formulation = "not specified"
         self.numerical_method = method
@@ -638,7 +638,7 @@ class LAMfixedparameters:
             Default value : None
     """
 
-    def __init__(self, method="not specified"):
+    def __init__(self, method = "not specified"):
         self.lam = "theoretical"
         self.formulation = "not specified"
         self.numerical_method = method
@@ -743,16 +743,16 @@ class solution_PATH:
 
         out = pathlasso(
             matrices,
-            lambdas=param.lambdas,
-            n_active=param.n_active,
-            typ=name_formulation,
-            meth=numerical_method,
-            return_sigm=True,
-            rho=rho,
-            e=e,
-            rho_classification=rho_classification,
-            w=param.formulation.w,
-            intercept=param.formulation.intercept,
+            lambdas = param.lambdas,
+            n_active = param.n_active,
+            typ = name_formulation,
+            meth = numerical_method,
+            return_sigm = True,
+            rho = rho,
+            e = e,
+            rho_classification = rho_classification,
+            w = param.formulation.w,
+            intercept = param.formulation.intercept,
         )
         if formulation.concomitant:
             self.BETAS, self.LAMBDAS, self.SIGMAS = out
@@ -775,7 +775,7 @@ class solution_PATH:
         if (
             d > 20
         ):  # this trick is to plot only the biggest value, excluding the intercept
-            avg_betas = np.mean(abs(np.array(self.BETAS)), axis=0)
+            avg_betas = np.mean(abs(np.array(self.BETAS)), axis = 0)
             if self.formulation.intercept:
                 avg_betas[0] = 0  # trick to exclude intercept in the graph
                 string += "\n There is also an intercept.  "
@@ -798,11 +798,11 @@ class solution_PATH:
         affichage(
             self.BETAS[:, top],
             xGraph,
-            labels=self.label[top],
-            naffichage=5,
-            title=PATH_beta_path["title"] + self.formulation.name(),
-            xlabel=xlabel,
-            ylabel=PATH_beta_path["ylabel"],
+            labels = self.label[top],
+            naffichage = 5,
+            title = pATH_beta_path["title"] + self.formulation.name(),
+            xlabel = xlabel,
+            ylabel = pATH_beta_path["ylabel"],
         )
         if type(self.save) == str:
             plt.savefig(self.save + "Beta-path")
@@ -879,16 +879,16 @@ class solution_CV:
         (out, self.yGraph, self.standard_error, self.index_min, self.index_1SE,) = CV(
             matrices,
             param.Nsubset,
-            typ=name_formulation,
-            num_meth=numerical_method,
-            lambdas=param.lambdas,
-            seed=param.seed,
-            rho=rho,
-            rho_classification=rho_classification,
-            oneSE=param.oneSE,
-            e=e,
-            w=param.formulation.w,
-            intercept=param.formulation.intercept,
+            typ = name_formulation,
+            num_meth = numerical_method,
+            lambdas = param.lambdas,
+            seed = param.seed,
+            rho = rho,
+            rho_classification = rho_classification,
+            oneSE = param.oneSE,
+            e = e,
+            w = param.formulation.w,
+            intercept = param.formulation.intercept,
         )
 
         self.xGraph = param.lambdas
@@ -903,9 +903,9 @@ class solution_CV:
 
         self.selected_param = (
             abs(self.beta) > 1e-5
-        )  # boolean array, false iff beta_i =0
+        )  # boolean array, false iff beta_i = 0
         self.refit = min_LS(
-            matrices, self.selected_param, intercept=self.formulation.intercept
+            matrices, self.selected_param, intercept = self.formulation.intercept
         )
         self.time = time() - t0
         self.save1 = False
@@ -922,7 +922,7 @@ class solution_CV:
             selected[0] = False
             string += "\n Intercept : " + str(self.refit[0])
 
-        self.graphic(save=self.save1,logscale=self.logscale)
+        self.graphic(save = self.save1,logscale = self.logscale)
 
         nb_select = sum(selected)
         if nb_select > 10:
@@ -934,7 +934,7 @@ class solution_CV:
         plt.bar(range(nb_select), self.refit[selected])
         plt.title(CV_beta["title"])
         plt.xlabel(CV_beta["xlabel"]), plt.ylabel(CV_beta["ylabel"])
-        plt.xticks(top, self.label[selected][top], rotation=90)
+        plt.xticks(top, self.label[selected][top], rotation = 90)
 
         if type(self.save2) == str:
             plt.savefig(self.save2)
@@ -947,7 +947,7 @@ class solution_CV:
         string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
         return string
 
-    def graphic(self, se_max=None, save=None, logscale=True, errorevery=5):
+    def graphic(self, se_max = None, save = None, logscale = True, errorevery = 5):
         """Method to plot the graphic showing mean squared error over along lambda path once cross validation is computed.
 
         Args:
@@ -979,38 +979,38 @@ class solution_CV:
                 np.log10(self.xGraph[jmin : jmax + 1]),
                 self.yGraph[jmin : jmax + 1],
                 self.standard_error[jmin : jmax + 1],
-                label="mean over the k groups of data",
-                errorevery=errorevery,
+                label = "mean over the k groups of data",
+                errorevery = errorevery,
             )
             plt.xlabel(r"$ \log_{10} \lambda / \lambda_{max}$")
             plt.axvline(
-                x=np.log10(self.xGraph[i_min]),
-                color="k",
-                label=r"$\lambda$ (min MSE)",
+                x = np.log10(self.xGraph[i_min]),
+                color = "k",
+                label = r"$\lambda$ (min MSE)",
             )
             plt.axvline(
-                x=np.log10(self.xGraph[i_1SE]),
-                color="r",
-                label=r"$\lambda$ (1SE) ",
+                x = np.log10(self.xGraph[i_1SE]),
+                color = "r",
+                label = r"$\lambda$ (1SE) ",
             )
         else:
             plt.errorbar(
                 self.xGraph[jmin : jmax + 1],
                 self.yGraph[jmin : jmax + 1],
                 self.standard_error[jmin : jmax + 1],
-                label="mean over the k groups of data",
-                errorevery=errorevery,
+                label = "mean over the k groups of data",
+                errorevery = errorevery,
             )
             plt.xlabel(r"$\lambda / \lambda_{max}$")
-            plt.axvline(x=self.xGraph[i_min], color="k", label=r"$\lambda$ (min MSE)")
-            plt.axvline(x=self.xGraph[i_1SE], color="r", label=r"$\lambda$ (1SE) ")
+            plt.axvline(x = self.xGraph[i_min], color = "k", label = r"$\lambda$ (min MSE)")
+            plt.axvline(x = self.xGraph[i_1SE], color = "r", label = r"$\lambda$ (1SE) ")
         plt.title(CV_graph["title"])
         if self.formulation.classification:
             plt.ylabel(CV_graph["ylabel_classification"])
         else:
             plt.ylabel(CV_graph["ylabel"])
         plt.legend()
-        if save is not None and type(save)==str:
+        if save is not None and type(save) == str:
             plt.savefig(save)
         plt.show()
 
@@ -1061,8 +1061,8 @@ class solution_StabSel:
             param.numerical_method,
             "StabSel",
             param.formulation,
-            StabSelmethod=param.method,
-            lam=lam,
+            StabSelmethod = param.method,
+            lam = lam,
         )
         param.numerical_method = numerical_method
 
@@ -1077,22 +1077,22 @@ class solution_StabSel:
         # Compute the distribution
         output = stability(
             matrices,
-            StabSelmethod=param.method,
-            numerical_method=numerical_method,
-            lamin=param.lamin,
-            lam=lam,
-            Nlam=param.Nlam,
-            q=param.q,
-            B=param.B,
-            percent_nS=param.percent_nS,
-            formulation=name_formulation,
-            seed=param.seed,
-            rho=rho,
-            rho_classification=rho_classification,
-            true_lam=not param.rescaled_lam,
-            e=e,
-            w=param.formulation.w,
-            intercept=param.formulation.intercept,
+            StabSelmethod = param.method,
+            numerical_method = numerical_method,
+            lamin = param.lamin,
+            lam = lam,
+            Nlam = param.Nlam,
+            q = param.q,
+            B = param.B,
+            percent_nS = param.percent_nS,
+            formulation = name_formulation,
+            seed = param.seed,
+            rho = rho,
+            rho_classification = rho_classification,
+            true_lam = not param.rescaled_lam,
+            e = e,
+            w = param.formulation.w,
+            intercept = param.formulation.intercept,
         )
 
         if param.method == "first":
@@ -1113,7 +1113,7 @@ class solution_StabSel:
         self.refit = min_LS(
             matrices,
             self.selected_param,
-            intercept=param.formulation.intercept,
+            intercept = param.formulation.intercept,
         )
         self.save1 = False
         self.save2 = False
@@ -1150,25 +1150,25 @@ class solution_StabSel:
         plt.bar(
             range(len(Dselected)),
             Dselected,
-            color="r",
-            label="selected coefficients",
+            color = "r",
+            label = "selected coefficients",
         )
         plt.bar(
             range(len(Dunselected)),
             Dunselected,
-            color="b",
-            label="unselected coefficients",
+            color = "b",
+            label = "unselected coefficients",
         )
         plt.axhline(
-            y=self.threshold,
-            color="g",
-            label="Threshold : thresh = " + str(self.threshold),
+            y = self.threshold,
+            color = "g",
+            label = "Threshold : thresh = " + str(self.threshold),
         )
 
         plt.xticks(
-            ticks=np.where(self.to_label[top])[0],
-            labels=self.label[top][self.to_label[top]],
-            rotation=30,
+            ticks = np.where(self.to_label[top])[0],
+            labels = self.label[top][self.to_label[top]],
+            rotation = 30,
         )
         plt.xlabel(StabSel_graph["xlabel"]), plt.ylabel(
             StabSel_graph["ylabel"]
@@ -1190,14 +1190,14 @@ class solution_StabSel:
                 else:
                     c = "b"
                 plt.plot(lambdas, [Dpath[j][i2] for j in range(N)], c)
-            p1 = mpatches.Patch(color="red", label="selected coefficients")
-            p2 = mpatches.Patch(color="blue", label="unselected coefficients")
+            p1 = mpatches.Patch(color = "red", label = "selected coefficients")
+            p2 = mpatches.Patch(color = "blue", label = "unselected coefficients")
             p3 = mpatches.Patch(
-                color="green",
-                label="Threshold : thresh = " + str(self.threshold),
+                color = "green",
+                label = "Threshold : thresh = " + str(self.threshold),
             )
-            plt.legend(handles=[p1, p2, p3], loc=1)
-            plt.axhline(y=self.threshold, color="g")
+            plt.legend(handles=[p1, p2, p3], loc = 1)
+            plt.axhline(y = self.threshold, color = "g")
             plt.xlabel(StabSel_path["xlabel"])
             plt.ylabel(StabSel_path["ylabel"])
             plt.title(
@@ -1212,7 +1212,7 @@ class solution_StabSel:
         plt.xticks(
             np.where(selected)[0],
             self.label[top][selected],
-            rotation=30,
+            rotation = 30,
         )
         if type(self.save2) == str:
             plt.savefig(self.save2)
@@ -1265,7 +1265,7 @@ class solution_LAMfixed:
 
         # Algorithmic method choosing
         numerical_method = choose_numerical_method(
-            param.numerical_method, "LAM", param.formulation, lam=self.lam
+            param.numerical_method, "LAM", param.formulation, lam = self.lam
         )
         param.numerical_method = numerical_method
         self.rescaled_lam = param.rescaled_lam
@@ -1274,15 +1274,15 @@ class solution_LAMfixed:
         out = Classo(
             matrices,
             self.lam,
-            typ=name_formulation,
-            meth=numerical_method,
-            rho=rho,
-            get_lambdamax=True,
-            true_lam=not self.rescaled_lam,
-            e=e,
-            rho_classification=rho_classification,
-            w=param.formulation.w,
-            intercept=param.formulation.intercept,
+            typ = name_formulation,
+            meth = numerical_method,
+            rho = rho,
+            get_lambdamax = True,
+            true_lam = not self.rescaled_lam,
+            e = e,
+            rho_classification = rho_classification,
+            w = param.formulation.w,
+            intercept = param.formulation.intercept,
         )
 
         if param.formulation.concomitant:
@@ -1296,7 +1296,7 @@ class solution_LAMfixed:
         self.refit = min_LS(
             matrices,
             self.selected_param,
-            intercept=param.formulation.intercept,
+            intercept = param.formulation.intercept,
         )
         self.label = label
         self.time = time() - t0
@@ -1318,7 +1318,7 @@ class solution_LAMfixed:
         plt.xticks(
             np.where(self.selected_param[top])[0],
             self.label[top][self.selected_param[top]],
-            rotation=30,
+            rotation = 30,
         )
 
         if type(self.save) == str:
@@ -1336,7 +1336,7 @@ class solution_LAMfixed:
         return string
 
 
-def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=None):
+def choose_numerical_method(method, model, formulation, StabSelmethod = None, lam = None):
     """Annex function in order to choose the right numerical method, if the given one is invalid.
     In general, it will choose one of the possible optimization scheme for a given formulation.
     When several computation modes are possible, the rules are as follow :

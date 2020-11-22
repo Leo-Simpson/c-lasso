@@ -14316,7 +14316,7 @@ a.anchor-link {
 <span class="n">X_C</span> <span class="o">=</span> <span class="n">csv_to_np</span><span class="p">(</span><span class="s1">&#39;COMBO_data/CaloriData.csv&#39;</span><span class="p">,</span> <span class="n">begin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 <span class="n">X_F</span> <span class="o">=</span> <span class="n">csv_to_np</span><span class="p">(</span><span class="s1">&#39;COMBO_data/FatData.csv&#39;</span><span class="p">,</span> <span class="n">begin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
 <span class="n">y</span>   <span class="o">=</span> <span class="n">csv_to_np</span><span class="p">(</span><span class="s1">&#39;COMBO_data/BMI.csv&#39;</span><span class="p">,</span> <span class="n">begin</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">]</span>
-<span class="n">labels</span>  <span class="o">=</span> <span class="n">csv_to_np</span><span class="p">(</span><span class="s1">&#39;COMBO_data/complete_data/GeneraPhylo.csv&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="n">csv_to_np</span><span class="p">(</span><span class="s1">&#39;COMBO_data/complete_data/GeneraPhylo.csv&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
 <span class="n">y</span>   <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="c1">#BMI data (n = 96)</span>
 <span class="n">X_C</span> <span class="o">=</span> <span class="n">X_C</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">X_C</span><span class="p">,</span> <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1">#Covariate data (Calorie)</span>
@@ -14396,9 +14396,9 @@ a.anchor-link {
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">formulation</span><span class="o">.</span><span class="n">concomitant</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-StabSel&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-StabSel-beta&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-StabSel&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-StabSel-beta&#39;</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
 </pre></div>
 
@@ -14559,9 +14559,9 @@ STABILITY SELECTION PARAMETERS:
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">formulation</span><span class="o">.</span><span class="n">huber</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
 
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R2-&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R2-StabSel&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R2-StabSel-beta&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R2-&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R2-StabSel&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R2-StabSel-beta&#39;</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
 </pre></div>
 
@@ -14724,9 +14724,9 @@ STABILITY SELECTION PARAMETERS:
 
 
 <span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R3-&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R3-StabSel&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R3-StabSel-beta&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R3-&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R3-StabSel&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R3-StabSel-beta&#39;</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
 </pre></div>
 
@@ -14904,9 +14904,9 @@ STABILITY SELECTION PARAMETERS:
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">formulation</span><span class="o">.</span><span class="n">huber</span> <span class="o">=</span> <span class="kc">True</span>
 <span class="n">problem</span><span class="o">.</span><span class="n">model_selection</span><span class="o">.</span><span class="n">StabSelparameters</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="mi">123</span>
 <span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R4-&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R4-StabSel&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R4-StabSel-beta&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R4-&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R4-StabSel&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R4-StabSel-beta&#39;</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
 </pre></div>
 
@@ -15145,8 +15145,8 @@ STABILITY SELECTION PARAMETERS:
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[10]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R3-StabSel&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R3-StabSel-beta&#39;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R3-StabSel&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R3-StabSel-beta&#39;</span>
 </pre></div>
 
      </div>
@@ -15278,8 +15278,8 @@ STABILITY SELECTION PARAMETERS:
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[13]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R4-StabSel&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R4-StabSel-beta&#39;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R4-StabSel&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R4-StabSel-beta&#39;</span>
 </pre></div>
 
      </div>
@@ -15478,10 +15478,10 @@ STABILITY SELECTION PARAMETERS:
      <div class="CodeMirror cm-s-jupyter">
 <div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">formulation</span><span class="o">.</span><span class="n">concomitant</span> <span class="o">=</span> <span class="kc">False</span>
 <span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-StabSel&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-StabSel-beta&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">LAMfixed</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-beta&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-StabSel&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-StabSel-beta&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">LAMfixed</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-beta&#39;</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
 </pre></div>
 
@@ -15802,10 +15802,10 @@ STABILITY SELECTION PARAMETERS:
 <span class="n">problem</span><span class="o">.</span><span class="n">formulation</span><span class="o">.</span><span class="n">huber</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="n">problem</span><span class="o">.</span><span class="n">solve</span><span class="p">()</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R3-&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R3-StabSel&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R3-StabSel-beta&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">LAMfixed</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R3-beta&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R3-&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R3-StabSel&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R3-StabSel-beta&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">LAMfixed</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R3-beta&#39;</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="p">)</span>
 </pre></div>
@@ -16656,8 +16656,8 @@ CROSS VALIDATION PARAMETERS:
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[34]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">CV</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-CVbeta&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-Path&#39;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">CV</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-CVbeta&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">PATH</span><span class="o">.</span><span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-Path&#39;</span>
 </pre></div>
 
      </div>
@@ -16800,7 +16800,7 @@ CROSS VALIDATION PARAMETERS:
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[39]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">CV</span><span class="o">.</span><span class="n">graphic</span><span class="p">(</span><span class="n">logscale</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">save</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-CV&#39;</span><span class="p">)</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">CV</span><span class="o">.</span><span class="n">graphic</span><span class="p">(</span><span class="n">logscale</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">save</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-CV&#39;</span><span class="p">)</span>
 </pre></div>
 
      </div>
@@ -17086,8 +17086,8 @@ STABILITY SELECTION PARAMETERS:
 <div class="jp-InputPrompt jp-InputArea-prompt">In&nbsp;[46]:</div>
 <div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
      <div class="CodeMirror cm-s-jupyter">
-<div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-StabSel&#39;</span>
-<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span><span class="o">+</span><span class="s1">&#39;R1-StabSel-beta&#39;</span>
+<div class=" highlight hl-ipython3"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save1</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-StabSel&#39;</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">solution</span><span class="o">.</span><span class="n">StabSel</span><span class="o">.</span><span class="n">save2</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;R1-StabSel-beta&#39;</span>
 </pre></div>
 
      </div>

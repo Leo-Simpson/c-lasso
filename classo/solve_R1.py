@@ -43,7 +43,7 @@ def Classo_R1(pb, lam):
         x = cp.Variable(d)
         objective, constraints = cp.Minimize(cp.sum_squares(A*x-y)+ lamb*cp.norm(x, 1)), [C*x == 0]
         prob = cp.Problem(objective, constraints)
-        result = prob.solve(warm_start=regpath,eps_abs= tol)
+        result = prob.solve(warm_start = regpath,eps_abs = tol)
         if (regpath): return(x.value,True)
         return(x.value)
     """
@@ -56,7 +56,7 @@ def Classo_R1(pb, lam):
     gamma, tau = pb.gam / (2 * pb.AtAnorm), pb.tauN
     w, zerod = lamb * gamma * pb.weights, np.zeros(
         d
-    )  # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
+    )  # two vectors usefull to compute the prox of f(b) = sum(wi |bi|)
 
     # NO PROJ
 
@@ -119,7 +119,7 @@ def Classo_R1(pb, lam):
         gamma = gamma / (2 * lam)
         w = w / (2 * lam)
         mu, ls, c, root = pb.mu, [], pb.c, 0.0
-        Q1, Q2 = QQ(2 * gamma / (mu - 1), A, AtA=pb.AtA, AAt=pb.AAt)
+        Q1, Q2 = QQ(2 * gamma / (mu - 1), A, AtA = pb.AtA, AAt = pb.AAt)
         QA, qy = Q1.dot(A), Q1.dot(y)
 
         qy_mult = qy * (mu - 1)
@@ -154,7 +154,7 @@ and then to evaluate it in the given finite path.
 """
 
 
-def pathlasso_R1(pb, path, n_active=False, return_sp_path=False):
+def pathlasso_R1(pb, path, n_active = False, return_sp_path = False):
     n = pb.dim[0]
     BETA, tol = [], pb.tol
     if pb.type == "Path-Alg":
@@ -163,7 +163,7 @@ def pathlasso_R1(pb, path, n_active=False, return_sp_path=False):
             return (
                 beta,
                 sp_path,
-            )  # in the method ODE, we only compute the solution for breaking points. We can stop here if return_sp_path=True
+            )  # in the method ODE, we only compute the solution for breaking points. We can stop here if return_sp_path = True
         else:  # else, we do a little manipulation to interpolated the value of beta between those points, as we know beta is affine between those breaking points.
             sp_path.append(path[-1]), beta.append(beta[-1])
             i = 0
@@ -280,7 +280,7 @@ def proj_c(M, d):
     return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)), M])
 
 
-def QQ(coef, A, AtA=None, AAt=None):
+def QQ(coef, A, AtA = None, AAt = None):
     if AtA is None:
         AtA = (A.T).dot(A)
     if AAt is None:
