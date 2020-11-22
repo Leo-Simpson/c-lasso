@@ -72,32 +72,32 @@ When preparing a pull request, one should check that the code changes:
 
 * Pass existing tests, this can be done by running within the root directory:
 
-.. code-block:: bash
+  .. code-block:: bash
 
-  $ pip install --upgrade pytest
-  $ pytest
+    $ pip install --upgrade pytest
+    $ pytest
 
 * Includes a test case.
   See the files in ``c-lasso/tests`` for examples
   
 * Includes some example of use cases.
-See the files in ``c-lasso/examples`` for examples
+  See the files in ``c-lasso/examples`` for examples
   
 * Depends on standard library. Any features
-requiring an external dependency should only be enabled when the dependenc is available.
+  requiring an external dependency should only be enabled when the dependenc is available.
   
 * Be properly documented. 
-c-lasso's documentation (including docstring in code) uses ReStructuredText format,
-see `Sphinx documentation <http://www.sphinx-doc.org/en/master/>`_ to learn more about editing them. The code
-follows the `NumPy docstring standard <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
-To ensure that documentation is rendered correctly,
-the best bet is to follow the existing examples for function docstrings.
-If you want to test the documentation locally,
-you will need to run the following command lines within the ``c-lasso/docs`` directory :
+  c-lasso's documentation (including docstring in code) uses ReStructuredText format,
+  see `Sphinx documentation <http://www.sphinx-doc.org/en/master/>`_ to learn more about editing them. The code
+  follows the `NumPy docstring standard <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
+  To ensure that documentation is rendered correctly,
+  the best bet is to follow the existing examples for function docstrings.
+  If you want to test the documentation locally,
+  you will need to run the following command lines within the ``c-lasso/docs`` directory :
 
-.. code-block:: bash
+  .. code-block:: bash
 
-  $ pip install --upgrade sphinx
-  $ make html
+    $ pip install --upgrade sphinx
+    $ make html
   
  
