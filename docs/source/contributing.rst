@@ -1,10 +1,9 @@
 ==========================
-Contributing to ``c-lasso``
+Contributing to c-lasso
 ==========================
 
-``classo`` development is driven by user feedback, and your contributions help
-to find bugs, add features, and improve performance.  This is a small guide to
-help those who wish to contribute.
+``c-lasso`` is a package that always can be improved. Any feedback can
+help a lot to fix some bug and to add possible new functionality.
 
 
 Development Portal
@@ -45,14 +44,11 @@ following:
 
      >>> import classo
      >>> classo.__version__
-     '1.0.2'
 
 * The version and build of python::
 
      >>> import sys
      >>> print(sys.version)
-     3.6.8 |Anaconda, Inc.| (default, Dec 29 2018, 19:04:46) 
-    [GCC 4.2.1 Compatible Clang 4.0.1 (tags/RELEASE_401/final)]
 
 * Your operating system (Linux, OS X, Windows, etc.), and your distribution if
   relevant.
@@ -77,8 +73,6 @@ When preparing a feature request, consider providing the following information:
 * Is it solvable using Python intrinsics?  How is it currently handled in
   similar modules?
 
-* Does the feature current exist in similar modules (`JSON`_, `YAML`_, etc.)?
-
 * Can you provide an example code block demonstrating the feature?
 
 * Does this feature require any new dependencies ?
@@ -100,22 +94,38 @@ Explicit patches via email are also welcome.
 
 When preparing a pull request, consider the following advice:
 
-* Commit logs should be long-form.  Don't use ``commit -m "Added a feature!"``;
-  instead provide a multiline description of your changes.
-
-  Single line commits are acceptable for very minor changes, such as
-  whitespace.
-
-* Commit messages should generally try to be standalone and ought to avoid
-  references to explicit GitHub content, such as issue numbers or usernames.
-
 * Code changes must pass existing tests::
 
      $ pytest
 
 * Providing a test case for your example would be greatly appreciated.  See
   the test files in ``tests``for examples.
+  
+* Changes must be accompanied by **updated documentation** and examples.
 
 * Features should generally only depend on the standard library.  Any features
   requiring an external dependency should only be enabled when the dependency
   is available.
+  
+  
+  
+Checking and building documentation
+-----------------------------------
+
+c-lasso's documentation (including docstring in code) uses ReStructuredText format,
+see `Sphinx documentation <http://www.sphinx-doc.org/en/master/>`_ to learn more about editing them. The code
+follows the `NumPy docstring standard <https://numpydoc.readthedocs.io/en/latest/format.html>`_.
+
+
+All changes to the codebase must be properly documented. To ensure that documentation is rendered correctly, the best bet is to follow the existing examples for function docstrings. If you want to test the documentation locally, you will need to install the following package:
+
+.. code-block:: bash
+
+  $ pip install --upgrade sphinx
+
+and then within the ``c-lasso/docs`` directory do:
+
+.. code-block:: bash
+
+  $ make html
+
