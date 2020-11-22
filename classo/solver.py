@@ -800,9 +800,9 @@ class solution_PATH:
             xGraph,
             labels = self.label[top],
             naffichage = 5,
-            title = pATH_beta_path["title"] + self.formulation.name(),
+            title = PATH_beta_path["title"] + self.formulation.name(),
             xlabel = xlabel,
-            ylabel = pATH_beta_path["ylabel"],
+            ylabel = PATH_beta_path["ylabel"],
         )
         if type(self.save) == str:
             plt.savefig(self.save + "Beta-path")

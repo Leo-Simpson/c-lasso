@@ -276,7 +276,10 @@ Here, we use a problem instance with $n=100$, $d=100$, a $\beta$ with five non-z
 from classo import classo_problem, random_data
 
 n, d, d_nonzero, k, sigma = 100, 100, 5, 1, 0.5
-(X, C, y), sol = random_data(n, d, d_nonzero, k, sigma, zerosum = True, seed = 123)
+(X, C, y), sol = random_data(
+  n, d, d_nonzero, k, sigma,
+  zerosum = True, seed = 123
+)
 print("Relevant variables  : {}".format(numpy.nonzero(sol)[0]))
 
 problem = classo_problem(X, y, C)
