@@ -105,5 +105,5 @@ When preparing a pull request, one should make sure that the code changes:
  =======
  
  If the above ways of interacting with c-lasso does not fit your request,
- you can also `contact directly one of the autors <leo.bill.simpson@gmail.com>`_.
+ you can also `contact directly one of the autors <leo.bill.simpson@gmail.com>`_
  
