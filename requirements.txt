@@ -1,13 +1,6 @@
-black
-c-lasso
 h5py
 matplotlib 
 numpy
 pandas
-pep8
-pycodestyle
 scipy 
-Sphinx
-twine
 zarr
-versioneer
