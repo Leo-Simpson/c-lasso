@@ -2,11 +2,12 @@
 Contributing to c-lasso
 ==========================
 
+_`guideline for third parties  <https://github.com/Leo-Simpson/c-lasso/blob/master/CONTRIBUTING.rst>`_
+
 ``c-lasso`` is a package that always can be improved. Any feedback can
 help a lot to fix some bug and to add possible new functionality.
 
-One can contribute either by reporting  an error, either 
-
+One can contribute either by reporting an error, requesting a new feature or adding a new feature.
 
 Reporting errors
 ================
