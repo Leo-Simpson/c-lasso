@@ -266,7 +266,7 @@ class problem_R2:
 
         self.AtA = (A.T).dot(A)
         self.Aty = (A.T).dot(y)
-        self.Cnorm = LA.norm(C, 2) ** 2
+        self.Cnorm = LA.norm(C, 2) ** 2 + 1e-5
         self.tauN = self.tau / self.Cnorm
         self.AtAnorm = LA.norm(self.AtA, 2)
 

@@ -141,7 +141,7 @@ Auxilaries functions that are used in the main function which is stability
 def biggest_indexes(array, q):
     array = abs(array)
     qbiggest = []
-    nonnul = non_nul_indices(array)
+    nonnul = np.nonzero(array)[0]
     reduc_array = array[nonnul]
     for i1 in range(q):
         if not np.any(nonnul):
@@ -154,14 +154,6 @@ def biggest_indexes(array, q):
         qbiggest.append(index)
     return qbiggest
 
-
-# return the list of indices where the componant of the array is null
-def non_nul_indices(array):
-    L = []
-    for i in range(len(array)):
-        if not (array[i] == 0.0):
-            L.append(i)
-    return L
 
 
 # for a certain threshold, it returns the features that should be selected

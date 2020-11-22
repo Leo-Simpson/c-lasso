@@ -3,29 +3,23 @@ import numpy.random as rd
 import numpy.linalg as LA
 from .compact_func import Classo, pathlasso
 
-n_lam = 80
 
-
-def compute_1SE(mse_max, MSE, i):
-    j = i
-    while j > 0 and MSE[j] < mse_max:
-        j -= 1
-    return j
-
-
-def train_test_CV(n, k, test_pourcent):
-    idx, training_size = rd.permutation(n), int(n - n * test_pourcent)
-    idx_train, idx_test = idx[:training_size], idx[training_size:]
-    SUBLIST, end = [], 0
+def train_test_CV(n, k):
+    idx = rd.permutation(n)
+    SUBLIST = []
+    sublist_len = n // k
+    rest = n % k
     for i in range(k):
-        begin, end = end, end + training_size // k
-        if i < training_size % k:
-            end += 1
-        SUBLIST.append(idx[begin:end])
-    return (SUBLIST, idx_train, idx_test)
+        if i == k-1:
+            SUBLIST.append(idx[i * sublist_len:(i+1) * sublist_len + rest])
+        else:
+            SUBLIST.append(idx[i * sublist_len:(i+1) * sublist_len])
+
+    return SUBLIST
 
 
 def train_test_i(SUBLIST, i):
+    # create training and test sets 
     training_set, test_set = np.array([], dtype=int), SUBLIST[i]
     for j in range(len(SUBLIST)):
         if j != i:
@@ -60,8 +54,7 @@ def training(
     )[0]
     return sol
 
-
-def test_i(
+def cv_test_i(
     matrices,
     typ,
     num_meth,
@@ -102,7 +95,6 @@ def test_i(
 
     return residual
 
-
 def average_test(
     matrices,
     typ,
@@ -119,7 +111,7 @@ def average_test(
     n_lam = len(lambdas)
     RESIDUAL = np.zeros((k, n_lam))
     for i in range(k):
-        RESIDUAL[i, :] = test_i(
+        RESIDUAL[i, :] = cv_test_i(
             matrices,
             typ,
             num_meth,
@@ -142,7 +134,6 @@ def CV(
     k,
     typ="R1",
     num_meth="Path-Alg",
-    test = 0.0,
     seed = 1,
     rho = 1.345,
     rho_classification = -1.0,
@@ -159,7 +150,7 @@ def CV(
 
     rd.seed(seed)
     (A, C, y) = matrices
-    SUBLIST, idx_train, idx_test = train_test_CV(len(y), k, test)
+    SUBLIST = train_test_CV(len(y), k)
     MSE, SE = average_test(
         matrices,
         typ,
@@ -173,7 +164,8 @@ def CV(
         intercept,
     )
     i = np.argmin(MSE)
-    i_1SE = compute_1SE(MSE[i] + SE[i], MSE, i)
+    i_1SE = np.min(np.where(MSE < MSE[i] + SE[i]))
+
     if oneSE:
         lam = lambdas[i_1SE]
     else:
@@ -209,17 +201,7 @@ def hinge(A, y, beta):
     return sum(np.maximum(0, 1 - y * A.dot(beta)) ** 2)
 
 
-def huber_hinge(A, y, beta, rho):
-    h = np.maximum(0, 1 - y * A.dot(beta))
-    s = 0
-    for i in range(len(h)):
-        if h[i] < rho:
-            s += 2 * h[i] * rho - rho ** 2
-        else:
-            s += h[i] ** 2
-    return s
-
-def misclassification_rate(X,y,beta):
+def misclassification_rate(X, y, beta):
     yhat = np.sign(X.dot(beta))
     return np.sum(y != yhat) / len(y)
 
@@ -241,3 +223,16 @@ def accuracy_func(
         return misclassification_rate(Aprime, y, beta)
     else:
         return LA.norm(Aprime.dot(beta) - y, 2) ** 2 / n
+
+
+"""
+def huber_hinge(A, y, beta, rho):
+    h = np.maximum(0, 1 - y * A.dot(beta))
+    s = 0
+    for i in range(len(h)):
+        if h[i] < rho:
+            s += 2 * h[i] * rho - rho ** 2
+        else:
+            s += h[i] ** 2
+    return s
+"""

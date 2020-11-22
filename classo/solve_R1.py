@@ -34,6 +34,7 @@ def Classo_R1(pb, lam):
     Anorm = pb.Anorm
     tol = pb.tol * LA.norm(y) / Anorm  # tolerance rescaled
 
+
     # cvx
     # call to the cvx function of minimization
     """
@@ -48,11 +49,10 @@ def Classo_R1(pb, lam):
         return(x.value)
     """
 
-    Proj, AtA, Aty = (
-        proj_c(C, d),
-        pb.AtA,
-        pb.Aty,
-    )  # Save some matrix products already computed in problem.compute_param()
+    Proj = proj_c(C, d)
+    AtA = pb.AtA
+    Aty = pb.Aty
+    # Save some matrix products already computed in problem.compute_param()
     gamma, tau = pb.gam / (2 * pb.AtAnorm), pb.tauN
     w, zerod = lamb * gamma * pb.weights, np.zeros(
         d
@@ -100,7 +100,7 @@ def Classo_R1(pb, lam):
             eps = nw_x - x
             xbar = p + eps
 
-            if i % 10 == 2 and LA.norm(eps) < tol:  # 0.6
+            if i % 10 == 2 and LA.norm(eps) < tol:
                 if regpath:
                     return (x, (xbar, x, v))
                 else:
@@ -184,18 +184,16 @@ def pathlasso_R1(pb, path, n_active = False, return_sp_path = False):
         n_act = n
     for lam in path:
         X = Classo_R1(pb, lam)
-        BETA.append(X[0])
-        pb.init = X[1]
+        beta, init = X[0], X[1]
+        BETA.append(beta)
+        pb.init = init
+        p = sum([(abs(beta[i]) > 1e-5) for i in range(len(beta))])
 
-        if (
-            sum([(abs(X[0][i]) > 1e-5) for i in range(len(X[0]))]) >= n_act
-            or type(X[1]) == str
-        ):
+        if p >= n_act or type(init) == str:
             pb.init = save_init
             BETA.extend([BETA[-1]] * (len(path) - len(BETA)))
             pb.regpath = False
             return BETA
-
     pb.init = save_init
     pb.regpath = False
     return BETA
@@ -252,7 +250,7 @@ class problem_R1:
         self.c = d ** 2 / np.trace(
             self.AtA
         )  # parameter for Concomitant problem : the matrix is scaled as c*A^2
-        self.Cnorm = LA.norm(C, 2) ** 2
+        self.Cnorm = LA.norm(C, 2) ** 2 + 1e-5
         self.tauN = self.tau / self.Cnorm
         self.AtAnorm = LA.norm(self.AtA, 2)
 
@@ -275,9 +273,8 @@ def prox(b, w, zeros):
 
 # Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
 def proj_c(M, d):
-    if LA.matrix_rank(M) == 0:
-        return np.eye(d)
-    return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)), M])
+    k = len(M)
+    return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)+ 1e-4 * np.eye(k)), M])
 
 
 def QQ(coef, A, AtA = None, AAt = None):

@@ -801,23 +801,6 @@ def next_idr2(liste, mat):
     return False
 
 
-# Update the invers of a matrix whom we add a line, which is useul to compute the derivatives
-def next_inv(Xt, B, al, ligne):
-    n = len(Xt)
-    Yt = np.zeros((n + 1, n + 1))
-    alpha = 1 / al
-    B = np.array([B])
-    b1 = Xt[:ligne, :][:, :ligne] + alpha * B[:, :ligne].T.dot(B[:, :ligne])
-    b2 = Xt[ligne:, :][:, :ligne] + alpha * B[:, ligne:].T.dot(B[:, :ligne])
-    b4 = Xt[ligne:, :][:, ligne:] + alpha * B[:, ligne:].T.dot(B[:, ligne:])
-    col1 = np.concatenate((b1, -alpha * B[:, :ligne], b2), axis=0)
-    col2 = np.concatenate((b2.T, -alpha * B[:, ligne:], b4), axis=0)
-    col = np.concatenate(
-        (-alpha * B[0, :ligne], [alpha], -alpha * B[0, ligne:]), axis=0
-    )
-    return np.concatenate((col1, np.array([col]).T, col2), axis=1)
-
-
 def h_lambdamax(matrices, rho, typ = "R1", intercept=False):
     param = parameters_for_update(matrices, 0.0, rho, typ, intercept=intercept)
     return param.lambdamax
@@ -898,4 +881,25 @@ then we use it to find sigma and so the solution, using the equation for sigma:
 sigma = || A*B(lambda*sigma) - y ||_2       (where B(lambda) is found thanks to solve_path)
 
             teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
+"""
+
+
+"""
+# Update the invers of a matrix whom we add a line, which is useul to compute the derivatives
+def next_inv(Xt, B, al, ligne):
+    n = len(Xt)
+    Yt = np.zeros((n + 1, n + 1))
+    alpha = 1 / al
+    B = np.array([B])
+    b1 = Xt[:ligne, :][:, :ligne] + alpha * B[:, :ligne].T.dot(B[:, :ligne])
+    b2 = Xt[ligne:, :][:, :ligne] + alpha * B[:, ligne:].T.dot(B[:, :ligne])
+    b4 = Xt[ligne:, :][:, ligne:] + alpha * B[:, ligne:].T.dot(B[:, ligne:])
+    col1 = np.concatenate((b1, -alpha * B[:, :ligne], b2), axis=0)
+    col2 = np.concatenate((b2.T, -alpha * B[:, ligne:], b4), axis=0)
+    col = np.concatenate(
+        (-alpha * B[0, :ligne], [alpha], -alpha * B[0, ligne:]), axis=0
+    )
+    return np.concatenate((col1, np.array([col]).T, col2), axis=1)
+
+
 """
