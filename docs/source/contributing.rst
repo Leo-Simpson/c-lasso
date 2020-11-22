@@ -68,7 +68,7 @@ Fixes and features are very welcome to ``c-lasso``, and are greatly encouraged.
 If you are concerned that a project may not be suitable or may conflict with
 ongoing work, then feel free to submit a feature request.
 
-When preparing a pull request, one should check that the code changes:
+When preparing a pull request, one should make sure that the code changes:
 
 * Pass existing tests, this can be done by running within the root directory:
 
