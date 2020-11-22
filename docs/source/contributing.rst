@@ -103,7 +103,7 @@ When preparing a pull request, one should make sure that the code changes:
  
 Seeking for support ?
 =======================
- 
- If the above ways of interacting with c-lasso does not fit your request,
- you can also `contact directly one of the autors <leo.bill.simpson@gmail.com>`_.
+
+If the above ways of interacting with c-lasso does not fit your request,
+you may `contact directly one of the autors <leo.bill.simpson@gmail.com>`_.
  
