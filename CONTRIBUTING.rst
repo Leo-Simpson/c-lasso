@@ -5,15 +5,12 @@ Contributing to c-lasso
 ``c-lasso`` is a package that always can be improved. Any feedback can
 help a lot to fix some bug and to add possible new functionality.
 
-One can contribute either by reporting  an error, either 
-
+One can contribute either by reporting an error, requesting a new feature or adding a new feature.
 
 Reporting errors
 ================
 
-Any errors or general problems can be reported on GitHub's Issue tracker:
-
-   https://github.com/Leo-Simpson/c-lasso/issues
+Any errors or general problems can be reported on `GitHub's Issue tracker <https://github.com/Leo-Simpson/c-lasso/issues>`_
 
 The quickest way resolve a problem is to go through the following steps:
 
@@ -104,6 +101,6 @@ When preparing a pull request, one should make sure that the code changes:
 Seeking for support ?
 =======================
 
-If the above ways of interacting with c-lasso does not fit your request,
+If the above ways of interacting with ``c-lasso`` does not fit your request,
 you may `contact directly one of the autors <leo.bill.simpson@gmail.com>`_.
  
