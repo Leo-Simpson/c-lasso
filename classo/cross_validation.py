@@ -149,8 +149,9 @@ def CV(
         lambdas = np.linspace(1.0, 1e-3, Nlam)
 
     rd.seed(seed)
+    n = len(matrices[0])
 
-    SUBLIST = train_test_CV(len(y), k)
+    SUBLIST = train_test_CV(n, k)
     MSE, SE = average_test(
         matrices,
         typ,
@@ -171,7 +172,7 @@ def CV(
     else:
         lam = lambdas[i]
     out = Classo(
-        matrix,
+        matrices,
         lam,
         typ = typ,
         meth = num_meth,
