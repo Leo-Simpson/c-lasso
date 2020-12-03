@@ -51,7 +51,7 @@ def Classo_R4(pb, lam):
         s = s / 2
         beta = beta_aug[:-m]
         if pb.intercept:
-            betaO = ybar - np.vdot(Abar, beta)
+            betaO = ybar - np.vdot(Abar, beta_aug)
             beta = np.array([betaO] + list(beta))
         return beta, s
 

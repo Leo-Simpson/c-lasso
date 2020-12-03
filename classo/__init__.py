@@ -2,7 +2,6 @@ from .misc_functions import (
     random_data,
     csv_to_np,
     mat_to_np,
-    rescale,
     clr,
     theoretical_lam,
     to_zarr,

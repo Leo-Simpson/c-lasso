@@ -153,7 +153,7 @@ def Classo_R2(pb, lam, compute = True):
             x = x + eps1
             o = o + eps2
 
-            if i > 0 and LA.norm(eps1) + LA.norm(eps2) < tol:
+            if i % 10 == 2 and LA.norm(eps1) + LA.norm(eps2) < tol:
                 if regpath:
                     return (x, (o, xbar, x, v))
                 else:
@@ -210,6 +210,7 @@ def pathlasso_R2(pb, path, n_active = False):
 
     pb.init = save_init
     pb.regpath = False
+
     return BETA
 
 

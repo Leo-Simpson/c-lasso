@@ -1,3 +1,7 @@
+"""
+done
+"""
+
 import numpy as np
 
 from ..cross_validation import (
@@ -61,16 +65,28 @@ def test_accuracy_func():
     assert np.isclose(result, exp)
 
 def test_misclassification_rate():
-    A = np.eye(6)*2
+    A = np.diag([2, 5, -0.4, -2., -6., -1])
     y = np.array([1, -1, 1, -1, 1, -1])
-    beta = np.ones(6)
+    beta = np.array([0.004, 2.4, -0.1, 1, -0.3, 15.])
 
     result = misclassification_rate(A, y, beta)
 
-    exp = 0.5
+    exp = 1/6
 
     assert np.isclose(result, exp)
 
-def test_average_test():
 
-    assert True
+def test_CV():
+    
+    lambdas= np.array([1., 0.1, 0.01, 0.005, 0.0001])
+    y_rand = np.random.randint(20, size=(10, 1))
+    X = np.concatenate([np.eye(10)]*10 , axis=0)
+    y = np.concatenate([y_rand]*10, axis=0)[:, 0]
+
+    matrices = (X, np.zeros((1,10)) , y)
+
+    out, MSE, SE, i, i_1SE = CV(matrices, 3, intercept=False, lambdas=lambdas)
+    print(y[:10])
+    print(out, MSE[i])
+    print(i, i_1SE)
+    assert i == len(lambdas)-1

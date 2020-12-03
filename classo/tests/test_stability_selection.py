@@ -1,4 +1,10 @@
+"""
+done
+"""
+
 import numpy as np
+
+from ..misc_functions import random_data
 
 from ..stability_selection import (
     stability,
@@ -152,9 +158,11 @@ def test_stability_max_R2_between_0_and_1():
 
 def test_stability_first_C1_not_too_high_distribution():
 
-    A = np.ones((10,30))+np.arange(-15,15)+np.arange(-5,5)[:, np.newaxis]
+    A = np.ones((25,30)) 
+    A = A + np.arange(-15,15)
+    A = A + np.arange(-10,15)[:, np.newaxis]
     C = np.zeros((2,30))
-    y =  np.arange(10)
+    y =  np.array([1, -1, 1, 1, -1]*5)
     matrix = (A, C, y)
     q = 5
 
@@ -163,13 +171,12 @@ def test_stability_first_C1_not_too_high_distribution():
                         numerical_method = "P-PDS",
                         q = q,
                         B = 10,
-                        percent_nS = 0.2,
+                        percent_nS = 0.4,
                         formulation = "C1",
                         seed = 24,
                         rho = 6.7,
                         rho_classification = -26.0,
                         true_lam = True,
                         e = 24.0)
-
 
     assert np.sum(result) <= q

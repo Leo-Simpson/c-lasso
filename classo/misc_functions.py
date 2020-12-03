@@ -43,37 +43,10 @@ colo = [
 
 
 """functions required in solver :
-rescale, theoretical_lam, min_LS, affichage, check_size, tree_to_matrix
+theoretical_lam, min_LS, affichage, check_size, tree_to_matrix
 """
 
 
-def rescale(matrices):
-    """Function that rescale the matrix and returns its scale
-
-    Substract the mean of y, then divides by its norm. Also divide each colomn of X by its norm.
-    This will change the solution, not only by scaling it, because then the L1 norm will affect every component equally (and not only the variables with big size)
-
-    Args:
-        matrices (tuple) : tuple of three ndarray matrices corresponding to (X,C,y)
-
-    Returns:
-        tuple : tuple of the three corresponding matrices after normalization
-        tuple : tuple of the three information one need to recover the initial data : lX (list of initial colomn-norms of X), ly (initial norm of y), my (initial mean of y)
-
-    """
-    (X, C, y) = matrices
-
-    my = sum(y) / len(y)
-    lX = [LA.norm(X[:, j]) for j in range(len(X[0]))]
-    ly = LA.norm(y - my * np.ones(len(y)))
-    Xn = np.array(
-        [[X[i, j] / (lX[j]) for j in range(len(X[0]))] for i in range(len(X))]
-    )
-    yn = np.array([(y[j] - my) / ly for j in range(len(y))])
-    Cn = np.array(
-        [[C[i, j] * ly / lX[j] for j in range(len(X[0]))] for i in range(len(C))]
-    )
-    return ((Xn, Cn, yn), (lX, ly, my))
 
 
 def theoretical_lam(n, d):
@@ -131,26 +104,16 @@ def affichage(
     path,
     title = " ",
     labels = False,
-    pix = False,
     xlabel = " ",
     ylabel = " ",
     naffichage = 10,
 ):
     BETAS = np.array(LISTE_BETA)
     l_index = influence(BETAS, naffichage)
-    plt.figure(figsize = (10, 3), dpi = 80)
-    if pix == "path":
-        plt.plot(path, [0] * len(path), "r+")
     plot_betai(labels, l_index, path, BETAS)
     plt.title(title), plt.legend(loc = 4, borderaxespad = 0.0)
     plt.xlabel(xlabel), plt.ylabel(ylabel)
-    if type(pix) == bool and pix:
-        plt.matshow(
-            [
-                [(abs(LISTE_BETA[i][j]) > 1e-2) for i in range(len(LISTE_BETA))]
-                for j in range(len(LISTE_BETA[0]))
-            ]
-        ), plt.show()
+
 
 
 def check_size(X, y, C):
@@ -173,47 +136,6 @@ def check_size(X, y, C):
             C2[:, : d_in_c] = C
 
     return X2, y2, C2
-
-
-def tree_to_matrix(tree, label, with_repr = False):
-    # to do here : given a skbio tree and the beta-labels in a given order, return the matrix A and the new labels corresponding
-    dicti = dict()
-    d = len(label)
-    LEAVES = [tip.name for tip in tree.tips()]
-    order = (
-        []
-    )  # list that will give the order in which the codes are added in the dicti, such that it will be easy to remove similar nodes
-    for i in range(d):
-        name_leaf = label[i]
-        dicti[name_leaf] = np.zeros(d)
-        dicti[name_leaf][i] = 1
-        order.append(name_leaf)
-        if name_leaf in LEAVES:
-            for n in tree.find(name_leaf).ancestors():
-                ancest = n.name
-                if ancest[-1] != "_":
-                    if ancest not in dicti:
-                        dicti[ancest] = np.zeros(d)
-                        order.append(ancest)
-                    dicti[ancest][i] = 1
-
-    L, label2, tree_repr = [], [], []
-
-    if with_repr:
-        for n, l in tree.to_taxonomy():
-            nam = n.name
-            if nam in label:
-                tree_repr.append((nam, l))
-
-    for node in tree.levelorder():
-        nam = node.name
-        if nam in dicti and nam not in label2:
-            label2.append(nam)
-            L.append(dicti[nam])
-
-    to_keep = remove_same_vect(L, label2, order)
-
-    return np.array(L)[to_keep].T, np.array(label2)[to_keep], tree_repr
 
 
 """functions required in init() :
@@ -394,29 +316,26 @@ def to_zarr(obj, name, root, first = True):
 
 
 """
-misc of compact func
+misc of solve_R.. functions
 """
 
 
-def unpenalized(matrix, eps = 1e-3, intercept = False):
+def unpenalized(cmatrices, intercept = False):
 
     if intercept:
-        A1, C1, y = matrix
+        A1, C1, y = cmatrices
         A = np.concatenate([np.ones((len(A1), 1)), A1], axis=1)
         C = np.concatenate([np.zeros((len(C1), 1)), C1], axis=1)
 
     else:
-        A, C, y = matrix
+        A, C, y = cmatrices
 
     M1 = np.concatenate([A.T.dot(A), C.T], axis=1)
     M2 = np.concatenate([C, np.zeros((len(C), len(C)))], axis=1)
     M = np.concatenate([M1, M2], axis=0)
     b = np.concatenate([A.T.dot(y), np.zeros(len(C))])
-
-    try:
-        return LA.inv(M).dot(b)[: len(A[0])]
-    except LA.LinAlgError:
-        return LA.inv(M + eps * np.eye(len(M))).dot(b)[: len(A[0])]
+    sol = LA.lstsq( M, b, rcond=None)[0]
+    return sol[: len(A[0])]
 
 
 """
@@ -450,8 +369,59 @@ def normalize(lb, lna, ly):
     return lb
 
 
-def denorm(B, lna, ly):
-    return np.array([ly * B[j] / (np.sqrt(len(B)) * lna[j]) for j in range(len(B))])
+def proj_c(M, d):
+    # Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
+    if LA.matrix_rank(M) == 0:
+        return np.eye(d)
+    return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)), M])
+
+
+def remove_same_vect(L, label, order):
+    K = len(L)
+    to_keep = np.array([True] * K)
+    j = label.index(order[0])
+    col = L[j]
+    for i in range(K - 1):
+        new_j = label.index(order[i + 1])
+        new_col = L[new_j]
+        if np.array_equal(col, new_col):
+            to_keep[new_j] = False
+        else:
+            j, col = new_j, new_col
+
+    return to_keep
+
+
+
+"""
+
+def rescale(matrices):
+    ""Function that rescale the matrix and returns its scale
+
+    Substract the mean of y, then divides by its norm. Also divide each colomn of X by its norm.
+    This will change the solution, not only by scaling it, because then the L1 norm will affect every component equally (and not only the variables with big size)
+
+    Args:
+        matrices (tuple) : tuple of three ndarray matrices corresponding to (X,C,y)
+
+    Returns:
+        tuple : tuple of the three corresponding matrices after normalization
+        tuple : tuple of the three information one need to recover the initial data : lX (list of initial colomn-norms of X), ly (initial norm of y), my (initial mean of y)
+
+    ""
+    (X, C, y) = matrices
+
+    my = sum(y) / len(y)
+    lX = [LA.norm(X[:, j]) for j in range(len(X[0]))]
+    ly = LA.norm(y - my * np.ones(len(y)))
+    Xn = np.array(
+        [[X[i, j] / (lX[j]) for j in range(len(X[0]))] for i in range(len(X))]
+    )
+    yn = np.array([(y[j] - my) / ly for j in range(len(y))])
+    Cn = np.array(
+        [[C[i, j] * ly / lX[j] for j in range(len(X[0]))] for i in range(len(C))]
+    )
+    return ((Xn, Cn, yn), (lX, ly, my))
 
 
 def hub(r, rho):
@@ -478,24 +448,49 @@ def L_H(A, y, lamb, x, rho):
     return hub(A.dot(x) - y, rho) + lamb * LA.norm(x, 1)
 
 
-def proj_c(M, d):
-    # Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
-    if LA.matrix_rank(M) == 0:
-        return np.eye(d)
-    return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)), M])
+def denorm(B, lna, ly):
+    return np.array([ly * B[j] / (np.sqrt(len(B)) * lna[j]) for j in range(len(B))])
 
 
-def remove_same_vect(L, label, order):
-    K = len(L)
-    to_keep = np.array([True] * K)
-    j = label.index(order[0])
-    col = L[j]
-    for i in range(K - 1):
-        new_j = label.index(order[i + 1])
-        new_col = L[new_j]
-        if np.array_equal(col, new_col):
-            to_keep[new_j] = False
-        else:
-            j, col = new_j, new_col
+def tree_to_matrix(tree, label, with_repr = False):
+    # to do here : given a skbio tree and the beta-labels in a given order, return the matrix A and the new labels corresponding
+    dicti = dict()
+    d = len(label)
+    LEAVES = [tip.name for tip in tree.tips()]
+    order = (
+        []
+    )  # list that will give the order in which the codes are added in the dicti, such that it will be easy to remove similar nodes
+    for i in range(d):
+        name_leaf = label[i]
+        dicti[name_leaf] = np.zeros(d)
+        dicti[name_leaf][i] = 1
+        order.append(name_leaf)
+        if name_leaf in LEAVES:
+            for n in tree.find(name_leaf).ancestors():
+                ancest = n.name
+                if ancest[-1] != "_":
+                    if ancest not in dicti:
+                        dicti[ancest] = np.zeros(d)
+                        order.append(ancest)
+                    dicti[ancest][i] = 1
 
-    return to_keep
+    L, label2, tree_repr = [], [], []
+
+    if with_repr:
+        for n, l in tree.to_taxonomy():
+            nam = n.name
+            if nam in label:
+                tree_repr.append((nam, l))
+
+    for node in tree.levelorder():
+        nam = node.name
+        if nam in dicti and nam not in label2:
+            label2.append(nam)
+            L.append(dicti[nam])
+
+    to_keep = remove_same_vect(L, label2, order)
+
+    return np.array(L)[to_keep].T, np.array(label2)[to_keep], tree_repr
+
+
+"""

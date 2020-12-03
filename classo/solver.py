@@ -21,13 +21,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from .misc_functions import (
-    rescale,
     theoretical_lam,
     min_LS,
     affichage,
-    check_size,
-    tree_to_matrix,
+    check_size
 )
+# from .misc_functions import tree_to_matrix
 from .compact_func import Classo, pathlasso
 from .cross_validation import CV
 from .stability_selection import stability, selected_param
@@ -43,8 +42,6 @@ class classo_problem:
         y (ndarray): Vector representing the output of the problem.
         C (str or ndarray, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
             Default value : 'zero-sum'
-        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem.
-            Default value : False
         label (list,optional) : list of the labels of each variable. If None, then label are just indices.
             Default value : None
 
@@ -61,9 +58,9 @@ class classo_problem:
     """
 
     def __init__(
-        self, X, y, C = None, Tree = None, label = None, rescale = False
+        self, X, y, C = None, Tree = None, label = None
     ):  # zero sum constraint by default, but it can be any matrix
-        self.data = Data(X, y, C, Tree = Tree, rescale = rescale, label = label)
+        self.data = Data(X, y, C, Tree = Tree, label = label)
         self.formulation = Formulation()
         self.model_selection = Model_selection()
         self.solution = Solution()
@@ -93,11 +90,6 @@ class classo_problem:
                 else:
                     self.formulation.e = n / 2
 
-        if data.rescale:
-            matrices, data.scaling = rescale(matrices)  # SCALING contains  :
-            # (list of initial norms of A-colomns,
-            #         initial norm of centered y,
-            #          mean of initial y )
 
         if self.formulation.w is not None:
             if min(self.formulation.w) < 1e-8:
@@ -127,6 +119,11 @@ class classo_problem:
 
         if self.formulation.intercept:
             data.label = np.array(["intercept"] + list(data.label))
+            yy = data.y - np.mean(data.y)
+        else:
+            yy = data.y
+        
+        self.formulation.rho_scaled = self.formulation.rho * np.sqrt(np.mean(yy**2))
 
         label = data.label
 
@@ -218,8 +215,6 @@ class Data:
         X (ndarray): Matrix representing the data of the problem.
         y (ndarray): Vector representing the output of the problem.
         C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
-        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem.
-            Default value : False
         label (list, optional) : list of the labels of each variable. If None, then labels are juste the indices.
             Default value : None
         Tree (skbio.TreeNode, optional) : taxonomic tree, if not None, then the matrices X and C and the labels will be changed.
@@ -228,14 +223,12 @@ class Data:
         X (ndarray): Matrix representing the data of the problem.
         y (ndarray): Vector representing the output of the problem.
         C (str or array, optional ): Matrix of constraints to the problem. If it is 'zero-sum' then the corresponding attribute will be all-one matrix.
-        rescale (bool, optional): if True, then the function :func:`rescale` will be applied to data when solving the problem.
         label (list) : list of the labels of each variable. If None, then labels are juste the indices.
         tree (skbio.TreeNode or None) : taxonomic tree.
 
     """
 
-    def __init__(self, X, y, C, Tree = None, rescale = False, label = None):
-        self.rescale = rescale  # booleen to know if we rescale the matrices
+    def __init__(self, X, y, C, Tree = None, label = None):
         X1, y1, C1 = check_size(X, y, C)
 
         if Tree is None:
@@ -245,15 +238,16 @@ class Data:
                 self.label = np.array(label)
             self.X, self.y, self.C, self.tree = X1, y1, C1, None
 
-        else:
-            A, label2, subtree = tree_to_matrix(Tree, label, with_repr = True)
-            self.tree = subtree
-            self.X, self.y, self.C, self.label = (
-                X1.dot(A),
-                y1,
-                C1.dot(A),
-                np.array(label2),
-            )
+
+        #else:
+        #    A, label2, subtree = tree_to_matrix(Tree, label, with_repr = True)
+        #    self.tree = subtree
+        #    self.X, self.y, self.C, self.label = (
+        #        X1.dot(A),
+        #        y1,
+        #        C1.dot(A),
+        #        np.array(label2),
+        #    )
 
 
 class Formulation:
@@ -290,8 +284,15 @@ class Formulation:
         rho (float) : Value of rho for R2 and R4 formulations.
             Default value : 1.345
 
+        rho_scaled (float) : Value of rescaled rho computed while olving the problem, which is 
+            rho * sqrt( mean( y**2 ) ) so that it lives on the scale of y
+            and also usefull so that we don't have the problem with the non strict convexity
+            (i.e. at least one sample is on the quadratic mode of the huber loss function)
+            as long as rho is higher than one.
+
+
         rho_classification (float) : value of rho for huberized hinge loss function for classification ie C2 (it has to be strictly smaller then 1).
-            Default value : 0.
+            Default value : -1.
 
         e (float or string)  : value of e in concomitant formulation.
             If 'n/2' then it becomes n/2 during the method :func:`solve()`, same for 'n'.
@@ -310,7 +311,7 @@ class Formulation:
         self.concomitant = True
         self.classification = False
         self.rho = 1.345
-        self.rho_classification = 0.0
+        self.rho_classification = -1.0
         self.e = "not specified"
         self.w = None
         self.intercept = False
@@ -722,7 +723,7 @@ class solution_PATH:
         if param.numerical_method == "not specified":
             param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
-        rho = param.formulation.rho
+        rho = param.formulation.rho_scaled
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Algorithmic method choosing
@@ -737,7 +738,7 @@ class solution_PATH:
                     [param.lamin ** (i / (param.Nlam - 1)) for i in range(param.Nlam)]
                 )
             else:
-                np.linspace(1.0, param.lamin, param.Nlam)
+                param.lambdas = np.linspace(1.0, param.lamin, param.Nlam)
 
         self.logscale = param.logscale
 
@@ -794,7 +795,7 @@ class solution_PATH:
         else:
             xGraph = self.LAMBDAS
             xlabel = PATH_beta_path["xlabel"]
-
+        plt.figure(figsize = (10, 3), dpi = 80)
         affichage(
             self.BETAS[:, top],
             xGraph,
@@ -806,15 +807,16 @@ class solution_PATH:
         )
         if type(self.save) == str:
             plt.savefig(self.save + "Beta-path")
-        plt.show()
+        plt.show(block=False)
         if type(self.SIGMAS) != str and self.plot_sigma:
+            plt.figure(figsize = (10, 3), dpi = 80)
             plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel(
                 PATH_sigma_path["ylabel"]
             ), plt.xlabel(PATH_sigma_path["xlabel"])
             plt.title(PATH_sigma_path["title"] + self.formulation.name())
             if type(self.save) == str:
                 plt.savefig(self.save + "Sigma-path")
-            plt.show()
+            plt.show(block=False)
 
         string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
         return string
@@ -856,7 +858,7 @@ class solution_CV:
             param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
 
-        rho = param.formulation.rho
+        rho = param.formulation.rho_scaled
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Algorithmic method choosing
@@ -871,7 +873,7 @@ class solution_CV:
                     [param.lamin ** (i / (param.Nlam - 1)) for i in range(param.Nlam)]
                 )
             else:
-                np.linspace(1.0, param.lamin, param.Nlam)
+                param.lambdas = np.linspace(1.0, param.lamin, param.Nlam)
 
         self.logscale = param.logscale
 
@@ -930,7 +932,7 @@ class solution_CV:
             top = np.sort(top)
         else:
             top = np.arange(nb_select)
-
+        plt.figure(figsize = (10, 3), dpi = 80)
         plt.bar(range(nb_select), self.refit[selected])
         plt.title(CV_beta["title"])
         plt.xlabel(CV_beta["xlabel"]), plt.ylabel(CV_beta["ylabel"])
@@ -938,7 +940,7 @@ class solution_CV:
 
         if type(self.save2) == str:
             plt.savefig(self.save2)
-        plt.show()
+        plt.show(block=False)
 
         string += "\n   Selected variables :  "
         for i in np.where(self.selected_param)[0]:
@@ -962,6 +964,7 @@ class solution_CV:
                 Default value : None
 
         """
+        plt.figure(figsize = (10, 3), dpi = 80)
 
         i_min, i_1SE = self.index_min, self.index_1SE
 
@@ -1012,7 +1015,7 @@ class solution_CV:
         plt.legend()
         if save is not None and type(save) == str:
             plt.savefig(save)
-        plt.show()
+        plt.show(block=False)
 
 
 # Here, the main function used is stability ; from the file stability selection
@@ -1047,7 +1050,7 @@ class solution_StabSel:
             param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
 
-        rho = param.formulation.rho
+        rho = param.formulation.rho_scaled
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Compute the theoretical lam if necessary
@@ -1146,7 +1149,7 @@ class solution_StabSel:
             D[selected],
             D[unselected],
         )
-
+        plt.figure(figsize = (10, 3), dpi = 80)
         plt.bar(
             range(len(Dselected)),
             Dselected,
@@ -1179,9 +1182,10 @@ class solution_StabSel:
         if type(self.save1) == str:
             plt.savefig(self.save1)
 
-        plt.show()
+        plt.show(block=False)
         plot_path = False  # do not plot this graphic for now because it is confusing
         if type(Dpath) != str and plot_path:
+            plt.figure(figsize = (10, 3), dpi = 80)
             lambdas = self.lambdas_path
             N = len(lambdas)
             for i1, i2 in enumerate(top):
@@ -1203,8 +1207,9 @@ class solution_StabSel:
             plt.title(
                 StabSel_path["title"] + self.method + " using " + self.formulation
             )
-            plt.show()
+            plt.show(block=False)
 
+        plt.figure(figsize = (10, 3), dpi = 80)
         plt.bar(range(len(self.refit[top])), self.refit[top])
         plt.xlabel(StabSel_beta["xlabel"]), plt.ylabel(
             StabSel_beta["ylabel"]
@@ -1216,7 +1221,7 @@ class solution_StabSel:
         )
         if type(self.save2) == str:
             plt.savefig(self.save2)
-        plt.show()
+        plt.show(block=False)
 
         string += "\n   Selected variables :  "
         for i in np.where(self.selected_param)[0]:
@@ -1254,7 +1259,7 @@ class solution_LAMfixed:
             param.numerical_method = numerical_method
         name_formulation = param.formulation.name()
 
-        rho = param.formulation.rho
+        rho = param.formulation.rho_scaled
         rho_classification = param.formulation.rho_classification
         e = param.formulation.e
         # Compute the theoretical lam if necessary
@@ -1312,6 +1317,7 @@ class solution_LAMfixed:
         else:
             top = np.arange(d)
 
+        plt.figure(figsize = (10, 3), dpi = 80)
         plt.bar(range(len(top)), self.beta[top]), plt.title(
             LAM_beta["title"] + str(round(self.lam, 3))
         ), plt.xlabel(LAM_beta["xlabel"]), plt.ylabel(LAM_beta["ylabel"])
@@ -1323,7 +1329,7 @@ class solution_LAMfixed:
 
         if type(self.save) == str:
             plt.savefig(self.save)
-        plt.show()
+        plt.show(block=False)
 
         if self.formulation.concomitant:
             string += "\n   Sigma  =  " + str(round(self.sigma, 3))
@@ -1408,7 +1414,7 @@ CV_graph = {
     "title": r" ",
     "xlabel": r"$\lambda / \lambda_{max}$",
     "ylabel": r"Mean-Squared Error (MSE) ",
-    "ylabel_classify": r"Miss classification rate "
+    "ylabel_classification": r"Miss classification rate "
 }
 LAM_beta = {
     "title": r"Coefficients at $\lambda$ = ",

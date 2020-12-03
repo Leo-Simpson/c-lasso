@@ -52,6 +52,7 @@ def stability(
     if StabSelmethod == "first":
 
         distr_path = np.zeros((Nlam, d))
+        distribution = np.zeros(d)
         for i in range(B):
             subset = build_subset(n, nS)
             submatrix = build_submatrix(matrix, subset)
@@ -71,13 +72,14 @@ def stability(
                     intercept = intercept,
                 )[0]
             )
-
             distr_path = distr_path + (abs(BETA) >= 1e-5)
+            pop = biggest_indexes(BETA[-1], q)
+            distribution[pop] +=1.
             # to do : output, instead of lambdas, the average aciv
             """
                 distr_path(lambda)_i = 1/B number of time where i is  (among the q-first & activated before lambda) 
             """
-        distribution = distr_path[-1]
+        #distribution = distr_path[-1]
         return (distribution * 1.0 / B, distr_path * 1.0 / B, lambdas)
 
     elif StabSelmethod == "lam":

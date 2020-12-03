@@ -73,7 +73,7 @@ def Classo_R1(pb, lam):
             eps = p - gamma * (AtA.dot(p) - Aty) * 2 - C.T.dot(y2) - S
             x = x + eps
 
-            if i > 0 and LA.norm(eps) < tol:
+            if i % 10 == 2 and LA.norm(eps) < tol:
                 if regpath:
                     return (x, (x, v))
                 else:

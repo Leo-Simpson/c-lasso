@@ -50,7 +50,7 @@ def Classo_R3(pb, lam):
     if not regpath:
         pb.compute_param()
 
-    lamb = lam * pb.lambdamax
+    lamb = lam * pb.lambdamax 
     Anorm = pb.Anorm
     tol = pb.tol * LA.norm(y) / Anorm  # tolerance rescaled
     Proj = proj_c(C, d)  # Proj = I - C^t . (C . C^t )^-1 . C
@@ -60,6 +60,7 @@ def Classo_R3(pb, lam):
     # Save some matrix products already computed in problem.compute_param()
     gamma = pb.gam / (pb.Anorm2 * lam)  # Normalize gamma
     w = lamb * gamma * pb.weights
+
     zerod = np.zeros(d)
     # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
     mu, c, root = pb.mu, pb.c, 0.0
@@ -71,7 +72,8 @@ def Classo_R3(pb, lam):
         for i in range(pb.N):
             nv_b = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar)
             nv_s = (xs + nu) / 2
-            if i > 0 and LA.norm(b - nv_b) + LA.norm(s - nv_s) / Anorm < 2 * tol:
+            if i % 10 == 2 and LA.norm(b - nv_b) + LA.norm(s - nv_s) / Anorm < 2 * tol:
+                s = s / np.sqrt(m)
                 if regpath:
                     return (b, (xs, nu, o, xbar, x), s)
                 else:
@@ -79,7 +81,7 @@ def Classo_R3(pb, lam):
 
             s, b = nv_s, nv_b
             Ab = A.dot(b)
-            p1, p2, root = prox_phi_1(xs, 2 * Ab - o - y, gamma / c, root)
+            p1, p2, root = prox_phi_1(xs, 2 * Ab - o - y, np.sqrt(m)*gamma / c, root)
             sup1 = max(0, nu) - s
             sup2 = p1 - s
             sup3 = p2 + y - Ab
@@ -188,7 +190,7 @@ class problem_R3:
 
         (m, d, k) = self.dim
         self.weights = np.ones(d)
-        self.tol = 1e-6
+        self.tol = 1e-5
 
         self.regpath = False
         self.name = algo + " Concomitant"
@@ -197,11 +199,11 @@ class problem_R3:
         self.proj_sigm = lambda x: max(x, 0)
         self.mu = 1.95
 
-        self.gam = np.sqrt(d)
+        self.gam = 1. #np.sqrt(d/m)
         self.Aty = (A.T).dot(y)
         self.sigmax = LA.norm(y) / np.sqrt(m / 2)
         self.lambdamax = 2 * LA.norm(self.Aty, np.infty) / self.sigmax
-        self.init = 1.0, 1.0, np.zeros(m), np.zeros(d), np.zeros(d)
+        self.init = 0.0, 0.0, np.zeros(m), np.zeros(d), np.zeros(d)
 
     # Here we compute the costful matrices products and inverts in order to compute it only once, which is especially helpful for warmstarts.
     def compute_param(self):

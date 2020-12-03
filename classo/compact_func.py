@@ -26,9 +26,10 @@ def Classo(
     get_lambdamax = False,
     true_lam = False,
     e = None,
-    rho_classification = -0.0,
+    rho_classification = -1.0,
     w = None,
     intercept = False,
+    return_sigm = True
 ):
 
     if w is not None:
@@ -52,6 +53,7 @@ def Classo(
         if e is None or e == len(matrices[0]) / 2:
             r = 1.0
             pb = problem_R3(matrices, meth)
+            e = len(matrices[0]) / 2
         else:
             r = np.sqrt(2 * e / len(matrices[0]))
             pb = problem_R3((matrices[0] * r, matrices[1], matrices[2] * r), meth)
@@ -60,7 +62,6 @@ def Classo(
             beta, s = Classo_R3(pb, lam / lambdamax)
         else:
             beta, s = Classo_R3(pb, lam)
-        s = s / np.sqrt(e)
 
         if intercept:
             betaO = ybar - np.vdot(Xbar, beta)
@@ -73,6 +74,7 @@ def Classo(
         if e is None or e == len(matrices[0]):
             r = 1.0
             pb = problem_R4(matrices, meth, rho, intercept = intercept)
+            e = len(matrices[0])
         else:
             r = np.sqrt(e / len(matrices[0]))
             pb = problem_R4(
@@ -101,6 +103,9 @@ def Classo(
 
     elif typ == "C2":
 
+        assert set(matrices[2]).issubset({1, -1})
+
+
         lambdamax = h_lambdamax(
             matrices, rho_classification, typ="C2", intercept = intercept
         )
@@ -117,6 +122,8 @@ def Classo(
             beta = out[0][-1]
 
     elif typ == "C1":
+
+        assert set(matrices[2]).issubset({1, -1})
 
         lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept = intercept)
         if true_lam:
@@ -159,7 +166,7 @@ def Classo(
         else:
             beta = beta / w
 
-    if typ in ["R3", "R4"]:
+    if typ in ["R3", "R4"] and return_sigm:
         if get_lambdamax:
             return (lambdamax, beta, s)
         else:
@@ -181,7 +188,7 @@ def pathlasso(
     true_lam = False,
     e = None,
     return_sigm = False,
-    rho_classification = 0.0,
+    rho_classification = -1.0,
     w = None,
     intercept = False,
 ):
@@ -257,6 +264,8 @@ def pathlasso(
 
     elif typ == "C2":
 
+        assert set(matrices[2]).issubset({1, -1})
+
         lambdamax = h_lambdamax(
             matrices, rho_classification, typ="C2", intercept = intercept
         )
@@ -272,6 +281,8 @@ def pathlasso(
         )
 
     elif typ == "C1":
+
+        assert set(matrices[2]).issubset({1, -1})
 
         lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept = intercept)
         if true_lam:
@@ -297,6 +308,7 @@ def pathlasso(
         if intercept:
             BETA = np.array([[ybar - Xbar.dot(beta)] + list(beta) for beta in BETA])
 
+
     real_path = [lam * lambdamax for lam in lambdass]
 
     if w is not None:
@@ -306,6 +318,7 @@ def pathlasso(
             ww = w
 
         BETA = np.array([beta / ww for beta in BETA])
+
 
     if typ in ["R3", "R4"] and return_sigm:
         return (np.array(BETA), real_path, S)
