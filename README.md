@@ -315,7 +315,7 @@ In the [the accompanying notebook](./examples/example-notebook.ipynb) we study s
 We first consider the [COMBO data set](./examples/COMBO_data) and show how to predict Body Mass Index (BMI) from microbial genus abundances and two non-compositional covariates  using "filtered_data".
 
 ```python
-from classo import csv_to_np, classo_problem
+from classo import csv_to_np, classo_problem, clr
 
 # Load microbiome and covariate data X
 X0  = csv_to_np('COMBO_data/complete_data/GeneraCounts.csv', begin = 0).astype(float)
