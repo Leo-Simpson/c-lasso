@@ -51,7 +51,7 @@ pip install c-lasso
 To use the c-lasso package in Python, type 
 
 ```python
-from classo import *
+from classo import classo_problem # one can add auxiliary functions as well such as random_data or csv_to_np
 ```
 
 The `c-lasso` package depends on the following Python packages:
@@ -60,7 +60,8 @@ The `c-lasso` package depends on the following Python packages:
 - `matplotlib`; 
 - `scipy`; 
 - `pandas`; 
-- `h5py`.
+- `h5py`;
+- `pytest` (for tests)
 
 ##  Regression and classification problems
 
@@ -314,7 +315,7 @@ In the [the accompanying notebook](./examples/example-notebook.ipynb) we study s
 We first consider the [COMBO data set](./examples/COMBO_data) and show how to predict Body Mass Index (BMI) from microbial genus abundances and two non-compositional covariates  using "filtered_data".
 
 ```python
-from classo import *
+from classo import csv_to_np, classo_problem
 
 # Load microbiome and covariate data X
 X0  = csv_to_np('COMBO_data/complete_data/GeneraCounts.csv', begin = 0).astype(float)
