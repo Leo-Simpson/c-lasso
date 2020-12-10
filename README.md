@@ -50,12 +50,9 @@ pip install c-lasso
 To use the c-lasso package in Python, type 
 
 ```python
-<<<<<<< HEAD
+
 from classo import classo_problem 
 # one can add auxiliary functions as well such as random_data or csv_to_np
-=======
-from classo import classo_problem # one can add auxiliary functions as well such as random_data or csv_to_np
->>>>>>> 81d56addcc06032325fc3e9a6f33e0cfc25cfe5d
 ```
 
 The `c-lasso` package depends on the following Python packages:
