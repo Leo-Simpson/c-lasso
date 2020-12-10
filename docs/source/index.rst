@@ -28,7 +28,7 @@ The package is available on `https://github.com/Leo-Simpson/c-lasso`.
 
 
    additional/license
-   ../../CONTRIBUTING.rst
+   CONTRIBUTING
 
 
 

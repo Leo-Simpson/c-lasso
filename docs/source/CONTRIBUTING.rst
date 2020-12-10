@@ -1,4 +1,4 @@
-==========================
+
 Contributing to c-lasso
 ==========================
 
@@ -8,14 +8,14 @@ help a lot to fix some bug and to add possible new functionality.
 One can contribute either by reporting an error, requesting a new feature or adding a new feature.
 
 Reporting errors
-================
+^^^^^^^^^^^^^^^^^^
 
 Any errors or general problems can be reported on `GitHub's Issue tracker <https://github.com/Leo-Simpson/c-lasso/issues>`_
 
 The quickest way resolve a problem is to go through the following steps:
 
 * Have I tested this on the latest GitHub (``master``) version?
-To see which version you use, you can run on python :
+  To see which version you use, you can run on python :
 
      >>> import classo
      >>> classo.__version__
@@ -31,9 +31,9 @@ discussion.
 
 
 Feature requests
-================
+^^^^^^^^^^^^^^^^^^
 
-We recommend opening an issue on `GitHub <https://github.com/Leo-Simpson/c-lasso/issues>`_ to discuss potential changes.
+We recommend opening an issue on `issue on GitHub <https://github.com/Leo-Simpson/c-lasso/issues>`_ to discuss potential changes.
 
 When preparing a feature request, consider providing the following information:
 
@@ -53,7 +53,7 @@ When preparing a feature request, consider providing the following information:
 
 
 Adding a feature
-==================
+^^^^^^^^^^^^^^^^^^
 
 One can also contribute with a new feature or with fixing a bug.
 
@@ -99,7 +99,7 @@ When preparing a pull request, one should make sure that the code changes:
   
  
 Seeking for support ?
-=======================
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 If the above ways of interacting with ``c-lasso`` does not fit your request,
 you may `contact directly one of the autors <leo.bill.simpson@gmail.com>`_.
