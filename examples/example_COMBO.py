@@ -1,4 +1,4 @@
-path = "/Users/lsimpson/Desktop/GitHub/Figures/exampleCOMBO/"
+path = "../../figures/exampleCOMBO/"
 from classo import csv_to_np, classo_problem, clr
 import numpy as np
 

@@ -1,4 +1,4 @@
-path = "/Users/lsimpson/Desktop/GitHub/Figures/examplePH/"
+path = "../../figures/examplePH/"
 from classo import classo_problem
 import numpy as np
 from copy import deepcopy as dc

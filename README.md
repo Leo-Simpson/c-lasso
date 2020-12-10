@@ -34,7 +34,6 @@ The code builds on results from several papers which can be found in the [Refere
 * [Getting started](#getting-started)
 * [Log-contrast regression for microbiome data](#log-contrast-regression-for-microbiome-data)
 * [Optimization schemes](#optimization-schemes)
-* [Structure of the code](#structure-of-the-code)
 
 
 * [References](#references)
@@ -51,7 +50,8 @@ pip install c-lasso
 To use the c-lasso package in Python, type 
 
 ```python
-from classo import *
+from classo import classo_problem 
+# one can add auxiliary functions as well such as random_data or csv_to_np
 ```
 
 The `c-lasso` package depends on the following Python packages:
@@ -190,20 +190,21 @@ The command shows the running time(s) for the c-lasso problem instance, and the 
 
 ```
 STABILITY SELECTION : 
-   Selected variables :  1    5    14    17    18    
-   Running time :  0.663s
+   Selected variables :  7    63    148    164    168    
+   Running time :  1.546s
+
 ```
 
 Here, we only used stability selection as *default* model selection strategy. 
 The command also allows you to inspect the computed stability profile for all variables 
 at the theoretical &lambda; 
 
-![1.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/basic/StabSel.png)
+![1.StabSel](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/basic/StabSel.png)
 
 
 The refitted &beta; values on the selected support are also displayed in the next plot
 
-![beta](https://github.com/Leo-Simpson/Figures/blob/master/basic/beta.png)
+![beta](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/basic/beta.png)
 
 
 #### Advanced example             
@@ -234,75 +235,74 @@ print(problem.solution)
 
 Results : 
 ```
-FORMULATION: R2
- 
-MODEL SELECTION COMPUTED:  
-     Lambda fixed
-     Path
-     Cross Validation
-     Stability selection
- 
-LAMBDA FIXED PARAMETERS: 
-     numerical_method = Path-Alg
-     rescaled lam : True
-     threshold = 0.106
-     lam = 0.1
-     theoretical_lam = 0.224
- 
-PATH PARAMETERS: 
-     numerical_method : Path-Alg
-     lamin = 0.001
-     Nlam = 80
- 
- 
-CROSS VALIDATION PARAMETERS: 
-     numerical_method : Path-Alg
-     one-SE method : True
-     Nsubset = 5
-     lamin = 0.001
-     Nlam = 80
- 
- 
-STABILITY SELECTION PARAMETERS: 
-     numerical_method : Path-Alg
-     method : max
-     B = 50
-     q = 10
-     percent_nS = 0.5
-     threshold = 0.7
-     lamin = 0.01
-     Nlam = 50
+     FORMULATION: R2
+     
+     MODEL SELECTION COMPUTED:  
+          Lambda fixed
+          Path
+          Cross Validation
+          Stability selection
+     
+     LAMBDA FIXED PARAMETERS: 
+          numerical_method = Path-Alg
+          rescaled lam : True
+          threshold = 0.09
+          lam = 0.1
+          theoretical_lam = 0.224
+     
+     PATH PARAMETERS: 
+          numerical_method : Path-Alg
+          lamin = 0.001
+          Nlam = 80
+     
+     
+     CROSS VALIDATION PARAMETERS: 
+          numerical_method : Path-Alg
+          one-SE method : True
+          Nsubset = 5
+          lamin = 0.001
+          Nlam = 80
+     
+     
+     STABILITY SELECTION PARAMETERS: 
+          numerical_method : Path-Alg
+          method : max
+          B = 50
+          q = 10
+          percent_nS = 0.5
+          threshold = 0.7
+          lamin = 0.01
+          Nlam = 50
 
+     LAMBDA FIXED : 
+     Selected variables :  17    59    123    
+     Running time :  0.104s
 
- LAMBDA FIXED : 
-   Selected variables :  17    59    76    123    137    
-   Running time :  0.234s
+     PATH COMPUTATION : 
+     Running time :  0.638s
 
- PATH COMPUTATION : 
-   Running time :  0.557s
+     CROSS VALIDATION : 
+     Selected variables :  16    17    57    59    64    73    74    76    93    115    123    134    137    181    
+     Running time :  2.1s
 
- CROSS VALIDATION : 
-   Selected variables :  16    17    57    59    64    73    74    76    93    115    123    134    137    181    
-   Running time :  1.751s
-
- STABILITY SELECTION : 
-   Selected variables :  1    3    7    12    
-   Running time :  8.391s
+     STABILITY SELECTION : 
+     Selected variables :  17    59    76    123    137    
+     Running time :  6.062s
 
 ```
 
 
-![2.StabSel](https://github.com/Leo-Simpson/Figures/blob/master/advanced/StabSel.png)
+![2.StabSel](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/StabSel.png)
 
-![2.StabSel-beta](https://github.com/Leo-Simpson/Figures/blob/master/advanced/StabSel-beta.png)
+![2.StabSel-beta](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/StabSel-beta.png)
 
-![2.CV-beta](https://github.com/Leo-Simpson/Figures/blob/master/advanced/CVbeta.png)
+![2.CV-beta](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/CVbeta.png)
 
-![2.CV-graph](https://github.com/Leo-Simpson/Figures/blob/master/advanced/CV.png)
+![2.CV-graph](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/CV.png)
 
-![2.LAM-beta](https://github.com/Leo-Simpson/Figures/blob/master/advanced/beta.png)
+![2.LAM-beta](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/beta.png)
 
-![2.Path](https://github.com/Leo-Simpson/Figures/blob/master/advanced/Beta-path.png)
+![2.Path](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/Beta-path.png)
 
 
 ## Log-contrast regression for microbiome data
@@ -364,13 +364,13 @@ print(problem.solution)
 
 ```
 
-![3.Stability profile R3](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R3-StabSel.png)
+![3.Stability profile R3](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R3-StabSel.png)
 
-![3.Beta solution R3](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R3-StabSel-beta.png)
+![3.Beta solution R3](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R3-StabSel-beta.png)
 
-![3.Stability profile R4](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R4-StabSel.png)
+![3.Stability profile R4](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R4-StabSel.png)
 
-![3.Beta solution R4](https://github.com/Leo-Simpson/Figures/blob/master/exampleFilteredCOMBO/R4-StabSel-beta.png)
+![3.Beta solution R4](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R4-StabSel-beta.png)
 
 
 <img src="https://i.imgur.com/8tFmM8T.png" alt="Central Park Soil Microbiome" height="250" align="right"/>
@@ -430,15 +430,15 @@ LAMBDA FIXED :
    Running time :  0.287s
 ```
 
-![Ex4.1](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-Beta-path.png)
+![Ex4.1](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-Beta-path.png)
 
-![Ex4.2](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-Sigma-path.png)
+![Ex4.2](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-Sigma-path.png)
 
-![Ex4.3](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-StabSel.png)
+![Ex4.3](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-StabSel.png)
 
-![Ex4.4](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-StabSel-beta.png)
+![Ex4.4](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-StabSel-beta.png)
 
-![Ex4.5](https://github.com/Leo-Simpson/Figures/blob/master/examplePH/R3-beta.png)
+![Ex4.5](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-beta.png)
 
 
 ## Optimization schemes
@@ -478,10 +478,6 @@ It makes use of the proximity operators of the perspective of the LS objective (
 The Huber problem with concomitant scale [R4] is reformulated as scaled Lasso problem 
 with the mean shift (see [6]) and thus solved in (n + d) dimensions. 
 
-
-## Structure of the code
-
-![Structure](https://github.com/Leo-Simpson/Figures/blob/master/classo_structure.png)
 
 
 ## References 

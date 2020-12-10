@@ -110,7 +110,9 @@ def Classo(
             matrices, rho_classification, typ="C2", intercept = intercept
         )
         if true_lam:
-            out = solve_path(matrices, lam / lambdamax, False, rho_classification, "C2")
+            out = solve_path(
+                matrices, lam / lambdamax, False, rho_classification, "C2", intercept = intercept
+            )
         else:
             out = solve_path(
                 matrices, lam, False, rho_classification, "C2", intercept = intercept
