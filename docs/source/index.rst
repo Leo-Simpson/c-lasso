@@ -26,8 +26,9 @@ The package is available on `https://github.com/Leo-Simpson/c-lasso`.
    misc-functions
    structure-code
 
+
    additional/license
-   additional/help
+   ../../CONTRIBUTING.rst
 
 
 
