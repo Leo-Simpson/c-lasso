@@ -14,7 +14,8 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-
+import sphinx_gallery 
+import sys
 # -- Project information -----------------------------------------------------
 
 project = 'classo'
@@ -36,7 +37,10 @@ extensions = ['sphinx.ext.autodoc',
                 'sphinx.ext.coverage',
                 'sphinx.ext.mathjax',
                 'sphinx.ext.napoleon',
-                'sphinx.ext.autosummary']
+                'sphinx.ext.autosummary',
+                'sphinx_gallery.gen_gallery',]
+
+autosummary_generate = True
 
 def skip(app, what, name, obj, would_skip, options):
     if name == "__init__" or name == "__new__":
@@ -67,3 +71,18 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/{.major}'.format(sys.version_info), None),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/reference', None),
+    'matplotlib': ('https://matplotlib.org/', None)
+}
+
+sphinx_gallery_conf = {
+    'doc_module': 'numpy',
+    'examples_dirs': '../../examples',
+    'ignore_pattern': r'/example_',
+    'gallery_dirs': 'auto_examples',
+}

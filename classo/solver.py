@@ -650,7 +650,11 @@ class LAMfixedparameters:
     def __repr__(self):
         string = "\n     numerical_method = " + str(self.numerical_method)
         string += "\n     rescaled lam : " + str(self.rescaled_lam)
-        string += "\n     threshold = " + str(round(self.threshold, 3))
+        if self.threshold is None:
+            string += "\n     threshold : average of the absolute value of beta"
+        else:
+            string += "\n     threshold = " + str(round(self.threshold, 3))
+        
         if type(self.lam) is str:
             string += "\n     lam : " + self.lam
         else:

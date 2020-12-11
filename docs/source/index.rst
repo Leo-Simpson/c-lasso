@@ -22,9 +22,11 @@ The package is available on `https://github.com/Leo-Simpson/c-lasso`.
 
    description
    getting-started
+   auto_examples/index
    problem_classo
    misc-functions
    structure-code
+   auto_examples/index
 
 
    additional/license
