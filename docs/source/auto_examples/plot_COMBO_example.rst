@@ -88,6 +88,7 @@ Set up design matrix and zero-sum constraints for 45 genera
 
 .. code-block:: default
 
+
     X     = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis = 1) # Joint microbiome and covariate data and offset
     label = np.concatenate([labels, np.array(['Calorie', 'Fat', 'Bias'])])
     C = np.ones((1, len(X[0])))
@@ -191,7 +192,7 @@ Use formulation R3
 
      STABILITY SELECTION : 
        Selected variables :  27    56    
-       Running time :  0.656s
+       Running time :  0.618s
 
 
 
@@ -254,7 +255,7 @@ Use formulation R4
 
      STABILITY SELECTION : 
        Selected variables :  27    56    
-       Running time :  0.909s
+       Running time :  0.886s
 
 
 
@@ -263,7 +264,7 @@ Use formulation R4
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.321 seconds)
+   **Total running time of the script:** ( 0 minutes  2.222 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_combo_example.py:

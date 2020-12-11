@@ -30,6 +30,7 @@ Let's present what classo does when using its default parameters on synthetic da
 
 Generate the data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 This code snippet generates a problem instance with sparse ß in dimension
 d=100 (sparsity d_nonzero=5). The design matrix X comprises n=100 samples generated from an i.i.d standard normal
 distribution. The dimension of the constraint matrix C is d x k matrix. The noise level is σ=0.5. 
@@ -55,6 +56,7 @@ Remark : one can see the parameters that should be selected :
 
 .. code-block:: default
 
+
     print(np.nonzero(sol))
 
 
@@ -74,6 +76,7 @@ Remark : one can see the parameters that should be selected :
 
 Define the classo instance
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 Next we can define a default c-lasso problem instance with the generated data:
 
 
@@ -91,6 +94,7 @@ Next we can define a default c-lasso problem instance with the generated data:
 
 Check parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 You can look at the generated problem instance by typing:
 
 
@@ -132,7 +136,8 @@ You can look at the generated problem instance by typing:
 
 Solve optimization problems
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
- We only use stability selection as default model selection strategy. 
+
+We only use stability selection as default model selection strategy. 
 The command also allows you to inspect the computed stability profile for all variables 
 at the theoretical λ
 
@@ -151,6 +156,7 @@ at the theoretical λ
 
 Visualisation
 ^^^^^^^^^^^^^^^
+
 After completion, the results of the optimization and model selection routines 
 can be visualized using
 
@@ -186,7 +192,7 @@ can be visualized using
 
      STABILITY SELECTION : 
        Selected variables :  7    63    148    164    168    
-       Running time :  1.316s
+       Running time :  0.988s
 
 
 
@@ -195,7 +201,7 @@ can be visualized using
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.140 seconds)
+   **Total running time of the script:** ( 0 minutes  1.601 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_basic_example.py:

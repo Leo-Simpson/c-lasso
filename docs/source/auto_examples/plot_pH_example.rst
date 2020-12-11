@@ -165,14 +165,14 @@ Solve for R1
  
      LAMBDA FIXED : 
        Selected variables :  18    19    39    43    62    85    93    94    102    107    
-       Running time :  0.013s
+       Running time :  0.01s
 
      PATH COMPUTATION : 
-       Running time :  0.204s
+       Running time :  0.145s
 
      STABILITY SELECTION : 
        Selected variables :  19    62    94    
-       Running time :  0.429s
+       Running time :  0.329s
 
 
 
@@ -261,14 +261,14 @@ Solve for R2
  
      LAMBDA FIXED : 
        Selected variables :  18    19    39    43    57    62    85    93    94    107    
-       Running time :  0.066s
+       Running time :  0.053s
 
      PATH COMPUTATION : 
-       Running time :  0.358s
+       Running time :  0.301s
 
      STABILITY SELECTION : 
        Selected variables :  19    62    94    
-       Running time :  1.37s
+       Running time :  1.139s
 
 
 
@@ -365,14 +365,14 @@ Solve for R3
      LAMBDA FIXED : 
        Sigma  =  0.633
        Selected variables :  15    18    19    23    25    27    43    47    50    53    57    58    62    89    93    94    104    107    
-       Running time :  0.032s
+       Running time :  0.026s
 
      PATH COMPUTATION : 
-       Running time :  0.23s
+       Running time :  0.175s
 
      STABILITY SELECTION : 
        Selected variables :  18    19    43    62    94    107    
-       Running time :  1.002s
+       Running time :  0.781s
 
 
 
@@ -476,14 +476,14 @@ because of the absence of possible warm-start in this method
      LAMBDA FIXED : 
        Sigma  =  0.284
        Selected variables :  15    18    19    23    27    43    47    50    53    57    58    62    89    93    94    104    107    
-       Running time :  0.052s
+       Running time :  0.053s
 
      PATH COMPUTATION : 
-       Running time :  79.059s
+       Running time :  80.145s
 
      STABILITY SELECTION : 
        Selected variables :  18    19    43    62    94    107    
-       Running time :  1.474s
+       Running time :  1.318s
 
 
 
@@ -492,7 +492,7 @@ because of the absence of possible warm-start in this method
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  29.420 seconds)
+   **Total running time of the script:** ( 1 minutes  28.110 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_pH_example.py:

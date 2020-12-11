@@ -35,6 +35,7 @@ X0 = clr(X0, 1 / 2).T
 # %%
 # Set up design matrix and zero-sum constraints for 45 genera
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 X     = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis = 1) # Joint microbiome and covariate data and offset
 label = np.concatenate([labels, np.array(['Calorie', 'Fat', 'Bias'])])
 C = np.ones((1, len(X[0])))
