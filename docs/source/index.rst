@@ -26,8 +26,6 @@ The package is available on `https://github.com/Leo-Simpson/c-lasso`.
    problem_classo
    misc-functions
    structure-code
-   auto_examples/index
-
 
    additional/license
    CONTRIBUTING
