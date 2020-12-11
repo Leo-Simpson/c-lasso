@@ -155,7 +155,7 @@ and then to evaluate it in the given finite path.
 
 
 def pathlasso_R1(pb, path, n_active = False, return_sp_path = False):
-    n = pb.dim[0]
+    n, d, k = pb.dim
     BETA, tol = [], pb.tol
     if pb.type == "Path-Alg":
         beta, sp_path = solve_path(pb.matrix, path[-1], n_active, 0, "R1")
@@ -181,7 +181,7 @@ def pathlasso_R1(pb, path, n_active = False, return_sp_path = False):
     if type(n_active) == int and n_active > 0:
         n_act = n_active
     else:
-        n_act = n
+        n_act = d
     for lam in path:
         X = Classo_R1(pb, lam)
         beta, init = X[0], X[1]

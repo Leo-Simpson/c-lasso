@@ -70,6 +70,8 @@ def Classo_R2(pb, lam, compute = True):
 
     tol = pb.tol * LA.norm(y) / LA.norm(A, "fro")  # tolerance rescaled
 
+    
+    """
     # cvx
     # call to the cvx function of minimization
     if pb_type == "cvx":
@@ -85,6 +87,7 @@ def Classo_R2(pb, lam, compute = True):
         if regpath:
             return (x.value, True)
         return x.value
+    """
 
     if compute:
         pb.compute_param()
@@ -176,7 +179,7 @@ and then to evaluate it in the given finite path.
 
 
 def pathlasso_R2(pb, path, n_active = False):
-    n = pb.dim[0]
+    n, d, k = pb.dim
     BETA, tol = [], pb.tol
     if pb.type == "Path-Alg":
         (A, C, y) = pb.matrix
@@ -194,7 +197,7 @@ def pathlasso_R2(pb, path, n_active = False):
     if type(n_active) == int and n_active > 0:
         n_act = n_active
     else:
-        n_act = n
+        n_act = d
     for lam in path:
         X = Classo_R2(pb, lam, compute = False)
         BETA.append(X[0])

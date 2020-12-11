@@ -14,7 +14,7 @@ Bellow is a gallery of examples.
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="Let&#x27;s present what classo does when using its default parameters on synthetic data">
+    <div class="sphx-glr-thumbcontainer" tooltip="Let&#x27;s present what classo does when using its default parameters on synthetic data.">
 
 .. only:: html
 
@@ -53,6 +53,48 @@ Bellow is a gallery of examples.
    :hidden:
 
    /auto_examples/plot_advanced_example
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="The next microbiome example considers the  `Central Park Soil dataset &lt;https://github.com/Leo-S...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_pH_example_thumb.png
+     :alt: pH prediction using the Central Park soil dataset
+
+     :ref:`sphx_glr_auto_examples_plot_pH_example.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/plot_pH_example
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="We first consider the `COMBO data set &lt;https://github.com/Leo-Simpson/c-lasso/tree/master/examp...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_combo_example_thumb.png
+     :alt: BMI prediction using the COMBO dataset
+
+     :ref:`sphx_glr_auto_examples_plot_combo_example.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/plot_combo_example
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

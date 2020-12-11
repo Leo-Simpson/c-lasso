@@ -13,7 +13,7 @@ Advanced example
 ===============
 
 Let's present how one can specify different aspects of the problem 
-formulation and model selection strategy on classo, using synthetic data
+formulation and model selection strategy on classo, using synthetic data.
 
 
 .. code-block:: default
@@ -47,6 +47,28 @@ and the regression vector ß is then generated to satisfy the given constraints.
 
 
 
+
+
+
+
+Remark : one can see the parameters that should be selected :
+
+
+.. code-block:: default
+
+    print(np.nonzero(sol))
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    (array([  7,  63, 148, 164, 168]),)
 
 
 
@@ -108,19 +130,54 @@ You can look at the generated problem instance by typing:
 
 
 
+
+
 .. rst-class:: sphx-glr-script-out
 
+ Out:
 
-.. code-block:: pytb
+ .. code-block:: none
 
-    Traceback (most recent call last):
-      File "/Users/lsimpson/Desktop/GitHub/c-lasso/examples/plot_advanced_example.py", line 54, in <module>
-        print(problem)
-      File "/Users/lsimpson/anaconda3/envs/envthesis/lib/python3.9/site-packages/classo/solver.py", line 178, in __repr__
-        + self.model_selection.LAMfixedparameters.__repr__()
-      File "/Users/lsimpson/anaconda3/envs/envthesis/lib/python3.9/site-packages/classo/solver.py", line 653, in __repr__
-        string += "\n     threshold = " + str(round(self.threshold, 3))
-    TypeError: type NoneType doesn't define __round__ method
+ 
+ 
+    FORMULATION: R2
+ 
+    MODEL SELECTION COMPUTED:  
+         Lambda fixed
+         Path
+         Cross Validation
+         Stability selection
+ 
+    LAMBDA FIXED PARAMETERS: 
+         numerical_method = not specified
+         rescaled lam : True
+         threshold : average of the absolute value of beta
+         lam = 0.1
+ 
+    PATH PARAMETERS: 
+         numerical_method : not specified
+         lamin = 0.001
+         Nlam = 80
+     with log-scale
+ 
+    CROSS VALIDATION PARAMETERS: 
+         numerical_method : not specified
+         one-SE method : True
+         Nsubset = 5
+         lamin = 0.001
+         Nlam = 80
+     with log-scale
+ 
+    STABILITY SELECTION PARAMETERS: 
+         numerical_method : not specified
+         method : max
+         B = 50
+         q = 10
+         percent_nS = 0.5
+         threshold = 0.7
+         lamin = 0.01
+         Nlam = 50
+
 
 
 
@@ -138,6 +195,12 @@ at the theoretical λ
     problem.solve()
 
 
+
+
+
+
+
+
 Visualisation
 ^^^^^^^^^^^^^^^
 After completion, the results of the optimization and model selection routines 
@@ -149,9 +212,77 @@ can be visualized using
 
     print(problem.solution)
 
+
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_advanced_example_001.png
+          :alt: Coefficients at $\lambda$ = 0.1
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_advanced_example_002.png
+          :alt: Coefficients across $\lambda$-path using R2
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_advanced_example_003.png
+          :alt:  
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_advanced_example_004.png
+          :alt: Refitted coefficients after CV model selection
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_advanced_example_005.png
+          :alt: Stability selection profile of type max using R2
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_advanced_example_006.png
+          :alt: Refitted coefficients after stability selection
+          :class: sphx-glr-multi-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+
+     LAMBDA FIXED : 
+       Selected variables :  7    63    148    164    168    
+       Running time :  0.069s
+
+     PATH COMPUTATION : 
+       Running time :  0.472s
+
+     CROSS VALIDATION : 
+       Selected variables :  7    10    63    101    148    164    168    
+       Running time :  1.747s
+
+     STABILITY SELECTION : 
+       Selected variables :  7    63    148    164    168    
+       Running time :  4.463s
+
+
+
+
+
+
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.010 seconds)
+   **Total running time of the script:** ( 0 minutes  7.799 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_advanced_example.py:

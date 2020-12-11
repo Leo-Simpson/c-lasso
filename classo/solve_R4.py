@@ -131,7 +131,7 @@ that rules Beta and the subgradient s, and then to evaluate it in the given fini
 
 
 def pathlasso_R4(pb, path, n_active = False):
-    n = pb.dim[0]
+    n, d, k = pb.dim
     BETA, SIGMA, tol = [], [], pb.tol
     pb.type = "DR"
     save_init = pb.init
@@ -140,7 +140,7 @@ def pathlasso_R4(pb, path, n_active = False):
     if type(n_active) == int and n_active > 0:
         n_act = n_active
     else:
-        n_act = n
+        n_act = d
 
     for lam in path:
         X = Classo_R4(pb, lam)

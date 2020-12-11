@@ -2,7 +2,7 @@ r"""
 Basic example
 ===============
 
-Let's present what classo does when using its default parameters on synthetic data
+Let's present what classo does when using its default parameters on synthetic data.
 """
 
 from classo import classo_problem, random_data
@@ -19,6 +19,10 @@ import numpy as np
 
 m, d, d_nonzero, k, sigma = 100, 200, 5, 1, 0.5
 (X, C, y), sol = random_data(m, d, d_nonzero, k, sigma, zerosum=True, seed=1)
+
+# %%
+# Remark : one can see the parameters that should be selected :
+print(np.nonzero(sol))
 
 # %%
 # Define the classo instance

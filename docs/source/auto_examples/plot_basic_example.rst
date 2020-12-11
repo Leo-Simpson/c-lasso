@@ -12,7 +12,7 @@
 Basic example
 ===============
 
-Let's present what classo does when using its default parameters on synthetic data
+Let's present what classo does when using its default parameters on synthetic data.
 
 
 .. code-block:: default
@@ -46,6 +46,28 @@ and the regression vector ß is then generated to satisfy the given constraints.
 
 
 
+
+
+
+
+Remark : one can see the parameters that should be selected :
+
+
+.. code-block:: default
+
+    print(np.nonzero(sol))
+
+
+
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+    (array([  7,  63, 148, 164, 168]),)
 
 
 
@@ -164,7 +186,7 @@ can be visualized using
 
      STABILITY SELECTION : 
        Selected variables :  7    63    148    164    168    
-       Running time :  1.494s
+       Running time :  1.316s
 
 
 
@@ -173,7 +195,7 @@ can be visualized using
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.273 seconds)
+   **Total running time of the script:** ( 0 minutes  2.140 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_basic_example.py:

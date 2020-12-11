@@ -3,7 +3,7 @@ Advanced example
 ===============
 
 Let's present how one can specify different aspects of the problem 
-formulation and model selection strategy on classo, using synthetic data
+formulation and model selection strategy on classo, using synthetic data.
 """
 
 from classo import classo_problem, random_data
@@ -20,6 +20,10 @@ import numpy as np
 
 m, d, d_nonzero, k, sigma = 100, 200, 5, 1, 0.5
 (X, C, y), sol = random_data(m, d, d_nonzero, k, sigma, zerosum=True, seed=1)
+
+# %%
+# Remark : one can see the parameters that should be selected :
+print(np.nonzero(sol))
 
 # %%
 # Define the classo instance
