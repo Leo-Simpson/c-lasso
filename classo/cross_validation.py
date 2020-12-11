@@ -165,7 +165,7 @@ def CV(
         intercept,
     )
     i = np.argmin(MSE)
-    i_1SE = np.min(np.where(MSE < MSE[i] + SE[i]))
+    i_1SE = np.min(np.where(MSE <= MSE[i] + SE[i]))
 
     if oneSE:
         lam = lambdas[i_1SE]

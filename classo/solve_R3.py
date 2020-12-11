@@ -152,7 +152,7 @@ def pathlasso_R3(pb, path, n_active = False):
     if type(n_active) == int and n_active > 0:
         n_act = n_active
     else:
-        n_act = d
+        n_act = d + 1
 
     for lam in path:
         X = Classo_R3(pb, lam)

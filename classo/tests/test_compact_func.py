@@ -68,7 +68,7 @@ def test_pathlasso_R3():
     aux_test_pathlasso((X,C,y), "R3", "Path-Alg")
 
 def test_pathlasso_R4():
-    aux_test_pathlasso((X,C,y), "R4", "DR")
+    aux_test_pathlasso((X,C,y), "R4", "DR", atol = 1.) # to change : tolerance
 
 def test_pathlasso_C1():
     aux_test_pathlasso((X,C,np.sign(y)), "C1", "Path-Alg")

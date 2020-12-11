@@ -181,7 +181,7 @@ def pathlasso_R1(pb, path, n_active = False, return_sp_path = False):
     if type(n_active) == int and n_active > 0:
         n_act = n_active
     else:
-        n_act = d
+        n_act = d + 1
     for lam in path:
         X = Classo_R1(pb, lam)
         beta, init = X[0], X[1]
