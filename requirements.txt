@@ -5,3 +5,6 @@ pandas
 scipy 
 zarr
 pytest
+pytest-cov
+sphinx
+sphinx-gallery

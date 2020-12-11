@@ -22,8 +22,6 @@ setup(name='c-lasso',
             'docs': [
                   'sphinx',
                   'sphinx-gallery',
-                  'sphinx_rtd_theme',
-                  'sphinxcontrib-bibtex',
                   'numpydoc',
                   'matplotlib',
                   'pandas',
