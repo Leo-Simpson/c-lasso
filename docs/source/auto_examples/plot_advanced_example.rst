@@ -80,7 +80,6 @@ Next we can define a default c-lasso problem instance with the generated data:
 
 
 
-
 Change the parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -99,8 +98,6 @@ Let's see some example of change in the parameters
     problem.model_selection.CVparameters.seed = 1
     problem.model_selection.LAMfixedparameters.rescaled_lam = True
     problem.model_selection.LAMfixedparameters.lam = .1
-
-
 
 
 
@@ -256,18 +253,18 @@ can be visualized using
 
      LAMBDA FIXED : 
        Selected variables :  7    63    148    164    168    
-       Running time :  0.09s
+       Running time :  0.075s
 
      PATH COMPUTATION : 
-       Running time :  0.432s
+       Running time :  0.418s
 
      CROSS VALIDATION : 
        Selected variables :  7    10    63    101    148    164    168    
-       Running time :  1.767s
+       Running time :  1.636s
 
      STABILITY SELECTION : 
        Selected variables :  7    63    148    164    168    
-       Running time :  5.272s
+       Running time :  4.684s
 
 
 
@@ -276,7 +273,7 @@ can be visualized using
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  8.888 seconds)
+   **Total running time of the script:** ( 0 minutes  8.104 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_advanced_example.py:

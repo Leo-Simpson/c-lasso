@@ -33,7 +33,6 @@ print(np.nonzero(sol))
 
 problem = classo_problem(X, y, C) 
 
-
 # %%
 # Change the parameters
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -49,8 +48,6 @@ problem.model_selection.StabSelparameters.method = 'max'
 problem.model_selection.CVparameters.seed = 1
 problem.model_selection.LAMfixedparameters.rescaled_lam = True
 problem.model_selection.LAMfixedparameters.lam = .1
-
-
 
 # %%
 # Check parameters
