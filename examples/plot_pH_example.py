@@ -1,5 +1,5 @@
 r"""
-pH prediction using the Central Park soil dataset 
+pH prediction using the 88 soils dataset 
 ===================================================
 
 The next microbiome example considers a
@@ -7,7 +7,7 @@ The next microbiome example considers a
 
 The task is to predict pH concentration in the soil from microbial abundance data.
 
-This task was also considered in `Tree-Aggregated Predictive Modeling of Microbiome Data <https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1>`_.
+A similar analysis is also done in `Tree-Aggregated Predictive Modeling of Microbiome Data <https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1>`_.
  `on another dataset <https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988>`_
 """
 
