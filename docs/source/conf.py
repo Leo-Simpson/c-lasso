@@ -16,6 +16,10 @@
 
 import sphinx_gallery 
 import sys
+import warnings
+
+warnings.filterwarnings("ignore")
+
 # -- Project information -----------------------------------------------------
 
 project = 'classo'
