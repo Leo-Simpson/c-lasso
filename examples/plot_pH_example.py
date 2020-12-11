@@ -2,10 +2,13 @@ r"""
 pH prediction using the Central Park soil dataset 
 ===================================================
 
-The next microbiome example considers the 
-`Central Park Soil dataset <https://github.com/Leo-Simpson/c-lasso/tree/master/examples/pH_data>`_ from
-`Ramirez et al. <https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988>`_. The sample locations are shown in the Figure on the right.
-The task is to predict pH concentration in the soil from microbial abundance data. This task was also considered in `Tree-Aggregated Predictive Modeling of Microbiome Data <https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1>`_.
+The next microbiome example considers a
+`Soil dataset <https://github.com/Leo-Simpson/c-lasso/tree/master/examples/pH_data>`_ .
+
+The task is to predict pH concentration in the soil from microbial abundance data.
+
+This task was also considered in `Tree-Aggregated Predictive Modeling of Microbiome Data <https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1>`_.
+ `on another dataset <https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988>`_
 """
 
 from classo import classo_problem
