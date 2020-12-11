@@ -375,17 +375,19 @@ print(problem.solution)
 ![3.Beta solution R4](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R4-StabSel-beta.png)
 
 
-[comment]: <> (<img src="https://i.imgur.com/8tFmM8T.png" alt="Central Park Soil Microbiome" height="250" align="right"/>)
-
-[comment]: <> (#### pH prediction using the Central Park soil dataset )
-
-[comment]: <> (The next microbiome example considers the [Central Park Soil dataset](./examples/pH_data) from [Ramirez et al.](https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988). The sample locations are shown in the Figure on the right.)
+<!---
+<img src="https://i.imgur.com/8tFmM8T.png" alt="Central Park Soil Microbiome" height="250" align="right"/>
+#### pH prediction using the Central Park soil dataset 
+The next microbiome example considers the [Central Park Soil dataset](./examples/pH_data) from [Ramirez et al.](https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988). The sample locations are shown in the Figure on the right.)
+-->
 
 #### pH prediction using soil dataset
 
 The next microbiome example considers a [Soil dataset](./examples/pH_data).
 
-The task is to predict pH concentration in the soil from microbial abundance data. This task was also considered in [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1).
+The task is to predict pH concentration in the soil from microbial abundance data. 
+
+This task was also considered in [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1) for [another sol dataset](https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988).
 
 
 
