@@ -22,9 +22,10 @@ setup(name='c-lasso',
             'docs': [
                   'sphinx',
                   'sphinx-gallery',
+                  'sphinx_rtd_theme',
                   'numpydoc',
                   'matplotlib',
-                  'pandas',
+                  'pandas'
             ]
       },
       classifiers=['Intended Audience :: Science/Research',

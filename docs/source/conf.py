@@ -17,6 +17,7 @@
 import sphinx_gallery 
 import sys
 import warnings
+from classo import __version__ as version
 
 
 # -- Project information -----------------------------------------------------
@@ -26,7 +27,7 @@ copyright = '2020, Leo Simpson'
 author = 'Leo Simpson'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.1'
+release = version
 
 
 # -- General configuration ---------------------------------------------------
@@ -62,7 +63,16 @@ templates_path = ['_templates']
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', '.DS_Store']
 
+# The suffix(es) of source filenames.
+# You can specify multiple suffix as a list of string:
+# source_suffix = ['.rst', '.md']
+source_suffix = '.rst'
 
+# The encoding of source files.
+#source_encoding = 'utf-8-sig'
+
+# The master toctree document.
+master_doc = 'index'
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -84,7 +94,8 @@ intersphinx_mapping = {
 }
 
 sphinx_gallery_conf = {
-    'doc_module': 'numpy',
+    'backreferences_dir': 'backreferences',
+    'doc_module': ('classo', 'numpy'),
     'examples_dirs': '../../examples',
     'ignore_pattern': r'/example_',
     'gallery_dirs': 'auto_examples',
