@@ -95,8 +95,9 @@ intersphinx_mapping = {
 
 sphinx_gallery_conf = {
     'backreferences_dir': 'backreferences',
-    'doc_module': ('classo', 'numpy'),
+    'doc_module': ('classo', 'numpy', 'py2r', 'matplotlib'),
     'examples_dirs': '../../examples',
     'ignore_pattern': r'/example_',
     'gallery_dirs': 'auto_examples',
+    'plot_gallery': 'False',
 }
