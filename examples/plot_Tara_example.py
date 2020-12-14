@@ -8,7 +8,7 @@ where the R package `trac <https://github.com/jacobbien/trac>`_ (which uses c-la
 has been used. 
 
 The data come originally from `trac <https://github.com/jacobbien/trac>`_,
-then it is translated in python in this `notebook <https://github.com/Leo-Simpson/c-lasso/examples/Tara/treat%20data.ipynb>`_.
+then it is translated in python in this `notebook <https://github.com/Leo-Simpson/c-lasso/examples/Tara/preprocess>`_.
 
 
 
