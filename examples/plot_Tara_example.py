@@ -7,6 +7,9 @@ that has been introduced in `this article <https://www.biorxiv.org/content/10.11
 where the R package `trac <https://github.com/jacobbien/trac>`_ (which uses c-lasso)
 has been used. 
 
+The data come originally from `trac <https://github.com/jacobbien/trac>`_,
+then it is translated in python in this `notebook <https://github.com/Leo-Simpson/c-lasso/examples/Tara/treat%20data.ipynb>`_.
+
 
 
 Bien, J., Yan, X., Simpson, L. and Müller, C. (2020).
@@ -32,59 +35,17 @@ import numpy as np
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^
 
-# import rpy in order to read data generated on R
-import rpy2.robjects as ro
-from rpy2.robjects.packages import importr
-
-# this code code be used in order to import R library Matrix
-utils = importr('utils')    
-utils.chooseCRANmirror(ind=1) #
-utils.install_packages('Matrix')
-importr('Matrix')
-
-#Open R file tara_sal_processed.RDS
-file = 'Tara/tara_sal_processed.RDS'
-rds = ro.r['readRDS'](file)
-
-rA = ro.r["as.matrix"](rds[4])
-x = np.array(rds[1])
-y = np.array(rds[0])
-A = np.array(rA)
-
-label_OTU = rds[1].colnames
-label_sample =rds[1].rownames
-label_nodes = np.array(list(rA.colnames))
-label_short = np.array([l.split("::")[-1] for l in label_nodes])
-print(y.shape)
-print(x.shape)
-print(A.shape)
-
-# %%
-#  Process similar to 2fit_trac_model.R
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-# first need to load "tara_sal_trac.Rdata"
-# in order to extract training set we are using
-ro.r['load']("Tara/tara_sal_trac.RData")
+data = np.load('Tara/tara.npz')
 
 
-cvfit = ro.r["cvfit"]
-cv = cvfit.rx("cv")
-lambda_1SE = cv.rx("lambda_1se")
+logGeom = data["logGeom"]
+nleaves = data["nleaves"]
+y = data["y"]
+label_nodes = data["label_nodes"]
+label_short = data["label_short"]
+tr = data["tr"]
+te = data["te"]
 
-tr = np.array(ro.r['tr']) - 1  # python index starts at 0 when R index starts at 1
-te = np.array([i for i in range(len(y)) if not i in tr])
-
-
-# %%
-#  Process similar to trac
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-pseudo_count = 1
-X = np.log(pseudo_count+x)
-nleaves = np.sum(A,axis = 0)
-logGeom = X.dot(A)/nleaves
 
 # %%
 # Cross validation and Path Computation
@@ -112,6 +73,8 @@ print(label_nodes[selection])
 # %%
 # Prediction plot
 # """"""""""""""""""""
+
+te = np.array([i for i in range(len(y)) if not i in tr])
 alpha = problem.solution.CV.refit
 yhat = logGeom[te].dot(alpha[1:])+alpha[0]
 
@@ -147,6 +110,7 @@ print(label_nodes[selection])
 # Prediction plot
 # """"""""""""""""""""
 
+te = np.array([i for i in range(len(y)) if not i in tr])
 alpha = problem.solution.StabSel.refit
 yhat = logGeom[te].dot(alpha[1:])+alpha[0]
 
