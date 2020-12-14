@@ -25,6 +25,6 @@ python:
     - method: setuptools
       path: .
     - method: pip
-          path: .
-          extra_requirements:
-            - r2py
+      path: .
+      extra_requirements:
+        - r2py
