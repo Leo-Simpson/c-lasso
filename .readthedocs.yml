@@ -24,3 +24,7 @@ python:
     - requirements: requirements.txt
     - method: setuptools
       path: .
+    - method: pip
+          path: .
+          extra_requirements:
+            - r2py
