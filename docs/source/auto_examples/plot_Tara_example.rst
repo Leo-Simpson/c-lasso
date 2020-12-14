@@ -111,6 +111,7 @@ Process similar to trac
     nleaves = np.sum(A,axis = 0)
     logGeom = X.dot(A)/nleaves
 
+    raise ValueError("Do not compute it now")
 
 Cross validation and Path Computation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

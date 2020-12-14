@@ -48,7 +48,7 @@ C[0, -1], C[0, -2], C[0, -3] = 0., 0., 0.
 # Set up c-lassso problem
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-problem = classo_problem(X, y, C) 
+problem = classo_problem(X, y, C, label = label) 
 
 # %%
 # Use stability selection with theoretical lambda [Combettes & Müller, 2020b]

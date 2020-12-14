@@ -25,15 +25,10 @@ A similar analysis is also done in `Tree-Aggregated Predictive Modeling of Micro
 
 
     from classo import classo_problem
+
+    import qiime2
+    import pandas as pd
     import numpy as np
-    from copy import deepcopy as dc
-    import scipy.io as sio
-
-
-
-
-
-
 
 
 Load data
@@ -43,26 +38,17 @@ Load data
 .. code-block:: default
 
 
-    pH = sio.loadmat("pH_data/pHData.mat")
-    tax = sio.loadmat("pH_data/taxTablepHData.mat")["None"][0]
+    table_art = qiime2.Artifact.load('pH_data/news/88soils_balances.qza')
+    table = table_art.view(pd.DataFrame)
+    metadata = pd.read_table('pH_data/originals/88soils_modified_metadata.txt', index_col=0)
+    label = list(table.index)
 
-    X, Y_uncent = pH["X"], pH["Y"].T[0]
+
+    X = np.array(table)
+    y_uncent = metadata["ph"].values
     y = Y_uncent - np.mean(Y_uncent)  # Center Y
     print(X.shape)
-
-
-
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
-    (88, 116)
-
-
+    print(y.shape)
 
 
 Set up c-lassso problem
@@ -72,18 +58,12 @@ Set up c-lassso problem
 .. code-block:: default
 
 
-    problem = classo_problem(X, y) 
+    problem = classo_problem(X, y, label = label) 
 
     problem.model_selection.StabSelparameters.method      = 'lam'
     problem.model_selection.PATH = True
     problem.model_selection.LAMfixed = True
     problem.model_selection.PATHparameters.n_active = X.shape[1] + 1
-
-
-
-
-
-
 
 
 Solve for R1
@@ -95,90 +75,6 @@ Solve for R1
     problem.formulation.concomitant = False
     problem.solve()
     print(problem, problem.solution)
-
-
-
-
-.. rst-class:: sphx-glr-horizontal
-
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_001.png
-          :alt: Coefficients at $\lambda$ = 0.218
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_002.png
-          :alt: Coefficients across $\lambda$-path using R1
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_003.png
-          :alt: Stability selection profile of type lam using R1
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_004.png
-          :alt: Refitted coefficients after stability selection
-          :class: sphx-glr-multi-img
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
- 
- 
-    FORMULATION: R1
- 
-    MODEL SELECTION COMPUTED:  
-         Lambda fixed
-         Path
-         Stability selection
- 
-    LAMBDA FIXED PARAMETERS: 
-         numerical_method = Path-Alg
-         rescaled lam : True
-         threshold = 0.008
-         lam : theoretical
-         theoretical_lam = 0.2182
- 
-    PATH PARAMETERS: 
-         numerical_method : Path-Alg
-         lamin = 0.001
-         Nlam = 80
- 
-         maximum active variables = 117
- 
-    STABILITY SELECTION PARAMETERS: 
-         numerical_method : Path-Alg
-         method : lam
-         B = 50
-         q = 10
-         percent_nS = 0.5
-         threshold = 0.7
-         lam = theoretical
-         theoretical_lam = 0.3085
- 
-     LAMBDA FIXED : 
-       Selected variables :  18    19    39    43    62    85    93    94    102    107    
-       Running time :  0.012s
-
-     PATH COMPUTATION : 
-       Running time :  0.171s
-
-     STABILITY SELECTION : 
-       Selected variables :  19    62    94    
-       Running time :  0.365s
-
-
-
 
 
 Solve for R2
@@ -193,90 +89,6 @@ Solve for R2
 
 
 
-
-
-.. rst-class:: sphx-glr-horizontal
-
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_005.png
-          :alt: Coefficients at $\lambda$ = 0.218
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_006.png
-          :alt: Coefficients across $\lambda$-path using R2
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_007.png
-          :alt: Stability selection profile of type lam using R2
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_008.png
-          :alt: Refitted coefficients after stability selection
-          :class: sphx-glr-multi-img
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
- 
- 
-    FORMULATION: R2
- 
-    MODEL SELECTION COMPUTED:  
-         Lambda fixed
-         Path
-         Stability selection
- 
-    LAMBDA FIXED PARAMETERS: 
-         numerical_method = Path-Alg
-         rescaled lam : True
-         threshold = 0.008
-         lam : theoretical
-         theoretical_lam = 0.2182
- 
-    PATH PARAMETERS: 
-         numerical_method : Path-Alg
-         lamin = 0.001
-         Nlam = 80
- 
-         maximum active variables = 117
- 
-    STABILITY SELECTION PARAMETERS: 
-         numerical_method : Path-Alg
-         method : lam
-         B = 50
-         q = 10
-         percent_nS = 0.5
-         threshold = 0.7
-         lam = theoretical
-         theoretical_lam = 0.3085
- 
-     LAMBDA FIXED : 
-       Selected variables :  18    19    39    43    57    62    85    93    94    107    
-       Running time :  0.055s
-
-     PATH COMPUTATION : 
-       Running time :  0.329s
-
-     STABILITY SELECTION : 
-       Selected variables :  19    62    94    
-       Running time :  1.269s
-
-
-
-
-
 Solve for R3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -287,97 +99,6 @@ Solve for R3
     problem.formulation.huber = False
     problem.solve()
     print(problem, problem.solution)
-
-
-
-
-
-.. rst-class:: sphx-glr-horizontal
-
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_009.png
-          :alt: Coefficients at $\lambda$ = 0.218
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_010.png
-          :alt: Coefficients across $\lambda$-path using R3
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_011.png
-          :alt: Scale estimate across $\lambda$-path using R3
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_012.png
-          :alt: Stability selection profile of type lam using R3
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_013.png
-          :alt: Refitted coefficients after stability selection
-          :class: sphx-glr-multi-img
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
- 
- 
-    FORMULATION: R3
- 
-    MODEL SELECTION COMPUTED:  
-         Lambda fixed
-         Path
-         Stability selection
- 
-    LAMBDA FIXED PARAMETERS: 
-         numerical_method = Path-Alg
-         rescaled lam : True
-         threshold = 0.008
-         lam : theoretical
-         theoretical_lam = 0.2182
- 
-    PATH PARAMETERS: 
-         numerical_method : Path-Alg
-         lamin = 0.001
-         Nlam = 80
- 
-         maximum active variables = 117
- 
-    STABILITY SELECTION PARAMETERS: 
-         numerical_method : Path-Alg
-         method : lam
-         B = 50
-         q = 10
-         percent_nS = 0.5
-         threshold = 0.7
-         lam = theoretical
-         theoretical_lam = 0.3085
- 
-     LAMBDA FIXED : 
-       Sigma  =  0.633
-       Selected variables :  15    18    19    23    25    27    43    47    50    53    57    58    62    89    93    94    104    107    
-       Running time :  0.03s
-
-     PATH COMPUTATION : 
-       Running time :  0.198s
-
-     STABILITY SELECTION : 
-       Selected variables :  18    19    43    62    94    107    
-       Running time :  0.826s
-
-
 
 
 
@@ -402,100 +123,9 @@ because of the absence of possible warm-start in this method
 
 
 
-
-.. rst-class:: sphx-glr-horizontal
-
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_014.png
-          :alt: Coefficients at $\lambda$ = 0.218
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_015.png
-          :alt: Coefficients across $\lambda$-path using R4
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_016.png
-          :alt: Scale estimate across $\lambda$-path using R4
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_017.png
-          :alt: Stability selection profile of type lam using R4
-          :class: sphx-glr-multi-img
-
-    *
-
-      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_018.png
-          :alt: Refitted coefficients after stability selection
-          :class: sphx-glr-multi-img
-
-
-.. rst-class:: sphx-glr-script-out
-
- Out:
-
- .. code-block:: none
-
- 
- 
-    FORMULATION: R4
- 
-    MODEL SELECTION COMPUTED:  
-         Lambda fixed
-         Path
-         Stability selection
- 
-    LAMBDA FIXED PARAMETERS: 
-         numerical_method = Path-Alg
-         rescaled lam : True
-         threshold = 0.008
-         lam : theoretical
-         theoretical_lam = 0.2182
- 
-    PATH PARAMETERS: 
-         numerical_method : DR
-         lamin = 0.001
-         Nlam = 80
- 
-         maximum active variables = 117
- 
-    STABILITY SELECTION PARAMETERS: 
-         numerical_method : Path-Alg
-         method : lam
-         B = 50
-         q = 10
-         percent_nS = 0.5
-         threshold = 0.7
-         lam = theoretical
-         theoretical_lam = 0.3085
- 
-     LAMBDA FIXED : 
-       Sigma  =  0.284
-       Selected variables :  15    18    19    23    27    43    47    50    53    57    58    62    89    93    94    104    107    
-       Running time :  0.044s
-
-     PATH COMPUTATION : 
-       Running time :  71.706s
-
-     STABILITY SELECTION : 
-       Selected variables :  18    19    43    62    94    107    
-       Running time :  1.133s
-
-
-
-
-
-
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 1 minutes  19.612 seconds)
+   **Total running time of the script:** ( 0 minutes  0.000 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_pH_example.py:

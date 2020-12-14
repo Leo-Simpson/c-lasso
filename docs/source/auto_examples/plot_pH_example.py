@@ -20,8 +20,8 @@ import scipy.io as sio
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-pH = sio.loadmat("pH_data/pHData.mat")
-tax = sio.loadmat("pH_data/taxTablepHData.mat")["None"][0]
+pH = sio.loadmat("pH_data/matlab/pHData.mat")
+tax = sio.loadmat("pH_data/matlab/taxTablepHData.mat")["None"][0]
 
 X, Y_uncent = pH["X"], pH["Y"].T[0]
 y = Y_uncent - np.mean(Y_uncent)  # Center Y
