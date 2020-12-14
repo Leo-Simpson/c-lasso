@@ -29,7 +29,7 @@ import pandas as pd
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-t = pd.read_csv('news/table.csv', index_col=0)
+t = pd.read_csv('pH_data/qiime2/news/table.csv', index_col=0)
 metadata = pd.read_table('originals/88soils_modified_metadata.txt', index_col=0)
 y_uncent = metadata["ph"].values
 
