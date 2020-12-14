@@ -44,7 +44,6 @@ y = data["y"]
 label_nodes = data["label_nodes"]
 label_short = data["label_short"]
 tr = data["tr"]
-te = data["te"]
 
 
 # %%
