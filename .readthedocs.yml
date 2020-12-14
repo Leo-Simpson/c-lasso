@@ -23,3 +23,5 @@ python:
   install:
     - requirements: requirements.txt
     - requirements: c-lasso
+    - method: setuptools
+      path: .
