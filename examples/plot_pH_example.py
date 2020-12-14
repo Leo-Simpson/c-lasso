@@ -13,25 +13,42 @@ A similar analysis is also done in `Tree-Aggregated Predictive Modeling of Micro
 
 from classo import classo_problem
 import numpy as np
-from copy import deepcopy as dc
-import scipy.io as sio
+import pandas as pd
+
+
 
 # %%
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-pH = sio.loadmat("pH_data/matlab/pHData.mat")
-tax = sio.loadmat("pH_data/matlab/taxTablepHData.mat")["None"][0]
 
-X, Y_uncent = pH["X"], pH["Y"].T[0]
-y = Y_uncent - np.mean(Y_uncent)  # Center Y
+t = pd.read_csv('news/table.csv', index_col=0)
+metadata = pd.read_table('originals/88soils_modified_metadata.txt', index_col=0)
+y_uncent = metadata["ph"].values
+
+
+X = t.values
+label = t.columns
+
+
+
+
+# second option to load the data
+# import scipy.io as sio
+# pH = sio.loadmat("pH_data/matlab/pHData.mat")
+# tax = sio.loadmat("pH_data/matlab/taxTablepHData.mat")["None"][0]
+# X, y_uncent = pH["X"], pH["Y"].T[0]
+# label = None
+
+y = y_uncent - np.mean(y_uncent)  # Center Y
 print(X.shape)
+print(y.shape)
 
 # %%
 # Set up c-lassso problem
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-problem = classo_problem(X, y) 
+problem = classo_problem(X, y, label = label) 
 
 problem.model_selection.StabSelparameters.method      = 'lam'
 problem.model_selection.PATH = True
