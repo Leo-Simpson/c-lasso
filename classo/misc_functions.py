@@ -363,17 +363,19 @@ def influence(BETAS, ntop):
     return np.sort(top)
 
 
-def normalize(lb, lna, ly):
-    for j in range(len(lb[0])):
-        lb[:, j] = lb[:, j] * ly / lna[j]
-    return lb
-
 
 def proj_c(M, d):
     # Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
     if LA.matrix_rank(M) == 0:
         return np.eye(d)
     return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)), M])
+
+
+"""
+def normalize(lb, lna, ly):
+    for j in range(len(lb[0])):
+        lb[:, j] = lb[:, j] * ly / lna[j]
+    return lb
 
 
 def remove_same_vect(L, label, order):
@@ -393,7 +395,6 @@ def remove_same_vect(L, label, order):
 
 
 
-"""
 
 def rescale(matrices):
     ""Function that rescale the matrix and returns its scale

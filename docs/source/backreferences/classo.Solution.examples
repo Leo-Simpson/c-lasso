@@ -5,14 +5,14 @@ Examples using ``classo.Solution``
 
 .. raw:: html
 
-    <div class="sphx-glr-thumbcontainer" tooltip="We first consider the `COMBO data set &lt;https://github.com/Leo-Simpson/c-lasso/tree/master/examp...">
+    <div class="sphx-glr-thumbcontainer" tooltip="We repoduce an example of prediction of ocean salinity over ocean microbiome data that has been...">
 
 .. only:: html
 
- .. figure:: /auto_examples/images/thumb/sphx_glr_plot_combo_example_thumb.png
-     :alt: BMI prediction using the COMBO dataset
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_Tara_example_thumb.png
+     :alt: Ocean salinity prediction based on marin microbiome data
 
-     :ref:`sphx_glr_auto_examples_plot_combo_example.py`
+     :ref:`sphx_glr_auto_examples_plot_Tara_example.py`
 
 .. raw:: html
 
@@ -20,4 +20,23 @@ Examples using ``classo.Solution``
 
 .. only:: not html
 
- * :ref:`sphx_glr_auto_examples_plot_combo_example.py`
+ * :ref:`sphx_glr_auto_examples_plot_Tara_example.py`
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip=" The next microbiome example considers the [Central Park Soil dataset](./examples/CentralParkSo...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_CentralParkSoil_thumb.png
+     :alt: pH prediction using the Central Park soil dataset
+
+     :ref:`sphx_glr_auto_examples_plot_CentralParkSoil.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+ * :ref:`sphx_glr_auto_examples_plot_CentralParkSoil.py`

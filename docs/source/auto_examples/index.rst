@@ -74,6 +74,48 @@ Below is a gallery of examples.
    :hidden:
 
    /auto_examples/plot_combo_example
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip="We repoduce an example of prediction of ocean salinity over ocean microbiome data that has been...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_Tara_example_thumb.png
+     :alt: Ocean salinity prediction based on marin microbiome data
+
+     :ref:`sphx_glr_auto_examples_plot_Tara_example.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/plot_Tara_example
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip=" The next microbiome example considers the [Central Park Soil dataset](./examples/CentralParkSo...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_CentralParkSoil_thumb.png
+     :alt: pH prediction using the Central Park soil dataset
+
+     :ref:`sphx_glr_auto_examples_plot_CentralParkSoil.py`
+
+.. raw:: html
+
+    </div>
+
+
+.. toctree::
+   :hidden:
+
+   /auto_examples/plot_CentralParkSoil
 .. raw:: html
 
     <div class="sphx-glr-clear"></div>

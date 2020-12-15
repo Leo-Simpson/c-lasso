@@ -147,7 +147,6 @@ Use formulation R3
     problem.solve()
     print(problem)
     print(problem.solution)
-    plt.tight_layout()
 
 
 
@@ -194,7 +193,7 @@ Use formulation R3
 
      STABILITY SELECTION : 
        Selected variables :   Clostridium     Acidaminococcus    
-       Running time :  0.595s
+       Running time :  0.723s
 
 
 
@@ -212,7 +211,6 @@ Use formulation R4
     problem.solve()
     print(problem)
     print(problem.solution)
-    plt.tight_layout()
 
 
 
@@ -258,7 +256,7 @@ Use formulation R4
 
      STABILITY SELECTION : 
        Selected variables :   Clostridium     Acidaminococcus    
-       Running time :  0.881s
+       Running time :  1.1s
 
 
 
@@ -267,7 +265,7 @@ Use formulation R4
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.535 seconds)
+   **Total running time of the script:** ( 0 minutes  3.339 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_combo_example.py:

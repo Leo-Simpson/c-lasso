@@ -1,0 +1,23 @@
+
+
+Examples using ``numpy.random.permutation``
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. raw:: html
+
+    <div class="sphx-glr-thumbcontainer" tooltip=" The next microbiome example considers the [Central Park Soil dataset](./examples/CentralParkSo...">
+
+.. only:: html
+
+ .. figure:: /auto_examples/images/thumb/sphx_glr_plot_CentralParkSoil_thumb.png
+     :alt: pH prediction using the Central Park soil dataset
+
+     :ref:`sphx_glr_auto_examples_plot_CentralParkSoil.py`
+
+.. raw:: html
+
+    </div>
+
+.. only:: not html
+
+ * :ref:`sphx_glr_auto_examples_plot_CentralParkSoil.py`

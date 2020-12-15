@@ -64,7 +64,6 @@ problem.formulation.concomitant = True
 problem.solve()
 print(problem)
 print(problem.solution)
-plt.tight_layout()
 
 # %%
 # Use formulation R4
@@ -75,4 +74,3 @@ problem.formulation.concomitant = True
 problem.solve()
 print(problem)
 print(problem.solution)
-plt.tight_layout()
