@@ -1260,7 +1260,7 @@ class solution_LAMfixed:
     Attributes:
         lambdamax (float) : lambda maximum for which the solution is non-null.
         rescaled_lam (bool) : if True, the problem had been computed for lambda*lambdamax (so lambda should be between 0 and 1).
-        lambda (float) : lambda for which the problem is solved.
+        lamb (float) : lambda for which the problem is solved.
         beta (numpy.ndarray) : solution beta of classo.
         sigma (float) : solution sigma of classo when formulation is 'R2' or 'R4'.
         selected_param (numpy.ndarray) : boolean arrays of size d with True when the variable is selected (which is the case when the i-th component solution of the classo is non-null).
@@ -1317,9 +1317,9 @@ class solution_LAMfixed:
             self.lambdamax, self.beta = out
         
         if param.rescaled_lam:
-            self.lambda = self.lambdamax*self.lam
+            self.lamb = self.lambdamax*self.lam
         else:
-            self.lambda = self.lam
+            self.lamb = self.lam
             
         if param.threshold is None:
             param.threshold = np.mean(abs(self.beta))
