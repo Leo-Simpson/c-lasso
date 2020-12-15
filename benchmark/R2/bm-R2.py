@@ -36,17 +36,22 @@ SIZES = [
 
 N_sizes = len(SIZES)
 
+
 T_pa = np.zeros((N_sizes, N_data))
 L_pa = np.zeros((N_sizes, N_data))
+C_pa = np.zeros((N_sizes, N_data))
 
 T_pds = np.zeros((N_sizes, N_data))
 L_pds = np.zeros((N_sizes, N_data))
+C_pds = np.zeros((N_sizes, N_data))
 
 T_dr = np.zeros((N_sizes, N_data))
 L_dr = np.zeros((N_sizes, N_data))
+C_dr = np.zeros((N_sizes, N_data))
 
 T_cvx = np.zeros((N_sizes, N_data))
 L_cvx = np.zeros((N_sizes, N_data))
+C_cvx = np.zeros((N_sizes, N_data))
 
 
 
