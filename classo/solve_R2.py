@@ -71,25 +71,6 @@ def Classo_R2(pb, lam, compute = True):
 
     tol = pb.tol * LA.norm(y) / LA.norm(A, "fro")  # tolerance rescaled
 
-    
-    """
-    # cvx
-    # call to the cvx function of minimization
-    if pb_type == "cvx":
-        import cvxpy as cp
-
-        x = cp.Variable(d)
-        objective, constraints = (
-            cp.Minimize(cp.sum(cp.huber(A * x - y, rho)) + lamb * cp.norm(x, 1)),
-            [C * x == 0],
-        )
-        prob = cp.Problem(objective, constraints)
-        result = prob.solve(warm_start=regpath, eps_abs=tol)
-        if regpath:
-            return (x.value, True)
-        return x.value
-    """
-
     if compute:
         pb.compute_param()
     tau, Proj, AtA, Aty = pb.tauN, proj_c(C, d), pb.AtA, pb.Aty

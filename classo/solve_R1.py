@@ -36,20 +36,6 @@ def Classo_R1(pb, lam):
     tol = pb.tol * LA.norm(y) / Anorm  # tolerance rescaled
 
 
-    # cvx
-    # call to the cvx function of minimization
-    """
-    if (pb_type == 'cvx'):
-        import cvxpy as cp
-        lamb = lam*2*LA.norm(A.T.dot(y),np.infty)
-        x = cp.Variable(d)
-        objective, constraints = cp.Minimize(cp.sum_squares(A*x-y)+ lamb*cp.norm(x, 1)), [C*x == 0]
-        prob = cp.Problem(objective, constraints)
-        result = prob.solve(warm_start = regpath,eps_abs = tol)
-        if (regpath): return(x.value,True)
-        return(x.value)
-    """
-
     Proj = proj_c(C, d)
     AtA = pb.AtA
     Aty = pb.Aty

@@ -112,25 +112,33 @@ for s in range(N_sizes):
 
         T_pa[s, i] = (t1 - t0) / N_per_data
         L_pa[s, i] = loss(X, y, lam, np.mean(b_pa, axis=0))
+        C_pa[s, i] = np.linalg.norm(C.dot(np.mean(b_pa, axis=0)))
 
         T_pds[s, i] = (t2 - t1) / N_per_data
         L_pds[s, i] = loss(X, y, lam, np.mean(b_pds, axis=0))
+        C_pds[s, i] = np.linalg.norm(C.dot(np.mean(b_pds, axis=0)))
 
         T_dr[s, i] = (t3 - t0) / N_per_data
         L_dr[s, i] = loss(X, y, lam, np.mean(b_dr, axis=0))
+        C_dr[s, i] = np.linalg.norm(C.dot(np.mean(b_dr, axis=0)))
 
         T_cvx[s, i] = (t4 - t3) / N_per_data  
         L_cvx[s, i] = loss(X, y, lam, np.mean(b_cvx, axis=0))
+        C_cvx[s, i] = np.linalg.norm(C.dot(np.mean(b_cvx, axis=0)))
 
 np.savez(
     'bm-R1.npz',
     T_pa = T_pa,
     L_pa = L_pa,
+    C_pa = C_pa, 
     T_pds = T_pds,
     L_pds = L_pds,
+    C_pds = C_pds,
     T_dr = T_dr,
     L_dr = L_dr,
+    C_dr = C_dr,
     T_cvx = T_cvx,
     L_cvx = L_cvx,
+    C_cvx = C_cvx,
     SIZES = np.array(SIZES)
 )

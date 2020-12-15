@@ -192,7 +192,7 @@ Use formulation R3
 
      STABILITY SELECTION : 
        Selected variables :   Clostridium     Acidaminococcus    
-       Running time :  1.564s
+       Running time :  0.609s
 
 
 
@@ -255,7 +255,7 @@ Use formulation R4
 
      STABILITY SELECTION : 
        Selected variables :   Clostridium     Acidaminococcus    
-       Running time :  1.699s
+       Running time :  0.913s
 
 
 
@@ -264,7 +264,7 @@ Use formulation R4
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  4.883 seconds)
+   **Total running time of the script:** ( 0 minutes  2.334 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_combo_example.py:

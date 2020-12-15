@@ -37,13 +37,24 @@ import numpy as np
 
 data = np.load('Tara/tara.npz')
 
-
-logGeom = data["logGeom"]
-nleaves = data["nleaves"]
+x = data["x"]
+label = data["label"]
 y = data["y"]
-label_nodes = data["label_nodes"]
-label_short = data["label_short"]
 tr = data["tr"]
+
+A = np.load('Tara/A.npy')
+
+# %%
+#  Preprocess: taxonomy aggregation
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+label_short = np.array([l.split("::")[-1] for l in label])
+
+pseudo_count = 1
+X = np.log(pseudo_count+x)
+nleaves = np.sum(A,axis = 0)
+logGeom = X.dot(A)/nleaves
+
 
 
 # %%
@@ -67,7 +78,7 @@ print(problem.solution)
 
 
 selection = problem.solution.CV.selected_param[1:] # exclude the intercept
-print(label_nodes[selection])
+print(label[selection])
 
 # %%
 # Prediction plot
@@ -103,7 +114,7 @@ problem.solve()
 print(problem, problem.solution)
 
 selection = problem.solution.StabSel.selected_param[1:] # exclude the intercept
-print(label_nodes[selection])
+print(label[selection])
 
 # %%
 # Prediction plot

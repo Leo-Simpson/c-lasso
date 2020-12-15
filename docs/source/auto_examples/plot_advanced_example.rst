@@ -253,10 +253,10 @@ can be visualized using
 
      LAMBDA FIXED : 
        Selected variables :  7    63    148    164    168    
-       Running time :  0.072s
+       Running time :  0.065s
 
      PATH COMPUTATION : 
-       Running time :  0.379s
+       Running time :  0.36s
 
      CROSS VALIDATION : 
        Selected variables :  7    10    63    101    148    164    168    
@@ -264,7 +264,7 @@ can be visualized using
 
      STABILITY SELECTION : 
        Selected variables :  7    63    148    164    168    
-       Running time :  4.644s
+       Running time :  4.289s
 
 
 
@@ -273,7 +273,7 @@ can be visualized using
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  7.621 seconds)
+   **Total running time of the script:** ( 0 minutes  7.241 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_advanced_example.py:

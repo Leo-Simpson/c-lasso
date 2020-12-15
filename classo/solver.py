@@ -123,8 +123,11 @@ class classo_problem:
         else:
             yy = data.y
         
-        self.formulation.rho_scaled = self.formulation.rho * np.sqrt(np.mean(yy**2))
-
+        if self.formulation.scale_rho:
+            self.formulation.rho_scaled = self.formulation.rho * np.sqrt(np.mean(yy**2))
+        else: 
+            self.formulation.rho_scaled = self.formulation.rho
+            
         label = data.label
 
         # Compute the path thanks to the class solution_path which contains directely the computation in the initialisation
@@ -284,14 +287,20 @@ class Formulation:
         rho (float) : Value of rho for R2 and R4 formulations.
             Default value : 1.345
 
-        rho_scaled (float) : Value of rescaled rho computed while olving the problem, which is 
-            rho * sqrt( mean( y**2 ) ) so that it lives on the scale of y
+        scale_rho (bool) : If set to True, it will become
+            rho * sqrt( mean( y**2 ) ) while solving the problem
+            so that it lives on the scale of y
             and also usefull so that we don't have the problem with the non strict convexity
             (i.e. at least one sample is on the quadratic mode of the huber loss function)
             as long as rho is higher than one.
+            Default value : True
+            
+        rho_scaled (float): Actual rho after solving
+            Default value : Not defined
 
 
-        rho_classification (float) : value of rho for huberized hinge loss function for classification ie C2 (it has to be strictly smaller then 1).
+        rho_classification (float) : value of rho for huberized hinge loss function for classification ie C2 
+            (it has to be strictly smaller then 1).
             Default value : -1.
 
         e (float or string)  : value of e in concomitant formulation.
@@ -311,6 +320,7 @@ class Formulation:
         self.concomitant = True
         self.classification = False
         self.rho = 1.345
+        self.scale_rho = True
         self.rho_classification = -1.0
         self.e = "not specified"
         self.w = None
