@@ -1317,7 +1317,7 @@ class solution_LAMfixed:
             self.lambdamax, self.beta = out
         
         if param.rescaled_lam:
-            self.lamb = self.lambdamax*self.lam
+            self.lamb = self.lambdamax * self.lam
         else:
             self.lamb = self.lam
             
