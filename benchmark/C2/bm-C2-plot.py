@@ -1,20 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 import os
 my_path = os.path.dirname(__file__)
 
 output = os.path.join(my_path, "output/")
 
-
-data = np.load(os.path.join(my_path, 'bm-R1.npz'))
+data = np.load(os.path.join(my_path, 'bm-C2.npz'))
 
 labels = [str(size) for size in data["SIZES"]]
 
 
+
 fig = plt.figure()
 
-for name in ["T_pa", "T_pds", "T_dr", "T_cvx"]:
+for name in ["T_pa", "T_cvx"]:
     T = data[name]
     N_size, N_data = T.shape
     mean = np.mean(T, axis=1)
@@ -25,11 +26,11 @@ for name in ["T_pa", "T_pds", "T_dr", "T_cvx"]:
 plt.title("Running time")
 plt.xticks(range(N_size), labels)
 plt.legend()
-plt.savefig(os.path.join(output, "bm-R1-times.png"))
+plt.savefig(os.path.join(output, "bm-C2-times.png"))
 plt.show()
 
 
-for name in ["L_pa", "L_pds", "L_dr", "L_cvx"]:
+for name in ["L_pa", "L_cvx"]:
     L = data[name] - data["L_pa"]
     N_size, N_data = L.shape
     mean = np.mean(L, axis=1)
@@ -40,10 +41,10 @@ for name in ["L_pa", "L_pds", "L_dr", "L_cvx"]:
 plt.title("Value of loss function")
 plt.xticks(range(N_size), labels)
 plt.legend()
-plt.savefig(os.path.join(output, "bm-R1-losses.png"))
+plt.savefig(os.path.join(output, "bm-C2-losses.png"))
 plt.show()
 
-for name in ["C_pa", "C_pds", "C_dr", "C_cvx"]:
+for name in ["C_pa", "C_cvx"]:
     L = data[name]
     N_size, N_data = L.shape
     mean = np.mean(L, axis=1)
@@ -54,5 +55,5 @@ for name in ["C_pa", "C_pds", "C_dr", "C_cvx"]:
 plt.title("Value of norm(Cbeta)")
 plt.xticks(range(N_size), labels)
 plt.legend()
-plt.savefig(os.path.join(output, "bm-R1-constraint.png"))
+plt.savefig(os.path.join(output, "bm-C2-constraint.png"))
 plt.show()

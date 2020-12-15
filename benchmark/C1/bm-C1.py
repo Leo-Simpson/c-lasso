@@ -35,14 +35,6 @@ T_pa = np.zeros((N_sizes, N_data))
 L_pa = np.zeros((N_sizes, N_data))
 C_pa = np.zeros((N_sizes, N_data))
 
-T_pds = np.zeros((N_sizes, N_data))
-L_pds = np.zeros((N_sizes, N_data))
-C_pds = np.zeros((N_sizes, N_data))
-
-T_dr = np.zeros((N_sizes, N_data))
-L_dr = np.zeros((N_sizes, N_data))
-C_dr = np.zeros((N_sizes, N_data))
-
 T_cvx = np.zeros((N_sizes, N_data))
 L_cvx = np.zeros((N_sizes, N_data))
 C_cvx = np.zeros((N_sizes, N_data))
@@ -74,36 +66,7 @@ for s in range(N_sizes):
         b_pa = np.array(b_pa)
 
         t1 = time()
-        # classo P-PDS
-        b_pds = []
-        for j in range(N_per_data):
-            problem = classo_problem(X, y, C)
-            problem.formulation.concomitant = False
-            problem.model_selection.StabSel = False
-            problem.model_selection.LAMfixed = True
-            problem.model_selection.LAMfixedparameters.rescaled_lam = True
-            problem.model_selection.LAMfixedparameters.lam = lam
-            problem.model_selection.LAMfixedparameters.numerical_method = 'P-PDS'
-            problem.solve()
-            b_pds.append(problem.solution.LAMfixed.beta)
-        b_pds = np.array(b_pds)
 
-        t2 = time()
-        # classo DR
-        b_dr = []
-        for j in range(N_per_data):
-            problem = classo_problem(X, y, C)
-            problem.formulation.concomitant = False
-            problem.model_selection.StabSel = False
-            problem.model_selection.LAMfixed = True
-            problem.model_selection.LAMfixedparameters.rescaled_lam = True
-            problem.model_selection.LAMfixedparameters.lam = lam
-            problem.model_selection.LAMfixedparameters.numerical_method = 'P-PDS'
-            problem.solve()
-            b_dr.append(problem.solution.LAMfixed.beta)
-        b_dr = np.array(b_dr)
-
-        t3 = time()
         # cvx
         b_cvx = []
         for j in range(N_per_data):
@@ -114,36 +77,22 @@ for s in range(N_sizes):
             b_cvx.append(beta.value)
         b_cvx = np.array(b_cvx)
         
-        t4 = time()
+        t2 = time()
 
 
         T_pa[s, i] = (t1 - t0) / N_per_data
         L_pa[s, i] = loss(X, y, lam, np.mean(b_pa, axis=0))
         C_pa[s, i] = np.linalg.norm(C.dot(np.mean(b_pa, axis=0)))
 
-        T_pds[s, i] = (t2 - t1) / N_per_data
-        L_pds[s, i] = loss(X, y, lam, np.mean(b_pds, axis=0))
-        C_pds[s, i] = np.linalg.norm(C.dot(np.mean(b_pds, axis=0)))
-
-        T_dr[s, i] = (t3 - t0) / N_per_data
-        L_dr[s, i] = loss(X, y, lam, np.mean(b_dr, axis=0))
-        C_dr[s, i] = np.linalg.norm(C.dot(np.mean(b_dr, axis=0)))
-
-        T_cvx[s, i] = (t4 - t3) / N_per_data  
+        T_cvx[s, i] = (t2 - t1) / N_per_data  
         L_cvx[s, i] = loss(X, y, lam, np.mean(b_cvx, axis=0))
         C_cvx[s, i] = np.linalg.norm(C.dot(np.mean(b_cvx, axis=0)))
 
 np.savez(
-    os.path.join(my_path, 'bm-R1.npz'),
+    os.path.join(my_path, 'bm-C1.npz'),
     T_pa = T_pa,
     L_pa = L_pa,
     C_pa = C_pa, 
-    T_pds = T_pds,
-    L_pds = L_pds,
-    C_pds = C_pds,
-    T_dr = T_dr,
-    L_dr = L_dr,
-    C_dr = C_dr,
     T_cvx = T_cvx,
     L_cvx = L_cvx,
     C_cvx = C_cvx,
