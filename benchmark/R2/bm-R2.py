@@ -10,7 +10,7 @@ def huber(r, rho):
     F = abs(r) >= rho
     h = r**2
     h[F] =  2*rho*abs(r)[F] - rho**2
-    return t
+    return h
     
     
 
