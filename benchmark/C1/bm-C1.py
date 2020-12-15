@@ -11,9 +11,8 @@ l = [1, 2, 5, 7]
 
 
 
-def loss(X, y, lam, beta):
-    lamb = lam*2*LA.norm(X.T.dot(y),np.infty)
-    return np.sum((X.dot(beta) - y)**2) + lamb*np.sum(abs(beta))
+def loss(X, y, lamb, beta):
+    return np.sum(np.maximum(1 - y*X.dot(beta), 0)**2) + lamb*np.sum(abs(beta))
 
 
 d_nonzero = 5
@@ -21,13 +20,16 @@ sigma = 0.5
 lam = 0.1
 
 N_per_data = 5
-N_data = 10
-SIZES = [
-    (50, 100),
-    (100, 100),
-    (100, 200),
-    (200, 200)
-]
+N_data = 20
+S = [50, 100, 200, 500, 1000]
+S = [20, 50]
+
+
+SIZES = []
+for i in range(len(S)):
+    SIZES.append((S[i], S[i]))
+    if i+1<len(S):
+        SIZES.append((S[i], S[i+1]))
 
 N_sizes = len(SIZES)
 
@@ -48,6 +50,7 @@ for s in range(N_sizes):
 
     for i in range(N_data):
         (X, C, y), sol = random_data(m, d, d_nonzero, 1, sigma, zerosum=True, seed=i)
+        y = np.sign(y)
         lamb = lam*2*LA.norm(X.T.dot(y),np.infty)
 
         t0 = time()
@@ -56,10 +59,11 @@ for s in range(N_sizes):
         for j in range(N_per_data):
             problem = classo_problem(X, y, C)
             problem.formulation.concomitant = False
+            problem.formulation.classification =True
             problem.model_selection.StabSel = False
             problem.model_selection.LAMfixed = True
-            problem.model_selection.LAMfixedparameters.rescaled_lam = True
-            problem.model_selection.LAMfixedparameters.lam = lam
+            problem.model_selection.LAMfixedparameters.rescaled_lam = False
+            problem.model_selection.LAMfixedparameters.lam = lamb
             problem.model_selection.LAMfixedparameters.numerical_method = 'Path-Alg'
             problem.solve()
             b_pa.append(problem.solution.LAMfixed.beta)
@@ -71,7 +75,8 @@ for s in range(N_sizes):
         b_cvx = []
         for j in range(N_per_data):
             beta = cp.Variable(d)
-            objective, constraints = cp.Minimize(cp.sum_squares(X@beta-y)+ lamb*cp.norm(beta, 1)), [C@beta == 0]
+            cp.pos(1 - cp.multiply(y, X @ beta))
+            objective, constraints = cp.Minimize(cp.sum_squares(cp.pos(1 - cp.multiply(y, X @ beta)))+ lamb*cp.norm(beta, 1)), [C@beta == 0]
             prob = cp.Problem(objective, constraints)
             result = prob.solve(warm_start = False, eps_abs = 1e-5)
             b_cvx.append(beta.value)
@@ -81,11 +86,11 @@ for s in range(N_sizes):
 
 
         T_pa[s, i] = (t1 - t0) / N_per_data
-        L_pa[s, i] = loss(X, y, lam, np.mean(b_pa, axis=0))
+        L_pa[s, i] = loss(X, y, lamb, np.mean(b_pa, axis=0))
         C_pa[s, i] = np.linalg.norm(C.dot(np.mean(b_pa, axis=0)))
 
         T_cvx[s, i] = (t2 - t1) / N_per_data  
-        L_cvx[s, i] = loss(X, y, lam, np.mean(b_cvx, axis=0))
+        L_cvx[s, i] = loss(X, y, lamb, np.mean(b_cvx, axis=0))
         C_cvx[s, i] = np.linalg.norm(C.dot(np.mean(b_cvx, axis=0)))
 
 np.savez(

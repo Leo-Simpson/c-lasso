@@ -8,6 +8,7 @@ and show how to predict Body Mass Index (BMI) from microbial genus abundances an
 
 from classo import csv_to_np, classo_problem, clr
 import numpy as np
+import matplotlib.pyplot as plt
 
 # %%
 #  Load microbiome and covariate data X
@@ -63,6 +64,7 @@ problem.formulation.concomitant = True
 problem.solve()
 print(problem)
 print(problem.solution)
+plt.tight_layout()
 
 # %%
 # Use formulation R4
@@ -73,3 +75,4 @@ problem.formulation.concomitant = True
 problem.solve()
 print(problem)
 print(problem.solution)
+plt.tight_layout()

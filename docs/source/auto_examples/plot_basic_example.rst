@@ -192,7 +192,7 @@ can be visualized using
 
      STABILITY SELECTION : 
        Selected variables :  7    63    148    164    168    
-       Running time :  0.958s
+       Running time :  0.954s
 
 
 
@@ -201,7 +201,7 @@ can be visualized using
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  1.589 seconds)
+   **Total running time of the script:** ( 0 minutes  1.606 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_basic_example.py:

@@ -21,6 +21,7 @@ and show how to predict Body Mass Index (BMI) from microbial genus abundances an
 
     from classo import csv_to_np, classo_problem, clr
     import numpy as np
+    import matplotlib.pyplot as plt
 
 
 
@@ -146,6 +147,7 @@ Use formulation R3
     problem.solve()
     print(problem)
     print(problem.solution)
+    plt.tight_layout()
 
 
 
@@ -192,7 +194,7 @@ Use formulation R3
 
      STABILITY SELECTION : 
        Selected variables :   Clostridium     Acidaminococcus    
-       Running time :  0.609s
+       Running time :  0.595s
 
 
 
@@ -210,6 +212,7 @@ Use formulation R4
     problem.solve()
     print(problem)
     print(problem.solution)
+    plt.tight_layout()
 
 
 
@@ -255,7 +258,7 @@ Use formulation R4
 
      STABILITY SELECTION : 
        Selected variables :   Clostridium     Acidaminococcus    
-       Running time :  0.913s
+       Running time :  0.881s
 
 
 
@@ -264,7 +267,7 @@ Use formulation R4
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  2.334 seconds)
+   **Total running time of the script:** ( 0 minutes  2.535 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_combo_example.py:

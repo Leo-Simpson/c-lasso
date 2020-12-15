@@ -819,6 +819,8 @@ class solution_PATH:
             xlabel = xlabel,
             ylabel = PATH_beta_path["ylabel"],
         )
+
+        plt.tight_layout()
         if type(self.save) == str:
             plt.savefig(self.save + "Beta-path")
         plt.show(block=False)
@@ -828,6 +830,7 @@ class solution_PATH:
                 PATH_sigma_path["ylabel"]
             ), plt.xlabel(PATH_sigma_path["xlabel"])
             plt.title(PATH_sigma_path["title"] + self.formulation.name())
+            plt.tight_layout()
             if type(self.save) == str:
                 plt.savefig(self.save + "Sigma-path")
             plt.show(block=False)
@@ -951,7 +954,7 @@ class solution_CV:
         plt.title(CV_beta["title"])
         plt.xlabel(CV_beta["xlabel"]), plt.ylabel(CV_beta["ylabel"])
         plt.xticks(top, self.label[selected][top], rotation = 90)
-
+        plt.tight_layout()
         if type(self.save2) == str:
             plt.savefig(self.save2)
         plt.show(block=False)
@@ -1027,6 +1030,7 @@ class solution_CV:
         else:
             plt.ylabel(CV_graph["ylabel"])
         plt.legend()
+        plt.tight_layout()
         if save is not None and type(save) == str:
             plt.savefig(save)
         plt.show(block=False)
@@ -1193,6 +1197,7 @@ class solution_StabSel:
             StabSel_graph["title"] + self.method + " using " + self.formulation
         ), plt.legend()
 
+        plt.tight_layout()
         if type(self.save1) == str:
             plt.savefig(self.save1)
 
@@ -1221,6 +1226,7 @@ class solution_StabSel:
             plt.title(
                 StabSel_path["title"] + self.method + " using " + self.formulation
             )
+            plt.tight_layout()
             plt.show(block=False)
 
         plt.figure(figsize = (10, 3), dpi = 80)
@@ -1233,6 +1239,7 @@ class solution_StabSel:
             self.label[top][selected],
             rotation = 30,
         )
+        plt.tight_layout()
         if type(self.save2) == str:
             plt.savefig(self.save2)
         plt.show(block=False)
@@ -1308,6 +1315,12 @@ class solution_LAMfixed:
             self.lambdamax, self.beta, self.sigma = out
         else:
             self.lambdamax, self.beta = out
+        
+        if param.rescaled_lam:
+            self.lambda = self.lambdamax*self.lam
+        else:
+            self.lambda = self.lam
+            
         if param.threshold is None:
             param.threshold = np.mean(abs(self.beta))
 
@@ -1340,9 +1353,12 @@ class solution_LAMfixed:
             self.label[top][self.selected_param[top]],
             rotation = 30,
         )
-
+        
+        plt.tight_layout()
         if type(self.save) == str:
             plt.savefig(self.save)
+        
+        
         plt.show(block=False)
 
         if self.formulation.concomitant:

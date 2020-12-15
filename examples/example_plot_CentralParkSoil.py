@@ -1,30 +1,14 @@
 r"""
-Ocean salinity prediction based on marin microbiome data
+pH prediction using the Central Park soil dataset 
 =========================================================
 
-We repoduce an example of prediction of ocean salinity over ocean microbiome data
-that has been introduced in `this article <https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1.full>`_,
-where the R package `trac <https://github.com/jacobbien/trac>`_ (which uses c-lasso)
-has been used. 
 
-The data come originally from `trac <https://github.com/jacobbien/trac>`_,
-then it is preprocessed in python in this `notebook <https://github.com/Leo-Simpson/c-lasso/examples/Tara/preprocess>`_.
+The next microbiome example considers the [Central Park Soil dataset](./examples/CentralParkSoil) from [Ramirez et al.](https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988). The sample locations are shown in the Figure on the right.)
 
+The task is to predict pH concentration in the soil from microbial abundance data.
 
+This task is also done in `Tree-Aggregated Predictive Modeling of Microbiome Data <https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1>`_.
 
-Bien, J., Yan, X., Simpson, L. and Müller, C. (2020).
-Tree-Aggregated Predictive Modeling of Microbiome Data :
-
-"Integrative marine data collection efforts such as Tara Oceans (Sunagawa et al., 2020)
-or the Simons CMAP (https://simonscmap.com)
-provide the means to investigate ocean ecosystems on a global scale.
-Using Tara’s environmental and microbial survey of ocean surface water (Sunagawa, 2015),
-we next illustrate how trac can be used to globally connect environmental covariates
-and the ocean microbiome. As an example, we learn a global predictive model of ocean salinity
-from n = 136 samples and p = 8916 miTAG OTUs (Logares et al., 2014).
-trac identifies four taxonomic aggregations,
-the kingdom bacteria and the phylum Bacteroidetes being negatively associated
-and the classes Alpha and Gammaproteobacteria being positively associated with marine salinity.
 """
 
 from classo import classo_problem
@@ -35,14 +19,13 @@ import numpy as np
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^
 
-data = np.load('Tara/tara.npz')
+data = np.load('CentralParkSoil/cps.npz')
 
 x = data["x"]
 label = data["label"]
 y = data["y"]
-tr = data["tr"]
 
-A = np.load('Tara/A.npy')
+A = np.load('CentralParkSoil/A.npy')
 
 # %%
 #  Preprocess: taxonomy aggregation
@@ -55,7 +38,9 @@ X = np.log(pseudo_count+x)
 nleaves = np.sum(A,axis = 0)
 logGeom = X.dot(A)/nleaves
 
+n,d = logGeom.shape
 
+tr = np.random.permutation(n)[:int(0.8*n)]
 
 # %%
 # Cross validation and Path Computation
@@ -76,7 +61,6 @@ print(problem)
 problem.solve()
 print(problem.solution)
 
-
 selection = problem.solution.CV.selected_param[1:] # exclude the intercept
 print(label[selection])
 
@@ -92,7 +76,7 @@ M1, M2 = max(y[te]), min(y[te])
 plt.plot(yhat, y[te], 'bo', label = 'sample of the testing set')
 plt.plot([M1, M2], [M1, M2], 'k-', label = "identity")
 plt.xlabel('predictor yhat'), plt.ylabel('real y'), plt.legend()
-plt.show()
+plt.tight_layout()
 
 # %%
 # Stability selection
@@ -128,4 +112,4 @@ M1, M2 = max(y[te]), min(y[te])
 plt.plot(yhat, y[te], 'bo', label = 'sample of the testing set')
 plt.plot([M1, M2],[M1, M2], 'k-', label = "identity")
 plt.xlabel('predictor yhat'), plt.ylabel('real y'), plt.legend()
-plt.show()
+plt.tight_layout()

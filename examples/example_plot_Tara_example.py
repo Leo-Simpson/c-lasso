@@ -92,7 +92,7 @@ M1, M2 = max(y[te]), min(y[te])
 plt.plot(yhat, y[te], 'bo', label = 'sample of the testing set')
 plt.plot([M1, M2], [M1, M2], 'k-', label = "identity")
 plt.xlabel('predictor yhat'), plt.ylabel('real y'), plt.legend()
-plt.show()
+plt.tight_layout()
 
 # %%
 # Stability selection
@@ -128,4 +128,4 @@ M1, M2 = max(y[te]), min(y[te])
 plt.plot(yhat, y[te], 'bo', label = 'sample of the testing set')
 plt.plot([M1, M2],[M1, M2], 'k-', label = "identity")
 plt.xlabel('predictor yhat'), plt.ylabel('real y'), plt.legend()
-plt.show()
+plt.tight_layout()
