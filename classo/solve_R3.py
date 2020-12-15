@@ -15,6 +15,7 @@ One can initialise it this way : pb = class_of_problem.problem(data = (A,C,y),ty
 We solve the problem without normalizing anything.
 """
 
+tol = 1e-5
 
 def Classo_R3(pb, lam):
     pb_type = pb.type  # can be 'Path-Alg' or 'DR'
@@ -190,7 +191,7 @@ class problem_R3:
 
         (m, d, k) = self.dim
         self.weights = np.ones(d)
-        self.tol = 1e-5
+        self.tol = tol
 
         self.regpath = False
         self.name = algo + " Concomitant"

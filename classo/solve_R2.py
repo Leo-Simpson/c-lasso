@@ -15,6 +15,7 @@ One can initialise it this way : pb = class_of_problem.problem(data = (A,C,y),ty
 We solve the problem without normalizing anything.
 """
 
+tol = 1e-5
 
 def Classo_R2(pb, lam, compute = True):
 
@@ -246,7 +247,7 @@ class problem_R2:
         self.matrix = (A, C, y)
         (m, d, k) = self.dim
         self.init = np.zeros(m), np.zeros(d), np.zeros(d), np.zeros(k)
-        self.tol = 1e-4
+        self.tol = tol
         self.regpath = False
         self.name = algo + " Huber"
         self.type = algo  # type of algo used

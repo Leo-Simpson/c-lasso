@@ -53,7 +53,7 @@ Load data
 
 
     t = pd.read_csv('pH_data/qiime2/news/table.csv', index_col=0)
-    metadata = pd.read_table('originals/88soils_modified_metadata.txt', index_col=0)
+    metadata = pd.read_table('pH_data/qiime2/originals/88soils_modified_metadata.txt', index_col=0)
     y_uncent = metadata["ph"].values
 
 
@@ -76,29 +76,16 @@ Load data
 
 
 
+
+
 .. rst-class:: sphx-glr-script-out
 
+ Out:
 
-.. code-block:: pytb
+ .. code-block:: none
 
-    Traceback (most recent call last):
-      File "/Users/lsimpson/Desktop/GitHub/c-lasso/examples/plot_pH_example.py", line 33, in <module>
-        metadata = pd.read_table('originals/88soils_modified_metadata.txt', index_col=0)
-      File "/Users/lsimpson/opt/anaconda3/envs/myenv/lib/python3.9/site-packages/pandas/io/parsers.py", line 767, in read_table
-        return read_csv(**locals())
-      File "/Users/lsimpson/opt/anaconda3/envs/myenv/lib/python3.9/site-packages/pandas/io/parsers.py", line 688, in read_csv
-        return _read(filepath_or_buffer, kwds)
-      File "/Users/lsimpson/opt/anaconda3/envs/myenv/lib/python3.9/site-packages/pandas/io/parsers.py", line 454, in _read
-        parser = TextFileReader(fp_or_buf, **kwds)
-      File "/Users/lsimpson/opt/anaconda3/envs/myenv/lib/python3.9/site-packages/pandas/io/parsers.py", line 948, in __init__
-        self._make_engine(self.engine)
-      File "/Users/lsimpson/opt/anaconda3/envs/myenv/lib/python3.9/site-packages/pandas/io/parsers.py", line 1180, in _make_engine
-        self._engine = CParserWrapper(self.f, **self.options)
-      File "/Users/lsimpson/opt/anaconda3/envs/myenv/lib/python3.9/site-packages/pandas/io/parsers.py", line 2010, in __init__
-        self._reader = parsers.TextReader(src, **kwds)
-      File "pandas/_libs/parsers.pyx", line 382, in pandas._libs.parsers.TextReader.__cinit__
-      File "pandas/_libs/parsers.pyx", line 674, in pandas._libs.parsers.TextReader._setup_parser_source
-    FileNotFoundError: [Errno 2] No such file or directory: 'originals/88soils_modified_metadata.txt'
+    (89, 118)
+    (89,)
 
 
 
@@ -118,6 +105,12 @@ Set up c-lassso problem
     problem.model_selection.PATHparameters.n_active = X.shape[1] + 1
 
 
+
+
+
+
+
+
 Solve for R1
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -127,6 +120,90 @@ Solve for R1
     problem.formulation.concomitant = False
     problem.solve()
     print(problem, problem.solution)
+
+
+
+
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_001.png
+          :alt: Coefficients at $\lambda$ = 0.218
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_002.png
+          :alt: Coefficients across $\lambda$-path using R1
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_003.png
+          :alt: Stability selection profile of type lam using R1
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_004.png
+          :alt: Refitted coefficients after stability selection
+          :class: sphx-glr-multi-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+ 
+ 
+    FORMULATION: R1
+ 
+    MODEL SELECTION COMPUTED:  
+         Lambda fixed
+         Path
+         Stability selection
+ 
+    LAMBDA FIXED PARAMETERS: 
+         numerical_method = Path-Alg
+         rescaled lam : True
+         threshold = 0.001
+         lam : theoretical
+         theoretical_lam = 0.2176
+ 
+    PATH PARAMETERS: 
+         numerical_method : Path-Alg
+         lamin = 0.001
+         Nlam = 80
+ 
+         maximum active variables = 119
+ 
+    STABILITY SELECTION PARAMETERS: 
+         numerical_method : Path-Alg
+         method : lam
+         B = 50
+         q = 10
+         percent_nS = 0.5
+         threshold = 0.7
+         lam = theoretical
+         theoretical_lam = 0.3095
+ 
+     LAMBDA FIXED : 
+       Selected variables :  y0    y2    y82    
+       Running time :  0.009s
+
+     PATH COMPUTATION : 
+       Running time :  0.208s
+
+     STABILITY SELECTION : 
+       Selected variables :  y0    
+       Running time :  0.267s
+
+
+
 
 
 Solve for R2
@@ -141,6 +218,90 @@ Solve for R2
 
 
 
+
+
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_005.png
+          :alt: Coefficients at $\lambda$ = 0.218
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_006.png
+          :alt: Coefficients across $\lambda$-path using R2
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_007.png
+          :alt: Stability selection profile of type lam using R2
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_008.png
+          :alt: Refitted coefficients after stability selection
+          :class: sphx-glr-multi-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+ 
+ 
+    FORMULATION: R2
+ 
+    MODEL SELECTION COMPUTED:  
+         Lambda fixed
+         Path
+         Stability selection
+ 
+    LAMBDA FIXED PARAMETERS: 
+         numerical_method = Path-Alg
+         rescaled lam : True
+         threshold = 0.001
+         lam : theoretical
+         theoretical_lam = 0.2176
+ 
+    PATH PARAMETERS: 
+         numerical_method : Path-Alg
+         lamin = 0.001
+         Nlam = 80
+ 
+         maximum active variables = 119
+ 
+    STABILITY SELECTION PARAMETERS: 
+         numerical_method : Path-Alg
+         method : lam
+         B = 50
+         q = 10
+         percent_nS = 0.5
+         threshold = 0.7
+         lam = theoretical
+         theoretical_lam = 0.3095
+ 
+     LAMBDA FIXED : 
+       Selected variables :  y0    y2    y82    
+       Running time :  0.049s
+
+     PATH COMPUTATION : 
+       Running time :  0.589s
+
+     STABILITY SELECTION : 
+       Selected variables :  y0    
+       Running time :  1.551s
+
+
+
+
+
 Solve for R3
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -151,6 +312,97 @@ Solve for R3
     problem.formulation.huber = False
     problem.solve()
     print(problem, problem.solution)
+
+
+
+
+
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_009.png
+          :alt: Coefficients at $\lambda$ = 0.218
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_010.png
+          :alt: Coefficients across $\lambda$-path using R3
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_011.png
+          :alt: Scale estimate across $\lambda$-path using R3
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_012.png
+          :alt: Stability selection profile of type lam using R3
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_013.png
+          :alt: Refitted coefficients after stability selection
+          :class: sphx-glr-multi-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+ 
+ 
+    FORMULATION: R3
+ 
+    MODEL SELECTION COMPUTED:  
+         Lambda fixed
+         Path
+         Stability selection
+ 
+    LAMBDA FIXED PARAMETERS: 
+         numerical_method = Path-Alg
+         rescaled lam : True
+         threshold = 0.001
+         lam : theoretical
+         theoretical_lam = 0.2176
+ 
+    PATH PARAMETERS: 
+         numerical_method : Path-Alg
+         lamin = 0.001
+         Nlam = 80
+ 
+         maximum active variables = 119
+ 
+    STABILITY SELECTION PARAMETERS: 
+         numerical_method : Path-Alg
+         method : lam
+         B = 50
+         q = 10
+         percent_nS = 0.5
+         threshold = 0.7
+         lam = theoretical
+         theoretical_lam = 0.3095
+ 
+     LAMBDA FIXED : 
+       Sigma  =  1.938
+       Selected variables :  y0    y2    y82    
+       Running time :  0.03s
+
+     PATH COMPUTATION : 
+       Running time :  0.396s
+
+     STABILITY SELECTION : 
+       Selected variables :  y0    
+       Running time :  0.72s
+
+
 
 
 
@@ -175,9 +427,100 @@ because of the absence of possible warm-start in this method
 
 
 
+
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_014.png
+          :alt: Coefficients at $\lambda$ = 0.218
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_015.png
+          :alt: Coefficients across $\lambda$-path using R4
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_016.png
+          :alt: Scale estimate across $\lambda$-path using R4
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_017.png
+          :alt: Stability selection profile of type lam using R4
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_pH_example_018.png
+          :alt: Refitted coefficients after stability selection
+          :class: sphx-glr-multi-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+ 
+ 
+    FORMULATION: R4
+ 
+    MODEL SELECTION COMPUTED:  
+         Lambda fixed
+         Path
+         Stability selection
+ 
+    LAMBDA FIXED PARAMETERS: 
+         numerical_method = Path-Alg
+         rescaled lam : True
+         threshold = 0.001
+         lam : theoretical
+         theoretical_lam = 0.2176
+ 
+    PATH PARAMETERS: 
+         numerical_method : DR
+         lamin = 0.001
+         Nlam = 80
+ 
+         maximum active variables = 119
+ 
+    STABILITY SELECTION PARAMETERS: 
+         numerical_method : Path-Alg
+         method : lam
+         B = 50
+         q = 10
+         percent_nS = 0.5
+         threshold = 0.7
+         lam = theoretical
+         theoretical_lam = 0.3095
+ 
+     LAMBDA FIXED : 
+       Sigma  =  0.969
+       Selected variables :  y0    y2    y82    
+       Running time :  0.052s
+
+     PATH COMPUTATION : 
+       Running time :  355.96s
+
+     STABILITY SELECTION : 
+       Selected variables :  y0    
+       Running time :  1.184s
+
+
+
+
+
+
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.083 seconds)
+   **Total running time of the script:** ( 6 minutes  7.908 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_pH_example.py:

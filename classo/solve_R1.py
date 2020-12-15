@@ -13,6 +13,7 @@ The parameters are lam (lambda/lambdamax, in [0,1]) and pb, which has to be a 'p
  which is defined bellow in order to contain all the important parameters of the problem.
 """
 
+tol = 1e-5
 
 def Classo_R1(pb, lam):
     pb_type = pb.type  # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
@@ -222,7 +223,7 @@ class problem_R1:
             self.init = np.zeros(d), np.zeros(k)
         else:
             self.init = np.zeros(d), np.zeros(d), np.zeros(d)
-        self.tol = 1e-4
+        self.tol = tol
 
         self.weights = np.ones(d)
         self.regpath = False

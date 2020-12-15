@@ -17,6 +17,9 @@ that has been introduced in `this article <https://www.biorxiv.org/content/10.11
 where the R package `trac <https://github.com/jacobbien/trac>`_ (which uses c-lasso)
 has been used. 
 
+The data come originally from `trac <https://github.com/jacobbien/trac>`_,
+then it is preprocessed in python in this `notebook <https://github.com/Leo-Simpson/c-lasso/examples/Tara/preprocess>`_.
+
 
 
 Bien, J., Yan, X., Simpson, L. and Müller, C. (2020).
@@ -42,6 +45,12 @@ and the classes Alpha and Gammaproteobacteria being positively associated with m
     import numpy as np
 
 
+
+
+
+
+
+
 Load data
 ^^^^^^^^^^^^^^^^^^^
 
@@ -49,69 +58,23 @@ Load data
 .. code-block:: default
 
 
-    # import rpy in order to read data generated on R
-    import rpy2.robjects as ro
-    from rpy2.robjects.packages import importr
-
-    # this code code be used in order to import R library Matrix
-    utils = importr('utils')    
-    utils.chooseCRANmirror(ind=1) #
-    utils.install_packages('Matrix')
-    importr('Matrix')
-
-    #Open R file tara_sal_processed.RDS
-    file = 'Tara/tara_sal_processed.RDS'
-    rds = ro.r['readRDS'](file)
-
-    rA = ro.r["as.matrix"](rds[4])
-    x = np.array(rds[1])
-    y = np.array(rds[0])
-    A = np.array(rA)
-
-    label_OTU = rds[1].colnames
-    label_sample =rds[1].rownames
-    label_nodes = np.array(list(rA.colnames))
-    label_short = np.array([l.split("::")[-1] for l in label_nodes])
-    print(y.shape)
-    print(x.shape)
-    print(A.shape)
+    data = np.load('Tara/tara.npz')
 
 
-Process similar to 2fit_trac_model.R
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-.. code-block:: default
-
-
-    # first need to load "tara_sal_trac.Rdata"
-    # in order to extract training set we are using
-    ro.r['load']("Tara/tara_sal_trac.RData")
-
-
-    cvfit = ro.r["cvfit"]
-    cv = cvfit.rx("cv")
-    lambda_1SE = cv.rx("lambda_1se")
-
-    tr = np.array(ro.r['tr']) - 1  # python index starts at 0 when R index starts at 1
-    te = np.array([i for i in range(len(y)) if not i in tr])
+    logGeom = data["logGeom"]
+    nleaves = data["nleaves"]
+    y = data["y"]
+    label_nodes = data["label_nodes"]
+    label_short = data["label_short"]
+    tr = data["tr"]
 
 
 
-Process similar to trac
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-.. code-block:: default
 
 
 
-    pseudo_count = 1
-    X = np.log(pseudo_count+x)
-    nleaves = np.sum(A,axis = 0)
-    logGeom = X.dot(A)/nleaves
 
-    raise ValueError("Do not compute it now")
+
 
 Cross validation and Path Computation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -140,12 +103,82 @@ Cross validation and Path Computation
     print(label_nodes[selection])
 
 
+
+
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_Tara_example_001.png
+          :alt: Coefficients across $\lambda$-path using R1
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_Tara_example_002.png
+          :alt:  
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_Tara_example_003.png
+          :alt: Refitted coefficients after CV model selection
+          :class: sphx-glr-multi-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+ 
+ 
+    FORMULATION: R1
+ 
+    MODEL SELECTION COMPUTED:  
+         Path
+         Cross Validation
+ 
+    PATH PARAMETERS: 
+         numerical_method : not specified
+         lamin = 0.001
+         Nlam = 80
+     with log-scale
+ 
+    CROSS VALIDATION PARAMETERS: 
+         numerical_method : not specified
+         one-SE method : True
+         Nsubset = 5
+         lamin = 0.001
+         Nlam = 80
+     with log-scale
+
+
+     PATH COMPUTATION : 
+     There is also an intercept.  
+       Running time :  137.147s
+
+     CROSS VALIDATION : 
+     Intercept : 34.26188897229179
+       Selected variables :  Gammaproteobacteria    Alphaproteobacteria    Bacteria    
+       Running time :  710.037s
+
+    ['Life::Bacteria::Proteobacteria::Gammaproteobacteria'
+     'Life::Bacteria::Proteobacteria::Alphaproteobacteria' 'Life::Bacteria']
+
+
+
+
 Prediction plot
 """"""""""""""""""""
 
 
 .. code-block:: default
 
+
+    te = np.array([i for i in range(len(y)) if not i in tr])
     alpha = problem.solution.CV.refit
     yhat = logGeom[te].dot(alpha[1:])+alpha[0]
 
@@ -154,6 +187,16 @@ Prediction plot
     plt.plot([M1, M2], [M1, M2], 'k-', label = "identity")
     plt.xlabel('predictor yhat'), plt.ylabel('real y'), plt.legend()
     plt.show()
+
+
+
+
+.. image:: /auto_examples/images/sphx_glr_plot_Tara_example_004.png
+    :alt: plot Tara example
+    :class: sphx-glr-single-img
+
+
+
 
 
 Stability selection
@@ -182,6 +225,57 @@ Stability selection
     print(label_nodes[selection])
 
 
+
+
+.. rst-class:: sphx-glr-horizontal
+
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_Tara_example_005.png
+          :alt: Stability selection profile of type first using R1
+          :class: sphx-glr-multi-img
+
+    *
+
+      .. image:: /auto_examples/images/sphx_glr_plot_Tara_example_006.png
+          :alt: Refitted coefficients after stability selection
+          :class: sphx-glr-multi-img
+
+
+.. rst-class:: sphx-glr-script-out
+
+ Out:
+
+ .. code-block:: none
+
+ 
+ 
+    FORMULATION: R1
+ 
+    MODEL SELECTION COMPUTED:  
+         Stability selection
+ 
+    STABILITY SELECTION PARAMETERS: 
+         numerical_method : Path-Alg
+         method : first
+         B = 50
+         q = 10
+         percent_nS = 0.5
+         threshold = 0.7
+         lamin = 0.01
+         Nlam = 50
+ 
+     STABILITY SELECTION : 
+       Selected variables :  intercept    Bacteroidetes    Alphaproteobacteria    Bacteria    
+       Running time :  1484.467s
+
+    ['Life::Bacteria::Bacteroidetes'
+     'Life::Bacteria::Proteobacteria::Alphaproteobacteria' 'Life::Bacteria']
+
+
+
+
 Prediction plot
 """"""""""""""""""""
 
@@ -189,6 +283,7 @@ Prediction plot
 .. code-block:: default
 
 
+    te = np.array([i for i in range(len(y)) if not i in tr])
     alpha = problem.solution.StabSel.refit
     yhat = logGeom[te].dot(alpha[1:])+alpha[0]
 
@@ -198,9 +293,19 @@ Prediction plot
     plt.xlabel('predictor yhat'), plt.ylabel('real y'), plt.legend()
     plt.show()
 
+
+.. image:: /auto_examples/images/sphx_glr_plot_Tara_example_007.png
+    :alt: plot Tara example
+    :class: sphx-glr-single-img
+
+
+
+
+
+
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.000 seconds)
+   **Total running time of the script:** ( 38 minutes  55.152 seconds)
 
 
 .. _sphx_glr_download_auto_examples_plot_Tara_example.py:

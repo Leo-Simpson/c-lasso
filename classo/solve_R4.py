@@ -14,6 +14,7 @@ One can initialise it this way : pb = class_of_problem.problem(data=(A,C,y),type
 We solve the problem without normalizing anything.
 """
 
+tol = 1e-5
 
 def Classo_R4(pb, lam):
     pb_type = pb.type  # can be 'Path-Alg' or 'DR'
@@ -191,7 +192,7 @@ class problem_R4:
         self.matrix = (A, C, y)
 
         (m, d, k) = self.dim
-        self.tol = 1e-3
+        self.tol = tol
 
         self.regpath = False
         self.name = algo + " Concomitant Huber"

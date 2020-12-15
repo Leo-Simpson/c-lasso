@@ -99,5 +99,5 @@ sphinx_gallery_conf = {
     'examples_dirs': '../../examples',
     'ignore_pattern': r'/example_',
     'gallery_dirs': 'auto_examples',
-    'plot_gallery': 'True',
+    'plot_gallery': 'False',
 }
