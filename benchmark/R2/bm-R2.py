@@ -143,7 +143,7 @@ for s in range(N_sizes):
 
         T_dr[s, i] = (t3 - t0) / N_per_data
         L_dr[s, i] = loss(X, y, lam, rho, np.mean(b_dr, axis=0))
-        C_dr[s, i] = np.linalg.norm(C.dot(np.mean(b_ds, axis=0)))
+        C_dr[s, i] = np.linalg.norm(C.dot(np.mean(b_pds, axis=0)))
 
         T_cvx[s, i] = (t4 - t3) / N_per_data  
         L_cvx[s, i] = loss(X, y, lam, rho, np.mean(b_cvx, axis=0))
