@@ -71,80 +71,6 @@ with (constrained) sparse &beta; vector estimation.
 
 
 
-<!---
-<img src="https://i.imgur.com/8tFmM8T.png" alt="Central Park Soil Microbiome" height="250" align="right"/>
-#### pH prediction using the Central Park soil dataset 
-The next microbiome example considers the [Central Park Soil dataset](./examples/pH_data) from [Ramirez et al.](https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988). The sample locations are shown in the Figure on the right.)
--->
-
-#### pH prediction using the 88 soils dataset
-
-The next microbiome example considers the [88 soils dataset](./examples/pH_data) from [Lauber et al., 2009](https://pubmed.ncbi.nlm.nih.gov/19502440/).
-
-The task is to predict pH concentration in the soil from microbial abundance data. A similar analysis is available
-in [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1) 
-with Central Park soil data from [Ramirez et al.](https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988).
-
-Code to run this application is available in [the accompanying notebook](./examples/example-notebook.ipynb) under `pH data`. Below is a summary of a c-lasso problem instance (using the R3 formulation).
- 
-```
-FORMULATION: R3
- 
-MODEL SELECTION COMPUTED:  
-     Lambda fixed
-     Path
-     Stability selection
- 
-LAMBDA FIXED PARAMETERS: 
-     numerical_method = Path-Alg
-     rescaled lam : True
-     threshold = 0.004
-     lam : theoretical
-     theoretical_lam = 0.2182
- 
-PATH PARAMETERS: 
-     numerical_method : Path-Alg
-     lamin = 0.001
-     Nlam = 80
- 
- 
-STABILITY SELECTION PARAMETERS: 
-     numerical_method : Path-Alg
-     method : lam
-     B = 50
-     q = 10
-     percent_nS = 0.5
-     threshold = 0.7
-     lam = theoretical
-     theoretical_lam = 0.3085
-```
-
-The c-lasso estimation results are summarized below:
-
-```
-LAMBDA FIXED : 
-   Sigma  =  0.198
-   Selected variables :  14    18    19    39    43    57    62    85    93    94    104    107    
-   Running time :  0.008s
-
- PATH COMPUTATION : 
-   Running time :  0.12s
-
- STABILITY SELECTION : 
-   Selected variables :  2    12    15    
-   Running time :  0.287s
-```
-
-![Ex4.1](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-Beta-path.png)
-
-![Ex4.2](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-Sigma-path.png)
-
-![Ex4.3](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-StabSel.png)
-
-![Ex4.4](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-StabSel-beta.png)
-
-![Ex4.5](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-beta.png)
-
 
 ## Optimization schemes
 
@@ -169,19 +95,15 @@ via projection. In the absence of a linear constraint, the method reduces to FB.
 This method can solve problem [R1]. For the Huber problem [R3], 
 P-PDS can solve the mean-shift formulation of the problem (see [6]).
 
-### Projection-free primal-dual splitting method (PF-PDS):
-This algorithm is a special case of an algorithm proposed in [3] (Eq.4.5) and also belongs to the class of 
-proximal splitting algorithms. The algorithm does not require projection operators 
-which may be beneficial when C has a more complex structure. In the absence of a linear constraint, 
-the method reduces to the Forward-Backward-Forward scheme. This method can solve problem [R1]. 
-For the Huber problem [R3], PF-PDS can solve the mean-shift formulation of the problem (see [6]).
-
 ### Douglas-Rachford-type splitting method (DR)
 This algorithm is the most general algorithm and can solve all regression problems 
 [R1-R4]. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
 It makes use of the proximity operators of the perspective of the LS objective (see [4,5])
 The Huber problem with concomitant scale [R4] is reformulated as scaled Lasso problem 
 with the mean shift (see [6]) and thus solved in (n + d) dimensions. 
+
+### CVX (Conic operator splitting,scs)
+For external comparison, we use cvx and its underlying conic solver (scs). For more info, see [4].
 
 
 
@@ -191,16 +113,8 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 
 * [2] L. Briceno-Arias and S.L. Rivera, [A Projected Primal–Dual Method for Solving Constrained Monotone Inclusions](https://link.springer.com/article/10.1007/s10957-018-1430-2?shared-article-renderer), J. Optim. Theory Appl., vol. 180, Issue 3, March 2019.
 
-* [3] P. L. Combettes and J.C. Pesquet, [Primal-Dual Splitting Algorithm for Solving Inclusions with Mixtures of Composite, Lipschitzian, and Parallel-Sum Type Monotone Operators](https://arxiv.org/pdf/1107.0081.pdf), Set-Valued and Variational Analysis, vol. 20, pp. 307-330, 2012.
+* [3] S. Rosset and J. Zhu, [Piecewise linear regularized solution paths](https://projecteuclid.org/euclid.aos/1185303996), Ann. Stat., vol. 35, no. 3, pp. 1012–1030, 2007.
 
-* [4] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
-
-* [5] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), Statistics in Bioscience, 2020.
-
-* [6] A. Mishra and C. L. Müller, [Robust regression with compositional covariates](https://arxiv.org/abs/1909.04990), arXiv, 2019.
-
-* [7] S. Rosset and J. Zhu, [Piecewise linear regularized solution paths](https://projecteuclid.org/euclid.aos/1185303996), Ann. Stat., vol. 35, no. 3, pp. 1012–1030, 2007.
-
-* [8] J. Bien, X. Yan, L. Simpson, and C. L. Müller,   [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1), biorxiv, 2020.
+* [4] B. O’Donoghue, E. Chu, N. Parikh, and S. Boyd. "Conic optimization via operator splitting and homogeneous self-dual embedding." Journal of Optimization Theory and Applications 169, no. 3 (2016): 1042-1068.
 
 
