@@ -108,7 +108,7 @@ This algorithm is the most general algorithm and can solve all regression proble
 It makes use of the proximity operators of the perspective of the LS objective (see [4,5])
 
 
-### CVX (Conic operator splitting,cvx)
+### Operator splitting conic solver (SCS) in CVX (cvx)
 For external comparison, we use cvx and its underlying conic solver (scs). For more info, see [6].
 
 
