@@ -3,7 +3,7 @@
 # Numerical benchmarks for c-lasso 
 
 
-Here, we summarize numerical benchmarks for the [c-lasso package](https://c-lasso.readthedocs.io/en/latest/) in comparison to cvx.
+Here, we summarize numerical benchmarks for the [c-lasso package](https://c-lasso.readthedocs.io/en/latest/) in comparison to [cvxpy](https://www.cvxpy.org).
 
 ## Table of Contents
 
@@ -64,23 +64,21 @@ with (constrained) sparse &beta; vector estimation.
 
 ![Run times on R1](./output/bm-R1-times.png)
 
+#### R2
+
 ![Run times on R2](./output/bm-R2-times.png)
 
-![Run times on C1]](./output/bm-C1-times.png)
+#### C1
 
-
+![Run times on C1](./output/bm-C1-times.png)
 
 
 
 ## Optimization schemes
 
-The available problem formulations [R1-C2] require different algorithmic strategies for 
-efficiently solving the underlying optimization problem. We have implemented four 
-algorithms (with provable convergence guarantees) that vary in generality and are not 
-necessarily applicable to all problems. For each problem type, c-lasso has a default algorithm 
-setting that proved to be the fastest in our numerical experiments.
+We consider the following schemes in the benchmark.
 
-### Path algorithms (Path-Alg) 
+### Path algorithms (Path-Alg, pa) 
 This is the default algorithm for non-concomitant problems [R1,R3,C1,C2]. 
 The algorithm uses the fact that the solution path along &lambda; is piecewise-
 affine (as shown, e.g., in [1]). When Least-Squares is used as objective function,
@@ -92,17 +90,15 @@ This algorithm is derived from [2] and belongs to the class of
 proximal splitting algorithms. It extends the classical Forward-Backward (FB) 
 (aka proximal gradient descent) algorithm to handle an additional linear equality constraint
 via projection. In the absence of a linear constraint, the method reduces to FB.
-This method can solve problem [R1]. For the Huber problem [R3], 
-P-PDS can solve the mean-shift formulation of the problem (see [6]).
+This method can solve problem [R1]. 
 
-### Douglas-Rachford-type splitting method (DR)
+### Douglas-Rachford-type splitting method (dr)
 This algorithm is the most general algorithm and can solve all regression problems 
 [R1-R4]. It is based on Doulgas Rachford splitting in a higher-dimensional product space.
 It makes use of the proximity operators of the perspective of the LS objective (see [4,5])
-The Huber problem with concomitant scale [R4] is reformulated as scaled Lasso problem 
-with the mean shift (see [6]) and thus solved in (n + d) dimensions. 
 
-### CVX (Conic operator splitting,scs)
+
+### CVX (Conic operator splitting,cvx)
 For external comparison, we use cvx and its underlying conic solver (scs). For more info, see [4].
 
 
