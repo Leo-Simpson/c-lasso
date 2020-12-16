@@ -62,13 +62,13 @@ with (constrained) sparse &beta; vector estimation.
 #### R1
 
 
-![3.Stability profile R3](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R3-StabSel.png)
+![Run times on R1](./output/bm-R1-times.png)
 
-![3.Beta solution R3](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R3-StabSel-beta.png)
+![Run times on R2](./output/bm-R2-times.png)
 
-![3.Stability profile R4](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R4-StabSel.png)
+![Run times on C1]](./output/bm-C1-times.png)
 
-![3.Beta solution R4](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R4-StabSel-beta.png)
+
 
 
 <!---
