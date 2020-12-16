@@ -3,7 +3,8 @@
 # Numerical benchmarks for c-lasso 
 
 
-Here, we summarize numerical benchmarks for the [c-lasso package](https://c-lasso.readthedocs.io/en/latest/) in comparison to [cvxpy](https://www.cvxpy.org).
+We provide numerical benchmarks for the [c-lasso package](https://c-lasso.readthedocs.io/en/latest/) in comparison to [cvxpy](https://www.cvxpy.org). 
+We analyze run times, constraint satisfaction quality, and achieved minimum function values.
 
 ## Table of Contents
 
