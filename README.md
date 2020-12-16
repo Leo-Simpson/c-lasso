@@ -20,7 +20,7 @@ the underlying convex optimization problems.
 
 We also include two model selection strategies for determining the sparsity of the model parameters: k-fold cross-validation and stability selection.   
 
-This package is intended to fill the gap between popular python tools such as [scikit-learn](https://scikit-learn.org/stable/) which CANNOT solve sparse constrained problems and general-purpose optimization solvers that do not scale well for the considered problems.
+This package is intended to fill the gap between popular python tools such as [scikit-learn](https://scikit-learn.org/stable/) which CANNOT solve sparse constrained problems and general-purpose optimization solvers that do not scale well or are inaccurate (see [benchmarks](./benchmarks/README.md)) for the considered problems.
 
 Below we show several use cases of the package, including an application of sparse *log-contrast*
 regression tasks for *compositional* microbiome data.
