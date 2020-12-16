@@ -34,7 +34,7 @@ The objective function combines Least-Squares for model fitting with l1 penalty 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
 for robust model fitting with l1 and linear equality constraints on the &beta; vector. The parameter &rho;=1.345.
 
-#### [C1] Contrained sparse classification with Square Hinge loss (Square-Hinge SVM): 
+#### [C1] Contrained sparse classification with Square Hinge loss (L1-Regularized Square-Hinge SVM): 
 
 <img src="https://latex.codecogs.com/gif.latex?\arg&space;\min_{\beta&space;\in&space;\mathbb{R}^d}&space;\sum_{i=1}^n&space;l(y_i&space;x_i^\top&space;\beta)&space;&plus;&space;\lambda&space;\left\lVert&space;\beta\right\rVert_1&space;\qquad&space;s.t.&space;\qquad&space;C\beta&space;=&space;0" title="\arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i \beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad C\beta = 0" />
 
@@ -45,7 +45,7 @@ where the x<sub>i</sub> are the rows of X and l is defined as:
 This formulation is similar to [R1] but adapted for classification tasks using the Square Hinge loss
 with (constrained) sparse &beta; vector estimation.
 
-#### [C2] Contrained sparse classification with Huberized Square Hinge loss (Huberized Square-Hinge SVM):        
+#### [C2] Contrained sparse classification with Huberized Square Hinge loss (L1-Regularized Huberized Square-Hinge SVM):        
 
 <img src="https://latex.codecogs.com/gif.latex?\arg&space;\min_{\beta&space;\in&space;\mathbb{R}^d}&space;\sum_{i=1}^n&space;l_{\rho}(y_i&space;x_i^\top\beta)&space;&plus;&space;\lambda&space;\left\lVert&space;\beta\right\rVert_1&space;\qquad&space;s.t.&space;\qquad&space;C\beta&space;=&space;0" title="\arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l_{\rho}(y_i x_i\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad C\beta = 0" />
 
@@ -100,7 +100,7 @@ It makes use of the proximity operators of the perspective of the LS objective (
 
 
 ### CVX (Conic operator splitting,cvx)
-For external comparison, we use cvx and its underlying conic solver (scs). For more info, see [4].
+For external comparison, we use cvx and its underlying conic solver (scs). For more info, see [6].
 
 
 
@@ -112,6 +112,10 @@ For external comparison, we use cvx and its underlying conic solver (scs). For m
 
 * [3] S. Rosset and J. Zhu, [Piecewise linear regularized solution paths](https://projecteuclid.org/euclid.aos/1185303996), Ann. Stat., vol. 35, no. 3, pp. 1012–1030, 2007.
 
-* [4] B. O’Donoghue, E. Chu, N. Parikh, and S. Boyd. "Conic optimization via operator splitting and homogeneous self-dual embedding." Journal of Optimization Theory and Applications 169, no. 3 (2016): 1042-1068.
+* [4] P. L. Combettes and C. L. Müller, [Perspective M-estimation via proximal decomposition](https://arxiv.org/abs/1805.06098), Electronic Journal of Statistics, 2020, [Journal version](https://projecteuclid.org/euclid.ejs/1578452535) 
+
+* [5] P. L. Combettes and C. L. Müller, [Regression models for compositional data: General log-contrast formulations, proximal optimization, and microbiome data applications](https://arxiv.org/abs/1903.01050), Statistics in Bioscience, 2020.
+
+* [6] B. O’Donoghue, E. Chu, N. Parikh, and S. Boyd. "Conic optimization via operator splitting and homogeneous self-dual embedding." Journal of Optimization Theory and Applications 169, no. 3 (2016): 1042-1068.
 
 
