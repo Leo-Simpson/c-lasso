@@ -47,7 +47,7 @@ with (constrained) sparse &beta; vector estimation.
 
 ###  Synthetic data generation and test problem set-ups 
 
-We use the `random_data` function in c-lasso to generate X and y. We use the standard `zeroSum` constraint. We vary the number of samples n and dimensionionality d of the problems. The regularization parameter is set to &lambda values...
+We use the `random_data` function in c-lasso to generate X and y. We use the standard `zeroSum` constraint. We vary the number of samples n and dimensionionality d of the problems. The regularization parameter is set to &lambda; values...
 
 ## Results
 
@@ -95,7 +95,7 @@ affine (as shown, e.g., in [1]). When Least-Squares is used as objective functio
 we derive a novel efficient procedure that allows us to also derive the 
 solution for the concomitant problem [R2] along the path with little extra computational overhead.
 
-### Projected primal-dual splitting method (P-PDS):
+### Projected primal-dual splitting method (pds):
 This algorithm is derived from [2] and belongs to the class of 
 proximal splitting algorithms. It extends the classical Forward-Backward (FB) 
 (aka proximal gradient descent) algorithm to handle an additional linear equality constraint
