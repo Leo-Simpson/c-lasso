@@ -57,9 +57,9 @@ Run times for R1.
 
 ![Run times on R1](./output/bm-R1-times.png)
 
-Achieved minimum function values on R1. 
+Achieved minimum function values on R1. We observe considerable inaccuracies in cvx solutions.
 
-![Achieved function values on C1](./output/bm-C1-losses.png)
+![Achieved function values on C1](./output/bm-R1-losses.png)
 
 
 #### R2
