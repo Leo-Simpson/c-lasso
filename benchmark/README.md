@@ -9,7 +9,6 @@ We analyze run times, constraint satisfaction quality, and achieved minimum func
 ## Table of Contents
 
 * [Benchmark setup](#installation)
-* [Regression and classification problems](#regression-and-classification-problems)
 * [Results](#getting-started)
 * [Optimization schemes](#optimization-schemes)
 
@@ -20,19 +19,15 @@ We analyze run times, constraint satisfaction quality, and achieved minimum func
 
 ###  Tested Regression and classification problems
 
+Here, we consider the following problem formulations (see [here](../README.md) for detailed infos):
+
 #### [R1] Standard constrained Lasso regression:             
 
 <img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;||&space;X\beta-y&space;||^2&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0" />
 
-This is the standard Lasso problem with linear equality constraints on the &beta; vector. 
-The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
-
 #### [R2] Contrained sparse Huber regression:                   
 
 <img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;h_{\rho}(X\beta-y&space;)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0" />
-
-This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
-for robust model fitting with l1 and linear equality constraints on the &beta; vector. The parameter &rho;=1.345.
 
 #### [C1] Contrained sparse classification with Square Hinge loss (L1-Regularized Square-Hinge SVM): 
 
@@ -41,9 +36,6 @@ for robust model fitting with l1 and linear equality constraints on the &beta; v
 where the x<sub>i</sub> are the rows of X and l is defined as:
 
 <img src="https://latex.codecogs.com/gif.latex?l(r)&space;=&space;\begin{cases}&space;(1-r)^2&space;&&space;if&space;\quad&space;r&space;\leq&space;1&space;\\&space;0&space;&if&space;\quad&space;r&space;\geq&space;1&space;\end{cases}" title="l(r) = \begin{cases} (1-r)^2 & if \quad r \leq 1 \\ 0 &if \quad r \geq 1 \end{cases}" />
-
-This formulation is similar to [R1] but adapted for classification tasks using the Square Hinge loss
-with (constrained) sparse &beta; vector estimation.
 
 ###  Synthetic data generation and test problem set-ups 
 
