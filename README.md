@@ -14,7 +14,7 @@ Here, y and X are given outcome and predictor data. The vector y can be continuo
 unknown scale.
 
 The package handles several different estimators for inferring &beta; (and &sigma;), including 
-the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimation with linear equality constraints.
+the constrained Lasso, the constrained scaled Lasso, sparse Huber M-estimation with linear equality constraints, and regularized Support Vector Machines.
 Several different algorithmic strategies, including path and proximal splitting algorithms, are implemented to solve 
 the underlying convex optimization problems.
 
