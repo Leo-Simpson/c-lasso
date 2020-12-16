@@ -53,17 +53,30 @@ Run times for R1.
 
 ![Run times on R1](./output/bm-R1-times.png)
 
+Achieved minimum function values on R1. 
+
+![Achieved function values on C1](./output/bm-C1-losses.png)
+
+
 #### R2
 
 Run times for R2. 
 
 ![Run times on R2](./output/bm-R2-times.png)
 
+Achieved minimum function values on R2. 
+
+![Achieved function values on R2](./output/bm-R2-losses.png)
+
 #### C1
 
 Run times for C1. 
 
 ![Run times on C1](./output/bm-C1-times.png)
+
+Achieved minimum function values on C1. 
+
+![Achieved function values on C1](./output/bm-C1-losses.png)
 
 
 
