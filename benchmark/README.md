@@ -45,6 +45,10 @@ where the x<sub>i</sub> are the rows of X and l is defined as:
 This formulation is similar to [R1] but adapted for classification tasks using the Square Hinge loss
 with (constrained) sparse &beta; vector estimation.
 
+###  Synthetic data generation and test problem set-ups 
+
+We use the `random_data` function in c-lasso to generate $X$ and $y$. We use the standard `zeroSum` constraint. We vary the number of samples n and dimensionionality d of the problems. The regularization parameter is set to $\lambda$ values...
+
 ## Results
 
 #### R1
