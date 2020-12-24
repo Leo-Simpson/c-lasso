@@ -61,7 +61,6 @@ The `c-lasso` package depends on the following Python packages:
 - `matplotlib`; 
 - `scipy`; 
 - `pandas`; 
-- `h5py`;
 - `pytest` (for tests)
 
 ##  Regression and classification problems

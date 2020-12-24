@@ -11,7 +11,7 @@ from ..misc_functions import random_data
 tol = 1e-2
 
 m, d, d_nonzero, k, sigma = 30, 20, 5, 1, 0.5
-(X, C, y), sol = random_data(m, d, d_nonzero, k, sigma, zerosum = True, seed = 10)
+(X, C, y), sol = random_data(m, d, d_nonzero, k, sigma, zerosum = True, seed = 42)
 
 d1 = d//2
 w = np.array( [0.9]*d1 + [1.1]*(d-d1))
@@ -63,13 +63,17 @@ Test of pathlasso
 
 
 def test_pathlasso_R1():
-    aux_test_pathlasso((X,C,y), "R1", "Path-Alg")
+    for meth in ["Path-Alg", "DR", "P-PDS", "PF-PDS"]:
+        aux_test_pathlasso((X,C,y), "R1", meth)
+
 
 def test_pathlasso_R2():
-    aux_test_pathlasso((X,C,y), "R2", "Path-Alg")
+    for meth in ["Path-Alg", "DR", "P-PDS", "PF-PDS"]:
+        aux_test_pathlasso((X,C,y), "R2", meth, tole=1e-1)
 
 def test_pathlasso_R3():
-    aux_test_pathlasso((X,C,y), "R3", "Path-Alg")
+    for meth in ["Path-Alg", "DR"]:
+        aux_test_pathlasso((X,C,y), "R3", meth, tole=1)
 
 def test_pathlasso_R4():
     aux_test_pathlasso((X,C,y), "R4", "DR")
@@ -81,15 +85,23 @@ def test_pathlasso_C2():
     aux_test_pathlasso((X, C, np.sign(y)), "C2", "Path-Alg")
 
 
-
-
-
-def aux_test_pathlasso(matrix, typ, meth):
+def aux_test_pathlasso(matrix, typ, meth, tole=tol):
     betas, lambdas = pathlasso(matrix, typ=typ, meth=meth)
 
     i = len(lambdas)//2
     lamb  = lambdas[i]
     beta_1 = betas[i]
     beta_2 = Classo(matrix, lamb, typ=typ, true_lam=True, return_sigm=False, meth=meth)
-    assert_allclose(beta_1, beta_2, rtol=tol, atol=tol)
+    assert_allclose(beta_1, beta_2, rtol=tole, atol=tole)
 
+def test_pathlasso_R1_nactive():
+    for meth in ["Path-Alg", "DR", "P-PDS", "PF-PDS"]:
+        betas, lambdas = pathlasso((X, C, y), typ="R1", meth=meth, n_active=5)
+        beta = betas[-1]
+        assert sum(abs(beta) >= 1e-2) <= 6
+
+def test_pathlasso_R2_nactive():
+    for meth in ["Path-Alg", "DR", "P-PDS", "PF-PDS"]:
+        betas, lambdas = pathlasso((X, C, y), typ="R2", meth=meth, n_active=5)
+        beta = betas[-1]
+        assert sum(abs(beta) >= 1e-2) <= 6

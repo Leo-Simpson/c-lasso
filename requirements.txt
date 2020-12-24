@@ -1,9 +1,7 @@
-h5py
 matplotlib 
 numpy
 pandas
-scipy 
-zarr
+scipy
 pytest
 pytest-cov
 sphinx

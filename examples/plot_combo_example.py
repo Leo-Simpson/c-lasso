@@ -6,9 +6,29 @@ We first consider the `COMBO data set <https://github.com/Leo-Simpson/c-lasso/tr
 and show how to predict Body Mass Index (BMI) from microbial genus abundances and two non-compositional covariates  using "filtered_data".
 """
 
-from classo import csv_to_np, classo_problem, clr
+from classo import classo_problem, clr
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
+
+# %%
+#  Define how to read csv
+# ^^^^^^^^^^^^^^^^^^^^^^^^
+
+def csv_to_np(file, begin = 1, header = None):
+    """Function to read a csv file and to create an ndarray with this
+
+    Args:
+        file (str): Name of csv file
+        begin (int, optional): First colomn where it should read the matrix
+        header (None or int, optional): Same parameter as in the function :func:`pandas.read_csv`
+
+    Returns:
+        ndarray : matrix of the csv file
+    """
+    tab1 = pd.read_csv(file, header = header)
+    return np.array(tab1)[:, begin:]
+
 
 # %%
 #  Load microbiome and covariate data X

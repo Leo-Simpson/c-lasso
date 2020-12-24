@@ -1,10 +1,7 @@
 from .misc_functions import (
     random_data,
-    csv_to_np,
-    mat_to_np,
     clr,
-    theoretical_lam,
-    to_zarr,
+    theoretical_lam
 )  # , tree_to_matrix
 from .compact_func import Classo, pathlasso
 from .cross_validation import CV

@@ -287,16 +287,6 @@ def pathalgo_general(matrix, path, typ, n_active = False, rho = 0, intercept = F
     return BETA
 
 
-def pathalgo_huber_cl(matrix, path, rho, n_active = False, intercept = False):
-    return pathalgo_general(
-        matrix, path, "C2", n_active=n_active, rho=rho, intercept=intercept
-    )
-
-
-def pathalgo_cl(matrix, path, n_active = False, intercept = False):
-    return pathalgo_general(matrix, path, "C1", n_active, intercept=intercept)
-
-
 def up(param):
     """
     Function to call to go from a breaking point to the next one
@@ -809,6 +799,7 @@ def derivatives(activity, s, Mat, C, Inv, idr, number_act):
 # Upddate a list of constraints which are independant if we restrict the matrix C to the acrive set (C_A has to have independant rows)
 # When we ad an active parameter
 def next_idr1(liste, mat):
+    # function to know which indice one should add
     if sum(liste) == len(mat):
         return False
     if sum(liste) == 0:
@@ -899,10 +890,10 @@ def find_beta0(r, dbeta0, y, rho, typ):
 
 def binary_search(f, a, b, tol = 1e-8):
     c = (a + b) / 2
-    if f(a) * f(b) > 0:
-        print("gradh(min(y)) = ", f(a))
-        print("gradh(max(y)) = ", f(b))
-        raise ValueError("Error in binary search for initial intercept")
+    # if f(a) * f(b) > 0:
+    #    print("gradh(min(y)) = ", f(a))
+    #    print("gradh(max(y)) = ", f(b))
+    #    raise ValueError("Error in binary search for initial intercept")
     while abs(f(c)) > tol:
         if f(c) * f(a) < 0:
             b = c
@@ -939,6 +930,18 @@ def next_inv(Xt, B, al, ligne):
         (-alpha * B[0, :ligne], [alpha], -alpha * B[0, ligne:]), axis=0
     )
     return np.concatenate((col1, np.array([col]).T, col2), axis=1)
+
+
+
+def pathalgo_huber_cl(matrix, path, rho, n_active = False, intercept = False):
+    return pathalgo_general(
+        matrix, path, "C2", n_active=n_active, rho=rho, intercept=intercept
+    )
+
+
+def pathalgo_cl(matrix, path, n_active = False, intercept = False):
+    return pathalgo_general(matrix, path, "C1", n_active, intercept=intercept)
+
 
 
 """

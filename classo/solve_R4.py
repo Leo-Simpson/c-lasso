@@ -23,7 +23,7 @@ def Classo_R4(pb, lam):
     rho = pb.rho
     regpath = pb.regpath
 
-    if lam == 0.0:
+    if lam < 1e-5:
         pb_type = "Path-Alg"  # in this case, we will simply use R3.
 
     # Only alternative to 2prox : one can use the other formulation of the problem which shows that
@@ -60,28 +60,27 @@ def Classo_R4(pb, lam):
     # Hence, the prox is not so easy to compute because there is a root of polynomial of degree 3 to compute.
     # We do that in the function prox_phi_2 which use the function prox_phi_i (prox of one componant),
     # and it uses calc_Newton which uses newton's method with good initialization.
+    else: # "DR":
 
-    if not regpath:
-        pb.compute_param()
+        if not regpath:
+            pb.compute_param()
 
-    proj_sigm = pb.proj_sigm
-    QA = pb.QA
-    Q1 = pb.Q1
-    Q2 = pb.Q2
-    Proj = pb.Proj
-    Anorm = pb.Anorm
+        proj_sigm = pb.proj_sigm
+        QA = pb.QA
+        Q1 = pb.Q1
+        Q2 = pb.Q2
+        Proj = pb.Proj
+        Anorm = pb.Anorm
 
-    tol = pb.tol * LA.norm(y)  # tolerance rescaled
-    gamma = LA.norm(y) * pb.gam / (Anorm ** 2)
-    # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
-    w = lamb * gamma * pb.weights
-    zerod = np.zeros(d)
-    mu, c = pb.mu, pb.c
-    root = [0.0] * len(y)
-    xs, nu, o, xbar, x = pb.init
+        tol = pb.tol * LA.norm(y)  # tolerance rescaled
+        gamma = LA.norm(y) * pb.gam / (Anorm ** 2)
+        # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
+        w = lamb * gamma * pb.weights
+        zerod = np.zeros(d)
+        mu, c = pb.mu, pb.c
+        root = [0.0] * len(y)
+        xs, nu, o, xbar, x = pb.init
 
-    # 2prox
-    if pb_type == "DR":
         b,s = 0., 0.  # just for flake8 purpose
         for i in range(pb.N):
             nv_b = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar)
@@ -119,8 +118,6 @@ def Classo_R4(pb, lam):
             "The algorithm of Doulgas Rachford did not converge after %i iterations "
             % pb.N
         )
-
-    print("none of the cases ! ")
 
 
 """

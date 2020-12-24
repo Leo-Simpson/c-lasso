@@ -448,6 +448,7 @@ class PATHparameters:
         self.logscale = True
         self.lambdas = None
         self.plot_sigma = True
+        self.rescaled_lam = True
 
     def __repr__(self):
         if self.lambdas is not None:
@@ -768,6 +769,7 @@ class solution_PATH:
             rho_classification = rho_classification,
             w = param.formulation.w,
             intercept = param.formulation.intercept,
+            true_lam = not param.rescaled_lam
         )
         if formulation.concomitant:
             self.BETAS, self.LAMBDAS, self.SIGMAS = out
@@ -941,7 +943,7 @@ class solution_CV:
             selected[0] = False
             string += "\n Intercept : " + str(self.refit[0])
 
-        self.graphic(save = self.save1,logscale = self.logscale)
+        self.graphic(save = self.save1, logscale = self.logscale)
 
         nb_select = sum(selected)
         if nb_select > 10:
@@ -970,7 +972,7 @@ class solution_CV:
         """Method to plot the graphic showing mean squared error over along lambda path once cross validation is computed.
 
         Args:
-            ratio_mse_max (float): float thanks to which the graphic will not show the lambdas from which MSE(lambda)> min(MSE) + ratio * Standard_error(lambda_min).
+            se_max (float): float thanks to which the graphic will not show the lambdas from which MSE(lambda)> min(MSE) + se_max * Standard_error(lambda_min).
                 this parameter is useful to plot a graph that zooms in the interesting part.
                 Default value : None
             logScale (bool) : input that tells to plot the mean square error as a function of lambda, or log10(lambda)
@@ -1202,6 +1204,7 @@ class solution_StabSel:
             plt.savefig(self.save1)
 
         plt.show(block=False)
+        """
         plot_path = False  # do not plot this graphic for now because it is confusing
         if type(Dpath) != str and plot_path:
             plt.figure(figsize = (10, 3), dpi = 80)
@@ -1228,6 +1231,7 @@ class solution_StabSel:
             )
             plt.tight_layout()
             plt.show(block=False)
+        """
 
         plt.figure(figsize = (10, 3), dpi = 80)
         plt.bar(range(len(self.refit[top])), self.refit[top])

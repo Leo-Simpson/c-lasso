@@ -22,7 +22,7 @@ def Classo_R3(pb, lam):
     (m, d, k), (A, C, y) = pb.dim, pb.matrix
     sigmax = pb.sigmax
 
-    if lam == 0.0:
+    if lam < 1e-5:
         beta = unpenalized(pb.matrix)
         sigma = LA.norm(A.dot(beta) - y) / np.sqrt(m / 2)
         return beta, sigma
@@ -47,28 +47,28 @@ def Classo_R3(pb, lam):
         beta = beta1 * teta + beta2 * (1 - teta)
         return (beta, sigma)
 
-    regpath = pb.regpath
-    if not regpath:
-        pb.compute_param()
+    else: # DR
+        regpath = pb.regpath
+        if not regpath:
+            pb.compute_param()
 
-    lamb = lam * pb.lambdamax 
-    Anorm = pb.Anorm
-    tol = pb.tol * LA.norm(y) / Anorm  # tolerance rescaled
-    Proj = proj_c(C, d)  # Proj = I - C^t . (C . C^t )^-1 . C
-    QA = pb.QA
-    Q1 = pb.Q1
-    Q2 = pb.Q2
-    # Save some matrix products already computed in problem.compute_param()
-    gamma = pb.gam / (pb.Anorm2 * lam)  # Normalize gamma
-    w = lamb * gamma * pb.weights
+        lamb = lam * pb.lambdamax 
+        Anorm = pb.Anorm
+        tol = pb.tol * LA.norm(y) / Anorm  # tolerance rescaled
+        Proj = proj_c(C, d)  # Proj = I - C^t . (C . C^t )^-1 . C
+        QA = pb.QA
+        Q1 = pb.Q1
+        Q2 = pb.Q2
+        # Save some matrix products already computed in problem.compute_param()
+        gamma = pb.gam / (pb.Anorm2 * lam)  # Normalize gamma
+        w = lamb * gamma * pb.weights
 
-    zerod = np.zeros(d)
-    # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
-    mu, c, root = pb.mu, pb.c, 0.0
-    xs, nu, o, xbar, x = pb.init
+        zerod = np.zeros(d)
+        # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
+        mu, c, root = pb.mu, pb.c, 0.0
+        xs, nu, o, xbar, x = pb.init
 
-    # 2prox
-    if pb_type == "DR":
+        
         b, s = 0., 0. # just for flake8 purpose.
         for i in range(pb.N):
             nv_b = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar)
@@ -102,7 +102,6 @@ def Classo_R3(pb, lam):
             "The algorithm of Doulgas Rachford did not converge after %i iterations "
             % pb.N
         )
-    print("none of the cases ! ")
 
 
 """

@@ -18,7 +18,7 @@ tol = 1e-5
 def Classo_R1(pb, lam):
     pb_type = pb.type  # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
-    if lam == 0.0:
+    if lam < 1e-5:
         return unpenalized(pb.matrix)
 
     # ODE
@@ -45,7 +45,6 @@ def Classo_R1(pb, lam):
         d
     )  # two vectors usefull to compute the prox of f(b) = sum(wi |bi|)
 
-    # NO PROJ
 
     if pb_type == "PF-PDS":  # y1 --> S ; p1 --> p . ; p2 --> y2
         (x, v) = pb.init
@@ -73,7 +72,6 @@ def Classo_R1(pb, lam):
             "The algorithm of PF-PDS did not converge after %i iterations " % pb.N
         )
 
-    # FORARD BACKWARD
 
     if pb_type == "P-PDS":
         xbar, x, v = pb.init
@@ -100,9 +98,8 @@ def Classo_R1(pb, lam):
             "The algorithm of P-PDS did not converge after %i iterations " % pb.N
         )
 
-    # 2 PROX
 
-    if pb_type == "DR":
+    else: # "DR":
         gamma = gamma / (2 * lam)
         w = w / (2 * lam)
         mu, ls, c, root = pb.mu, [], pb.c, 0.0
@@ -141,25 +138,23 @@ and then to evaluate it in the given finite path.
 """
 
 
-def pathlasso_R1(pb, path, n_active = False, return_sp_path = False):
+def pathlasso_R1(pb, path, n_active = False):
     n, d, k = pb.dim
     BETA, tol = [], pb.tol
     if pb.type == "Path-Alg":
         beta, sp_path = solve_path(pb.matrix, path[-1], n_active, 0, "R1")
-        if return_sp_path:
-            return (
-                beta,
-                sp_path,
-            )  # in the method ODE, we only compute the solution for breaking points. We can stop here if return_sp_path = True
-        else:  # else, we do a little manipulation to interpolated the value of beta between those points, as we know beta is affine between those breaking points.
-            sp_path.append(path[-1]), beta.append(beta[-1])
-            i = 0
-            for lam in path:
-                while lam < sp_path[i + 1]:
-                    i += 1
-                teta = (sp_path[i] - lam) / (sp_path[i] - sp_path[i + 1])
-                BETA.append(beta[i] * (1 - teta) + beta[i + 1] * teta)
-            return BETA
+        # in the method ODE, we only compute the solution for breaking points. We can stop here if return_sp_path = True
+        # else, we do a little manipulation to interpolated the value of beta between those points, as we know beta is affine between those breaking points.
+        # if return_sp_path:
+        #     return beta, sp_path
+        sp_path.append(path[-1]), beta.append(beta[-1])
+        i = 0
+        for lam in path:
+            while lam < sp_path[i + 1]:
+                i += 1
+            teta = (sp_path[i] - lam) / (sp_path[i] - sp_path[i + 1])
+            BETA.append(beta[i] * (1 - teta) + beta[i + 1] * teta)
+        return BETA
 
     # Now we are in the case where we have to do warm starts.
     save_init = pb.init

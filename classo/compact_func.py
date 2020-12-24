@@ -198,15 +198,16 @@ def pathlasso(
     Nactive = n_active
     if Nactive == 0:
         Nactive = False
-    if type(lambdas) != bool:
-        if lambdas[0] < lambdas[-1]:
-            lambdass = [
-                lambdas[i] for i in range(len(lambdas) - 1, -1, -1)
-            ]  # reverse the list if needed
-        else:
-            lambdass = [lambdas[i] for i in range(len(lambdas))]
+    if type(lambdas) is bool:
+        lambdas = lamin**(np.linspace(0., 1, 100))
+
+    if lambdas[0] < lambdas[-1]:
+        lambdass = [
+            lambdas[i] for i in range(len(lambdas) - 1, -1, -1)
+        ]  # reverse the list if needed
     else:
-        lambdass = np.linspace(1.0, lamin, 80)
+        lambdass = [lambdas[i] for i in range(len(lambdas))]
+        
 
     if w is not None:
         matrices = (matrix[0] / w, matrix[1] / w, matrix[2])

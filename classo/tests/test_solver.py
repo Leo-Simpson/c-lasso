@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from ..solver import classo_problem
+from ..solver import classo_problem, choose_numerical_method, Formulation
 from ..misc_functions import random_data
 
 # in this files, we do test to verify the there is no problem
@@ -25,14 +25,25 @@ def test_solve_PATH_StabSel_R1():
 def test_solve_PATH_StabSel_C1():
     aux_test_solve_PATH_StabSel((False, False, True), close_window=close)
 
+def test_solve_PATH_StabSel_R3():
+    aux_test_solve_PATH_StabSel((True, False, False), close_window=close)
 
+
+def test_solve_PATH_CV_R1():
+    aux_test_solve_PATH_CV((False, False, False), close_window=close)
 
 def test_solve_PATH_CV_R2():
     aux_test_solve_PATH_CV((False, True, False), close_window=close)
 
+def test_solve_PATH_CV_R3():
+    aux_test_solve_PATH_CV((True, False, False), close_window=close)
+
 def test_solve_PATH_CV_C2():
     aux_test_solve_PATH_CV((False, True, True), close_window=close)
 
+
+def test_solve_PATH_LAMfixed_R1():
+    aux_test_solve_PATH_LAMfixed((False, False, False), close_window=close)
 
 def test_solve_PATH_LAMfixed_R3():
     aux_test_solve_PATH_LAMfixed((True, False, False), close_window=close)
@@ -50,12 +61,18 @@ def test_solve_CV_StabSel_R3():
 
 
 
+def test_solve_CV_LAMfixed_R1():
+    aux_test_solve_CV_LAMfixed((False, False, False), close_window=close)
+
 def test_solve_CV_LAMfixed_R4():
     aux_test_solve_CV_LAMfixed((True, True, False), close_window=close)
 
 def test_solve_CV_LAMfixed_C1():
     aux_test_solve_CV_LAMfixed((False, False, True), close_window=close)
 
+
+def test_solve_StabSel_LAMfixed_R2():
+    aux_test_solve_StabSel_LAMfixed((False, False, False), close_window=close)
 
 def test_solve_StabSel_LAMfixed_R2():
     aux_test_solve_StabSel_LAMfixed((False, True, False), close_window=close)
@@ -70,8 +87,8 @@ def aux_test_solve_PATH_StabSel(mode, close_window=True):
         yy = np.sign(y)
     else:
         yy = y 
-    pb = classo_problem(X, yy, C= C)
-    pb.formulation.intercept = True
+    pb = classo_problem(X, yy, C= C, label=['label1', 'label2'])
+    pb.formulation.intercept = False
     pb.formulation.w = np.array([1.1]*(d//3)+ [1.]*(d-d//3))
     #pb.formulation.rho = 10.
 
@@ -99,10 +116,11 @@ def aux_test_solve_PATH_StabSel(mode, close_window=True):
     param.lamin = 0.01
     param.hd = False
     param.lam = 'theoretical'
-    param.true_lam = True
+    param.rescaled_lam = False
     param.threshold = 0.7 
     param.threshold_label = 0.2
 
+    print(pb)
     pb.solve()
 
     print(pb, pb.solution)
@@ -129,7 +147,8 @@ def aux_test_solve_PATH_CV(mode, close_window=True):
 
     param = pb.model_selection.PATHparameters
     param.n_active = 0
-    param.lambdas = np.linspace(1., 1e-1, 10)
+    param.lambdas = np.linspace(10., 1e-1, 10)
+    param.rescaled_lam = False
 
     param = pb.model_selection.CVparameters
     param.seed = None
@@ -138,7 +157,7 @@ def aux_test_solve_PATH_CV(mode, close_window=True):
     param.Nlam = 50
     param.lamin = 1e-3
     param.logscale = True
-    
+    print(pb)
     pb.solve()
 
     print(pb, pb.solution)
@@ -152,11 +171,13 @@ def aux_test_solve_PATH_LAMfixed(mode, close_window=True):
     else:
         yy = y 
     pb = classo_problem(X, yy, C= C)
-    pb.formulation.intercept = True
+    pb.formulation.intercept = False
 
     pb.formulation.concomitant = mode[0]
     pb.formulation.huber = mode[1]
     pb.formulation.classification = mode[2]
+    pb.formulation.e = 20
+    pb.formulation.rho_scaled = False
 
     pb.model_selection.PATH = True
     pb.model_selection.CV = False
@@ -171,8 +192,8 @@ def aux_test_solve_PATH_LAMfixed(mode, close_window=True):
 
     param = pb.model_selection.LAMfixedparameters
     param.lam = 'theoretical'
-    param.true_lam = True
-
+    param.rescaled_lam = False
+    print(pb)
     pb.solve()
 
     print(pb, pb.solution)
@@ -214,13 +235,14 @@ def aux_test_solve_CV_StabSel(mode, close_window=True):
     param.lamin = 0.01
     param.hd = False
     param.lam = 'theoretical'
-    param.true_lam = True
+    param.rescaled_lam = False
     param.threshold = 0.5 
     param.threshold_label = 0.2
-
+    print(pb)
     pb.solve()
 
     print(pb, pb.solution)
+    pb.solution.CV.graphic(se_max = 5)
 
     if close_window:
         plt.close("all")
@@ -232,7 +254,7 @@ def aux_test_solve_CV_LAMfixed(mode, close_window=True):
         yy = y 
 
     pb = classo_problem(X, yy, C= C)
-    pb.formulation.intercept = False
+    pb.formulation.intercept = True
     pb.formulation.w = np.array([1.1]*20+ [1.]*(d-20))
 
     pb.formulation.concomitant = mode[0]
@@ -252,8 +274,8 @@ def aux_test_solve_CV_LAMfixed(mode, close_window=True):
 
     param = pb.model_selection.LAMfixedparameters
     param.lam = 0.1
-    param.true_lam = False
-    
+    param.rescaled_lam = True
+    print(pb)
     pb.solve()
 
     print(pb, pb.solution)
@@ -268,7 +290,7 @@ def aux_test_solve_StabSel_LAMfixed(mode, close_window=True):
         yy = y 
 
     pb = classo_problem(X, yy, C= C)
-    pb.formulation.intercept = False
+    pb.formulation.intercept = True
 
     pb.formulation.concomitant = mode[0]
     pb.formulation.huber = mode[1]
@@ -288,14 +310,14 @@ def aux_test_solve_StabSel_LAMfixed(mode, close_window=True):
     param.lamin = 1.
     param.hd = False
     param.lam = 'theoretical'
-    param.true_lam = True
+    param.rescaled_lam = False
     param.threshold = 0.8
     param.threshold_label = 0.2
 
     param = pb.model_selection.LAMfixedparameters
     param.lam = 0.
-    param.true_lam = True
-
+    param.rescaled_lam = False
+    print(pb)
     pb.solve()
 
     print(pb, pb.solution)
@@ -306,4 +328,26 @@ def aux_test_solve_StabSel_LAMfixed(mode, close_window=True):
 
 
 
+def test_choose_numerical_method_R4DR():
+    formulation = Formulation()
+    formulation.huber = True
+    for model in ['PATH', 'StabSel']:
+        value = choose_numerical_method('DR', model, formulation)
+        assert value == 'DR'
 
+def test_choose_numerical_method_2():
+    formulation = Formulation()
+    
+    for meth in ["Path-Alg", "DR", "P-PDS", "PF-PDS"]:
+        for model in ['PATH', 'StabSel']:
+            formulation.concomitant = False
+            formulation.classification = False
+            formulation.huber = False
+            value = choose_numerical_method(meth, model, formulation)
+            assert value == meth
+            formulation.huber = True
+            value = choose_numerical_method(meth, model, formulation)
+            assert value == meth
+            formulation.classification = True
+            value = choose_numerical_method(meth, model, formulation)
+            assert value == 'Path-Alg'

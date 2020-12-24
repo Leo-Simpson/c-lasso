@@ -2,7 +2,6 @@ import numpy as np
 import numpy.linalg as LA
 import matplotlib.pyplot as plt
 import pandas as pd
-import h5py
 from scipy.special import erfinv
 
 colo = [
@@ -191,8 +190,7 @@ def random_data(
         A = np.eye(d)
     d1 = len(A[0])
 
-    sol, list_i = np.zeros(d1), np.random.randint(d1, size=d_nonzero)
-
+    reduc = np.random.permutation(d1) < d_nonzero
     # sol reduc is random int between lb_beta and ub_beta with a random sign.
     sol_reduc = np.random.randint(low = lb_beta, high = ub_beta + 1, size = d_nonzero) * (
         np.random.randint(2, size=d_nonzero) * 2 - 1
@@ -202,64 +200,41 @@ def random_data(
         C, k = np.ones((1, d)), 1
     else:
         if k == 0:
-            sol[list_i] = sol_reduc
+            sol = np.zeros(d1)
+            sol[reduc] = sol_reduc
             y = X.dot(A.dot(sol)) + np.random.randn(n) * sigma
-            return ((X, np.zeros((0, d1)), y), sol)
+            return ((X, np.zeros((1, d1)), y), sol)
 
         while True:
             C = np.random.randint(low = -1, high = 1, size = (k, d))
             if LA.matrix_rank(C) == k:
                 break
+            
 
     while True:
         # building a sparse solution such that C.A sol = 0
-        C_reduc = C.dot(A)[:, list_i]
+        sol = np.zeros(d1)
+        C_reduc = C.dot(A)[:, reduc]
         if LA.matrix_rank(C_reduc) < k:
             list_i = np.random.randint(d1, size = d_nonzero)
+            reduc = np.random.permutation(d1) < d_nonzero
             continue
         proj = proj_c(C_reduc, d_nonzero).dot(sol_reduc)
-        sol[list_i] = proj
+        sol[reduc] = proj
+
         break
+    
 
     y = X.dot(A.dot(sol)) + np.random.randn(n) * sigma
+    
     if intercept is not None:
         y = y + intercept
     if classification:
         y = np.sign(y)
     if exp:
-        return (np.exp(X), C, y), sol
+        X = np.exp(X)
+    
     return (X, C, y), sol
-
-
-def csv_to_np(file, begin = 1, header = None):
-    """Function to read a csv file and to create an ndarray with this
-
-    Args:
-        file (str): Name of csv file
-        begin (int, optional): First colomn where it should read the matrix
-        header (None or int, optional): Same parameter as in the function :func:`pandas.read_csv`
-
-    Returns:
-        ndarray : matrix of the csv file
-    """
-    tab1 = pd.read_csv(file, header = header)
-    return np.array(tab1)[:, begin:]
-
-
-def mat_to_np(file):
-    """Function to read a mat file and to create an ndarray with this
-
-    Args:
-        file (str): Name of mat file
-
-    Returns:
-         ndarray : matrix of the mat file
-    """
-    arrays = {}
-    f = h5py.File(file)
-    for k, v in f.items():
-        arrays[k] = np.array(v)
-    return arrays
 
 
 def clr(array, coef = 0.5):
@@ -282,39 +257,6 @@ def clr(array, coef = 0.5):
     return M - np.mean(M, axis = 0)
 
 
-def to_zarr(obj, name, root, first = True):
-
-    if type(obj) == dict:
-        if first:
-            zz = root
-        else:
-            zz = root.create_group(name)
-
-        for key, value in obj.items():
-            to_zarr(value, key, zz, first = False)
-
-    elif type(obj) in [np.ndarray, pd.DataFrame]:
-        root.create_dataset(name, data = obj, shape = obj.shape)
-
-    elif type(obj) == np.float64:
-        root.attrs[name] = float(obj)
-
-    elif type(obj) == np.int64:
-        root.attrs[name] = int(obj)
-
-    elif type(obj) == list:
-        if name == "tree":
-            root.attrs[name] = obj
-        else:
-            to_zarr(np.array(obj), name, root, first = False)
-
-    elif obj is None or type(obj) in [str, bool, float, int]:
-        root.attrs[name] = obj
-
-    else:
-        to_zarr(obj.__dict__, name, root, first = first)
-
-
 """
 misc of solve_R.. functions
 """
@@ -330,12 +272,15 @@ def unpenalized(cmatrices, intercept = False):
     else:
         A, C, y = cmatrices
 
+    k = len(C)
+    d = len(A[0])
     M1 = np.concatenate([A.T.dot(A), C.T], axis=1)
-    M2 = np.concatenate([C, np.zeros((len(C), len(C)))], axis=1)
+    M2 = np.concatenate([C, np.zeros((k, k))], axis=1)
     M = np.concatenate([M1, M2], axis=0)
-    b = np.concatenate([A.T.dot(y), np.zeros(len(C))])
+    b = np.concatenate([A.T.dot(y), np.zeros(k)])
     sol = LA.lstsq( M, b, rcond=None)[0]
-    return sol[: len(A[0])]
+    beta = sol[: d]
+    return beta
 
 
 """
@@ -361,7 +306,6 @@ def influence(BETAS, ntop):
     means = np.mean(abs(BETAS), axis = 0)
     top = np.argpartition(means, -ntop)[-ntop:]
     return np.sort(top)
-
 
 
 def proj_c(M, d):

@@ -30,6 +30,5 @@ The `c-lasso` package depends on the following Python packages:
 - ``numpy``; 
 - ``matplotlib``; 
 - ``scipy``; 
-- ``pandas``; 
-- ``h5py``
+- ``pandas``;
 - ``pytest`` (for tests)

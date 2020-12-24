@@ -24,7 +24,7 @@ def Classo_R2(pb, lam, compute = True):
     (m, d, k), (A, C, y) = pb.dim, pb.matrix
     lamb, rho = lam * pb.lambdamax, pb.rho
 
-    if lam == 0.0:
+    if lam < 1e-5:
         pb_type = "DR"
         compute = "True"
         # here we simply refer to Classo_R1 that is called line 42.
@@ -115,9 +115,7 @@ def Classo_R2(pb, lam, compute = True):
             "The algorithm of P-PDS did not converge after %i iterations " % pb.N
         )
 
-    # NO PROJ
-
-    if pb_type == "PF-PDS":  # y1 --> S ; p1 --> p . ; p2 --> y2
+    else: # "PF-PDS"
         for i in range(pb.N):
             grad = AtA.dot(x) - Aty
 
