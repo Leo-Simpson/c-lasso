@@ -269,7 +269,7 @@ To evaluate optimization accuracy and running time of the different algorithms a
 
 Figure 1 summarizes the results for the *Path-Alg*, *DR*, and *P-PDS* algorithms on the [constrained lasso regression formulation R1](#R1) for different samples sizes $n$ and problem dimensions $p$ on synthetic data (using `c-lasso`'s data generator). We observe that `c-lasso`'s algorithms are faster and more accurate than the `cvx` baseline. For instance, for $d=500$ features and $n=500$ samples, the *Path-Alg* algorithm is about $70$ times faster than `cvx`.
 
-![Average objective function value difference (with respect to the *Path-Alg* solution) (left panel) and running time (right panel) for solutions found with *Path-Alg* (blue), *P-PDS* (yellow), *DR* (green), and cvx (red) at fixed $\lambda = 0.1$. Mean (and standard deviation) running time is reported across 20 synthetic datasets for each sample size/ dimension pair $(n,d)$. On a single data set, the reported running time of an algorithm is the average time of five algorithm runs (to guard against system background processes).](figures/figure_benchmark.png)
+![Average objective function value difference (with respect to the *Path-Alg* solution) (left panel) and running time (right panel) for solutions found with *Path-Alg* (blue), *P-PDS* (yellow), *DR* (green), and cvx (red) at fixed $\lambda = 0.1$. Mean (and standard deviation) running time is reported across 20 synthetic datasets for each sample size/dimension scenario $(n,d)$. On a single data set, the reported running time of an algorithm is the average time of five algorithm runs (to guard against system background processes).](figures/figure_benchmark.png)
 
 
 # Computational examples  
