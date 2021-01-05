@@ -53,7 +53,7 @@ $$
     \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R}_{0}} f\left(X\beta - y,{\sigma} \right) + \lambda \left\lVert \beta\right\rVert_1 \qquad \textrm{subject to} \qquad  C\beta = 0
 $$
 
-for several convex loss functions $f(\cdot,\cdot)$. This includes the constrained Lasso, the constrained scaled Lasso, and sparse Huber M-estimators with linear equality constraints.
+for several convex loss functions $f(\cdot,\cdot)$. This includes the constrained Lasso, the constrained scaled Lasso, sparse Huber M-estimators with linear equality constraints, and constrained (Huberized) Square Hinge Support Vector Machines (SVMs) for classifcation.
 
 # Statement of need 
 
@@ -263,15 +263,13 @@ problem.model_selection.StabSel = True
 ```
 Each model selection procedure has additional meta-parameters that are described in the [Documentation](https://c-lasso.readthedocs.io/en/latest/).
 
-# Micro-benchmark
+# Runtime benchmarking
 
-c-lasso is a fast implementation of the constraint lasso problem. In order to underpin this claim,  micro-benchmark is availbable [in the GitHub](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark). This benchmark compares our algorithms on the running time and precision point of view, with each other, and with the solution found by [cvx](https://www.cvxpy.org), an open source convex optimization software. 
+To evaluate optimization accuracy and run time of the different algorithms available in `c-lasso`, we provide [micro-benchmark](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark) experiments which also includes [cvxpy](https://www.cvxpy.org), an open source convex optimization software, as baseline comparison. 
 
-Notably, it shows that for high dimensional synthetic data, our three main algorithms for [standard constrained lasso regression](#R1) are faster than cvx algorithm, and give a better a precision. Typically, for $500$ features and $500$ samples, our algorithm *Path-Alg* will be $70$ times faster than the solution provided by cvx.
+Figure 1 summarizes the results for the *Path-Alg*, *DR*, and *P-PDS* algorithms on the [constrained lasso regression formulation R1](#R1) across different $(n,d)$ on synthetic data (using `c-lasso`'s data generator). We observe that `c-lasso`'s algorithms are faster and more accurate than 'cvx'. For instance, for $d=500$ features and $n=500$ samples, the *Path-Alg* algorithm is $70$ times faster than cvx.
 
 ![Running time and value of the objective function for solutions found with *Path-Alg* (blue), *P-PDS* (yellow), *DR* (green) and cvx (red) for a fixed $\lambda = 0.1$ 20 different synthetic datasets have been considered for each dimensions, and the algorithms have been computed 5 times for each for more stable results. On the left, one can see the objective function for one solution, substracted by the one found by *Path-Alg*.](figures/figure_benchmark.png)
-
-
 
 
 # Computational examples  
