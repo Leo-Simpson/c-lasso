@@ -2,9 +2,9 @@
 
 # Numerical benchmarks for c-lasso 
 
-
 We provide numerical benchmarks for the [c-lasso package](https://c-lasso.readthedocs.io/en/latest/) in comparison to [cvxpy](https://www.cvxpy.org). 
 We analyze run times, constraint satisfaction quality, and achieved minimum function values.
+
 
 ## Table of Contents
 
@@ -42,6 +42,8 @@ where the x<sub>i</sub> are the rows of X and l is defined as:
 We use the `random_data` function in c-lasso to generate X and y. We use the standard `zeroSum` constraint. We vary the number of samples n and dimensionionality d of the problems. The regularization parameter is set to &lambda; values...
 
 ## Results
+
+The running times of the micro-benchmark has been computed using Python 3.9.1 on a laptop `MacBook Air`, operating on macOS high Sierra with the processor `1,8 GHz Intel Core i5`, with memory of `8 Go 1600 MHz DDR3`.
 
 #### R1
 
