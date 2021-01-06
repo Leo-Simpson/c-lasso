@@ -264,7 +264,7 @@ problem.model_selection.StabSel = True
 ```
 Each model selection procedure has additional meta-parameters that are described in the [Documentation](https://c-lasso.readthedocs.io/en/latest/).
 
-# Micro-benchmarking
+# Numerical benchmarks
 
 To evaluate optimization accuracy and running time of the different algorithms available in `c-lasso`, we provide [micro-benchmark](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark) experiments which also include [cvxpy](https://www.cvxpy.org), an open source convex optimization software, for baseline comparison. All experiments have been computed using Python 3.9.1 on a `MacBook Air` with a `1,8 GHz Intel Core i5` processor and `8 Go 1600 MHz DDR3` memory, operating on macOS High Sierra. 
 
