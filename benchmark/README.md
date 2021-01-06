@@ -3,8 +3,7 @@
 # Numerical benchmarks for c-lasso 
 
 We provide numerical benchmarks for the [c-lasso package](https://c-lasso.readthedocs.io/en/latest/) in comparison to [cvxpy](https://www.cvxpy.org). 
-We analyze run times, constraint satisfaction quality, and achieved minimum function values.
-
+We report run times, achieved minimum function values (with the path algorithm solutin as baseline), and constraint satisfaction quality of the zero-sum constraint.  
 
 ## Table of Contents
 
@@ -39,7 +38,7 @@ where the x<sub>i</sub> are the rows of X and l is defined as:
 
 ###  Synthetic data generation and test problem set-ups 
 
-We use the `random_data` function in c-lasso to generate X and y. We use the standard `zeroSum` constraint. We vary the number of samples n and dimensionionality d of the problems. The regularization parameter is fixed to &lambda;=0.1. This settings does not favor the path algorithm. The reported performance is thus rather a lower bound on the actual speed-up. Since for most model selection schemes, the computation of the entire solution path is required, the path algorithm formulation is even more preferred.  
+We use the `random_data` function in c-lasso to generate X and y. We use the standard `zeroSum` constraint. We vary the number of samples n and dimensionionality d of the problems. The regularization parameter is fixed to &lambda;=0.1. This setting does not favor the path algorithm. The reported performance is thus rather a lower bound on the actual speed-up. Since, for most model selection schemes, the computation of the entire solution path is required, the path algorithm formulation would be even more preferable then.  
 
 ## Results
 
@@ -55,6 +54,10 @@ Achieved minimum function values on R1. We observe considerable inaccuracies in 
 
 ![Achieved function values on C1](./output/bm-R1-losses.png)
 
+Satistifaction of the zero-sum constraint.
+
+![Satistifaction of the zero-sum constraint](./output/bm-R1-constraint.png)
+
 
 #### R2
 
@@ -66,6 +69,9 @@ Achieved minimum function values on R2.
 
 ![Achieved function values on R2](./output/bm-R2-losses.png)
 
+Satistifaction of the zero-sum constraint
+![Satistifaction of the zero-sum constraint](./output/bm-R2-constraint.png)
+
 #### C1
 
 Run times for C1. 
@@ -75,6 +81,9 @@ Run times for C1.
 Achieved minimum function values on C1. 
 
 ![Achieved function values on C1](./output/bm-C1-losses.png)
+
+Satistifaction of the zero-sum constraint
+![Satistifaction of the zero-sum constraint](./output/bm-C1-constraint.png)
 
 
 
