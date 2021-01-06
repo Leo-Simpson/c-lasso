@@ -7,6 +7,7 @@ tags:
   - constrained regression
   - Lasso
   - Huber function
+  - Square Hinge SVM
   - convex optimization
   - perspective function
 authors:
@@ -53,7 +54,7 @@ $$
     \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R}_{0}} f\left(X\beta - y,{\sigma} \right) + \lambda \left\lVert \beta\right\rVert_1 \qquad \textrm{subject to} \qquad  C\beta = 0
 $$
 
-for several convex loss functions $f(\cdot,\cdot)$. This includes the constrained Lasso, the constrained scaled Lasso, sparse Huber M-estimators with linear equality constraints, and constrained (Huberized) Square Hinge Support Vector Machines (SVMs) for classifcation.
+for several convex loss functions $f(\cdot,\cdot)$. This includes the constrained Lasso, the constrained scaled Lasso, sparse Huber M-estimators with linear equality constraints, and constrained (Huberized) Square Hinge Support Vector Machines (SVMs) for classification.
 
 # Statement of need 
 
@@ -265,15 +266,12 @@ Each model selection procedure has additional meta-parameters that are described
 
 # Runtime benchmarking
 
-To evaluate optimization accuracy and running time of the different algorithms available in `c-lasso`, we provide [micro-benchmark](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark) experiments which also includes [cvxpy](https://www.cvxpy.org), an open source convex optimization software, as baseline comparison. 
+To evaluate optimization accuracy and running time of the different algorithms available in `c-lasso`, we provide [micro-benchmark](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark) experiments which also include [cvxpy](https://www.cvxpy.org), an open source convex optimization software, for baseline comparison. All experiments have been computed using Python 3.9.1 on a `MacBook Air` with a `1,8 GHz Intel Core i5` processor and `8 Go 1600 MHz DDR3` memory, operating on macOS High Sierra. 
 
-Figure 1 summarizes the results for the *Path-Alg*, *DR*, and *P-PDS* algorithms on the [constrained lasso regression formulation R1](#R1) for different samples sizes $n$ and problem dimensions $p$ on synthetic data (using `c-lasso`'s data generator). We observe that `c-lasso`'s algorithms are faster and more accurate than the `cvx` baseline. For instance, for $d=500$ features and $n=500$ samples, the *Path-Alg* algorithm is about $70$ times faster than `cvx`.
+Figure 1 summarizes the results for the *Path-Alg*, *DR*, and *P-PDS* algorithms solving the regression formulation [R1](#R1) for different samples sizes $n$ and problem dimensions $p$ on synthetic data (using `c-lasso`'s data generator). We observe that `c-lasso`'s algorithms are faster and more accurate than the `cvx` baseline. For instance, for $d=500$ features and $n=500$ samples, the *Path-Alg* algorithm is about $70$ times faster than `cvx`.
 
 
-
-![Average objective function value difference (with respect to the *Path-Alg* solution) (left panel) and running time (right panel) for solutions found with *Path-Alg* (blue), *P-PDS* (yellow), *DR* (green), and cvx (red) at fixed $\lambda = 0.1$. Mean (and standard deviation) running time is reported across 20 synthetic datasets for each sample size/dimension scenario $(n,d)$. On a single data set, the reported running time of an algorithm is the average time of five algorithm runs (to guard against system background processes).](figures/figure_benchmark.png)
-
-The running times of the micro-benchmark has been computed using Python 3.9.1 on a laptop `MacBook Air`, operating on macOS high Sierra with the processor `1,8 GHz Intel Core i5`, with memory of `8 Go 1600 MHz DDR3`.
+![Average objective function value differences (with respect to function value of the *Path-Alg* solution as baseline) (left panel) and running times (right panel) of *Path-Alg* (blue), *P-PDS* (yellow), *DR* (green), and cvx (red) at fixed $\lambda = 0.1$. Mean (and standard deviation) running time is reported averaged over 20 synthetic datasets for each sample size/dimension scenario $(n,d)$. On a single data set, the reported running time of an algorithm is the average time of five algorithm runs (to guard against system background process fluctuations).](figures/figure_benchmark.png)
 
 # Computational examples  
 
