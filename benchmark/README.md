@@ -70,6 +70,7 @@ Achieved minimum function values on R2.
 ![Achieved function values on R2](./output/bm-R2-losses.png)
 
 Satistifaction of the zero-sum constraint
+
 ![Satistifaction of the zero-sum constraint](./output/bm-R2-constraint.png)
 
 #### C1
@@ -83,6 +84,7 @@ Achieved minimum function values on C1.
 ![Achieved function values on C1](./output/bm-C1-losses.png)
 
 Satistifaction of the zero-sum constraint
+
 ![Satistifaction of the zero-sum constraint](./output/bm-C1-constraint.png)
 
 
