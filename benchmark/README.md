@@ -3,7 +3,7 @@
 # Numerical benchmarks for c-lasso 
 
 We provide numerical benchmarks for the [c-lasso package](https://c-lasso.readthedocs.io/en/latest/) in comparison to [cvxpy](https://www.cvxpy.org). 
-We report run times, achieved minimum function values (with the path algorithm solutin as baseline), and constraint satisfaction quality of the zero-sum constraint.  
+We report run times, achieved minimum function values (with the function value found by the path algorithm as baseline), and constraint satisfaction quality of the zero-sum constraint.  
 
 ## Table of Contents
 
