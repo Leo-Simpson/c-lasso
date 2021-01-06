@@ -71,6 +71,7 @@ Currently, there is no Python package available that can solve these ubiquitous 
 pip install c-lasso
 ```
 
+`c-lasso` is a stand-alone package and not yet compatible with the `scikit-learn` API.
 The central object in the `c-lasso` package is the instantiation of a `c-lasso` problem. 
 
 ```python
