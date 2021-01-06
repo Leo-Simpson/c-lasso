@@ -39,7 +39,7 @@ where the x<sub>i</sub> are the rows of X and l is defined as:
 
 ###  Synthetic data generation and test problem set-ups 
 
-We use the `random_data` function in c-lasso to generate X and y. We use the standard `zeroSum` constraint. We vary the number of samples n and dimensionionality d of the problems. The regularization parameter is set to &lambda; values...
+We use the `random_data` function in c-lasso to generate X and y. We use the standard `zeroSum` constraint. We vary the number of samples n and dimensionionality d of the problems. The regularization parameter is fixed to &lambda;=0.1. This settings does not favor the path algorithm. The reported performance is thus rather a lower bound on the actual speed-up. Since for most model selection schemes, the computation of the entire solution path is required, the path algorithm formulation is even more preferred.  
 
 ## Results
 
