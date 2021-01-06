@@ -264,14 +264,15 @@ problem.model_selection.StabSel = True
 ```
 Each model selection procedure has additional meta-parameters that are described in the [Documentation](https://c-lasso.readthedocs.io/en/latest/).
 
-# Runtime benchmarking
+# Micro-benchmarking
 
 To evaluate optimization accuracy and running time of the different algorithms available in `c-lasso`, we provide [micro-benchmark](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark) experiments which also include [cvxpy](https://www.cvxpy.org), an open source convex optimization software, for baseline comparison. All experiments have been computed using Python 3.9.1 on a `MacBook Air` with a `1,8 GHz Intel Core i5` processor and `8 Go 1600 MHz DDR3` memory, operating on macOS High Sierra. 
 
 Figure 1 summarizes the results for the *Path-Alg*, *DR*, and *P-PDS* algorithms solving the regression formulation [R1](#R1) for different samples sizes $n$ and problem dimensions $p$ on synthetic data (using `c-lasso`'s data generator). We observe that `c-lasso`'s algorithms are faster and more accurate than the `cvx` baseline. For instance, for $d=500$ features and $n=500$ samples, the *Path-Alg* algorithm is about $70$ times faster than `cvx`.
 
+![Average running times (left panel) of *Path-Alg* (blue), *P-PDS* (yellow), *DR* (green), and cvx (red) at fixed $\lambda = 0.1$ and corresponding average objective function value differences (with respect to the function value obtained by the *Path-Alg* solution as baseline) (right panel). Mean (and standard deviation) running time is calculated over 20 data replications for each sample size/dimension scenario $(n,d)$. On a single data set, the reported running time of an algorithm is the average time of five algorithm runs (to guard against system background process fluctuations).](figures/figure_benchmark.png)
 
-![Average objective function value differences (with respect to function value of the *Path-Alg* solution as baseline) (left panel) and running times (right panel) of *Path-Alg* (blue), *P-PDS* (yellow), *DR* (green), and cvx (red) at fixed $\lambda = 0.1$. Mean (and standard deviation) running time is reported averaged over 20 synthetic datasets for each sample size/dimension scenario $(n,d)$. On a single data set, the reported running time of an algorithm is the average time of five algorithm runs (to guard against system background process fluctuations).](figures/figure_benchmark.png)
+The complete reproducible micro-benchmark is avaialable [here](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark).
 
 # Computational examples  
 
