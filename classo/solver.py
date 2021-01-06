@@ -457,14 +457,14 @@ class PATHparameters:
             typ = " "
         else:
             if self.logscale:
-                typ = " with log-scale"
+                typ = "with log-scale"
             else:
-                typ = " with linear-scale"
+                typ = "with linear-scale"
 
         string = "\n     numerical_method : " + str(self.numerical_method)
         string += "\n     lamin = " + str(self.lamin)
         string += "\n     Nlam = " + str(self.Nlam)
-        string += "\n" + typ
+        string += "\n     " + typ
         if self.n_active > 0:
             string += "\n     maximum active variables = " + str(self.n_active)
 
@@ -522,16 +522,16 @@ class CVparameters:
             typ = " "
         else:
             if self.logscale:
-                typ = " with log-scale"
+                typ = "with log-scale"
             else:
-                typ = " with linear-scale"
+                typ = "with linear-scale"
 
         string = "\n     numerical_method : " + str(self.numerical_method)
         string += "\n     one-SE method : " + str(self.oneSE)
         string += "\n     Nsubset = " + str(self.Nsubset)
         string += "\n     lamin = " + str(self.lamin)
         string += "\n     Nlam = " + str(self.Nlam)
-        string += "\n" + typ
+        string += "\n     " + typ
 
         return string
 
@@ -795,13 +795,13 @@ class solution_PATH:
             avg_betas = np.mean(abs(np.array(self.BETAS)), axis = 0)
             if self.formulation.intercept:
                 avg_betas[0] = 0  # trick to exclude intercept in the graph
-                string += "\n There is also an intercept.  "
+                string += "\n   There is also an intercept.  "
             top = np.argpartition(avg_betas, -20)[-20:]
 
         else:
             if self.formulation.intercept:
                 top = np.arange(1, d)
-                string += "\n There is also an intercept.  "
+                string += "\n   There is also an intercept.  "
             else:
                 top = np.arange(d)
 
@@ -941,7 +941,7 @@ class solution_CV:
         # this trick is done to plot only selected parameters, excluding intercept
         if self.formulation.intercept:
             selected[0] = False
-            string += "\n Intercept : " + str(self.refit[0])
+            string += "\n    Intercept : " + str(self.refit[0])
 
         self.graphic(save = self.save1, logscale = self.logscale)
 
