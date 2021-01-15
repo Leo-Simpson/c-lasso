@@ -267,7 +267,7 @@ Each model selection procedure has additional meta-parameters that are described
 
 # Numerical benchmarks
 
-To evaluate optimization accuracy and running time of the different algorithms available in `c-lasso`, we provide [micro-benchmark](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark) experiments which also include [cvxpy](https://www.cvxpy.org), an open source convex optimization software, for baseline comparison. All experiments have been computed using Python 3.9.1 on a `MacBook Air` with a `1.8 GHz Intel Core i5` processor and `8 GB 1600 MHz DDR3` memory, operating on macOS High Sierra. 
+To evaluate optimization accuracy and running time of the different algorithms available in `c-lasso`, we provide [micro-benchmark](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark) experiments which also include [cvxpy](https://www.cvxpy.org), an open source convex optimization software, for baseline comparison. All experiments have been computed using Python 3.9.1 on a `MacBook Air` with a `1.8 GHz Intel Core i5` processor and `8 Gb 1600 MHz DDR3` memory, operating on macOS High Sierra. 
 
 Figure 1 summarizes the results for the *Path-Alg*, *DR*, and *P-PDS* algorithms solving the regression formulation [R1](#R1) for different samples sizes $n$ and problem dimensions $p$ on synthetic data (using `c-lasso`'s data generator). We observe that `c-lasso`'s algorithms are faster and more accurate than the `cvx` baseline. For instance, for $d=500$ features and $n=500$ samples, the *Path-Alg* algorithm is about $70$ times faster than `cvx`.
 
