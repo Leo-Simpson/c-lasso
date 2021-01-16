@@ -75,14 +75,14 @@ four regression-type and two classification-type formulations.
 This is the standard Lasso problem with linear equality constraints on the &beta; vector. 
 The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
 
-#### [R2] Contrained sparse Huber regression:                   
+#### [R2] Constrained sparse Huber regression:                   
 
 <img src="https://latex.codecogs.com/gif.latex?\arg\min_{\beta\in&space;R^d}&space;h_{\rho}(X\beta-y&space;)&space;&plus;&space;\lambda&space;||\beta||_1&space;\qquad\mbox{s.t.}\qquad&space;C\beta=0" />
 
 This regression problem uses the [Huber loss](https://en.wikipedia.org/wiki/Huber_loss) as objective function 
 for robust model fitting with l1 and linear equality constraints on the &beta; vector. The parameter &rho;=1.345.
 
-#### [R3] Contrained scaled Lasso regression: 
+#### [R3] Constrained scaled Lasso regression: 
 
 <img src="https://latex.codecogs.com/gif.latex?\arg&space;\min_{\beta&space;\in&space;\mathbb{R}^d,&space;\sigma&space;>&space;0}&space;\frac{||&space;X\beta&space;-&space;y||^2}{\sigma}&space;&plus;&space;\frac{n}{2}&space;\sigma&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;\mbox{s.t.}&space;\qquad&space;C\beta&space;=&space;0" title="\arg \min_{\beta \in \mathbb{R}^d, \sigma > 0} \frac{|| X\beta - y||^2}{\sigma} + \frac{n}{2} \sigma+ \lambda ||\beta||_1 \qquad \mbox{s.t.} \qquad C\beta = 0" />
 
@@ -90,14 +90,14 @@ This formulation is similar to [R1] but allows for joint estimation of the (cons
 the standard deviation &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
 This is the default problem formulation in c-lasso.
 
-#### [R4] Contrained sparse Huber regression with concomitant scale estimation:        
+#### [R4] Constrained sparse Huber regression with concomitant scale estimation:        
 
 <img src="https://latex.codecogs.com/gif.latex?\arg&space;\min_{\beta&space;\in&space;\mathbb{R}^d,&space;\sigma&space;>&space;0}&space;\left(&space;h_{\rho}&space;\left(&space;\frac{&space;X\beta&space;-&space;y}{\sigma}&space;\right)&plus;&space;n&space;\right)&space;\sigma&plus;&space;\lambda&space;||\beta||_1&space;\qquad&space;\mbox{s.t.}&space;\qquad&space;C\beta&space;=&space;0" title="\arg \min_{\beta \in \mathbb{R}^d, \sigma > 0} \left( h_{\rho} \left( \frac{ X\beta - y}{\sigma} \right)+ n \right) \sigma+ \lambda ||\beta||_1 \qquad \mbox{s.t.} \qquad C\beta = 0" />
 
 This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) &beta; vector and 
 the scale &sigma; in a concomitant fashion (see [References](#references) [4,5] for further info).
 
-#### [C1] Contrained sparse classification with Square Hinge loss: 
+#### [C1] Constrained sparse classification with Square Hinge loss: 
 
 <img src="https://latex.codecogs.com/gif.latex?\arg&space;\min_{\beta&space;\in&space;\mathbb{R}^d}&space;\sum_{i=1}^n&space;l(y_i&space;x_i^\top&space;\beta)&space;&plus;&space;\lambda&space;\left\lVert&space;\beta\right\rVert_1&space;\qquad&space;s.t.&space;\qquad&space;C\beta&space;=&space;0" title="\arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i \beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad C\beta = 0" />
 
@@ -108,7 +108,7 @@ where the x<sub>i</sub> are the rows of X and l is defined as:
 This formulation is similar to [R1] but adapted for classification tasks using the Square Hinge loss
 with (constrained) sparse &beta; vector estimation.
 
-#### [C2] Contrained sparse classification with Huberized Square Hinge loss:        
+#### [C2] Constrained sparse classification with Huberized Square Hinge loss:        
 
 <img src="https://latex.codecogs.com/gif.latex?\arg&space;\min_{\beta&space;\in&space;\mathbb{R}^d}&space;\sum_{i=1}^n&space;l_{\rho}(y_i&space;x_i^\top\beta)&space;&plus;&space;\lambda&space;\left\lVert&space;\beta\right\rVert_1&space;\qquad&space;s.t.&space;\qquad&space;C\beta&space;=&space;0" title="\arg \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l_{\rho}(y_i x_i\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad s.t. \qquad C\beta = 0" />
 
