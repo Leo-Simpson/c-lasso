@@ -42,7 +42,7 @@ four regression-type and two classification-type formulations.
 This is the standard Lasso problem with linear equality constraints on the :math:`\beta` vector. 
 The objective function combines Least-Squares for model fitting with l1 penalty for sparsity.   
 
-[R2] Contrained sparse Huber regression
+[R2] Constrained sparse Huber regression
 """"""""""""""""""""""""""""""""""""""""""""""""""                   
 
 .. math::
@@ -51,7 +51,7 @@ The objective function combines Least-Squares for model fitting with l1 penalty 
 This regression problem uses the `Huber loss <https://en.wikipedia.org/wiki/Huber_loss>`_ as objective function 
 for robust model fitting with l1 and linear equality constraints on the :math:`\beta` vector. The parameter :math:`\rho=1.345`.
 
-[R3] Contrained scaled Lasso regression
+[R3] Constrained scaled Lasso regression
 """"""""""""""""""""""""""""""""""""""""""""""""""  
 
 .. math::
@@ -61,7 +61,7 @@ for robust model fitting with l1 and linear equality constraints on the :math:`\
 This formulation is similar to [R1] but allows for joint estimation of the (constrained) :math:`\beta` vector and the standard deviation :math:`\sigma` in a concomitant fashion [4]_, [5]_ .
 This is the default problem formulation in c-lasso.
 
-[R4] Contrained sparse Huber regression with concomitant scale estimation 
+[R4] Constrained sparse Huber regression with concomitant scale estimation 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""       
 
 .. math::
@@ -70,7 +70,7 @@ This is the default problem formulation in c-lasso.
 This formulation combines [R2] and [R3] to allow robust joint estimation of the (constrained) :math:`\beta` vector and 
 the scale :math:`\sigma` in a concomitant fashion [4]_ , [5]_ .
 
-[C1] Contrained sparse classification with Square Hinge loss
+[C1] Constrained sparse classification with Square Hinge loss
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""  
 
 .. math::
@@ -85,7 +85,7 @@ where the :math:`x_i` are the rows of X and l is defined as:
 This formulation is similar to [R1] but adapted for classification tasks using the Square Hinge loss
 with (constrained) sparse :math:`\beta` vector estimation.
 
-[C2] Contrained sparse classification with Huberized Square Hinge loss
+[C2] Constrained sparse classification with Huberized Square Hinge loss
 """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""  
 
 .. math::
