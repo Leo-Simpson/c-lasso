@@ -108,7 +108,7 @@ problem.formulation.concomitant = False
 problem.formulation.classification = False
 ```
 
-### *R2* Contrained sparse Huber regression: {#R2}                  
+### *R2* Constrained sparse Huber regression: {#R2}                  
 
 $$
     \min_{\beta \in \mathbb{R}^d} h_{\rho} (X\beta - y) + \lambda \left\lVert \beta\right\rVert_1 \qquad \textrm{subject to} \qquad  C\beta = 0
@@ -124,7 +124,7 @@ problem.formulation.concomitant = False
 problem.formulation.classification = False
 ```
 
-### *R3* Contrained scaled Lasso regression: {#R3}
+### *R3* Constrained scaled Lasso regression: {#R3}
 
 $$
     \min_{\beta \in \mathbb{R}^d, \sigma \in \mathbb{R}_{0}} \frac{\left\lVert X\beta - y \right\rVert^2}{\sigma} + \frac{n}{2} \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad \textrm{subject to} \qquad  C\beta = 0
@@ -139,7 +139,7 @@ problem.formulation.concomitant = True
 problem.formulation.classification = False
 ```
 
-### *R4* Contrained sparse Huber regression with concomitant scale estimation: {#R4}       
+### *R4* Constrained sparse Huber regression with concomitant scale estimation: {#R4}       
 
 $$
     \min_{\beta \in \mathbb{R}^d, \sigma \in  \mathbb{R}_{0}} \left( h_{\rho} \left( \frac{X\beta - y}{\sigma} \right) + n \right) \sigma + \lambda \left\lVert \beta\right\rVert_1 \qquad \textrm{subject to} \qquad  C\beta = 0
@@ -155,7 +155,7 @@ problem.formulation.concomitant = True
 problem.formulation.classification = False
 ```
 
-### *C1* Contrained sparse classification with Square Hinge loss: {#C1}
+### *C1* Constrained sparse classification with Square Hinge loss: {#C1}
 
 $$
     \min_{\beta \in \mathbb{R}^d} \sum_{i=1}^n l(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad \textrm{subject to} \qquad  C\beta = 0
@@ -176,7 +176,7 @@ problem.formulation.concomitant = False
 problem.formulation.classification = True
 ```
 
-### *C2* Contrained sparse classification with Huberized Square Hinge loss: {#C2}       
+### *C2* Constrained sparse classification with Huberized Square Hinge loss: {#C2}       
 
 $$
     \min_{\beta \in \mathbb{R}^d}  \sum_{i=1}^n  l_{\rho}(y_i x_i^\top\beta) + \lambda \left\lVert \beta\right\rVert_1 \qquad \textrm{subject to} \qquad  C\beta = 0 \,.
