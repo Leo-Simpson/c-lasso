@@ -282,9 +282,14 @@ The complete reproducible micro-benchmark is avaialable [here](https://github.co
 We illustrate the workflow of the `c-lasso` package on synthetic data using the built-in routine ```random_data``` which enables the generation of test 
 problem instances with normally distributed data $X$, sparse coefficient vectors $\beta$, and constraints $C \in \mathbb{R}^{k\times d}$.
 
-Here, we use a problem instance with $n=100$, $d=100$, a $\beta$ with five non-zero components, $\sigma=0.5$, and a zero-sum contraint. 
+Here, we use a problem instance with $n=100$, $d=100$, a $\beta$ with five non-zero components, $\sigma=0.5$, and a zero-sum contraint.
+
 
 ```python
+
+
+
+
 from classo import classo_problem, random_data
 
 n, d, d_nonzero, k, sigma = 100, 100, 5, 1, 0.5
@@ -341,7 +346,7 @@ are stored in ```problem.solution``` and can be directly acccessed for each mode
 # Access to the estimated coefficient vector at a fixed lambda 
 problem.solution.LAMfixed.beta
 ```
-Note that the run time for this $d=100$-dimensional example for a single path computation is about 0.5 seconds on a standard Laptop.
+Note that the run time for this $d=100$-dimensional example for a single path computation is about 0.5 seconds on a standard laptop.
 
 ## Log-contrast regression on gut microbiome data
 
