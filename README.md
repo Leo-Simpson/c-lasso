@@ -2,6 +2,7 @@
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.02844/status.svg)](https://doi.org/10.21105/joss.02844)
 
 <img src="https://i.imgur.com/2nGwlux.png" alt="c-lasso" height="150" align="right"/>
+
 # c-lasso: a Python package for constrained sparse regression and classification 
 
 
