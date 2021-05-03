@@ -35,14 +35,14 @@ import numpy as np
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^
 
-data = np.load("Tara/tara.npz", allow_pickle=True)
+data = np.load("Tara/tara.npz")
 
 x = data["x"]
 label = data["label"]
 y = data["y"]
 tr = data["tr"]
 
-A = np.load("Tara/A.npy", allow_pickle=True)
+A = np.load("Tara/A.npy")
 
 # %%
 #  Preprocess: taxonomy aggregation

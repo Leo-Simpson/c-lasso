@@ -86,7 +86,7 @@ print(problem.solution)
 # R1 Formulation with R1
 # ^^^^^^^^^^^^^^^
 #
-
+problem.formulation.intercept = False
 problem.formulation.huber = False
 problem.model_selection.ALO = True
 problem.solve()
