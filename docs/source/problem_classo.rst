@@ -18,6 +18,7 @@ Structure of problem instance
       LAMfixedparameters
       Solution
       solution_PATH
+      solution_ALO
       solution_CV
       solution_CV.graphic
       solution_StabSel
@@ -51,6 +52,7 @@ Class Model_selection
 Classes used in Model_selection
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autoclass:: PATHparameters
+.. autoclass:: ALOparameters
 .. autoclass:: CVparameters
 .. autoclass:: StabSelparameters
 .. autoclass:: LAMfixedparameters
@@ -65,6 +67,7 @@ Classes used in Solution
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autoclass:: solution_PATH
+.. autoclass:: solution_ALO
 .. autoclass:: solution_CV
 .. automethod:: solution_CV.graphic
 .. autoclass:: solution_StabSel
