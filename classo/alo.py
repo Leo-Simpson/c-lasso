@@ -1,54 +1,9 @@
 """Utility functions for implementing and testing out ALO for c-lasso.
 """
 
-import functools
-from typing import Tuple
-
-import multiprocessing
 import numpy as np
 import scipy.linalg
-import tqdm
-import sklearn.linear_model
 
-from classo import classo_problem
-from classo.solve_R1 import pathlasso_R1, problem_R1
-
-
-def generate_data(n, p, k, d, sigma=1, seed=None):
-    """Generate random c-lasso problem.
-
-    Parameters
-    ----------
-    n : int
-        Number of observations
-    p : int
-        Number of parameters
-    k : int
-        Number of ground truth non-zero parameters.
-    d : int
-        Number of constraints
-    sigma : float
-        Standard deviation of additive noise.
-    seed : int, optional
-        Optional integer used to seed the random number generator
-        for reproducibility.
-    """
-    rng = np.random.Generator(np.random.Philox(seed))
-
-    X = rng.normal(scale=1 / np.sqrt(k), size=(n, p))
-    C = rng.normal(size=(d, p))
-    beta_nz = np.ones(k)
-    C_k = C[:, :k]
-
-    # ensure that beta verifies the constraint by projecting.
-    beta_nz = beta_nz - C_k.T @ scipy.linalg.lstsq(C_k.T, beta_nz)[0]
-    beta_nz /= np.mean(beta_nz ** 2)
-    beta = np.concatenate((beta_nz, np.zeros(p - k)))
-
-    eps = rng.normal(scale=sigma, size=(n,))
-
-    y = X @ beta + eps
-    return (X, C, y), beta
 
 
 def solve_cls(X, y, C):
@@ -134,7 +89,7 @@ def alo_cls_h(X: np.ndarray, C: np.ndarray) -> np.ndarray:
 
 def alo_h(
     X: np.ndarray, beta: np.ndarray, y: np.ndarray, C: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray]:
+):
     """Computes the ALO leverage and residual for the c-lasso.
 
     Due to its L1 structure, the ALO for the constrained lasso corresponds
@@ -175,7 +130,7 @@ def alo_h(
 
 def alo_classo_risk(
     X: np.ndarray, C: np.ndarray, y: np.ndarray, betas: np.ndarray
-) -> Tuple[np.ndarray, np.ndarray]:
+):
     """Computes the ALO risk for the c-lasso at the given estimates.
 
     Parameters
@@ -210,8 +165,63 @@ def alo_classo_risk(
     return mse, df
 
 
+
+"""
+Not used for now.
+import functools
+from typing import Tuple
+
+import multiprocessing
+import numpy as np
+import scipy.linalg
+import tqdm
+import sklearn.linear_model
+
+from classo import classo_problem
+from classo.solve_R1 import pathlasso_R1, problem_R1
+
+
+
+
+def generate_data(n, p, k, d, sigma=1, seed=None):
+    ""Generate random c-lasso problem.
+
+    Parameters
+    ----------
+    n : int
+        Number of observations
+    p : int
+        Number of parameters
+    k : int
+        Number of ground truth non-zero parameters.
+    d : int
+        Number of constraints
+    sigma : float
+        Standard deviation of additive noise.
+    seed : int, optional
+        Optional integer used to seed the random number generator
+        for reproducibility.
+    ""
+    rng = np.random.Generator(np.random.Philox(seed))
+
+    X = rng.normal(scale=1 / np.sqrt(k), size=(n, p))
+    C = rng.normal(size=(d, p))
+    beta_nz = np.ones(k)
+    C_k = C[:, :k]
+
+    # ensure that beta verifies the constraint by projecting.
+    beta_nz = beta_nz - C_k.T @ scipy.linalg.lstsq(C_k.T, beta_nz)[0]
+    beta_nz /= np.mean(beta_nz ** 2)
+    beta = np.concatenate((beta_nz, np.zeros(p - k)))
+
+    eps = rng.normal(scale=sigma, size=(n,))
+
+    y = X @ beta + eps
+    return (X, C, y), beta
+
+
 def solve_standard(X, C, y, lambdas=None):
-    """Utility function to solve standard c-lasso formulation."""
+    ""Utility function to solve standard c-lasso formulation.""
     problem = problem_R1((X, C, y), "Path-Alg")
     problem.tol = 1e-6
 
@@ -225,6 +235,26 @@ def solve_standard(X, C, y, lambdas=None):
 
     beta = pathlasso_R1(problem, lambdas)
     return np.array(beta), lambdas * problem.lambdamax
+
+def solve_loo(X, C, y):
+    ""Solves the leave-one-out problem for each observation.
+
+    This function makes use of python multi-processing in order
+    to accelerate the computation across all the cores.
+    ""
+    _, lambdas = solve_standard(X, C, y)
+
+    ctx = multiprocessing.get_context("spawn")
+
+    with ctx.Pool(initializer=_set_sequential_mkl) as pool:
+        result = pool.imap(
+            functools.partial(_solve_loo_i_beta, X=X, C=C, y=y, lambdas=lambdas),
+            range(X.shape[0]),
+        )
+
+        result = list(result)
+
+    return np.stack(result, axis=0), lambdas
 
 
 def solve_loo_i(X, C, y, i, lambdas):
@@ -249,28 +279,10 @@ def _set_sequential_mkl():
         os.environ["OMP_NUM_THREADS"] = "1"
 
 
-def solve_loo(X, C, y, progress=False):
-    """Solves the leave-one-out problem for each observation.
-
-    This function makes use of python multi-processing in order
-    to accelerate the computation across all the cores.
-    """
-    _, lambdas = solve_standard(X, C, y)
-
-    ctx = multiprocessing.get_context("spawn")
-
-    with ctx.Pool(initializer=_set_sequential_mkl) as pool:
-        result = pool.imap(
-            functools.partial(_solve_loo_i_beta, X=X, C=C, y=y, lambdas=lambdas),
-            range(X.shape[0]),
-        )
-        if progress:
-            result = tqdm.tqdm(result, total=X.shape[0])
-        result = list(result)
-
-    return np.stack(result, axis=0), lambdas
+"""
 
 
+"""
 # The functions below are simply helper functions which implement the same functionality for the LASSO (not the C-LASSO)
 # They are mostly intended for debugging and do not need to be integrated.
 
@@ -327,3 +339,4 @@ def solve_lasso_loo(X, y, lambdas=None, progress=False):
         result = list(result)
 
     return lambdas, np.stack(result, axis=0)
+"""
