@@ -1203,8 +1203,15 @@ class solution_ALO:
             and not formulation.huber
         ):
 
-            self.mse, self.df = alo_classo_risk(X, C, y, self.BETAS)
-
+            self.alo, self.df = alo_classo_risk(X, C, y, self.BETAS)
+            self.imin = np.argmin(self.alo)
+            self.beta = self.BETAS[self.imin]
+            self.selected_param = (
+                abs(self.beta) > 1e-5
+            )  # boolean array, false iff beta_i = 0
+            self.refit = min_LS(
+                matrices, self.selected_param, intercept=self.formulation.intercept
+            )
         else:
             raise ValueError("ALO is implemented only for R1.")
 
@@ -1212,8 +1219,10 @@ class solution_ALO:
 
     def __repr__(self):
 
-        string = "\n PATH COMPUTATION : "
+        string = "\n ALO COMPUTATION : "
         d = len(self.BETAS[0])
+        selected = self.selected_param[:]
+        # this trick is done to plot only selected parameters, excluding intercept
 
         if (
             d > 20
@@ -1262,6 +1271,33 @@ class solution_ALO:
             if type(self.save) == str:
                 plt.savefig(self.save + "Sigma-path")
             plt.show(block=False)
+
+        plt.plot(self.LAMBDAS, self.alo)
+        plt.xlabel(ALO_graph["xlabel"])
+        plt.ylabel(ALO_graph["ylabel"])
+        plt.title(ALO_graph["title"])
+
+        plt.show(block=False)
+
+        nb_select = sum(selected)
+        if nb_select > 10:
+            top = np.argpartition(abs(self.refit[selected]), -10)[-10:]
+            top = np.sort(top)
+        else:
+            top = np.arange(nb_select)
+        plt.figure(figsize=(10, 3), dpi=80)
+        plt.bar(range(nb_select), self.refit[selected])
+        plt.title(ALO_beta["title"])
+        plt.xlabel(ALO_beta["xlabel"]), plt.ylabel(ALO_beta["ylabel"])
+        plt.xticks(top, self.label[selected][top], rotation=90)
+        plt.tight_layout()
+        if type(self.save2) == str:
+            plt.savefig(self.save2)
+        plt.show(block=False)
+
+        string += "\n   Selected variables :  "
+        for i in np.where(self.selected_param)[0]:
+            string += self.label[i] + "    "
 
         string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
         return string
@@ -1713,4 +1749,10 @@ ALO_graph = {
     "title": r" ",
     "xlabel": r"$\lambda / \lambda_{max}$",
     "ylabel": r"Approximation of Leave 1-out error (ALO) ",
+}
+
+ALO_beta = {
+    "title": r"Refitted coefficients after ALO model selection",
+    "xlabel": r"Coefficient index $i$",
+    "ylabel": r"Coefficients $\beta_i$ ",
 }

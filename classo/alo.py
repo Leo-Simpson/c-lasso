@@ -5,7 +5,6 @@ import numpy as np
 import scipy.linalg
 
 
-
 def solve_cls(X, y, C):
     """Solve the constrained least-squares problem.
 
@@ -87,9 +86,7 @@ def alo_cls_h(X: np.ndarray, C: np.ndarray) -> np.ndarray:
     return (K_inv_2_Xt ** 2).sum(axis=0) - ((F @ K_inv_2_Xt) ** 2).sum(axis=0)
 
 
-def alo_h(
-    X: np.ndarray, beta: np.ndarray, y: np.ndarray, C: np.ndarray
-):
+def alo_h(X: np.ndarray, beta: np.ndarray, y: np.ndarray, C: np.ndarray):
     """Computes the ALO leverage and residual for the c-lasso.
 
     Due to its L1 structure, the ALO for the constrained lasso corresponds
@@ -128,9 +125,7 @@ def alo_h(
     return (y - X @ beta) / (1 - h), h
 
 
-def alo_classo_risk(
-    X: np.ndarray, C: np.ndarray, y: np.ndarray, betas: np.ndarray
-):
+def alo_classo_risk(X: np.ndarray, C: np.ndarray, y: np.ndarray, betas: np.ndarray):
     """Computes the ALO risk for the c-lasso at the given estimates.
 
     Parameters
@@ -163,7 +158,6 @@ def alo_classo_risk(
         mse[i] = np.mean(np.square(res))
 
     return mse, df
-
 
 
 """
