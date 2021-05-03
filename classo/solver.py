@@ -30,6 +30,7 @@ from .misc_functions import (
 from .compact_func import Classo, pathlasso
 from .cross_validation import CV
 from .stability_selection import stability, selected_param
+from .alo import alo_classo_risk
 import matplotlib.patches as mpatches
 
 
@@ -140,6 +141,18 @@ class classo_problem:
                 label,
             )
 
+
+        # Compute the ALO thanks to the class solution_ALO which contains directely the computation in the initialisation
+        if self.model_selection.ALO:
+            self.solution.ALO = solution_ALO(
+                matrices,
+                self.model_selection.PATHparameters,
+                self.formulation,
+                self.numerical_method,
+                label,
+            )
+
+
         # Compute the cross validation thanks to the class solution_CV which contains directely the computation in the initialisation
         if self.model_selection.CV:
             self.solution.CV = solution_CV(
@@ -185,6 +198,12 @@ class classo_problem:
             print_parameters += (
                 "\n \nPATH PARAMETERS: "
                 + self.model_selection.PATHparameters.__repr__()
+            )
+
+        if self.model_selection.ALO:
+            print_parameters += (
+                "\n \nALO PARAMETERS: "
+                + self.model_selection.ALOparameters.__repr__()
             )
 
         if self.model_selection.CV:
@@ -358,6 +377,11 @@ class Model_selection:
 
         PATHparameters (PATHparameters): object containing parameters to compute the lasso-path.
 
+        ALO (bool): True if path should be computed.
+            Default value : False
+
+        ALOparameters (ALOparameters): object containing parameters to compute the ALO for c-lasso.
+
         CV (bool):  True if Cross Validation should be computed.
             Default value : False
 
@@ -383,6 +407,9 @@ class Model_selection:
         self.PATH = False
         self.PATHparameters = PATHparameters(method = method)
 
+        self.ALO = False
+        self.ALOparameters = ALOparameters(method = method)
+
         self.CV = False
         self.CVparameters = CVparameters(method = method)
 
@@ -394,20 +421,88 @@ class Model_selection:
 
     def __repr__(self):
         string = ""
-        if self.LAMfixed:
-            string += "\n     Lambda fixed"
+
         if self.PATH:
             string += "\n     Path"
+        if self.ALO:
+            string += "\n     ALO"
         if self.CV:
             string += "\n     Cross Validation"
         if self.StabSel:
             string += "\n     Stability selection"
+        if self.LAMfixed:
+            string += "\n     Lambda fixed"
 
         return string
 
 
 class PATHparameters:
     """Class that contains the parameters to compute the lasso-path.
+    It also has a representation method so one can print it.
+
+    Attributes:
+        numerical_method (str) : name of the numerical method that is used, it can be :
+            'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method),
+            'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method).
+            Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation
+
+        n_active (int): if it is higher than 0, then the algo stops computing the path when n_active variables are active.
+        Then the solution does not change from this point.
+            Default value : 0
+
+        lambdas (numpy.ndarray) : list of rescaled lambdas for computing lasso-path.
+            Default value : None, which means line space between 1 and :attr:`lamin` and :attr:`Nlam` points, with logarithm scale or not depending on :attr:`logscale`.
+
+        Nlam (int) : number of points in the lambda-path if :attr:`lambdas` is still None (default).
+            Default value : 80
+
+        lamin (float) : lambda minimum if :attr:`lambdas` is still None (default).
+            Default value : 1e-3
+
+        logscale (bool): when :attr:`lambdas` is set to None (default), this parameters tells if it should be set with log scale or not.
+            Default value : True
+
+        plot_sigma (bool) : if True then the representation method of the solution will also plot the sigma-path if it is computed (formulation R3 or R4).
+            Default value : True
+
+        label (numpy.ndarray of str) : labels on each coefficient.
+
+    """
+
+    def __init__(self, method = "not specified"):
+        self.formulation = "not specified"
+        self.numerical_method = method
+        self.n_active = 0
+        self.Nlam = 80
+        self.lamin = 1e-3
+        self.logscale = True
+        self.lambdas = None
+        self.plot_sigma = True
+        self.rescaled_lam = True
+
+    def __repr__(self):
+        if self.lambdas is not None:
+            self.Nlam = len(self.lambdas)
+            self.lamin = min(self.lambdas)
+            typ = " "
+        else:
+            if self.logscale:
+                typ = "with log-scale"
+            else:
+                typ = "with linear-scale"
+
+        string = "\n     numerical_method : " + str(self.numerical_method)
+        string += "\n     lamin = " + str(self.lamin)
+        string += "\n     Nlam = " + str(self.Nlam)
+        string += "\n     " + typ
+        if self.n_active > 0:
+            string += "\n     maximum active variables = " + str(self.n_active)
+
+        return string
+
+
+class ALOparameters:
+    """Class that contains the parameters to compute the lasso-path, then the Approximation of Leave one-out error.
     It also has a representation method so one can print it.
 
     Attributes:
@@ -691,24 +786,19 @@ class Solution:
     """
 
     def __init__(self):
+
         self.PATH = "not computed"  # this will be filled with an object of the class 'solution_PATH' when the method solve() will be used.
+        self.ALO = "not computed"  # this will be filled with an object of the class 'solution_ALO' when the method solve() will be used.
         self.CV = "not computed"  # will be an object of the class 'solution_PATH'
-        self.StabSel = (
-            "not computed"  # will be an object of the class 'solution_StabSel'
-        )
+        self.StabSel = "not computed"  # will be an object of the class 'solution_StabSel'
         self.LAMfixed = "not computed"
 
     def __repr__(self):
         string = ""
-        if not type(self.LAMfixed) is str:
-            string += self.LAMfixed.__repr__() + "\n"
-        if not type(self.PATH) is str:
-            string += self.PATH.__repr__() + "\n"
-        if not type(self.CV) is str:
-            string += self.CV.__repr__() + "\n"
-        if not type(self.StabSel) is str:
-            string += self.StabSel.__repr__() + "\n"
-
+        for obj in [self.LAMfixed, self.PATH, self.ALO, self.CV, self.StabSel]:
+            if not type(obj) is str:
+                string += obj.__repr__() + "\n"
+    
         return string
 
 
@@ -1036,6 +1126,150 @@ class solution_CV:
         if save is not None and type(save) == str:
             plt.savefig(save)
         plt.show(block=False)
+
+
+# Here, the main function used is pathlasso ; from the file compact_func
+class solution_ALO:
+    """Class that contains  characteristics of the lasso-path computed,
+    which also contains representation method that plot the graphic of this lasso-path.
+
+    Attributes:
+        BETAS (numpy.ndarray) : array of size Npath x d with the solution beta for each lambda on each row.
+        SIGMAS (numpy.ndarray) : array of size Npath with the solution sigma for each lambda when the formulation of the problem is R2 or R4.
+        LAMBDAS (numpy.ndarray) : array of size Npath with the lambdas (real lambdas, not divided by lambda_max) for which the solution is computed.
+        logscale (bool): whether or not the path should be plotted with a logscale.
+        method (str) : name of the numerical method that has been used. It can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'.
+        save (bool or str) : if it is a str, then it gives the name of the file where the graphics has been/will be saved (after using print(solution) ).
+        formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
+        time (float) : running time of this action.
+
+    """
+
+    def __init__(self, matrices, param, formulation, numerical_method, label):
+        t0 = time()
+
+        # Formulation choosing
+        if param.formulation == "not specified":
+            param.formulation = formulation
+        if param.numerical_method == "not specified":
+            param.numerical_method = numerical_method
+        name_formulation = param.formulation.name()
+        rho = param.formulation.rho_scaled
+        rho_classification = param.formulation.rho_classification
+        e = param.formulation.e
+        # Algorithmic method choosing
+        numerical_method = choose_numerical_method(
+            param.numerical_method, "PATH", param.formulation
+        )
+        param.numerical_method = numerical_method
+        # Compute the solution and is the formulation is concomitant, it also compute sigma
+        if param.lambdas is None:
+            if param.logscale:
+                param.lambdas = np.array(
+                    [param.lamin ** (i / (param.Nlam - 1)) for i in range(param.Nlam)]
+                )
+            else:
+                param.lambdas = np.linspace(1.0, param.lamin, param.Nlam)
+
+        self.logscale = param.logscale
+
+        out = pathlasso(
+            matrices,
+            lambdas = param.lambdas,
+            n_active = param.n_active,
+            typ = name_formulation,
+            meth = numerical_method,
+            return_sigm = True,
+            rho = rho,
+            e = e,
+            rho_classification = rho_classification,
+            w = param.formulation.w,
+            intercept = param.formulation.intercept,
+            true_lam = not param.rescaled_lam
+        )
+        if formulation.concomitant:
+            self.BETAS, self.LAMBDAS, self.SIGMAS = out
+        else:
+            self.BETAS, self.LAMBDAS = out
+            self.SIGMAS = "not computed"
+
+        self.formulation = formulation
+        self.plot_sigma = param.plot_sigma
+        self.method = numerical_method
+        self.save = False
+        self.label = label
+        
+        # ALO part, for 
+        X, C, y = matrices
+
+        if (
+            not formulation.concomitant
+            and not formulation.classification
+            and not formulation.huber):
+
+            self.mse, self.df = alo_classo_risk(X, C, y, self.BETAS)
+
+        else:
+            raise ValueError("ALO is implemented only for R1.")
+
+
+        self.time = time() - t0
+
+    def __repr__(self):
+
+        string = "\n PATH COMPUTATION : "
+        d = len(self.BETAS[0])
+
+        if (
+            d > 20
+        ):  # this trick is to plot only the biggest value, excluding the intercept
+            avg_betas = np.mean(abs(np.array(self.BETAS)), axis = 0)
+            if self.formulation.intercept:
+                avg_betas[0] = 0  # trick to exclude intercept in the graph
+                string += "\n   There is also an intercept.  "
+            top = np.argpartition(avg_betas, -20)[-20:]
+
+        else:
+            if self.formulation.intercept:
+                top = np.arange(1, d)
+                string += "\n   There is also an intercept.  "
+            else:
+                top = np.arange(d)
+
+        if self.logscale:
+            xGraph = -np.log10(self.LAMBDAS)
+            xlabel = r"$ \log_{10} \lambda $"
+        else:
+            xGraph = self.LAMBDAS
+            xlabel = PATH_beta_path["xlabel"]
+        plt.figure(figsize = (10, 3), dpi = 80)
+        affichage(
+            self.BETAS[:, top],
+            xGraph,
+            labels = self.label[top],
+            naffichage = 5,
+            title = PATH_beta_path["title"] + self.formulation.name(),
+            xlabel = xlabel,
+            ylabel = PATH_beta_path["ylabel"],
+        )
+
+        plt.tight_layout()
+        if type(self.save) == str:
+            plt.savefig(self.save + "Beta-path")
+        plt.show(block=False)
+        if type(self.SIGMAS) != str and self.plot_sigma:
+            plt.figure(figsize = (10, 3), dpi = 80)
+            plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel(
+                PATH_sigma_path["ylabel"]
+            ), plt.xlabel(PATH_sigma_path["xlabel"])
+            plt.title(PATH_sigma_path["title"] + self.formulation.name())
+            plt.tight_layout()
+            if type(self.save) == str:
+                plt.savefig(self.save + "Sigma-path")
+            plt.show(block=False)
+
+        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
+        return string
 
 
 # Here, the main function used is stability ; from the file stability selection
@@ -1479,4 +1713,10 @@ StabSel_beta = {
     "title": r"Refitted coefficients after stability selection",
     "xlabel": r"Coefficient index $i$",
     "ylabel": r"Coefficients $\beta_i$ ",
+}
+
+ALO_graph = {
+    "title": r" ",
+    "xlabel": r"$\lambda / \lambda_{max}$",
+    "ylabel": r"Approximation of Leave 1-out error (ALO) ",
 }

@@ -57,10 +57,10 @@ X0 = clr(X0, 1 / 2).T
 # Set up design matrix and zero-sum constraints for 45 genera
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-X     = np.concatenate((X0, X_C, X_F, np.ones((len(X0), 1))), axis = 1) # Joint microbiome and covariate data and offset
-label = np.concatenate([labels, np.array(['Calorie', 'Fat', 'Bias'])])
+X     = np.concatenate((X0, X_C, X_F, axis = 1) # Joint microbiome and covariate data and offset
+label = np.concatenate([labels, np.array(['Calorie', 'Fat'])])
 C = np.ones((1, len(X[0])))
-C[0, -1], C[0, -2], C[0, -3] = 0., 0., 0.
+C[0, -1], C[0, -2] = 0., 0., 0.
 
 
 
@@ -70,7 +70,7 @@ C[0, -1], C[0, -2], C[0, -3] = 0., 0., 0.
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 problem = classo_problem(X, y, C, label = label) 
-
+problem.formulation.intercept = True
 # %%
 # Use stability selection with theoretical lambda [Combettes & Müller, 2020b]
 problem.model_selection.StabSelparameters.method      = 'lam'
@@ -88,6 +88,7 @@ print(problem.solution)
 # %%
 # Use formulation R4
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+problem.data.label = label
 problem.formulation.huber = True
 problem.formulation.concomitant = True
 

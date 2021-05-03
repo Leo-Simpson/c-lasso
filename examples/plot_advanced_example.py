@@ -22,7 +22,7 @@ import numpy as np
 # One can then see the parameters that should be selected.
 
 m, d, d_nonzero, k, sigma = 100, 200, 5, 1, 0.5
-(X, C, y), sol = random_data(m, d, d_nonzero, k, sigma, zerosum=True, seed=1)
+(X, C, y), sol = random_data(m, d, d_nonzero, k, sigma, zerosum=True, seed=1, intercept=1.)
 print(np.nonzero(sol))
 
 # %%
@@ -41,6 +41,7 @@ problem = classo_problem(X, y, C)
 
 problem.formulation.huber                   = True
 problem.formulation.concomitant             = False
+problem.formulation.intercept               = True
 problem.model_selection.CV                  = True
 problem.model_selection.LAMfixed            = True
 problem.model_selection.PATH                = True
