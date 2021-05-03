@@ -63,7 +63,7 @@ X = np.concatenate(
 )  # Joint microbiome and covariate data and offset
 label = np.concatenate([labels, np.array(["Calorie", "Fat"])])
 C = np.ones((1, len(X[0])))
-C[0, -1], C[0, -2] = 0.0, 0.0, 0.0
+C[0, -1], C[0, -2] = 0.0, 0.0
 
 
 # %%
@@ -72,7 +72,6 @@ C[0, -1], C[0, -2] = 0.0, 0.0, 0.0
 
 problem = classo_problem(X, y, C, label=label)
 problem.formulation.intercept = True
-problem.model_selection.ALO = True
 # %%
 # Use stability selection with theoretical lambda [Combettes & Müller, 2020b]
 problem.model_selection.StabSelparameters.method = "lam"
@@ -93,6 +92,19 @@ print(problem.solution)
 problem.data.label = label
 problem.formulation.huber = True
 problem.formulation.concomitant = True
+
+problem.solve()
+print(problem)
+print(problem.solution)
+
+
+# %%
+# Use formulation R1 with ALO
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+problem.data.label = label
+problem.formulation.huber = False
+problem.formulation.concomitant = False
+problem.model_selection.ALO = True
 
 problem.solve()
 print(problem)

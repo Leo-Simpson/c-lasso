@@ -46,7 +46,6 @@ problem.formulation.concomitant = False
 problem.formulation.intercept = True
 problem.model_selection.CV = True
 problem.model_selection.LAMfixed = True
-problem.model_selection.ALO = True
 problem.model_selection.StabSelparameters.method = "max"
 problem.model_selection.CVparameters.seed = 1
 problem.model_selection.LAMfixedparameters.rescaled_lam = True
@@ -81,4 +80,15 @@ problem.solve()
 # After completion, the results of the optimization and model selection routines
 # can be visualized using
 
+print(problem.solution)
+
+# %%
+# R1 Formulation with R1
+# ^^^^^^^^^^^^^^^
+#
+
+problem.formulation.huber = False
+problem.model_selection.ALO = True
+problem.solve()
+print(problem)
 print(problem.solution)
