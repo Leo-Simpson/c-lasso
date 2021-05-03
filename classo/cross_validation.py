@@ -10,16 +10,16 @@ def train_test_CV(n, k):
     sublist_len = n // k
     rest = n % k
     for i in range(k):
-        if i == k-1:
-            SUBLIST.append(idx[i * sublist_len:(i+1) * sublist_len + rest])
+        if i == k - 1:
+            SUBLIST.append(idx[i * sublist_len : (i + 1) * sublist_len + rest])
         else:
-            SUBLIST.append(idx[i * sublist_len:(i+1) * sublist_len])
+            SUBLIST.append(idx[i * sublist_len : (i + 1) * sublist_len])
 
     return SUBLIST
 
 
 def train_test_i(SUBLIST, i):
-    # create training and test sets 
+    # create training and test sets
     training_set, test_set = np.array([], dtype=int), SUBLIST[i]
     for j in range(len(SUBLIST)):
         if j != i:
@@ -43,16 +43,17 @@ def training(
     mat = (A[training_set], C, y[training_set])
     sol = pathlasso(
         mat,
-        lambdas = lambdas,
-        typ = typ,
-        meth = num_meth,
-        rho = rho,
-        e = e,
-        rho_classification = rho_classification,
-        w = w,
-        intercept = intercept,
+        lambdas=lambdas,
+        typ=typ,
+        meth=num_meth,
+        rho=rho,
+        e=e,
+        rho_classification=rho_classification,
+        w=w,
+        intercept=intercept,
     )[0]
     return sol
+
 
 def cv_test_i(
     matrices,
@@ -88,12 +89,13 @@ def cv_test_i(
             matrices[2][test_set],
             BETA[j],
             typ,
-            rho = rho,
-            rho_classification = rho_classification,
-            intercept = intercept,
+            rho=rho,
+            rho_classification=rho_classification,
+            intercept=intercept,
         )
 
     return residual
+
 
 def average_test(
     matrices,
@@ -124,8 +126,8 @@ def average_test(
             w,
             intercept,
         )
-    MSE = np.mean(RESIDUAL, axis = 0)
-    SE = np.std(RESIDUAL, axis = 0) / np.sqrt(k)
+    MSE = np.mean(RESIDUAL, axis=0)
+    SE = np.std(RESIDUAL, axis=0) / np.sqrt(k)
     return (MSE, SE)
 
 
@@ -134,15 +136,15 @@ def CV(
     k,
     typ="R1",
     num_meth="Path-Alg",
-    seed = 1,
-    rho = 1.345,
-    rho_classification = -1.0,
-    e = 1.0,
-    lambdas = None,
-    Nlam = 100,
-    oneSE = True,
-    w = None,
-    intercept = False,
+    seed=1,
+    rho=1.345,
+    rho_classification=-1.0,
+    e=1.0,
+    lambdas=None,
+    Nlam=100,
+    oneSE=True,
+    w=None,
+    intercept=False,
 ):
 
     if lambdas is None:
@@ -174,13 +176,13 @@ def CV(
     out = Classo(
         matrices,
         lam,
-        typ = typ,
-        meth = num_meth,
-        rho = rho,
-        e = e,
-        rho_classification = rho_classification,
-        w = w,
-        intercept = intercept,
+        typ=typ,
+        meth=num_meth,
+        rho=rho,
+        e=e,
+        rho_classification=rho_classification,
+        w=w,
+        intercept=intercept,
     )
     return (out, MSE, SE, i, i_1SE)
 
@@ -212,7 +214,7 @@ def accuracy_func(
 ):
 
     if intercept:
-        Aprime = np.concatenate([np.ones((len(A), 1)), A], axis = 1)
+        Aprime = np.concatenate([np.ones((len(A), 1)), A], axis=1)
     else:
         Aprime = A[:, :]
 
@@ -220,7 +222,7 @@ def accuracy_func(
 
     if typ == "R2":
         return hub(Aprime.dot(beta) - y, rho) / n
-    elif typ in ["C1","C2"]:
+    elif typ in ["C1", "C2"]:
         return misclassification_rate(Aprime, y, beta)
     else:
         return LA.norm(Aprime.dot(beta) - y, 2) ** 2 / n

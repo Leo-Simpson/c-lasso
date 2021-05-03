@@ -15,6 +15,7 @@ The parameters are lam (lambda/lambdamax, in [0,1]) and pb, which has to be a 'p
 
 tol = 1e-5
 
+
 def Classo_R1(pb, lam):
     pb_type = pb.type  # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
@@ -35,7 +36,6 @@ def Classo_R1(pb, lam):
     Anorm = pb.Anorm
     tol = pb.tol * LA.norm(y) / Anorm  # tolerance rescaled
 
-
     Proj = proj_c(C, d)
     AtA = pb.AtA
     Aty = pb.Aty
@@ -44,7 +44,6 @@ def Classo_R1(pb, lam):
     w, zerod = lamb * gamma * pb.weights, np.zeros(
         d
     )  # two vectors usefull to compute the prox of f(b) = sum(wi |bi|)
-
 
     if pb_type == "PF-PDS":  # y1 --> S ; p1 --> p . ; p2 --> y2
         (x, v) = pb.init
@@ -72,7 +71,6 @@ def Classo_R1(pb, lam):
             "The algorithm of PF-PDS did not converge after %i iterations " % pb.N
         )
 
-
     if pb_type == "P-PDS":
         xbar, x, v = pb.init
         for i in range(pb.N):
@@ -98,12 +96,11 @@ def Classo_R1(pb, lam):
             "The algorithm of P-PDS did not converge after %i iterations " % pb.N
         )
 
-
-    else: # "DR":
+    else:  # "DR":
         gamma = gamma / (2 * lam)
         w = w / (2 * lam)
         mu, ls, c, root = pb.mu, [], pb.c, 0.0
-        Q1, Q2 = QQ(2 * gamma / (mu - 1), A, AtA = pb.AtA, AAt = pb.AAt)
+        Q1, Q2 = QQ(2 * gamma / (mu - 1), A, AtA=pb.AtA, AAt=pb.AAt)
         QA, qy = Q1.dot(A), Q1.dot(y)
 
         qy_mult = qy * (mu - 1)
@@ -138,7 +135,7 @@ and then to evaluate it in the given finite path.
 """
 
 
-def pathlasso_R1(pb, path, n_active = False):
+def pathlasso_R1(pb, path, n_active=False):
     n, d, k = pb.dim
     BETA, tol = [], pb.tol
     if pb.type == "Path-Alg":
@@ -256,10 +253,12 @@ def prox(b, w, zeros):
 # Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
 def proj_c(M, d):
     k = len(M)
-    return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)+ 1e-4 * np.eye(k)), M])
+    return np.eye(d) - LA.multi_dot(
+        [M.T, np.linalg.inv(M.dot(M.T) + 1e-4 * np.eye(k)), M]
+    )
 
 
-def QQ(coef, A, AtA = None, AAt = None):
+def QQ(coef, A, AtA=None, AAt=None):
     if AtA is None:
         AtA = (A.T).dot(A)
     if AAt is None:

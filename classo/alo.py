@@ -35,7 +35,7 @@ def generate_data(n, p, k, d, sigma=1, seed=None):
     """
     rng = np.random.Generator(np.random.Philox(seed))
 
-    X = rng.normal(scale = 1 / np.sqrt(k), size=(n, p))
+    X = rng.normal(scale=1 / np.sqrt(k), size=(n, p))
     C = rng.normal(size=(d, p))
     beta_nz = np.ones(k)
     C_k = C[:, :k]
@@ -111,18 +111,30 @@ def alo_cls_h(X: np.ndarray, C: np.ndarray) -> np.ndarray:
     relying extensively on the cholesky decomposition.
     """
     K = X.T @ X
-    K_cho, _ = scipy.linalg.cho_factor(K, overwrite_a=True, lower=True, check_finite=False)
-    K_inv_2_C = scipy.linalg.solve_triangular(K_cho, C.T, lower=True, check_finite=False)
-    K_inv_2_Xt = scipy.linalg.solve_triangular(K_cho, X.T, lower=True, check_finite=False)
+    K_cho, _ = scipy.linalg.cho_factor(
+        K, overwrite_a=True, lower=True, check_finite=False
+    )
+    K_inv_2_C = scipy.linalg.solve_triangular(
+        K_cho, C.T, lower=True, check_finite=False
+    )
+    K_inv_2_Xt = scipy.linalg.solve_triangular(
+        K_cho, X.T, lower=True, check_finite=False
+    )
 
     C_Ki_C = K_inv_2_C.T @ K_inv_2_C
 
-    CKC_cho, _ = scipy.linalg.cho_factor(C_Ki_C, overwrite_a=True, lower=True, check_finite=False)
-    F = scipy.linalg.solve_triangular(CKC_cho, K_inv_2_C.T, lower=True, check_finite=False)
+    CKC_cho, _ = scipy.linalg.cho_factor(
+        C_Ki_C, overwrite_a=True, lower=True, check_finite=False
+    )
+    F = scipy.linalg.solve_triangular(
+        CKC_cho, K_inv_2_C.T, lower=True, check_finite=False
+    )
     return (K_inv_2_Xt ** 2).sum(axis=0) - ((F @ K_inv_2_Xt) ** 2).sum(axis=0)
 
 
-def alo_h(X: np.ndarray, beta: np.ndarray, y: np.ndarray, C: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def alo_h(
+    X: np.ndarray, beta: np.ndarray, y: np.ndarray, C: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
     """Computes the ALO leverage and residual for the c-lasso.
 
     Due to its L1 structure, the ALO for the constrained lasso corresponds
@@ -145,7 +157,7 @@ def alo_h(X: np.ndarray, beta: np.ndarray, y: np.ndarray, C: np.ndarray) -> Tupl
     Returns
     -------
     alo_residual : np.ndarray
-        A numpy array of size [n] representing the estimated ALO residuals 
+        A numpy array of size [n] representing the estimated ALO residuals
     h : np.ndarray
         A numpy array of size [n] representing the ALO leverage at each observation.
     """
@@ -161,8 +173,9 @@ def alo_h(X: np.ndarray, beta: np.ndarray, y: np.ndarray, C: np.ndarray) -> Tupl
     return (y - X @ beta) / (1 - h), h
 
 
-
-def alo_classo_risk(X: np.ndarray, C: np.ndarray, y: np.ndarray, betas: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+def alo_classo_risk(
+    X: np.ndarray, C: np.ndarray, y: np.ndarray, betas: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
     """Computes the ALO risk for the c-lasso at the given estimates.
 
     Parameters
@@ -197,10 +210,9 @@ def alo_classo_risk(X: np.ndarray, C: np.ndarray, y: np.ndarray, betas: np.ndarr
     return mse, df
 
 
-
 def solve_standard(X, C, y, lambdas=None):
     """Utility function to solve standard c-lasso formulation."""
-    problem = problem_R1((X, C, y), 'Path-Alg')
+    problem = problem_R1((X, C, y), "Path-Alg")
     problem.tol = 1e-6
 
     if lambdas is None:
@@ -216,9 +228,10 @@ def solve_standard(X, C, y, lambdas=None):
 
 
 def solve_loo_i(X, C, y, i, lambdas):
-    X = np.concatenate((X[:i], X[i+1:]))
-    y = np.concatenate((y[:i], y[i+1:]))
+    X = np.concatenate((X[:i], X[i + 1 :]))
+    y = np.concatenate((y[:i], y[i + 1 :]))
     return solve_standard(X, C, y, lambdas)
+
 
 def _solve_loo_i_beta(i, X, C, y, lambdas):
     return solve_loo_i(X, C, y, i, lambdas)[0]
@@ -226,12 +239,14 @@ def _solve_loo_i_beta(i, X, C, y, lambdas):
 
 def _set_sequential_mkl():
     import os
+
     try:
         import mkl
+
         mkl.set_num_threads(1)
     except ImportError:
-        os.environ['MKL_NUM_THREADS'] = '1'
-        os.environ['OMP_NUM_THREADS'] = '1'
+        os.environ["MKL_NUM_THREADS"] = "1"
+        os.environ["OMP_NUM_THREADS"] = "1"
 
 
 def solve_loo(X, C, y, progress=False):
@@ -242,10 +257,13 @@ def solve_loo(X, C, y, progress=False):
     """
     _, lambdas = solve_standard(X, C, y)
 
-    ctx = multiprocessing.get_context('spawn')
+    ctx = multiprocessing.get_context("spawn")
 
     with ctx.Pool(initializer=_set_sequential_mkl) as pool:
-        result = pool.imap(functools.partial(_solve_loo_i_beta, X=X, C=C, y=y, lambdas=lambdas), range(X.shape[0]))
+        result = pool.imap(
+            functools.partial(_solve_loo_i_beta, X=X, C=C, y=y, lambdas=lambdas),
+            range(X.shape[0]),
+        )
         if progress:
             result = tqdm.tqdm(result, total=X.shape[0])
         result = list(result)
@@ -253,12 +271,14 @@ def solve_loo(X, C, y, progress=False):
     return np.stack(result, axis=0), lambdas
 
 
-
 # The functions below are simply helper functions which implement the same functionality for the LASSO (not the C-LASSO)
 # They are mostly intended for debugging and do not need to be integrated.
 
+
 def solve_lasso(X, y, lambdas=None):
-    lambdas, betas, _ = sklearn.linear_model.lasso_path(X, y, intercept=False, lambdas=lambdas)
+    lambdas, betas, _ = sklearn.linear_model.lasso_path(
+        X, y, intercept=False, lambdas=lambdas
+    )
     return lambdas, betas.T
 
 
@@ -270,7 +290,7 @@ def alo_lasso_h(X, y, beta, tol=1e-4):
     X = X[:, E]
 
     K = X.T @ X
-    H = X @ scipy.linalg.solve(K, X.T, assume_a='pos')
+    H = X @ scipy.linalg.solve(K, X.T, assume_a="pos")
 
     h = np.diag(H)
     return (y - X @ beta[E]) / (1 - h), h
@@ -289,8 +309,8 @@ def alo_lasso_risk(X, y, betas):
 
 
 def _lasso_loo(i, X, y, lambdas):
-    X_i = np.concatenate((X[:i], X[i+1:]))
-    y_i = np.concatenate((y[:i], y[i+1:]))
+    X_i = np.concatenate((X[:i], X[i + 1 :]))
+    y_i = np.concatenate((y[:i], y[i + 1 :]))
     return solve_lasso(X_i, y_i, lambdas)[1]
 
 
@@ -299,10 +319,11 @@ def solve_lasso_loo(X, y, lambdas=None, progress=False):
         lambdas, _ = solve_lasso(X, y)
 
     with multiprocessing.Pool(initializer=_set_sequential_mkl) as pool:
-        result = pool.imap(functools.partial(_lasso_loo, X=X, y=y, lambdas=lambdas), range(X.shape[0]))
+        result = pool.imap(
+            functools.partial(_lasso_loo, X=X, y=y, lambdas=lambdas), range(X.shape[0])
+        )
         if progress:
             result = tqdm.tqdm(result, total=X.shape[0])
         result = list(result)
 
     return lambdas, np.stack(result, axis=0)
-

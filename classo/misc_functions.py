@@ -46,8 +46,6 @@ theoretical_lam, min_LS, affichage, check_size, tree_to_matrix
 """
 
 
-
-
 def theoretical_lam(n, d):
     r"""Theoretical lambda as a function of the dimensions of the problem
 
@@ -101,18 +99,17 @@ def min_LS(matrices, selected, intercept=False):
 def affichage(
     LISTE_BETA,
     path,
-    title = " ",
-    labels = False,
-    xlabel = " ",
-    ylabel = " ",
-    naffichage = 10,
+    title=" ",
+    labels=False,
+    xlabel=" ",
+    ylabel=" ",
+    naffichage=10,
 ):
     BETAS = np.array(LISTE_BETA)
     l_index = influence(BETAS, naffichage)
     plot_betai(labels, l_index, path, BETAS)
-    plt.title(title), plt.legend(loc = 4, borderaxespad = 0.0)
+    plt.title(title), plt.legend(loc=4, borderaxespad=0.0)
     plt.xlabel(xlabel), plt.ylabel(ylabel)
-
 
 
 def check_size(X, y, C):
@@ -131,8 +128,8 @@ def check_size(X, y, C):
         elif d_in_c > d_in_x:
             C2 = C[:, :d_in_x]
         else:
-            C2 = np.zeros((k, d_in_x ))
-            C2[:, : d_in_c] = C
+            C2 = np.zeros((k, d_in_x))
+            C2[:, :d_in_c] = C
 
     return X2, y2, C2
 
@@ -148,14 +145,14 @@ def random_data(
     d_nonzero,
     k,
     sigma,
-    zerosum = False,
-    seed = False,
-    classification = False,
-    exp = False,
-    A = None,
-    lb_beta = 3,
-    ub_beta = 10,
-    intercept = None,
+    zerosum=False,
+    seed=False,
+    classification=False,
+    exp=False,
+    A=None,
+    lb_beta=3,
+    ub_beta=10,
+    intercept=None,
 ):
     """Generation of random matrices as data such that y = X.sol + sigma. noise
 
@@ -192,7 +189,7 @@ def random_data(
 
     reduc = np.random.permutation(d1) < d_nonzero
     # sol reduc is random int between lb_beta and ub_beta with a random sign.
-    sol_reduc = np.random.randint(low = lb_beta, high = ub_beta + 1, size = d_nonzero) * (
+    sol_reduc = np.random.randint(low=lb_beta, high=ub_beta + 1, size=d_nonzero) * (
         np.random.randint(2, size=d_nonzero) * 2 - 1
     )
 
@@ -206,38 +203,36 @@ def random_data(
             return ((X, np.zeros((1, d1)), y), sol)
 
         while True:
-            C = np.random.randint(low = -1, high = 1, size = (k, d))
+            C = np.random.randint(low=-1, high=1, size=(k, d))
             if LA.matrix_rank(C) == k:
                 break
-            
 
     while True:
         # building a sparse solution such that C.A sol = 0
         sol = np.zeros(d1)
         C_reduc = C.dot(A)[:, reduc]
         if LA.matrix_rank(C_reduc) < k:
-            list_i = np.random.randint(d1, size = d_nonzero)
+            list_i = np.random.randint(d1, size=d_nonzero)
             reduc = np.random.permutation(d1) < d_nonzero
             continue
         proj = proj_c(C_reduc, d_nonzero).dot(sol_reduc)
         sol[reduc] = proj
 
         break
-    
 
     y = X.dot(A.dot(sol)) + np.random.randn(n) * sigma
-    
+
     if intercept is not None:
         y = y + intercept
     if classification:
         y = np.sign(y)
     if exp:
         X = np.exp(X)
-    
+
     return (X, C, y), sol
 
 
-def clr(array, coef = 0.5):
+def clr(array, coef=0.5):
     """Centered-Log-Ratio transformation
 
     Set all non positive entry to a constant coef. Then compute the log of each component. Then substract the mean of each column.
@@ -254,7 +249,7 @@ def clr(array, coef = 0.5):
     null_set = M <= 0.0
     M[null_set] = np.ones(M[null_set].shape) * coef
     M = np.log(M)
-    return M - np.mean(M, axis = 0)
+    return M - np.mean(M, axis=0)
 
 
 """
@@ -262,7 +257,7 @@ misc of solve_R.. functions
 """
 
 
-def unpenalized(cmatrices, intercept = False):
+def unpenalized(cmatrices, intercept=False):
 
     if intercept:
         A1, C1, y = cmatrices
@@ -278,8 +273,8 @@ def unpenalized(cmatrices, intercept = False):
     M2 = np.concatenate([C, np.zeros((k, k))], axis=1)
     M = np.concatenate([M1, M2], axis=0)
     b = np.concatenate([A.T.dot(y), np.zeros(k)])
-    sol = LA.lstsq( M, b, rcond=None)[0]
-    beta = sol[: d]
+    sol = LA.lstsq(M, b, rcond=None)[0]
+    beta = sol[:d]
     return beta
 
 
@@ -303,7 +298,7 @@ def plot_betai(labels, l_index, path, BETAS):
 
 
 def influence(BETAS, ntop):
-    means = np.mean(abs(BETAS), axis = 0)
+    means = np.mean(abs(BETAS), axis=0)
     top = np.argpartition(means, -ntop)[-ntop:]
     return np.sort(top)
 

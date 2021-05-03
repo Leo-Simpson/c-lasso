@@ -1,8 +1,4 @@
-from .misc_functions import (
-    random_data,
-    clr,
-    theoretical_lam
-)  # , tree_to_matrix
+from .misc_functions import random_data, clr, theoretical_lam  # , tree_to_matrix
 from .compact_func import Classo, pathlasso
 from .cross_validation import CV
 from .stability_selection import stability
@@ -24,5 +20,6 @@ from .solver import (
 )
 
 from ._version import get_versions
-__version__ = get_versions()['version']
+
+__version__ = get_versions()["version"]
 del get_versions

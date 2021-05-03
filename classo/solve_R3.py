@@ -17,6 +17,7 @@ We solve the problem without normalizing anything.
 
 tol = 1e-5
 
+
 def Classo_R3(pb, lam):
     pb_type = pb.type  # can be 'Path-Alg' or 'DR'
     (m, d, k), (A, C, y) = pb.dim, pb.matrix
@@ -35,7 +36,7 @@ def Classo_R3(pb, lam):
     # Then we only have to finc the solution between the last beta computed and the one before.
     if pb_type == "Path-Alg":
         (beta1, beta2), (s1, s2), (r1, r2) = solve_path_Conc(
-            (A, C, y), lam, lassopath = False
+            (A, C, y), lam, lassopath=False
         )
         dr, ds = r1 - r2, s1 - s2
         teta = root_2(
@@ -47,12 +48,12 @@ def Classo_R3(pb, lam):
         beta = beta1 * teta + beta2 * (1 - teta)
         return (beta, sigma)
 
-    else: # DR
+    else:  # DR
         regpath = pb.regpath
         if not regpath:
             pb.compute_param()
 
-        lamb = lam * pb.lambdamax 
+        lamb = lam * pb.lambdamax
         Anorm = pb.Anorm
         tol = pb.tol * LA.norm(y) / Anorm  # tolerance rescaled
         Proj = proj_c(C, d)  # Proj = I - C^t . (C . C^t )^-1 . C
@@ -68,8 +69,7 @@ def Classo_R3(pb, lam):
         mu, c, root = pb.mu, pb.c, 0.0
         xs, nu, o, xbar, x = pb.init
 
-        
-        b, s = 0., 0. # just for flake8 purpose.
+        b, s = 0.0, 0.0  # just for flake8 purpose.
         for i in range(pb.N):
             nv_b = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar)
             nv_s = (xs + nu) / 2
@@ -82,7 +82,7 @@ def Classo_R3(pb, lam):
 
             s, b = nv_s, nv_b
             Ab = A.dot(b)
-            p1, p2, root = prox_phi_1(xs, 2 * Ab - o - y, np.sqrt(m)*gamma / c, root)
+            p1, p2, root = prox_phi_1(xs, 2 * Ab - o - y, np.sqrt(m) * gamma / c, root)
             sup1 = max(0, nu) - s
             sup2 = p1 - s
             sup3 = p2 + y - Ab
@@ -112,7 +112,7 @@ and then to evaluate it in the given finite path.
 """
 
 
-def pathlasso_R3(pb, path, n_active = False):
+def pathlasso_R3(pb, path, n_active=False):
     n, d, k = pb.dim
     BETA, SIGMA, tol = [], [], pb.tol
 
@@ -199,7 +199,7 @@ class problem_R3:
         self.proj_sigm = lambda x: max(x, 0)
         self.mu = 1.95
 
-        self.gam = 1. #np.sqrt(d/m)
+        self.gam = 1.0  # np.sqrt(d/m)
         self.Aty = (A.T).dot(y)
         self.sigmax = LA.norm(y) / np.sqrt(m / 2)
         self.lambdamax = 2 * LA.norm(self.Aty, np.infty) / self.sigmax

@@ -46,7 +46,7 @@ class parameters_for_update:
 
     """
 
-    def __init__(self, matrices, lamin, rho, typ, eps_L2 = 1e-3, intercept = False):
+    def __init__(self, matrices, lamin, rho, typ, eps_L2=1e-3, intercept=False):
         if typ == "C2" and rho > 1:
             raise ValueError(
                 "For huberized hinge, rho has to be smaller than 1, but here it is :",
@@ -118,9 +118,8 @@ class parameters_for_update:
             self.Xt = LA.inv(N + self.eps_L2 * np.eye(len(N)))
 
 
-
 # iteration of the function up to solve the path at each breaking points.
-def solve_path(matrices, lamin, n_active, rho, typ, intercept = False):
+def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
     """
     This functions will compute the path for all the breaking points :
     beta is a piecewise linear function of lambda, and only value on the breaking points
@@ -151,32 +150,30 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept = False):
     for i in range(d * N_frac):
 
         still_F = np.any(param.F)
-        too_active = (n_active > 0 and param.number_act >= n_active)
-        
+        too_active = n_active > 0 and param.number_act >= n_active
+
         if not still_F or too_active or param.lam == lamin:
             if intercept:
                 return BETA0, BETA, LAM
             else:
                 return BETA, LAM
-                
-        #elif not np.any(param.F):
+
+        # elif not np.any(param.F):
         #    print(param.r)
         #    raise ValueError("The problem looks infeasible because the set of active sample became zero, "
         #                     "at the iteration {} "
-        #                      "for formulation {} " 
+        #                      "for formulation {} "
         #                      "with intercept ? {} "
         #                      "with rho equal to {} ".format(i, typ, intercept, rho ))
-        
+
         up(param)
         BETA.append(param.beta), LAM.append(param.lam)
 
-        #print("inside : ", param.r[ param.F], np.nonzero(param.F)[0] )
-        #print(" outside : ", param.r[~param.F], np.nonzero(~param.F)[0])
-
+        # print("inside : ", param.r[ param.F], np.nonzero(param.F)[0] )
+        # print(" outside : ", param.r[~param.F], np.nonzero(~param.F)[0])
 
         if intercept:
             BETA0.append(param.beta0)
-        
 
     raise ValueError(
         "The path algorithm did not finsh after %i iterations " % N,
@@ -185,7 +182,7 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept = False):
     )
 
 
-def solve_path_Conc(matrices, stop, n_active = False, lassopath = True, true_lam = False):
+def solve_path_Conc(matrices, stop, n_active=False, lassopath=True, true_lam=False):
     """
     This functions will compute the path for all the breaking points :
     beta is a piecewise linear function of lambda, and only value on the breaking points
@@ -255,7 +252,7 @@ def solve_path_Conc(matrices, stop, n_active = False, lassopath = True, true_lam
     )
 
 
-def pathalgo_general(matrix, path, typ, n_active = False, rho = 0, intercept = False):
+def pathalgo_general(matrix, path, typ, n_active=False, rho=0, intercept=False):
     """
     This function is only to interpolate the solution path between the breaking points
     """
@@ -269,7 +266,6 @@ def pathalgo_general(matrix, path, typ, n_active = False, rho = 0, intercept = F
         B, sp_path = solve_path(
             matrix, path[-1], n_active, rho, typ, intercept=intercept
         )
-    
 
     sp_path.append(path[-1]), B.append(B[-1])
     for lam in path:
@@ -282,7 +278,6 @@ def pathalgo_general(matrix, path, typ, n_active = False, rho = 0, intercept = F
 
     if intercept:
         BETA = np.array([[BETA0[i]] + list(BETA[i]) for i in range(len(BETA0))])
-
 
     return BETA
 
@@ -371,7 +366,7 @@ def up_LS(param):
         Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
 
     beta = beta - lambdamax * beta_dot * dlamb
-    if dlamb < lam :
+    if dlamb < lam:
         s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
     lam -= dlamb
 
@@ -409,7 +404,7 @@ def up_huber(param):
     lam = param.lam
     M = param.M
     r = param.r
-    
+
     d = len(activity)
     L = [lam] * d
     Mat = M[:d, :d]
@@ -451,7 +446,7 @@ def up_huber(param):
         if dl < dlamb:
             huber_up, j_switch, dlamb = True, j, dl
     beta = beta - lambdamax * beta_dot * dlamb
-    if dlamb < lam :
+    if dlamb < lam:
         s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
     r = r + ADl * dlamb
     lam = lam - dlamb
@@ -462,9 +457,9 @@ def up_huber(param):
     if huber_up:
         F[j_switch] = not F[j_switch]
         # sufficient :
-        #F = F | (abs(r) < rho - 1e-6)
+        # F = F | (abs(r) < rho - 1e-6)
         # necessary :
-        #F = F & (abs(r) <= rho + 1e-6) 
+        # F = F & (abs(r) <= rho + 1e-6)
 
         if param.intercept:
             P = A[F] - np.mean(A[F], axis=0)
@@ -567,7 +562,7 @@ def up_cl(param):
             max_up, j_switch, dlamb = True, j, dl
 
     beta = beta - lambdamax * beta_dot * dlamb
-    if dlamb < lam :
+    if dlamb < lam:
         s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
     r = r + yADl * dlamb
     lam = lam - dlamb
@@ -579,9 +574,9 @@ def up_cl(param):
     if max_up:
         F[j_switch] = not F[j_switch]
         # sufficient :
-        #F = F | (r < 1. - 1e-10) 
+        # F = F | (r < 1. - 1e-10)
         # necessary :
-        #F = F & (r <= 1. + 1e-10)
+        # F = F & (r <= 1. + 1e-10)
         if param.intercept:
             P = A[F] - np.mean(A[F], axis=0)
             M[:d, :][:, :d] = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
@@ -707,7 +702,7 @@ def up_huber_cl(param):
             max_up, j_switch, dlamb = True, j, dl
 
     beta = beta - lambdamax * beta_dot * dlamb
-    if dlamb < lam :
+    if dlamb < lam:
         s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
     r = r + yADl * dlamb
     lam = lam - dlamb
@@ -718,9 +713,9 @@ def up_huber_cl(param):
     if max_up:
         F[j_switch] = not F[j_switch]
         # sufficient :
-        #F = F | ( (r < 1. - 1e-10) & (r > rho + 1e-10) )
+        # F = F | ( (r < 1. - 1e-10) & (r > rho + 1e-10) )
         # necessary :
-        #F = F & ( (r <= 1. + 1e-10) & (r >= rho - 1e-10) )
+        # F = F & ( (r <= 1. + 1e-10) & (r >= rho - 1e-10) )
 
         if np.any(F):
             if param.intercept:
@@ -831,7 +826,7 @@ def next_idr2(liste, mat):
     return False
 
 
-def h_lambdamax(matrices, rho, typ = "R1", intercept=False):
+def h_lambdamax(matrices, rho, typ="R1", intercept=False):
     param = parameters_for_update(matrices, 0.0, rho, typ, intercept=intercept)
     return param.lambdamax
 
@@ -888,7 +883,7 @@ def find_beta0(r, dbeta0, y, rho, typ):
     return beta0
 
 
-def binary_search(f, a, b, tol = 1e-8):
+def binary_search(f, a, b, tol=1e-8):
     c = (a + b) / 2
     # if f(a) * f(b) > 0:
     #    print("gradh(min(y)) = ", f(a))

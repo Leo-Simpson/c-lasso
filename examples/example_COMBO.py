@@ -3,7 +3,8 @@ from classo import classo_problem, clr
 import pandas as pd
 import numpy as np
 
-def csv_to_np(file, begin = 1, header = None):
+
+def csv_to_np(file, begin=1, header=None):
     """Function to read a csv file and to create an ndarray with this
 
     Args:
@@ -14,7 +15,7 @@ def csv_to_np(file, begin = 1, header = None):
     Returns:
         ndarray : matrix of the csv file
     """
-    tab1 = pd.read_csv(file, header = header)
+    tab1 = pd.read_csv(file, header=header)
     return np.array(tab1)[:, begin:]
 
 
@@ -36,7 +37,7 @@ label = np.concatenate([labels, np.array(["Calorie", "Fat", "Biais"])])
 C = np.ones((1, len(X[0])))
 C[0, -1], C[0, -2], C[0, -3] = 0.0, 0.0, 0.0
 
-problem = classo_problem(X, y, C, label = label)
+problem = classo_problem(X, y, C, label=label)
 
 # Solve the problem for a fixed lambda (by default, it will use the theoritical lambda)
 problem.model_selection.LAMfixed = True

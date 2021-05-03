@@ -5,14 +5,14 @@ import cvxpy as cp
 from time import time
 
 import os
-my_path = os.path.dirname(__file__) 
+
+my_path = os.path.dirname(__file__)
 
 l = [1, 2, 5, 7]
 
 
-
 def loss(X, y, lamb, beta):
-    return np.sum((X.dot(beta) - y)**2) + lamb*np.sum(abs(beta))
+    return np.sum((X.dot(beta) - y) ** 2) + lamb * np.sum(abs(beta))
 
 
 d_nonzero = 5
@@ -27,8 +27,8 @@ S = [50, 100, 200, 500]
 SIZES = []
 for i in range(len(S)):
     SIZES.append((S[i], S[i]))
-    if i+1<len(S):
-        SIZES.append((S[i], S[i+1]))
+    if i + 1 < len(S):
+        SIZES.append((S[i], S[i + 1]))
 N_sizes = len(SIZES)
 
 T_pa = np.zeros((N_sizes, N_data))
@@ -48,15 +48,13 @@ L_cvx = np.zeros((N_sizes, N_data))
 C_cvx = np.zeros((N_sizes, N_data))
 
 
-
 for s in range(N_sizes):
 
     m, d = SIZES[s]
 
-
     for i in range(N_data):
         (X, C, y), sol = random_data(m, d, d_nonzero, 1, sigma, zerosum=True, seed=i)
-        lamb = lam*2*LA.norm(X.T.dot(y),np.infty)
+        lamb = lam * 2 * LA.norm(X.T.dot(y), np.infty)
 
         t0 = time()
         # classo Path-Alg
@@ -68,7 +66,7 @@ for s in range(N_sizes):
             problem.model_selection.LAMfixed = True
             problem.model_selection.LAMfixedparameters.rescaled_lam = False
             problem.model_selection.LAMfixedparameters.lam = lamb
-            problem.model_selection.LAMfixedparameters.numerical_method = 'Path-Alg'
+            problem.model_selection.LAMfixedparameters.numerical_method = "Path-Alg"
             problem.solve()
             b_pa.append(problem.solution.LAMfixed.beta)
         b_pa = np.array(b_pa)
@@ -83,7 +81,7 @@ for s in range(N_sizes):
             problem.model_selection.LAMfixed = True
             problem.model_selection.LAMfixedparameters.rescaled_lam = False
             problem.model_selection.LAMfixedparameters.lam = lamb
-            problem.model_selection.LAMfixedparameters.numerical_method = 'P-PDS'
+            problem.model_selection.LAMfixedparameters.numerical_method = "P-PDS"
             problem.solve()
             b_pds.append(problem.solution.LAMfixed.beta)
         b_pds = np.array(b_pds)
@@ -98,7 +96,7 @@ for s in range(N_sizes):
             problem.model_selection.LAMfixed = True
             problem.model_selection.LAMfixedparameters.rescaled_lam = False
             problem.model_selection.LAMfixedparameters.lam = lamb
-            problem.model_selection.LAMfixedparameters.numerical_method = 'P-PDS'
+            problem.model_selection.LAMfixedparameters.numerical_method = "P-PDS"
             problem.solve()
             b_dr.append(problem.solution.LAMfixed.beta)
         b_dr = np.array(b_dr)
@@ -108,14 +106,15 @@ for s in range(N_sizes):
         b_cvx = []
         for j in range(N_per_data):
             beta = cp.Variable(d)
-            objective, constraints = cp.Minimize(cp.sum_squares(X@beta-y)+ lamb*cp.norm(beta, 1)), [C@beta == 0]
+            objective, constraints = cp.Minimize(
+                cp.sum_squares(X @ beta - y) + lamb * cp.norm(beta, 1)
+            ), [C @ beta == 0]
             prob = cp.Problem(objective, constraints)
-            result = prob.solve(warm_start = False, eps_abs = 1e-5)
+            result = prob.solve(warm_start=False, eps_abs=1e-5)
             b_cvx.append(beta.value)
         b_cvx = np.array(b_cvx)
-        
-        t4 = time()
 
+        t4 = time()
 
         T_pa[s, i] = (t1 - t0) / N_per_data
         L_pa[s, i] = loss(X, y, lamb, np.mean(b_pa, axis=0))
@@ -129,23 +128,23 @@ for s in range(N_sizes):
         L_dr[s, i] = loss(X, y, lamb, np.mean(b_dr, axis=0))
         C_dr[s, i] = np.linalg.norm(C.dot(np.mean(b_dr, axis=0)))
 
-        T_cvx[s, i] = (t4 - t3) / N_per_data  
+        T_cvx[s, i] = (t4 - t3) / N_per_data
         L_cvx[s, i] = loss(X, y, lamb, np.mean(b_cvx, axis=0))
         C_cvx[s, i] = np.linalg.norm(C.dot(np.mean(b_cvx, axis=0)))
 
 np.savez(
-    os.path.join(my_path, 'bm-R1.npz'),
-    T_pa = T_pa,
-    L_pa = L_pa,
-    C_pa = C_pa, 
-    T_pds = T_pds,
-    L_pds = L_pds,
-    C_pds = C_pds,
-    T_dr = T_dr,
-    L_dr = L_dr,
-    C_dr = C_dr,
-    T_cvx = T_cvx,
-    L_cvx = L_cvx,
-    C_cvx = C_cvx,
-    SIZES = np.array(SIZES)
+    os.path.join(my_path, "bm-R1.npz"),
+    T_pa=T_pa,
+    L_pa=L_pa,
+    C_pa=C_pa,
+    T_pds=T_pds,
+    L_pds=L_pds,
+    C_pds=C_pds,
+    T_dr=T_dr,
+    L_dr=L_dr,
+    C_dr=C_dr,
+    T_cvx=T_cvx,
+    L_cvx=L_cvx,
+    C_cvx=C_cvx,
+    SIZES=np.array(SIZES),
 )
