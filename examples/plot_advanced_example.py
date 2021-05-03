@@ -46,7 +46,7 @@ problem.formulation.concomitant = False
 problem.formulation.intercept = True
 problem.model_selection.CV = True
 problem.model_selection.LAMfixed = True
-problem.model_selection.PATH = True
+problem.model_selection.ALO = True
 problem.model_selection.StabSelparameters.method = "max"
 problem.model_selection.CVparameters.seed = 1
 problem.model_selection.LAMfixedparameters.rescaled_lam = True
@@ -64,9 +64,13 @@ print(problem)
 #  Solve optimization problems
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
-#  We only use stability selection as default model selection strategy.
+#  We use stability selection as default model selection strategy.
 # The command also allows you to inspect the computed stability profile for all variables
-# at the theoretical λ
+# at the theoretical λ.
+# Two other model selections are computed here:
+# computation of the solution for a fixed lambda;
+# a path computation followed by a computation of the Approximation of the Leave-one Out error (ALO);
+# a k-fold cross-validation.
 
 problem.solve()
 

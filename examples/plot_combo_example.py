@@ -72,6 +72,7 @@ C[0, -1], C[0, -2] = 0.0, 0.0, 0.0
 
 problem = classo_problem(X, y, C, label=label)
 problem.formulation.intercept = True
+problem.model_selection.ALO = True
 # %%
 # Use stability selection with theoretical lambda [Combettes & Müller, 2020b]
 problem.model_selection.StabSelparameters.method = "lam"
