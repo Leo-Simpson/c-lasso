@@ -11,6 +11,7 @@ Let's present what classo does when using its default parameters on synthetic da
 # ^^^^^^^^^^^^^^^^^^^^
 import sys, os
 from os.path import dirname, abspath
+
 classo_dir = dirname(dirname(abspath("__file__")))
 sys.path.append(classo_dir)
 from classo import classo_problem, random_data

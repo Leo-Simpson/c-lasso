@@ -104,7 +104,7 @@ def affichage(
     xlabel=" ",
     ylabel=" ",
     naffichage=10,
-    logscale=False
+    logscale=False,
 ):
     BETAS = np.array(LISTE_BETA)
     l_index = influence(BETAS, naffichage)
@@ -113,6 +113,7 @@ def affichage(
     plt.xlabel(xlabel), plt.ylabel(ylabel)
     if logscale:
         plt.xscale("log")
+
 
 def check_size(X, y, C):
     samples, d_in_x = min(len(y), len(X)), len(X[0])

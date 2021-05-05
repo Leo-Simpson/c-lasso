@@ -125,7 +125,15 @@ def alo_h(X: np.ndarray, beta: np.ndarray, y: np.ndarray, C: np.ndarray):
     return (y - X @ beta) / (1 - h), h
 
 
-def alo_classo_risk(X: np.ndarray, C: np.ndarray, y: np.ndarray, betas: np.ndarray):
+def alo_classo_risk(
+    X: np.ndarray,
+    C: np.ndarray,
+    y: np.ndarray,
+    betas: np.ndarray,
+    huber: bool = False,
+    classification: bool = False,
+    intercept: bool = False,
+):
     """Computes the ALO risk for the c-lasso at the given estimates.
 
     Parameters
@@ -139,6 +147,12 @@ def alo_classo_risk(X: np.ndarray, C: np.ndarray, y: np.ndarray, betas: np.ndarr
     betas : np.ndarray
         A numpy array of size [m, p], where ``m`` denotes the number of solutions
         in the path, representing the solution at each point in the path.
+    huber : boolean
+        if True, the loss function is huberized.
+    classification : boolean
+        if True, the problem is a classification task, using hinge squared loss.
+    intercept: boolean
+        if True, there can be a bias, that is unpenalized
 
     Returns
     -------
@@ -149,6 +163,15 @@ def alo_classo_risk(X: np.ndarray, C: np.ndarray, y: np.ndarray, betas: np.ndarr
         A numpy array of size [m], representing the estimated normalized degrees of freedom
         at each solution along the path.
     """
+    if huber:
+        raise ValueError("ALO is not implemented for huberized loss.")
+    if classification:
+        raise ValueError("ALO is not implemented for hinge squared loss.")
+    if intercept:
+        raise ValueError(
+            "ALO is not implemented for formulations with unpenalized bias."
+        )
+
     mse = np.empty(len(betas))
     df = np.empty(len(betas))
 

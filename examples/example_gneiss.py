@@ -20,6 +20,7 @@ A similar analysis is also done in `Tree-Aggregated Predictive Modeling of Micro
 
 import sys, os
 from os.path import join, dirname, abspath
+
 classo_dir = dirname(dirname(abspath("__file__")))
 sys.path.append(classo_dir)
 from classo import classo_problem

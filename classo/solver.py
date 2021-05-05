@@ -1199,24 +1199,26 @@ class solution_ALO:
         # ALO part, for
         X, C, y = matrices
 
-        if (
-            not formulation.concomitant
-            and not formulation.classification
-            and not formulation.huber
-            and not self.formulation.intercept
-        ):
+        if formulation.concomitant:
+            raise ValueError("ALO is not implemented for R3 and R4.")
 
-            self.alo, self.df = alo_classo_risk(X, C, y, self.BETAS)
-            self.imin = np.argmin(self.alo)
-            self.beta = self.BETAS[self.imin]
-            self.selected_param = (
-                abs(self.beta) > 1e-5
-            )  # boolean array, false iff beta_i = 0
-            self.refit = min_LS(
-                matrices, self.selected_param, intercept=self.formulation.intercept
-            )
-        else:
-            raise ValueError("ALO is implemented only for R1 without intercept.")
+        self.alo, self.df = alo_classo_risk(
+            X,
+            C,
+            y,
+            self.BETAS,
+            huber=formulation.huber,
+            intercept=self.formulation.intercept,
+            classification=formulation.classification,
+        )
+        self.imin = np.argmin(self.alo)
+        self.beta = self.BETAS[self.imin]
+        self.selected_param = (
+            abs(self.beta) > 1e-5
+        )  # boolean array, false iff beta_i = 0
+        self.refit = min_LS(
+            matrices, self.selected_param, intercept=self.formulation.intercept
+        )
 
         self.time = time() - t0
 
@@ -1234,10 +1236,10 @@ class solution_ALO:
             self.formulation.name(),
             logscale=self.logscale,
             plot_sigma=self.plot_sigma,
-            save=self.save1
+            save=self.save1,
         )
         plot_alo(self.LAMBDAS, self.alo, logscale=self.logscale, save=self.save2)
-        
+
         nb_select = sum(selected)
         if nb_select > 10:
             top = np.argpartition(abs(self.refit[selected]), -10)[-10:]
@@ -1662,10 +1664,19 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
     return method
 
 
-def plot_path(BETAS, LAMBDAS, label, intercept, SIGMAS, name,
-                logscale=False, plot_sigma=False, save=False):
+def plot_path(
+    BETAS,
+    LAMBDAS,
+    label,
+    intercept,
+    SIGMAS,
+    name,
+    logscale=False,
+    plot_sigma=False,
+    save=False,
+):
     d = len(BETAS[0])
-    if (d > 20):  
+    if d > 20:
         # this trick is to plot only the biggest value, excluding the intercept
         avg_betas = np.mean(abs(np.array(BETAS)), axis=0)
         if intercept:
@@ -1679,7 +1690,7 @@ def plot_path(BETAS, LAMBDAS, label, intercept, SIGMAS, name,
             string += "\n   There is also an intercept.  "
         else:
             top = np.arange(d)
-    
+
     xGraph = LAMBDAS
     xlabel = PATH_beta_path["xlabel"]
 
@@ -1692,7 +1703,7 @@ def plot_path(BETAS, LAMBDAS, label, intercept, SIGMAS, name,
         title=PATH_beta_path["title"] + name,
         xlabel=xlabel,
         ylabel=PATH_beta_path["ylabel"],
-        logscale=logscale
+        logscale=logscale,
     )
 
     plt.tight_layout()
@@ -1701,23 +1712,24 @@ def plot_path(BETAS, LAMBDAS, label, intercept, SIGMAS, name,
     plt.show(block=False)
     if type(SIGMAS) != str and plot_sigma:
         plt.figure(figsize=(10, 3), dpi=80)
-        plt.plot(LAMBDAS, SIGMAS), plt.ylabel(
-            PATH_sigma_path["ylabel"]
-        ), plt.xlabel(PATH_sigma_path["xlabel"])
+        plt.plot(LAMBDAS, SIGMAS), plt.ylabel(PATH_sigma_path["ylabel"]), plt.xlabel(
+            PATH_sigma_path["xlabel"]
+        )
         plt.title(PATH_sigma_path["title"] + name)
         plt.tight_layout()
         if type(save) == str:
             plt.savefig(save + "Sigma-path")
         plt.show(block=False)
 
+
 def plot_alo(lambdas, alo, logscale=False, save=False):
     imin = np.argmin(alo)
     alomin = alo[imin]
-    ymin = 0.5*alomin
-    ymax = 2*alomin
-    xmin = lambdas[np.max( np.argwhere(alo < ymax))]
-    xmax = lambdas[np.min( np.argwhere(alo < ymax))]
-    
+    ymin = 0.5 * alomin
+    ymax = 2 * alomin
+    xmin = lambdas[np.max(np.argwhere(alo < ymax))]
+    xmax = lambdas[np.min(np.argwhere(alo < ymax))]
+
     plt.figure(figsize=(10, 3), dpi=80)
     plt.plot(lambdas, alo)
     plt.axvline(x=lambdas[imin], color="r", label=r"$\lambda$ chosen ")
