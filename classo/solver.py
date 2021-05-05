@@ -1225,6 +1225,8 @@ class solution_ALO:
     def __repr__(self):
 
         string = "\n ALO COMPUTATION : "
+        if self.formulation.intercept:
+            string += "\n   There is also an intercept.  "
         selected = self.selected_param[:]
         # this trick is done to plot only selected parameters, excluding intercept
         plot_path(
@@ -1681,13 +1683,11 @@ def plot_path(
         avg_betas = np.mean(abs(np.array(BETAS)), axis=0)
         if intercept:
             avg_betas[0] = 0  # trick to exclude intercept in the graph
-            string += "\n   There is also an intercept.  "
         top = np.argpartition(avg_betas, -20)[-20:]
 
     else:
         if intercept:
             top = np.arange(1, d)
-            string += "\n   There is also an intercept.  "
         else:
             top = np.arange(d)
 

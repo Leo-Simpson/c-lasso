@@ -103,7 +103,7 @@ problem.solve()
 print(problem.solution)
 
 # %%
-# R1 formulation with ALO.
+# R1 formulation with ALO
 # ^^^^^^^^^^^^^^^
 #
 problem.data.label = labels
