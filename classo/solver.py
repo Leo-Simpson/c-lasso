@@ -1709,7 +1709,9 @@ def plot_path(
     plt.tight_layout()
     if type(save) == str:
         plt.savefig(save + "Beta-path")
+    
     plt.show(block=False)
+    
     if type(SIGMAS) != str and plot_sigma:
         plt.figure(figsize=(10, 3), dpi=80)
         plt.plot(LAMBDAS, SIGMAS), plt.ylabel(PATH_sigma_path["ylabel"]), plt.xlabel(
@@ -1726,7 +1728,7 @@ def plot_alo(lambdas, alo, logscale=False, save=False):
     imin = np.argmin(alo)
     alomin = alo[imin]
     ymin = 0.5 * alomin
-    ymax = 2 * alomin
+    ymax = 3 * alomin
     xmin = lambdas[np.max(np.argwhere(alo < ymax))]
     xmax = lambdas[np.min(np.argwhere(alo < ymax))]
 
