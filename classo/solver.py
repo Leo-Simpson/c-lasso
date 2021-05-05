@@ -142,7 +142,7 @@ class classo_problem:
         if self.model_selection.ALO:
             self.solution.ALO = solution_ALO(
                 matrices,
-                self.model_selection.PATHparameters,
+                self.model_selection.ALOparameters,
                 self.formulation,
                 self.numerical_method,
                 label,
@@ -1168,7 +1168,6 @@ class solution_ALO:
                 param.lambdas = np.linspace(1.0, param.lamin, param.Nlam)
 
         self.logscale = param.logscale
-
         out = pathlasso(
             matrices,
             lambdas=param.lambdas,
@@ -1224,66 +1223,21 @@ class solution_ALO:
     def __repr__(self):
 
         string = "\n ALO COMPUTATION : "
-        d = len(self.BETAS[0])
         selected = self.selected_param[:]
         # this trick is done to plot only selected parameters, excluding intercept
-
-        if (
-            d > 20
-        ):  # this trick is to plot only the biggest value, excluding the intercept
-            avg_betas = np.mean(abs(np.array(self.BETAS)), axis=0)
-            if self.formulation.intercept:
-                avg_betas[0] = 0  # trick to exclude intercept in the graph
-                string += "\n   There is also an intercept.  "
-            top = np.argpartition(avg_betas, -20)[-20:]
-
-        else:
-            if self.formulation.intercept:
-                top = np.arange(1, d)
-                string += "\n   There is also an intercept.  "
-            else:
-                top = np.arange(d)
-
-        if self.logscale:
-            xGraph = -np.log10(self.LAMBDAS)
-            xlabel = r"$ \log_{10} \lambda $"
-        else:
-            xGraph = self.LAMBDAS
-            xlabel = PATH_beta_path["xlabel"]
-        plt.figure(figsize=(10, 3), dpi=80)
-        affichage(
-            self.BETAS[:, top],
-            xGraph,
-            labels=self.label[top],
-            naffichage=5,
-            title=PATH_beta_path["title"] + self.formulation.name(),
-            xlabel=xlabel,
-            ylabel=PATH_beta_path["ylabel"],
+        plot_path(
+            self.BETAS,
+            self.LAMBDAS,
+            self.label,
+            self.formulation.intercept,
+            self.SIGMAS,
+            self.formulation.name(),
+            logscale=self.logscale,
+            plot_sigma=self.plot_sigma,
+            save=self.save1
         )
-
-        plt.tight_layout()
-        if type(self.save1) == str:
-            plt.savefig(self.save1 + "Beta-path")
-        plt.show(block=False)
-        if type(self.SIGMAS) != str and self.plot_sigma:
-            plt.figure(figsize=(10, 3), dpi=80)
-            plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel(
-                PATH_sigma_path["ylabel"]
-            ), plt.xlabel(PATH_sigma_path["xlabel"])
-            plt.title(PATH_sigma_path["title"] + self.formulation.name())
-            plt.tight_layout()
-            if type(self.save) == str:
-                plt.savefig(self.save + "Sigma-path")
-            plt.show(block=False)
-
-        plt.plot(self.LAMBDAS, self.alo)
-        plt.xlabel(ALO_graph["xlabel"])
-        plt.ylabel(ALO_graph["ylabel"])
-        plt.title(ALO_graph["title"])
-        if type(self.save2) == str:
-            plt.savefig(self.save2 + "ALO-path")
-        plt.show(block=False)
-
+        plot_alo(self.LAMBDAS, self.alo, logscale=self.logscale, save=self.save2)
+        
         nb_select = sum(selected)
         if nb_select > 10:
             top = np.argpartition(abs(self.refit[selected]), -10)[-10:]
@@ -1708,13 +1662,84 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
     return method
 
 
+def plot_path(BETAS, LAMBDAS, label, intercept, SIGMAS, name,
+                logscale=False, plot_sigma=False, save=False):
+    d = len(BETAS[0])
+    if (d > 20):  
+        # this trick is to plot only the biggest value, excluding the intercept
+        avg_betas = np.mean(abs(np.array(BETAS)), axis=0)
+        if intercept:
+            avg_betas[0] = 0  # trick to exclude intercept in the graph
+            string += "\n   There is also an intercept.  "
+        top = np.argpartition(avg_betas, -20)[-20:]
+
+    else:
+        if intercept:
+            top = np.arange(1, d)
+            string += "\n   There is also an intercept.  "
+        else:
+            top = np.arange(d)
+    
+    xGraph = LAMBDAS
+    xlabel = PATH_beta_path["xlabel"]
+
+    plt.figure(figsize=(10, 3), dpi=80)
+    affichage(
+        BETAS[:, top],
+        xGraph,
+        labels=label[top],
+        naffichage=5,
+        title=PATH_beta_path["title"] + name,
+        xlabel=xlabel,
+        ylabel=PATH_beta_path["ylabel"],
+        logscale=logscale
+    )
+
+    plt.tight_layout()
+    if type(save) == str:
+        plt.savefig(save + "Beta-path")
+    plt.show(block=False)
+    if type(SIGMAS) != str and plot_sigma:
+        plt.figure(figsize=(10, 3), dpi=80)
+        plt.plot(LAMBDAS, SIGMAS), plt.ylabel(
+            PATH_sigma_path["ylabel"]
+        ), plt.xlabel(PATH_sigma_path["xlabel"])
+        plt.title(PATH_sigma_path["title"] + name)
+        plt.tight_layout()
+        if type(save) == str:
+            plt.savefig(save + "Sigma-path")
+        plt.show(block=False)
+
+def plot_alo(lambdas, alo, logscale=False, save=False):
+    imin = np.argmin(alo)
+    alomin = alo[imin]
+    ymin = 0.5*alomin
+    ymax = 2*alomin
+    xmin = lambdas[np.max( np.argwhere(alo < ymax))]
+    xmax = lambdas[np.min( np.argwhere(alo < ymax))]
+    
+    plt.figure(figsize=(10, 3), dpi=80)
+    plt.plot(lambdas, alo)
+    plt.axvline(x=lambdas[imin], color="r", label=r"$\lambda$ chosen ")
+    if logscale:
+        plt.xscale("log")
+    plt.ylim(ymin, ymax)
+    plt.xlim(xmin, xmax)
+    plt.xlabel(ALO_graph["xlabel"])
+    plt.ylabel(ALO_graph["ylabel"])
+    plt.title(ALO_graph["title"])
+    if type(save) == str:
+        plt.savefig(save + "ALO-path")
+    plt.show(block=False)
+
+
 CV_beta = {
     "title": r"Refitted coefficients after CV model selection",
     "xlabel": r"Coefficient index $i$",
     "ylabel": r"Coefficients $\beta_i$ ",
 }
 CV_graph = {
-    "title": r" ",
+    "title": r"k-fold cross-validation profile",
     "xlabel": r"$\lambda / \lambda_{max}$",
     "ylabel": r"Mean-Squared Error (MSE) ",
     "ylabel_classification": r"Miss classification rate ",
@@ -1751,8 +1776,8 @@ StabSel_beta = {
 }
 
 ALO_graph = {
-    "title": r" ",
-    "xlabel": r"$\lambda / \lambda_{max}$",
+    "title": r"ALO profile",
+    "xlabel": r"$\lambda$",
     "ylabel": r"Approximation of Leave 1-out error (ALO) ",
 }
 

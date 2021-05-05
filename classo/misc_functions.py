@@ -104,13 +104,15 @@ def affichage(
     xlabel=" ",
     ylabel=" ",
     naffichage=10,
+    logscale=False
 ):
     BETAS = np.array(LISTE_BETA)
     l_index = influence(BETAS, naffichage)
     plot_betai(labels, l_index, path, BETAS)
     plt.title(title), plt.legend(loc=4, borderaxespad=0.0)
     plt.xlabel(xlabel), plt.ylabel(ylabel)
-
+    if logscale:
+        plt.xscale("log")
 
 def check_size(X, y, C):
     samples, d_in_x = min(len(y), len(X)), len(X[0])
