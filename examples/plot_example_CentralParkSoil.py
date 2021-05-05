@@ -14,8 +14,8 @@ This task is also done in `Tree-Aggregated Predictive Modeling of Microbiome Dat
 # Import the package
 # ^^^^^^^^^^^^^^^^^^^^
 import sys, os
-from os.path import join, dirname
-classo_dir = dirname(dirname(__file__))
+from os.path import join, dirname, abspath
+classo_dir = dirname(dirname(abspath("__file__")))
 sys.path.append(classo_dir)
 
 from classo import classo_problem
