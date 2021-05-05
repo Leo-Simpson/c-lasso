@@ -46,7 +46,7 @@ label = data["label"]
 y = data["y"]
 tr = data["tr"]
 
-A = np.load(join(data_dir, "A.npy"))
+A = np.load(join(data_dir, "A.npy"), allow_pickle=True)
 
 # %%
 #  Preprocess: taxonomy aggregation
