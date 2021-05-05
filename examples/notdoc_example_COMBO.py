@@ -1,7 +1,7 @@
 path = "../../figures/exampleCOMBO/"
 import sys, os
-
-classo_dir = os.getcwd()
+from os.path import join, dirname
+classo_dir = dirname(dirname(__file__))
 sys.path.append(classo_dir)
 from classo import classo_problem, clr
 import pandas as pd

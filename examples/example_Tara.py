@@ -27,9 +27,8 @@ the kingdom bacteria and the phylum Bacteroidetes being negatively associated
 and the classes Alpha and Gammaproteobacteria being positively associated with marine salinity.
 """
 import sys, os
-from os.path import join
-
-classo_dir = os.getcwd()
+from os.path import join, dirname
+classo_dir = dirname(dirname(__file__))
 sys.path.append(classo_dir)
 from classo import classo_problem
 import matplotlib.pyplot as plt

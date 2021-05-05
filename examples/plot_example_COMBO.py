@@ -10,9 +10,8 @@ and show how to predict Body Mass Index (BMI) from microbial genus abundances an
 # Import the package
 # ^^^^^^^^^^^^^^^^^^^^
 import sys, os
-from os.path import join
-
-classo_dir = os.getcwd()
+from os.path import join, dirname
+classo_dir = dirname(dirname(__file__))
 sys.path.append(classo_dir)
 from classo import classo_problem, clr
 import numpy as np

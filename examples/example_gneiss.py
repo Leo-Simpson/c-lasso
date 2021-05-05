@@ -18,6 +18,10 @@ A similar analysis is also done in `Tree-Aggregated Predictive Modeling of Micro
  `on another dataset <https://royalsocietypublishing.org/doi/full/10.1098/rspb.2014.1988>`_
 """
 
+import sys, os
+from os.path import join, dirname
+classo_dir = dirname(dirname(__file__))
+sys.path.append(classo_dir)
 from classo import classo_problem
 import numpy as np
 import pandas as pd
