@@ -6,6 +6,13 @@ Let's present how one can specify different aspects of the problem
 formulation and model selection strategy on classo, using synthetic data.
 
 """
+# %%
+# Import the package
+# ^^^^^^^^^^^^^^^^^^^^
+import sys, os
+
+classo_dir = os.getcwd()
+sys.path.append(classo_dir)
 
 from classo import classo_problem, random_data
 import numpy as np
@@ -25,7 +32,19 @@ m, d, d_nonzero, k, sigma = 100, 200, 5, 1, 0.5
 (X, C, y), sol = random_data(
     m, d, d_nonzero, k, sigma, zerosum=True, seed=1, intercept=1.0
 )
-print(np.nonzero(sol))
+
+# %%
+#  Create labels
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#
+# This code snoppet creates labels that indicate where the solution ß should be nonzero.
+
+labels = np.empty(d, dtype=str)
+for i in range(d):
+    if sol[i] == 0.0:
+        labels[i] = "no_" + str(i)
+    else:
+        labels[i] = "yes_" + str(i)
 
 # %%
 # Define the classo instance
@@ -83,9 +102,10 @@ problem.solve()
 print(problem.solution)
 
 # %%
-# R1 Formulation with R1
+# R1 formulation with ALO.
 # ^^^^^^^^^^^^^^^
 #
+problem.data.label = labels
 problem.formulation.intercept = False
 problem.formulation.huber = False
 problem.model_selection.ALO = True

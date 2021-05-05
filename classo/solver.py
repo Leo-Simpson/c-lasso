@@ -1134,7 +1134,8 @@ class solution_ALO:
         LAMBDAS (numpy.ndarray) : array of size Npath with the lambdas (real lambdas, not divided by lambda_max) for which the solution is computed.
         logscale (bool): whether or not the path should be plotted with a logscale.
         method (str) : name of the numerical method that has been used. It can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'.
-        save (bool or str) : if it is a str, then it gives the name of the file where the graphics has been/will be saved (after using print(solution) ).
+        save1,save2 (bool or string) : if a string is given, the corresponding graph will be saved with the given name of the file.
+            save1 is for the path plot ; save2 for ALO plot ; and save3 for refit beta-solution.
         formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
         time (float) : running time of this action.
 
@@ -1191,7 +1192,9 @@ class solution_ALO:
         self.formulation = formulation
         self.plot_sigma = param.plot_sigma
         self.method = numerical_method
-        self.save = False
+        self.save1 = False
+        self.save2 = False
+        self.save3 = False
         self.label = label
 
         # ALO part, for
@@ -1201,6 +1204,7 @@ class solution_ALO:
             not formulation.concomitant
             and not formulation.classification
             and not formulation.huber
+            and not self.formulation.intercept
         ):
 
             self.alo, self.df = alo_classo_risk(X, C, y, self.BETAS)
@@ -1213,7 +1217,7 @@ class solution_ALO:
                 matrices, self.selected_param, intercept=self.formulation.intercept
             )
         else:
-            raise ValueError("ALO is implemented only for R1.")
+            raise ValueError("ALO is implemented only for R1 without intercept.")
 
         self.time = time() - t0
 
@@ -1258,8 +1262,8 @@ class solution_ALO:
         )
 
         plt.tight_layout()
-        if type(self.save) == str:
-            plt.savefig(self.save + "Beta-path")
+        if type(self.save1) == str:
+            plt.savefig(self.save1 + "Beta-path")
         plt.show(block=False)
         if type(self.SIGMAS) != str and self.plot_sigma:
             plt.figure(figsize=(10, 3), dpi=80)
@@ -1276,7 +1280,8 @@ class solution_ALO:
         plt.xlabel(ALO_graph["xlabel"])
         plt.ylabel(ALO_graph["ylabel"])
         plt.title(ALO_graph["title"])
-
+        if type(self.save2) == str:
+            plt.savefig(self.save2 + "ALO-path")
         plt.show(block=False)
 
         nb_select = sum(selected)
@@ -1291,8 +1296,8 @@ class solution_ALO:
         plt.xlabel(ALO_beta["xlabel"]), plt.ylabel(ALO_beta["ylabel"])
         plt.xticks(top, self.label[selected][top], rotation=90)
         plt.tight_layout()
-        if type(self.save2) == str:
-            plt.savefig(self.save2)
+        if type(self.save3) == str:
+            plt.savefig(self.save3 + "ALO-beta")
         plt.show(block=False)
 
         string += "\n   Selected variables :  "

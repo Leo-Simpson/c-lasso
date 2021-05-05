@@ -10,6 +10,14 @@ The task is to predict pH concentration in the soil from microbial abundance dat
 This task is also done in `Tree-Aggregated Predictive Modeling of Microbiome Data <https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1>`_.
 
 """
+# %%
+# Import the package
+# ^^^^^^^^^^^^^^^^^^^^
+import sys, os
+from os.path import join
+
+classo_dir = os.getcwd()
+sys.path.append(classo_dir)
 
 from classo import classo_problem
 import matplotlib.pyplot as plt
@@ -18,14 +26,14 @@ import numpy as np
 # %%
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^
-
-data = np.load("CentralParkSoil/cps.npz")
+data_dir = join(classo_dir, "examples/CentralParkSoil")
+data = np.load(join(data_dir, "cps.npz"))
 
 x = data["x"]
 label = data["label"]
 y = data["y"]
 
-A = np.load("CentralParkSoil/A.npy")
+A = np.load(join(data_dir, "A.npy"))
 
 # %%
 #  Preprocess: taxonomy aggregation

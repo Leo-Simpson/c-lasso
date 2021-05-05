@@ -26,7 +26,11 @@ trac identifies four taxonomic aggregations,
 the kingdom bacteria and the phylum Bacteroidetes being negatively associated
 and the classes Alpha and Gammaproteobacteria being positively associated with marine salinity.
 """
+import sys, os
+from os.path import join
 
+classo_dir = os.getcwd()
+sys.path.append(classo_dir)
 from classo import classo_problem
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,15 +38,16 @@ import numpy as np
 # %%
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^
+data_dir = join(classo_dir, "examples/Tara")
 
-data = np.load("Tara/tara.npz")
+data = np.load(join(data_dir, "tara.npz"))
 
 x = data["x"]
 label = data["label"]
 y = data["y"]
 tr = data["tr"]
 
-A = np.load("Tara/A.npy")
+A = np.load(join(data_dir, "A.npy"))
 
 # %%
 #  Preprocess: taxonomy aggregation

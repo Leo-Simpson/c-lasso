@@ -6,6 +6,13 @@ Let's present what classo does when using its default parameters on synthetic da
 
 """
 
+# %%
+# Import the package
+# ^^^^^^^^^^^^^^^^^^^^
+import sys, os
+
+classo_dir = os.getcwd()
+sys.path.append(classo_dir)
 from classo import classo_problem, random_data
 import numpy as np
 

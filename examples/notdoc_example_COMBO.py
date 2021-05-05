@@ -1,4 +1,8 @@
 path = "../../figures/exampleCOMBO/"
+import sys, os
+
+classo_dir = os.getcwd()
+sys.path.append(classo_dir)
 from classo import classo_problem, clr
 import pandas as pd
 import numpy as np

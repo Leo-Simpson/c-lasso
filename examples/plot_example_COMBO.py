@@ -6,6 +6,14 @@ We first consider the `COMBO data set <https://github.com/Leo-Simpson/c-lasso/tr
 and show how to predict Body Mass Index (BMI) from microbial genus abundances and two non-compositional covariates  using "filtered_data".
 """
 
+# %%
+# Import the package
+# ^^^^^^^^^^^^^^^^^^^^
+import sys, os
+from os.path import join
+
+classo_dir = os.getcwd()
+sys.path.append(classo_dir)
 from classo import classo_problem, clr
 import numpy as np
 import pandas as pd
@@ -34,16 +42,16 @@ def csv_to_np(file, begin=1, header=None):
 # %%
 #  Load microbiome and covariate data X
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-X0 = csv_to_np("COMBO_data/complete_data/GeneraCounts.csv", begin=0).astype(float)
-X_C = csv_to_np("COMBO_data/CaloriData.csv", begin=0).astype(float)
-X_F = csv_to_np("COMBO_data/FatData.csv", begin=0).astype(float)
+data_dir = join(classo_dir, "examples/COMBO_data")
+X0 = csv_to_np(join(data_dir, "complete_data/GeneraCounts.csv"), begin=0).astype(float)
+X_C = csv_to_np(join(data_dir, "CaloriData.csv"), begin=0).astype(float)
+X_F = csv_to_np(join(data_dir, "FatData.csv"), begin=0).astype(float)
 
 # %%
 #  Load BMI measurements y
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-y = csv_to_np("COMBO_data/BMI.csv", begin=0).astype(float)[:, 0]
-labels = csv_to_np("COMBO_data/complete_data/GeneraPhylo.csv").astype(str)[:, -1]
+y = csv_to_np(join(data_dir, "BMI.csv"), begin=0).astype(float)[:, 0]
+labels = csv_to_np(join(data_dir, "complete_data/GeneraPhylo.csv")).astype(str)[:, -1]
 
 
 # %%
@@ -101,7 +109,11 @@ print(problem.solution)
 # %%
 # Use formulation R1 with ALO
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ALO is implemented only for R1 without intercept for now.
+#
+
 problem.data.label = label
+problem.formulation.intercept = False
 problem.formulation.huber = False
 problem.formulation.concomitant = False
 problem.model_selection.ALO = True
