@@ -108,7 +108,7 @@ print(problem.solution)
 
 # %%
 # Use formulation R1 with ALO
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 # ALO is implemented only for R1 without intercept for now.
 #
 

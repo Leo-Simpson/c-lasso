@@ -104,7 +104,7 @@ print(problem.solution)
 
 # %%
 # R1 formulation with ALO
-# ^^^^^^^^^^^^^^^
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^
 #
 problem.data.label = labels
 problem.formulation.intercept = False
