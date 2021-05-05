@@ -110,6 +110,8 @@ problem.data.label = labels
 problem.formulation.intercept = False
 problem.formulation.huber = False
 problem.model_selection.ALO = True
+problem.model_selection.CV = False
+problem.model_selection.LAMfixed = False
 problem.solve()
 print(problem)
 print(problem.solution)
