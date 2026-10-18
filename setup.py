@@ -11,7 +11,7 @@ setup(
     author_email="leo.bill.simpson@gmail.com",
     description="Algorithms for constrained Lasso problems",
     packages=["classo"],
-    install_requires=["numpy", "h5py", "scipy"],
+    install_requires=["numpy", "scipy", "matplotlib", "pandas"],
     extras_require={
         "tests": ["pytest", "pytest-cov"],
         "docs": [
