@@ -78,7 +78,7 @@ def test_solve_CV_LAMfixed_C1():
     aux_test_solve_CV_LAMfixed((False, False, True), close_window=close)
 
 
-def test_solve_StabSel_LAMfixed_R2():
+def test_solve_StabSel_LAMfixed_R1():
     aux_test_solve_StabSel_LAMfixed((False, False, False), close_window=close)
 
 
