@@ -297,7 +297,7 @@ def up(param):
         up_huber_cl(param)
     else:
         raise ValueError(
-            "Unknown formulation {}, please enter one of those : R1, R2, R3, C1, C2".format()
+            "Unknown formulation {}, please enter one of those : R1, R2, R3, C1, C2".format(formulation)
         )
 
 
