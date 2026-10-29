@@ -202,7 +202,7 @@ class problem_R3:
         self.gam = 1.0  # np.sqrt(d/m)
         self.Aty = (A.T).dot(y)
         self.sigmax = LA.norm(y) / np.sqrt(m / 2)
-        self.lambdamax = 2 * LA.norm(self.Aty, np.infty) / self.sigmax
+        self.lambdamax = 2 * LA.norm(self.Aty, np.inf) / self.sigmax
         self.init = 0.0, 0.0, np.zeros(m), np.zeros(d), np.zeros(d)
 
     # Here we compute the costful matrices products and inverts in order to compute it only once, which is especially helpful for warmstarts.
