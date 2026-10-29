@@ -33,7 +33,13 @@ zero coefficients. Compact `Classo` requires `meth="Path-Alg"` explicitly;
 its legacy default method DR is not an MC1 method. `pathlasso` computes knots
 once and interpolates, rather than fitting each requested lambda independently.
 The high-level `classo_problem`/CV/stability-selection interface is not yet
-multiclass-aware. Intercepts and n_active early stopping are not implemented.
+multiclass-aware. With `intercept=True`, the first coefficient row contains
+unpenalized class biases; all remaining rows are feature coefficients. At the
+initial knot the biases are `2*class_frequency-1`, with zero feature coefficients.
+`n_active` limits selected feature rows and excludes the biases. It stops before
+an outgoing segment would exceed the budget, without splitting simultaneous
+entries. Compact pathlasso returns a shorter path including the stop knot, with
+its actual lambda values, rather than copying the stopped fit to smaller lambdas.
 
 ## Event-driven algorithm
 
@@ -124,3 +130,16 @@ automatically. This is an event-driven floating-point implementation of the
 piecewise-affine construction, not a proof of finite termination or support for
 all rank-deficient and degenerate inputs. Current tests cover a defined small
 suite; arbitrary trees and high-dimensional paths need broader validation.
+
+## Practical compositional example
+
+`examples/soils_MC1_example.py` adapts the original 88-soils MATLAB log-abundance
+matrix (88 samples, 116 OTUs). It uses ten pH-quantile classes, class intercepts,
+and a shared sum-to-zero constraint. R1 predicts continuous pH on the same
+centered log-abundance design. Feature supports are compared at budgets of
+2, 5, 10, 15 and 20 using the first path segment attaining each size.
+OTU/sample mappings are recovered from and verified against the original BIOM
+counts; the MATLAB taxonomy table itself is opaque to SciPy.
+This is an exploratory full-data support comparison, not predictive validation.
+The example needs biom-format and pandas; neither is added as a core solver
+dependency. Run it with `--output /absolute/path/to/results`.

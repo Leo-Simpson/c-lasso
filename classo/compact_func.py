@@ -35,11 +35,9 @@ def Classo(
     if typ == "MC1":
         from .solve_MC1 import problem_MC1, Classo_MC1
 
-        if intercept:
-            raise NotImplementedError("MC1 intercepts are not yet supported")
         if meth != "Path-Alg":
             raise ValueError("MC1 currently supports meth='Path-Alg' only")
-        pb = problem_MC1(matrix, meth, w=w)
+        pb = problem_MC1(matrix, meth, w=w, intercept=intercept)
         if not np.isfinite(lam) or lam < 0:
             raise ValueError("lambda must be finite and nonnegative")
         relative = (min(lam/pb.lambdamax, 1.) if pb.lambdamax else 1.) if true_lam else lam
@@ -216,11 +214,9 @@ def pathlasso(
     if typ == "MC1":
         from .solve_MC1 import problem_MC1, pathlasso_MC1
 
-        if intercept or n_active:
-            raise NotImplementedError("MC1 intercepts and n_active stopping are not yet supported")
         if meth != "Path-Alg":
             raise ValueError("MC1 currently supports meth='Path-Alg' only")
-        pb = problem_MC1(matrix, meth, w=w)
+        pb = problem_MC1(matrix, meth, w=w, intercept=intercept)
         if type(lambdas) is bool and (not np.isfinite(lamin) or not 0 <= lamin <= 1):
             raise ValueError("lamin must lie in [0,1]")
         values = ((np.linspace(1., 0., 100) if lamin == 0 else np.geomspace(1., lamin, 100)) if type(lambdas) is bool
@@ -233,7 +229,10 @@ def pathlasso(
             real_path = values
         else:
             relative, real_path = values, values*pb.lambdamax
-        return np.asarray(pathlasso_MC1(pb, relative)), list(real_path)
+        BETA = pathlasso_MC1(pb, relative, n_active=n_active)
+        if pb.path_info["stop_reason"] == "n_active":
+            real_path = pb.path_info["evaluated_lambdas"]*pb.lambdamax
+        return np.asarray(BETA), list(real_path)
 
     Nactive = n_active
     if Nactive == 0:

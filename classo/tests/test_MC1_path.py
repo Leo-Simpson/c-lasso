@@ -75,8 +75,8 @@ def test_invalid_requests_and_event_limit():
     pb = problem_MC1((np.eye(3), None, [0, 1, 2]))
     with pytest.raises(ValueError):
         pathlasso_MC1(pb, [.1, .8])
-    with pytest.raises(NotImplementedError):
-        Classo((np.eye(3), None, [0, 1, 2]), .5, typ='MC1', meth='Path-Alg', intercept=True)
+    assert Classo((np.eye(3), None, [0, 1, 2]), .5, typ='MC1',
+                  meth='Path-Alg', intercept=True).shape == (4, 3)
     rng = np.random.default_rng(18)
     pb = problem_MC1((rng.normal(size=(18, 4)), None, np.arange(18) % 3))
     with pytest.raises(RuntimeError, match='max_events'):

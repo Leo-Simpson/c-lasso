@@ -81,8 +81,8 @@ def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None, weig
     active = np.asarray(active, dtype=int)
     K, a = int(n_classes), len(active)
     weights = np.ones(a) if weights is None else np.asarray(weights, float)
-    if weights.shape != (a,) or not np.isfinite(weights).all() or np.any(weights <= 0):
-        raise ValueError("weights must be finite and positive, one per active row")
+    if weights.shape != (a,) or not np.isfinite(weights).all() or np.any(weights < 0):
+        raise ValueError("weights must be finite and nonnegative, one per active row")
     if K < 1 or len(np.unique(active)) != a or np.any(active < 0) or np.any(active >= X.shape[1]):
         raise ValueError("Invalid active rows or class count")
     C = np.empty((0, X.shape[1])) if C is None else np.asarray(C, float)
@@ -109,6 +109,13 @@ def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None, weig
             row[k*a:(k+1)*a] = c
             rows.append(row)
     for j, bindings in enumerate(faces):
+        if weights[j] == 0:
+            # Free coefficient row (e.g. class intercepts): eliminate its
+            # unused epigraph variable, with no coefficient face constraint.
+            row = np.zeros(a*K+a)
+            row[a*K+j] = 1.
+            rows.append(row)
+            continue
         if not bindings:
             raise ValueError("Each active row must have at least one binding face")
         for k, sign in bindings:

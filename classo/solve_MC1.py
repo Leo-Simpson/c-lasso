@@ -29,13 +29,15 @@ class problem_MC1:
         Only 'Path-Alg' is reserved for this incremental implementation.
         Constructing this object does not run a path solver.
 
-    Positive feature weights are supported through w. Intercepts are deferred.
+    Positive feature weights are supported through w. With intercept=True,
+    the returned coefficient matrix starts with an unpenalized class-bias row.
     classes defines the column order of B; targets contains signed indicators.
-    init is the zero coefficient matrix. active is empty at lambdamax;
+    init has zero feature coefficients and fitted constant class biases when
+    requested. active is empty at lambdamax;
     candidates contains dual-tight rows, not a selected entering face.
     """
 
-    def __init__(self, data, algo="Path-Alg", w=None):
+    def __init__(self, data, algo="Path-Alg", w=None, intercept=False):
         if algo != "Path-Alg":
             raise ValueError("MC1 currently reserves only the Path-Alg method")
         X, C, y = data
@@ -68,16 +70,32 @@ class problem_MC1:
                 or np.any(self.weights <= 0)):
             raise ValueError("w must contain one finite positive weight per feature")
 
-        # At B=0, -grad(loss)=2 X.T T. Reuse the general constrained
-        # dual-norm calculation with Y=2T; no full feature Gram is needed.
-        state = initialize_path(self.matrix[0]/self.weights, 2 * self.targets,
-                                self.matrix[1]/self.weights, tol)
+        self.intercept = bool(intercept)
+        self.unpenalized = np.zeros(X.shape[1], dtype=bool)
+        base = np.zeros((X.shape[1], self.n_classes))
+        if self.intercept:
+            X, C, y = self.matrix
+            self.matrix = np.c_[np.ones(len(X)), X], np.c_[np.zeros(len(C)), C], y
+            self.weights = np.r_[0., self.weights]
+            self.unpenalized = np.r_[True, self.unpenalized]
+            self.dim = self.dim[0], self.dim[1]+1, self.dim[2]
+            base = np.zeros((self.dim[1], self.n_classes))
+            base[0] = self.targets.mean(axis=0)
+        X, C, _ = self.matrix
+        penalized = ~self.unpenalized
+        margins = self.targets*X.dot(base)
+        negative_gradient_response = 2*self.targets*np.maximum(1-margins, 0.)
+        state = initialize_path(X[:, penalized]/self.weights[penalized],
+                                negative_gradient_response,
+                                C[:, penalized]/self.weights[penalized], tol)
         self.lambdamax = state["lambda_max"]
-        self.init = state["B"]
-        self.active = state["active"]
-        self.candidates = state["candidates"]
+        self.init = base
+        self.active = np.empty(0, dtype=int)
+        self.candidates = np.flatnonzero(penalized)[state["candidates"]]
         self.dual = state["dual"]
-        self.adjusted_correlations = state["adjusted_correlations"]*self.weights[:, None]
+        self.adjusted_correlations = np.zeros_like(base)
+        self.adjusted_correlations[penalized] = (state["adjusted_correlations"]
+                                                *self.weights[penalized, None])
 
     def _coefficient_matrix(self, B):
         B = np.asarray(B, dtype=float)
@@ -128,15 +146,27 @@ def Classo_MC1(pb, lam):
     return pathlasso_MC1(pb, [lam])[0]
 
 
-def pathlasso_MC1(pb, path):
-    """Evaluate the knot path at descending relative lambda values."""
+def pathlasso_MC1(pb, path, n_active=0):
+    """Evaluate the knot path at descending relative lambda values.
+
+    n_active limits nonzero feature rows, excluding the intercept. The path
+    stops before an outgoing segment would exceed this limit; simultaneous
+    entries are not split. On a sparse stop, return only achieved points,
+    including the stop knot. Their relative lambdas are available through
+    pb.path_info['evaluated_lambdas']; never extrapolate a stopped solution.
+    """
     from .mc1_path_engine import solve_path_MC1
 
     path = np.asarray(path, float)
     if (path.ndim != 1 or not len(path) or not np.isfinite(path).all()
             or np.any(path < 0) or np.any(path > 1) or np.any(np.diff(path) > 0)):
         raise ValueError("path must be a nonempty descending sequence in [0,1]")
-    BETA, knots = solve_path_MC1(pb, path[-1])
+    BETA, knots = solve_path_MC1(pb, path[-1], n_active=n_active)
+    if pb.path_info["stop_reason"] == "n_active":
+        path = path[path >= knots[-1]]
+        if not len(path) or path[-1] > knots[-1]:
+            path = np.r_[path, knots[-1]]
+    pb.path_info["evaluated_lambdas"] = path.copy()
     if len(knots) == 1:
         return [BETA[0].copy() for lam in path]
     out = []

@@ -17,6 +17,7 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
     p, K = B.shape
     weights = getattr(pb, "weights", np.ones(p))
     t = np.max(np.abs(B), axis=1)
+    t[weights == 0] = 0.
     tight = np.abs(certificate).sum(axis=1) >= lam*weights - 20*tol*max(1., lam)
     working = np.flatnonzero((t > tol) | tight)
     a = len(working)
@@ -31,6 +32,11 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
     E = np.c_[np.kron(C[:, working], np.eye(K)), np.zeros((len(C)*K, a))]
     inequalities = []
     for j in range(a):
+        if wa[j] == 0:
+            row = np.zeros(a*K+a)
+            row[a*K+j] = 1.
+            E = np.vstack([E, row])
+            continue
         for k in range(K):
             for sign in (-1, 1):
                 if ta[j] - sign*BA[j, k] <= 20*tol*max(1., ta[j]):
@@ -89,11 +95,14 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
     D[working] = z[:a*K].reshape(a, K)
     dt = np.zeros(p)
     dt[working] = z[a*K:]
-    active = np.flatnonzero((t > tol) | (np.max(np.abs(D), axis=1) > tol))
+    active = np.flatnonzero((t > tol) | (np.max(np.abs(D), axis=1) > tol) | (weights == 0))
     if not len(active):
         raise RuntimeError("MC1 directional program returned no moving rows")
     faces = []
     for j in active:
+        if weights[j] == 0:
+            faces.append([])
+            continue
         face = []
         for k in range(K):
             for sign in (-1, 1):
@@ -144,6 +153,7 @@ def _segment_end(pb, B, lam, D, dt, active, faces, quadratic, cap, tol):
     m = len(C)
     weights = getattr(pb, "weights", np.ones(p))
     t = np.max(np.abs(B), axis=1)
+    t[weights == 0] = 0.
     margins, rate = pb.targets*X.dot(B), pb.targets*X.dot(D)
     candidates = [(float(cap), "endpoint")]
     for i, k in np.ndindex(margins.shape):
@@ -153,6 +163,8 @@ def _segment_end(pb, B, lam, D, dt, active, faces, quadratic, cap, tol):
             if root > 20*tol:
                 candidates.append((float(root), "sample_margin"))
     for j in active:
+        if weights[j] == 0:
+            continue
         if dt[j] < 0 and t[j] > tol:
             candidates.append((float(-t[j]/dt[j]), "row_exit"))
         binding = set(faces[list(active).index(j)])
@@ -180,6 +192,11 @@ def _segment_end(pb, B, lam, D, dt, active, faces, quadratic, cap, tol):
     active_set = set(active)
     rows, rhs = [], []
     for j in range(p):
+        if weights[j] == 0:
+            for k in range(K):
+                bounds[start_s+j*K+k] = (0., 0.)
+                bounds[start_t+j*K+k] = (0., 0.)
+            continue
         if j in active_set:
             allowed = dict(faces[list(active).index(j)])
             row = sparse.lil_matrix((1, total))
@@ -235,7 +252,7 @@ def _segment_end(pb, B, lam, D, dt, active, faces, quadratic, cap, tol):
     return step, S, reasons, residual
 
 
-def solve_path_MC1(pb, lamin=.01, max_events=2000, tol=1e-8):
+def solve_path_MC1(pb, lamin=.01, max_events=2000, tol=1e-8, n_active=0):
     """Trace MC1 knots down to lamin*lambda_max, without refitting a grid.
 
     Returns BETA and relative LAMBDAS as in c-lasso's solve_path. Diagnostics
@@ -243,19 +260,25 @@ def solve_path_MC1(pb, lamin=.01, max_events=2000, tol=1e-8):
     A rank-deficient outgoing face or an unresolved zero step raises, rather
     than silently adding ridge or returning an incomplete path as successful.
     Direction QPs use working rows; certificate LPs scan all feature rows.
+    n_active=0 is unlimited. A positive value stops at the current knot before
+    the next segment would exceed the feature-row budget. Free class biases
+    do not count. path_info distinguishes this stop from reaching lamin.
     """
     if not np.isfinite(lamin) or not 0 <= lamin <= 1:
         raise ValueError("lamin must lie in [0,1]")
     if not np.isfinite(tol) or tol <= 0:
         raise ValueError("tol must be finite and positive")
+    if not isinstance(n_active, (int, np.integer)) or n_active < 0:
+        raise ValueError("n_active must be a nonnegative integer")
     if max_events < 1:
         raise ValueError("max_events must be positive")
     B, lam = pb.init.copy(), pb.lambdamax
     BETA, LAMBDAS = [B.copy()], [1.]
-    info = dict(events=[], working_sizes=[], residuals=[], completed=False)
+    info = dict(events=[], working_sizes=[], residuals=[], completed=False, stop_reason=None)
     pb.path_info = info
     if lam == 0 or lamin == 1:
         info["completed"] = True
+        info["stop_reason"] = "lambda_target"
         if lamin < 1:
             BETA.append(B.copy())
             LAMBDAS.append(float(lamin))
@@ -265,6 +288,9 @@ def solve_path_MC1(pb, lamin=.01, max_events=2000, tol=1e-8):
     target = lamin*pb.lambdamax
     for _ in range(max_events):
         D, dt, active, faces, quadratic, size = _outgoing_direction(pb, B, lam, certificate, tol)
+        if n_active and np.count_nonzero(pb.weights[active] > 0) > n_active:
+            info["stop_reason"] = "n_active"
+            return BETA, LAMBDAS
         step, certificate, reasons, residual = _segment_end(
             pb, B, lam, D, dt, active, faces, quadratic, lam-target, tol)
         B, lam = B+step*D, max(target, lam-step)
@@ -275,5 +301,6 @@ def solve_path_MC1(pb, lamin=.01, max_events=2000, tol=1e-8):
         info["residuals"].append(residual)
         if lam <= target + tol*max(1., pb.lambdamax):
             info["completed"] = True
+            info["stop_reason"] = "lambda_target"
             return BETA, LAMBDAS
     raise RuntimeError("MC1 exceeded max_events before reaching the requested endpoint")
