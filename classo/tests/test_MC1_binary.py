@@ -17,8 +17,8 @@ def reference_MC1(pb, lam):
         loss, grad = pb.loss_gradient(z[:size].reshape(p, K))
         # Scaling improves SLSQP's line search without changing the minimizer.
         scale = len(X)
-        return ((loss + lam * z[size:].sum()) / scale,
-                np.r_[grad.ravel(), np.full(p, lam)] / scale)
+        return ((loss + lam * pb.weights.dot(z[size:])) / scale,
+                np.r_[grad.ravel(), lam*pb.weights] / scale)
 
     # t_j +/- B_jk >= 0, with row-major coefficient ordering.
     T = np.repeat(np.eye(p), K, axis=0)

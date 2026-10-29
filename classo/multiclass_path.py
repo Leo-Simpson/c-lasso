@@ -60,7 +60,7 @@ def initialize_path(X, Y, C=None, tol=1e-8):
                 dual=U, adjusted_correlations=adjusted)
 
 
-def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None):
+def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None, weights=None):
     """Compute dB_A/dlambda and dt_A/dlambda on a valid fixed face.
 
     faces[a] is a sequence of (class_index, sign) pairs binding on active
@@ -80,6 +80,9 @@ def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None):
     X = np.asarray(X, float)
     active = np.asarray(active, dtype=int)
     K, a = int(n_classes), len(active)
+    weights = np.ones(a) if weights is None else np.asarray(weights, float)
+    if weights.shape != (a,) or not np.isfinite(weights).all() or np.any(weights <= 0):
+        raise ValueError("weights must be finite and positive, one per active row")
     if K < 1 or len(np.unique(active)) != a or np.any(active < 0) or np.any(active >= X.shape[1]):
         raise ValueError("Invalid active rows or class count")
     C = np.empty((0, X.shape[1])) if C is None else np.asarray(C, float)
@@ -120,7 +123,7 @@ def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None):
     rank = np.sum(singular > tol * singular[0])
     E = vh[:rank]
     M = np.block([[H, E.T], [E, np.zeros((rank, rank))]])
-    rhs = np.r_[np.zeros(a*K), -np.ones(a), np.zeros(rank)]
+    rhs = np.r_[np.zeros(a*K), -weights, np.zeros(rank)]
     if np.linalg.matrix_rank(M, tol=tol * np.linalg.norm(M, 2)) < len(M):
         raise np.linalg.LinAlgError("Nonunique fixed-face direction; pivot or reduce the face")
     direction = np.linalg.solve(M, rhs)

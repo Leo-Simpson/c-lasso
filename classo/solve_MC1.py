@@ -11,8 +11,8 @@ T_ik is +1 for the observed class and -1 otherwise. The class scores
 are coupled by the row penalty: this is a joint problem, not K binary fits.
 The squared loss is unhalved, consistently with C1 and R1.
 
-This module currently provides the problem data and local quadratic pieces.
-It does not yet provide Classo_MC1 or pathlasso_MC1.
+Classo_MC1 and pathlasso_MC1 use an event-driven path engine, with explicit
+failure on unresolved singular/zero-step states. No implicit ridge is added.
 """
 
 tol = 1e-8
@@ -29,13 +29,13 @@ class problem_MC1:
         Only 'Path-Alg' is reserved for this incremental implementation.
         Constructing this object does not run a path solver.
 
-    Intercepts and feature weights are not supported by this first increment.
+    Positive feature weights are supported through w. Intercepts are deferred.
     classes defines the column order of B; targets contains signed indicators.
     init is the zero coefficient matrix. active is empty at lambdamax;
     candidates contains dual-tight rows, not a selected entering face.
     """
 
-    def __init__(self, data, algo="Path-Alg"):
+    def __init__(self, data, algo="Path-Alg", w=None):
         if algo != "Path-Alg":
             raise ValueError("MC1 currently reserves only the Path-Alg method")
         X, C, y = data
@@ -63,16 +63,21 @@ class problem_MC1:
         self.targets[np.arange(len(X)), encoded] = 1.0
         self.type, self.name = algo, algo + " MC1"
         self.tol, self.regpath = tol, False
+        self.weights = np.ones(X.shape[1]) if w is None else np.asarray(w, float).copy()
+        if (self.weights.shape != (X.shape[1],) or not np.isfinite(self.weights).all()
+                or np.any(self.weights <= 0)):
+            raise ValueError("w must contain one finite positive weight per feature")
 
         # At B=0, -grad(loss)=2 X.T T. Reuse the general constrained
         # dual-norm calculation with Y=2T; no full feature Gram is needed.
-        state = initialize_path(self.matrix[0], 2 * self.targets, self.matrix[1], tol)
+        state = initialize_path(self.matrix[0]/self.weights, 2 * self.targets,
+                                self.matrix[1]/self.weights, tol)
         self.lambdamax = state["lambda_max"]
         self.init = state["B"]
         self.active = state["active"]
         self.candidates = state["candidates"]
         self.dual = state["dual"]
-        self.adjusted_correlations = state["adjusted_correlations"]
+        self.adjusted_correlations = state["adjusted_correlations"]*self.weights[:, None]
 
     def _coefficient_matrix(self, B):
         B = np.asarray(B, dtype=float)
@@ -116,3 +121,27 @@ class problem_MC1:
             Xk = XA[quadratic[:, k]]
             H[k] = 2 * Xk.T.dot(Xk)
         return H, quadratic
+
+
+def Classo_MC1(pb, lam):
+    """Fit at relative lambda in [0,1] by tracing and interpolating the path."""
+    return pathlasso_MC1(pb, [lam])[0]
+
+
+def pathlasso_MC1(pb, path):
+    """Evaluate the knot path at descending relative lambda values."""
+    from .mc1_path_engine import solve_path_MC1
+
+    path = np.asarray(path, float)
+    if (path.ndim != 1 or not len(path) or not np.isfinite(path).all()
+            or np.any(path < 0) or np.any(path > 1) or np.any(np.diff(path) > 0)):
+        raise ValueError("path must be a nonempty descending sequence in [0,1]")
+    BETA, knots = solve_path_MC1(pb, path[-1])
+    if len(knots) == 1:
+        return [BETA[0].copy() for lam in path]
+    out = []
+    for lam in path:
+        i = min(max(np.searchsorted(-np.asarray(knots), -lam, side="right")-1, 0), len(knots)-2)
+        fraction = (knots[i]-lam)/(knots[i]-knots[i+1])
+        out.append((1-fraction)*BETA[i]+fraction*BETA[i+1])
+    return out

@@ -3,7 +3,9 @@ import numpy as np
 from .multiclass_path import face_direction
 
 
-"""Local MC1 path calculations. These do not yet traverse a complete path.
+"""Local MC1 calculations retained alongside the event-driven path engine.
+
+Full knot traversal is implemented by mc1_path_engine.solve_path_MC1.
 
 Use increasing-lambda derivatives, consistently with face_direction. A step
 delta towards lower regularization updates B to B - delta * beta_dot.
@@ -27,7 +29,8 @@ def derivatives_MC1(pb, B, active, faces):
         raise ValueError("A sample is on a margin boundary; select the outgoing region first")
     H, quadratic = pb.active_hessians(B, active)
     beta_dot, t_dot = face_direction(pb.matrix[0], pb.matrix[1], active, faces,
-                                    pb.n_classes, tol=pb.tol, hessians=H)
+                                    pb.n_classes, tol=pb.tol, hessians=H,
+                                    weights=pb.weights[np.asarray(active, dtype=int)])
     return beta_dot, t_dot, quadratic
 
 

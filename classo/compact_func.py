@@ -32,6 +32,20 @@ def Classo(
     return_sigm=True,
 ):
 
+    if typ == "MC1":
+        from .solve_MC1 import problem_MC1, Classo_MC1
+
+        if intercept:
+            raise NotImplementedError("MC1 intercepts are not yet supported")
+        if meth != "Path-Alg":
+            raise ValueError("MC1 currently supports meth='Path-Alg' only")
+        pb = problem_MC1(matrix, meth, w=w)
+        if not np.isfinite(lam) or lam < 0:
+            raise ValueError("lambda must be finite and nonnegative")
+        relative = (min(lam/pb.lambdamax, 1.) if pb.lambdamax else 1.) if true_lam else lam
+        beta = Classo_MC1(pb, relative)
+        return (pb.lambdamax, beta) if get_lambdamax else beta
+
     if w is not None:
         matrices = (matrix[0] / w, matrix[1] / w, matrix[2])
     else:
@@ -198,6 +212,28 @@ def pathlasso(
     w=None,
     intercept=False,
 ):
+
+    if typ == "MC1":
+        from .solve_MC1 import problem_MC1, pathlasso_MC1
+
+        if intercept or n_active:
+            raise NotImplementedError("MC1 intercepts and n_active stopping are not yet supported")
+        if meth != "Path-Alg":
+            raise ValueError("MC1 currently supports meth='Path-Alg' only")
+        pb = problem_MC1(matrix, meth, w=w)
+        if type(lambdas) is bool and (not np.isfinite(lamin) or not 0 <= lamin <= 1):
+            raise ValueError("lamin must lie in [0,1]")
+        values = ((np.linspace(1., 0., 100) if lamin == 0 else np.geomspace(1., lamin, 100)) if type(lambdas) is bool
+                  else np.asarray(lambdas, float))
+        if values.ndim != 1 or not len(values) or not np.isfinite(values).all() or np.any(values < 0):
+            raise ValueError("lambdas must be a finite nonnegative vector")
+        values = np.sort(values)[::-1]
+        if true_lam:
+            relative = np.minimum(values/pb.lambdamax, 1.) if pb.lambdamax else np.ones_like(values)
+            real_path = values
+        else:
+            relative, real_path = values, values*pb.lambdamax
+        return np.asarray(pathlasso_MC1(pb, relative)), list(real_path)
 
     Nactive = n_active
     if Nactive == 0:

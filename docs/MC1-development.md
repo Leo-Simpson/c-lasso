@@ -1,101 +1,126 @@
-# MC1: incremental implementation
+# MC1: joint multiclass squared-hinge path
 
-MC1 is the proposed joint multiclass counterpart of C1, using unhalved
-squared-hinge loss and the sum of row infinity norms:
+MC1 extends C1 to signed multiclass targets T (observed class +1, others -1):
 
     min_B sum_ik max(1 - T_ik (XB)_ik, 0)^2
-          + lambda sum_j max_k |B_jk|,  subject to CB=0.
+          + lambda sum_j w_j max_k |B_jk|, subject to CB=0.
 
-T is +1 for the observed class and -1 otherwise. This is an explicit extension
-of binary C1; it is not a pairwise multiclass margin loss. The original memo's
-one-hot least-squares objective remains a useful quadratic reference but is
-not the classification loss assigned to MC1. Predictions will select the
-largest class score. Coefficients need not sum to zero across class columns.
+The loss is unhalved. All weights must be finite and strictly positive. Classes
+are sorted by `numpy.unique`; their order defines the columns of B. MC2 remains
+reserved for a future Huberized-hinge extension. This is a joint block-penalized
+fit, not independent binary fits or a pairwise multiclass margin loss.
 
-MC2 is reserved for a future Huberized-hinge counterpart of C2; it is not yet
-implemented or selectable. Binary two-column MC1 has its own penalty scaling
-and must not be advertised as numerically identical to C1 with the same lambda.
-For two classes ordered (-1,+1), a symmetric optimum B=(-beta,beta) satisfies
-`objective_MC1(B, 2*lambda) = 2*objective_C1(beta, lambda)`. Thus the first
-numerical reference benchmark compares at this factor-of-two absolute lambda,
-with and without equality constraints. Under unconstrained initialization the
-relative lambda convention also agrees. Uniqueness is not assumed in general.
-The benchmark solves small MC1 epigraph problems with SciPy SLSQP independently
-of C1's path code; it is a future acceptance test for the MC1 path solver, not
-evidence that the unfinished homotopy implementation already fits models.
+## Use
 
-## First increment
+```python
+import numpy as np
+from classo import Classo, pathlasso
+from classo.solve_MC1 import problem_MC1
+from classo.mc1_path_engine import solve_path_MC1
 
-`solve_MC1.py` follows the existing `solve_R1.py` module organization and
-`problem_R1(data, algo)` naming convention. `problem_MC1((X, C, y), 'Path-Alg')`
-stores validated data, sorted class labels, signed targets, zero coefficients,
-lambda_max, and a constraint multiplier certificate. Lambda initialization
-uses the shared constrained dual-norm routine. `loss_gradient(B)` and
-`active_hessians(B, active)` expose the local quadratic model. They do not
-construct a full p-by-p Gram matrix.
+# X: samples by features; y: one class label per sample; C: constraints by features
+B = Classo((X, C, y), .1, typ="MC1", meth="Path-Alg", w=weights)
+B_grid, absolute_lambdas = pathlasso(
+    (X, C, y), [1., .5, .1], typ="MC1", w=weights)
+pb = problem_MC1((X, C, y), w=weights)
+B_knots, relative_knots = solve_path_MC1(pb, lamin=.1)
+predicted = pb.classes[np.argmax(X_test @ B_knots[-1], axis=1)]
+```
 
-This is an internal foundation, not a fitted estimator. There is no MC1 branch
-in `Classo`, `pathlasso`, or `Formulation.name()` yet. Intercepts, weights and
-one-hot input are deliberately deferred. Existing R1–R4 and C1/C2 dispatch is
-unchanged. The generic least-squares face-direction helper remains a reference;
-its common Hessian cannot directly handle class-specific hinge masks.
+`lam` and the knot outputs are relative to lambda_max unless `true_lam=True`
+is passed to the compact functions. Above-threshold absolute lambda returns
+zero coefficients. Compact `Classo` requires `meth="Path-Alg"` explicitly;
+its legacy default method DR is not an MC1 method. `pathlasso` computes knots
+once and interpolates, rather than fitting each requested lambda independently.
+The high-level `classo_problem`/CV/stability-selection interface is not yet
+multiclass-aware. Intercepts and n_active early stopping are not implemented.
 
-## Next increments
+## Event-driven algorithm
 
-The first local path routines now live in `path_alg_MC1.py`:
-`derivatives_MC1` uses class-specific Hessians on an already selected fixed
-face, and `margin_events_MC1` analytically locates sample-margin crossings.
-An identity-design three-class example verifies an exact affine segment and
-its stationarity at interior points. These routines reject unresolved current
-margin boundaries and singular directions. They do not yet choose initial
-faces, release faces, propagate certificates, or traverse a full path.
+`solve_MC1.py` follows the problem_R1, Classo_R1, pathlasso_R1 naming pattern.
+`mc1_path_engine.py` contains the traversal; `path_alg_MC1.py` retains the local
+helpers. Each step:
 
-1. Add a fixed-face KKT solve using class-specific Hessians and explicit
-   face multipliers. Validate derivatives and KKT conditions on small problems.
-2. Add all event candidates: sample margins, maximum-face ties/releases,
-   row exits, and inactive-row dual boundaries. Define simultaneous-event,
-   initial-face, and rank-deficiency handling before claiming an exact path.
-3. Add `Classo_MC1` and `pathlasso_MC1` with the existing relative-lambda
-   convention. Verify against independent convex solutions, including coupled
-   tree constraints and tied entries; then measure runtime for large p.
-4. Integrate compact dispatch and high-level formulation selection, followed
-   by multiclass prediction and model selection with stratified folds.
-5. Consider MC2 after MC1 is numerically and behaviorally stable.
+1. Select working rows: current nonzero rows and inactive rows whose weighted
+   dual L1 bounds are tight under the current certificate.
+2. Solve the directional convex problem on the critical cone, including weak
+   maximum faces and one-sided squared-hinge curvature at sample boundaries.
+   Positive certificate mass fixes strong faces. Equality nullspace reduction
+   removes redundant tangent rows before the numerical QP.
+3. Identify outgoing faces and sample regions, then refine the coefficient
+   direction through a bordered KKT solve on the selected active rows.
+4. Compute primal event caps analytically: sample margins reaching one,
+   coordinates meeting row maxima, row maxima reaching zero, and the endpoint.
+5. Find the largest certified step up to that cap by a sparse LP. It enforces
+   stationarity, nonnegative signed face masses summing to lambda*w on nonzero
+   rows, and weighted dual L1 bounds on inactive rows. Certificate failure ends
+   the segment at a dual event (including entries and face releases).
+6. Move along the affine segment, check endpoint stationarity and equality
+   feasibility, record the knot, and select the next outgoing state.
 
-Each increment should be separately reviewable. Retain original code idioms
-where useful, with clearer validation and numerical checks for the new code.
+The LP optimizes over all feasible certificates on the proposed primal segment;
+this avoids spurious events caused by an arbitrary choice of nonunique dual
+multipliers. It is our extension, not an implementation of the canonical
+certificate rule in the CLASSO paper. Simultaneous primal events are retained;
+the next directional problem handles their outgoing choice jointly.
 
-## Reference-guided extension
+`pb.path_info` records completion, event labels, working-row counts, and endpoint
+residuals. Exceeding max_events, an unresolved zero step, or a nonunique reduced
+KKT direction raises an error. No implicit ridge or lambda-grid fallback is used.
+Dense QP/KKT work depends on the working rows times class count. Sparse LPs scan
+all p rows; their construction is currently Python-heavy and not yet benchmarked
+at p=10,000. No large-p performance claim is made.
 
-The supplied references are Schmelzer and Hastie (2026),
-https://arxiv.org/abs/2609.25704, and Hobson, Butcher and Lentati (2026),
-https://arxiv.org/abs/2610.17024. Their PDFs are stored under `assets` in the
-parent development workspace. The first supplies the bordered segment and
-primal/dual ratio-test perspective; the second makes the directional release
-decision and certificate trajectory explicit. We must not treat every tight
-inequality as binding on the outgoing segment or arbitrarily recertify at
-every kink and infer termination. The second paper's positive-definite-Hessian
-assumption is not automatic for MC1. No ridge is added implicitly here.
+## Binary baseline and numerical references
 
-For our epigraph extension, set z=(vec(B_A),t_A) and q=(0,1). On a fixed
-sample region, the coefficient Hessian consists of the K blocks
-`H_k=2 X[F_k,A].T X[F_k,A]`, with zero curvature on t. E stacks tree
-equalities and selected maximum-face equalities `s*B[j,k]-t[j]=0`.
-Differentiating stationarity gives
+For two classes, B=(-beta,beta) gives
 
-    [ H  E.T ] [ z_dot  ] = [ -q ]
-    [ E   0  ] [ nu_dot ]   [  0 ]
+    objective_MC1(B, 2*lambda) = 2*objective_C1(beta, lambda).
 
-This is our MC1 derivation, not a theorem claimed verbatim from either paper.
-It is valid within a selected nondegenerate region; selecting that region is
-the next problem. A full traversal additionally needs physical nonnegative
-face multipliers, inactive-row dual L1 bounds, their piecewise-affine sign
-changes, and a justified degeneracy/certificate rule. A positive number of
-tested affine pieces does not establish a finite traversal theorem.
+Thus absolute lambda_MC1 must be twice lambda_C1. Independent epigraph solves
+validate MC1 at multiple interior points of every tested affine segment, with
+and without constraints. C1 coefficients are a useful compatibility baseline,
+but the existing implementation includes eps_L2 stabilization in path_alg.py
+(default 1e-3) and 1e-4 sample-margin snapping. It therefore need not equal the
+new unaugmented MC1 solution at machine precision. The independent optimizer
+of the unaugmented objective is the accuracy reference.
 
-Binary reference tests use independent small epigraph solves. Their objectives
-are scaled by sample count to improve SLSQP conditioning, without changing
-the minimizer. The coefficient comparison to existing C1 uses 1e-4 tolerance
-because its sample-margin events are snapped within 1e-4; objective comparisons
-remain tighter. This baseline tolerance must not become the accuracy target
-for the new MC1 homotopy algorithm.
+`examples/iris_MC1_path.py` reproduces small binary and three-class Iris runs
+with a fixed stratified 80/20 split. Standardization uses training samples only.
+The example reports path knots, runtime, endpoint residuals, reference objective
+differences, C1 differences, and train/test accuracy at three prespecified
+lambda values. It does not tune lambda on test data or claim a general accuracy
+advantage. scikit-learn is an optional example dependency.
+
+## trac
+
+`prepare_trac_MC1((X,C,y), A, w)` accepts an already log/CLR-transformed leaf
+design and a binary descendant-membership matrix A. With n_j descendants,
+M=A/n_j maps node coefficients to leaves; the node problem uses X M, C M, and
+w/n_j. C=None in this helper selects the leaf sum-to-zero log-contrast.
+This matches the numerical aggregation and weight scaling in the inspected
+local q2-classo add_taxa source. The helper does not infer a tree or process raw
+counts. The four-leaf benchmark checks normalized versus unnormalized tree
+parameterizations, prediction preservation, and log-contrast constraints.
+Node coefficients may be nonunique; scores and objectives are the comparison.
+
+## References and scope
+
+The parent development workspace stores the supplied PDFs in `assets`:
+
+- Schmelzer and Hastie, arXiv:2609.25704: bordered affine segments and primal/dual
+  event tests. https://arxiv.org/abs/2609.25704
+- Hobson, Butcher and Lentati, arXiv:2610.17024: directional face/release decisions
+  and why finite primal paths do not alone guarantee finite certificate
+  traversal. https://arxiv.org/abs/2610.17024
+- Malioutov, Cetin and Willsky, *Homotopy Continuation for Sparse Signal
+  Representation*, supplied PDF, Section 3: fixed-support affine continuation
+  and scalar coefficient-zero/dual-boundary events. Added during implementation
+  review; not used for the initial scaffold.
+
+MC1 has class-specific piecewise-quadratic Hessians and zero-curvature epigraph
+variables. The cited positive-definiteness/uniqueness assumptions do not transfer
+automatically. This is an event-driven floating-point implementation of the
+piecewise-affine construction, not a proof of finite termination or support for
+all rank-deficient and degenerate inputs. Current tests cover a defined small
+suite; arbitrary trees and high-dimensional paths need broader validation.
