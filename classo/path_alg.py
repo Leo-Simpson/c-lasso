@@ -637,7 +637,9 @@ def up_cl(param):
     for j in range(len(r)):
         #     find if there is a  0< dl < dlamb such that F[j] and r[j]+yADl[j]*dl > 1
         # or  find if there is a  0< dl < dlamb such that not F[j] r[j]+yADl[j]*dl < 1
-        if abs(r[j] - 1) < 1e-4:
+        # Skip the boundary itself, not distinct nearby margin crossings.
+        # A 1e-4 band can leave a sample on the wrong loss piece.
+        if abs(r[j] - 1) < 1e-10:
             continue
         if yADl[j] != 0.0:
             dl = (1 - r[j]) / yADl[j]
