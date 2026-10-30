@@ -71,3 +71,20 @@ def test_C1_certificate_handles_nonunique_constraint_multipliers():
     b0,B,L=solve_path((X,C,y),.08,0,0,'C1',intercept=True)
     assert len(L)>2
     np.testing.assert_allclose(C@B[-1],0,atol=1e-10)
+
+
+def test_C1_does_not_skip_nearly_coincident_margin_events():
+    rng=np.random.default_rng(0)
+    X=rng.normal(size=(24,5))
+    y=np.where(X[:,0]-X[:,1]+rng.normal(size=24)>0,1,-1)
+    X[-1]=X[0]+1e-6*rng.normal(size=5);y[-1]=y[0]
+    X[-2]=X[1]+1e-6*rng.normal(size=5);y[-2]=y[1]
+    pb=parameters_for_update((X,np.ones((1,5)),y),.01,0,'C1',intercept=True)
+    for _ in range(200):
+        check_C1_certificate(pb)
+        actual=y*(X@pb.beta+pb.beta0)
+        assert not np.any(pb.F & (actual>1+1e-8))
+        assert not np.any(~pb.F & (actual<1-1e-8))
+        if pb.lam<=.01:break
+        up_cl(pb)
+    else:pytest.fail('C1 did not reach target')
