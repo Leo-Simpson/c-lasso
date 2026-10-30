@@ -52,12 +52,18 @@ helpers. Each step:
 2. Solve the directional convex problem on the critical cone, including weak
    maximum faces and one-sided squared-hinge curvature at sample boundaries.
    Positive certificate mass fixes strong faces. Equality nullspace reduction
-   removes redundant tangent rows before the numerical QP.
+   removes redundant tangent rows. First try linear solves for the quadratic
+   sample regions; accept only a cone-feasible point with zero reduced gradient.
+   Otherwise use the constrained numerical QP.
 3. Identify outgoing faces and sample regions, then refine the coefficient
-   direction through a bordered KKT solve on the selected active rows.
+   direction through a reduced KKT solve on the selected active rows.
 4. Compute primal event caps analytically: sample margins reaching one,
    coordinates meeting row maxima, row maxima reaching zero, and the endpoint.
-5. Find the largest certified step up to that cap by a sparse LP. It enforces
+5. Try to certify the primal cap using a small least-squares multiplier solve.
+   Check every inactive L1 bound and every active signed subgradient condition.
+   If valid, convex interpolation of the starting and endpoint certificates
+   proves feasibility along the whole segment. Otherwise find the largest
+   certified step up to that cap by a sparse LP. The LP enforces
    stationarity, nonnegative signed face masses summing to lambda*w on nonzero
    rows, and weighted dual L1 bounds on inactive rows. Certificate failure ends
    the segment at a dual event (including entries and face releases).
@@ -71,10 +77,11 @@ certificate rule in the CLASSO paper. Simultaneous primal events are retained;
 the next directional problem handles their outgoing choice jointly.
 
 `pb.path_info` records completion, event labels, working-row counts, and endpoint
-residuals. Exceeding max_events, an unresolved zero step, or a nonunique reduced
+residuals, plus direction_linear/direction_qp and
+certificate_linear/certificate_lp counters. Exceeding max_events, an unresolved zero step, or a nonunique reduced
 KKT direction raises an error. No implicit ridge or lambda-grid fallback is used.
 Dense QP/KKT work depends on the working rows times class count. Sparse LPs scan
-all p rows; their construction is currently Python-heavy and not yet benchmarked
+all p rows; assembly is vectorized and sparse. This has not yet been benchmarked
 at p=10,000. No large-p performance claim is made.
 
 ## Binary baseline and numerical references
@@ -158,3 +165,17 @@ fell from 54.8 seconds to 9.2 seconds. All 130 knots were retained; coefficients
 at 30 common lambda values differed by at most 2.85e-15 and the maximum endpoint
 residual was 3.74e-13. These are illustrative single-run timings, not a general
 scaling guarantee. The certificate LP is now the largest measured cost.
+
+### Checked linear fast paths
+
+The default engine now tries a cone-feasible stationary linear direction before
+SLSQP, and a small multiplier solve plus full subgradient checks before the
+segment LP. A failed trial requests the existing general solver. Diagnostic
+`pb._mc1_fast=False` permits comparisons against that general traversal.
+
+Three-repeat soil timing medians in the same run: binary 2.326 to 0.870 seconds;
+ten classes 12.264 to 7.744 seconds. The paths retained 90 and 130 knots,
+respectively, with zero coefficient difference at 100 common lambda values.
+Binary used 85 linear direction selections and 5 QPs, and 65 linear certificates
+and 24 LPs; ten-class used 121/9 and 86/43. This is an initial fast-path
+implementation, not a complete incremental primal-dual pivot algorithm.

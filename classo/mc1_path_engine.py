@@ -12,6 +12,92 @@ from scipy.optimize import linprog, minimize
 from .multiclass_path import face_direction
 
 
+def _linear_direction(N, JN, XA, targets, interior, boundary, weights, objective, tol):
+    """Try equality-only piecewise-quadratic solves; certify global optimality.
+
+    A feasible point with zero reduced gradient minimizes the convex directional
+    objective even in the presence of the remaining cone inequalities. Failure
+    to find one merely requests the general constrained QP.
+    """
+    a, K = len(weights), targets.shape[1]
+    blocks = N[:a*K].reshape(a, K, -1)
+    scores = np.einsum('ij,jkr->ikr', XA, blocks)
+    region = interior | boundary
+    seen = set()
+    for _ in range(8):
+        key = region.tobytes()
+        if key in seen:
+            return None
+        seen.add(key)
+        selected_scores = scores[region]
+        H = 2*selected_scores.T.dot(selected_scores)
+        rhs = N[a*K:].T.dot(weights)
+        try:
+            v = np.linalg.solve(H, rhs)
+        except np.linalg.LinAlgError:
+            return None
+        if not np.isfinite(v).all():
+            return None
+        z = N.dot(v)
+        _, gradient = objective(z)
+        if (np.max(np.abs(N.T.dot(gradient)), initial=0.) <= 1e-8
+                and np.min(JN.dot(v), initial=0.) >= -1e-9):
+            return z
+        rate = targets*np.einsum('ikr,r->ik', scores, v)
+        region = interior | (boundary & (rate < 0))
+    return None
+
+
+def _endpoint_certificate(pb, grad, lam, active, faces, tol):
+    """Try a small multiplier solve, then check every row's subgradient.
+
+    Feasibility at both endpoints certifies the full affine interval by convex
+    interpolation. A failed candidate is inconclusive and requests the LP.
+    """
+    C = pb.matrix[1]
+    p, K = grad.shape
+    m = len(C)
+    rows, rhs = [], []
+    for j, binding in zip(active, faces):
+        binding = set(binding)
+        classes = {k for k, sign in binding}
+        for k in range(K):
+            if pb.weights[j] == 0 or k not in classes:
+                row = np.zeros((m, K)); row[:, k] = C[:, j]
+                rows.append(row.ravel()); rhs.append(-grad[j, k])
+        if pb.weights[j] > 0:
+            row = np.zeros((m, K))
+            for k, sign in binding:
+                row[:, k] += sign*C[:, j]
+            rows.append(row.ravel())
+            rhs.append(-sum(sign*grad[j, k] for k, sign in binding)-lam*pb.weights[j])
+    if m:
+        if not rows:
+            return None
+        U = np.linalg.lstsq(np.asarray(rows), np.asarray(rhs), rcond=None)[0].reshape(m, K)
+    else:
+        U = np.empty((0, K))
+    S = -grad-C.T.dot(U)
+    tolerance = 5e-9*max(1., np.max(np.abs(grad)), lam)
+    selected = np.zeros(p, dtype=bool); selected[active] = True
+    if np.any(np.abs(S[~selected]).sum(axis=1) > lam*pb.weights[~selected]+tolerance):
+        return None
+    for j, binding in zip(active, faces):
+        if pb.weights[j] == 0:
+            if np.max(np.abs(S[j]), initial=0.) > tolerance:
+                return None
+            continue
+        allowed = np.zeros(K, dtype=bool)
+        for k, sign in binding:
+            allowed[k] = True
+            if sign*S[j, k] < -tolerance:
+                return None
+        if (np.max(np.abs(S[j, ~allowed]), initial=0.) > tolerance
+                or abs(sum(sign*S[j, k] for k, sign in binding)-lam*pb.weights[j]) > tolerance):
+            return None
+    return U, S
+
+
 def _outgoing_direction(pb, B, lam, certificate, tol):
     X, C, _ = pb.matrix
     p, K = B.shape
@@ -80,11 +166,17 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
     constraints = []
     if len(JN):
         constraints.append(dict(type="ineq", fun=lambda v: JN.dot(v), jac=lambda v: JN))
-    fit = minimize(reduced_objective, np.zeros(N.shape[1]), jac=True, method="SLSQP",
-                   constraints=constraints, options=dict(ftol=1e-12, maxiter=2000))
-    if not fit.success:
-        raise RuntimeError("MC1 directional face selection failed: " + fit.message)
-    z = N.dot(fit.x)
+    z = (_linear_direction(N, JN, XA, pb.targets, interior, boundary, wa, objective, tol)
+         if getattr(pb, "_mc1_fast", True) else None)
+    if z is None:
+        fit = minimize(reduced_objective, np.zeros(N.shape[1]), jac=True, method="SLSQP",
+                       constraints=constraints, options=dict(ftol=1e-12, maxiter=2000))
+        if not fit.success:
+            raise RuntimeError("MC1 directional face selection failed: " + fit.message)
+        z = N.dot(fit.x)
+        pb.path_info["direction_qp"] += 1
+    else:
+        pb.path_info["direction_linear"] += 1
     if (np.max(np.abs(E.dot(z)), initial=0.) > 1e-7
             or np.min(J.dot(z), initial=0.) < -1e-7):
         raise RuntimeError("MC1 directional cone residual exceeds tolerance")
@@ -256,6 +348,21 @@ def _segment_end(pb, B, lam, D, dt, active, faces, quadratic, cap, tol):
     upper = min(value for value, _ in candidates)
     _, grad = pb.loss_gradient(B)
     gdot = 2*X.T.dot(quadratic*X.dot(D))
+    # The primal event gives an upper bound. If its endpoint admits a dual
+    # certificate, that bound is attained: no optimization LP is necessary.
+    endpoint = (_endpoint_certificate(pb, grad+upper*gdot, lam-upper, active, faces, tol)
+                if getattr(pb, "_mc1_fast", True) else None)
+    if endpoint is not None:
+        U, S = endpoint
+        _, actual_grad = pb.loss_gradient(B+upper*D)
+        residual = max(np.max(np.abs(actual_grad+C.T.dot(U)+S)),
+                       np.max(np.abs(C.dot(B+upper*D)), initial=0.))
+        if residual <= 5e-9*max(1., np.max(np.abs(actual_grad))):
+            pb.path_info["certificate_linear"] += 1
+            reasons = [reason for value, reason in candidates
+                       if abs(value-upper) <= 50*tol*max(1., lam)]
+            return upper, S, reasons, residual
+    pb.path_info["certificate_lp"] += 1
     # Variables: delta, vec(U), vec(S), vec(abs(S)) (row-major).
     nu, ns = m*K, p*K
     start_s, start_t = 1+nu, 1+nu+ns
@@ -292,7 +399,8 @@ def solve_path_MC1(pb, lamin=.01, max_events=2000, tol=1e-8, n_active=0):
     (events, working-set sizes and endpoint residuals) are stored on pb.path_info.
     A rank-deficient outgoing face or an unresolved zero step raises, rather
     than silently adding ridge or returning an incomplete path as successful.
-    Direction QPs use working rows; certificate LPs scan all feature rows.
+    Linear-solve fast paths are checked before directional QPs and certificate
+    LPs. Direction solves use working rows; certificates scan all feature rows.
     n_active=0 is unlimited. A positive value stops at the current knot before
     the next segment would exceed the feature-row budget. Free class biases
     do not count. path_info distinguishes this stop from reaching lamin.
@@ -307,7 +415,8 @@ def solve_path_MC1(pb, lamin=.01, max_events=2000, tol=1e-8, n_active=0):
         raise ValueError("max_events must be positive")
     B, lam = pb.init.copy(), pb.lambdamax
     BETA, LAMBDAS = [B.copy()], [1.]
-    info = dict(events=[], working_sizes=[], residuals=[], completed=False, stop_reason=None)
+    info = dict(events=[], working_sizes=[], residuals=[], completed=False, stop_reason=None,
+                direction_linear=0, direction_qp=0, certificate_linear=0, certificate_lp=0)
     pb.path_info = info
     pb._mc1_certificate_cache = {}
     if lam == 0 or lamin == 1:
