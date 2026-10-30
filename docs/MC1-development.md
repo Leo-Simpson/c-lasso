@@ -92,11 +92,24 @@ For two classes, B=(-beta,beta) gives
 
 Thus absolute lambda_MC1 must be twice lambda_C1. Independent epigraph solves
 validate MC1 at multiple interior points of every tested affine segment, with
-and without constraints. C1 coefficients are a useful compatibility baseline,
-but the existing implementation includes eps_L2 stabilization in path_alg.py
-(default 1e-3) and 1e-4 sample-margin snapping. It therefore need not equal the
-new unaugmented MC1 solution at machine precision. The independent optimizer
-of the unaugmented objective is the accuracy reference.
+and without constraints. C1 now uses the unregularized Hessian and checks KKT
+conditions at every returned knot. Its intercept margin derivative uses the
+current quadratic sample mean, consistent with the intercept update. The old
+full-sample mean caused tracked margin drift; the hidden direction ridge also
+perturbed sample-event choices. Neither is used in the corrected C1 path.
+Nonunique equality multipliers are checked with a residual-minimizing LP when
+an active-set least-squares candidate fails. Singular tied directions use an
+explicit minimum-norm policy, and the resulting knots must still pass the
+certificate.
+The independent epigraph optimizer remains the accuracy reference.
+
+On the binary 88-soils path with a maximum of 30 features and target relative
+lambda .001, corrected C1 and MC1 agree to 7.14e-14 in coefficients at 150 common
+absolute lambda values. Supports and predictions are identical. Both have 22
+features at the final common lambda. C1 has one extra initial zero-coefficient
+segment because its lambda_max convention differs from MC1's constrained dual
+threshold. Representative median runtimes including checks are .102 s (C1)
+and 1.59 s (MC1); these are local timings, not a general scaling claim.
 
 `examples/iris_MC1_path.py` reproduces small binary and three-class Iris runs
 with a fixed stratified 80/20 split. Standardization uses training samples only.
