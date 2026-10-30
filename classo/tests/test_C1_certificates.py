@@ -88,3 +88,33 @@ def test_C1_does_not_skip_nearly_coincident_margin_events():
         if pb.lam<=.01:break
         up_cl(pb)
     else:pytest.fail('C1 did not reach target')
+
+
+@pytest.mark.parametrize("seed",[0,2,3])
+def test_C1_switches_all_simultaneous_sample_margins(seed):
+    rng=np.random.default_rng(seed)
+    X=rng.normal(size=(24,5))
+    y=np.where(X[:,0]-X[:,1]+rng.normal(size=24)>0,1,-1)
+    X[-1]=X[0];y[-1]=y[0]
+    X[-2]=X[1];y[-2]=y[1]
+    pb=parameters_for_update((X,np.ones((1,5)),y),.01,0,'C1',intercept=True)
+    for _ in range(200):
+        check_C1_certificate(pb)
+        actual=y*(X@pb.beta+pb.beta0)
+        assert not np.any(pb.F & (actual>1+1e-8))
+        assert not np.any(~pb.F & (actual<1-1e-8))
+        if pb.lam<=.01:break
+        up_cl(pb)
+    else:pytest.fail('C1 did not reach target')
+
+
+def test_C1_small_exits_and_constraint_solve_are_scale_invariant():
+    rng=np.random.default_rng(1)
+    X=rng.normal(size=(24,8))
+    y=np.where(X[:,0]-X[:,1]+rng.normal(size=24)>.1,1,-1)
+    C=np.ones((1,8))
+    a,B,L=solve_path((X,C,y),.001,0,0,'C1',intercept=True)
+    b,scaled,K=solve_path((1000*X,C,y),.001,0,0,'C1',intercept=True)
+    np.testing.assert_allclose(B[-1],1000*np.asarray(scaled[-1]),atol=1e-8,rtol=1e-8)
+    assert a[-1]==pytest.approx(b[-1],abs=1e-8)
+    np.testing.assert_allclose(C@scaled[-1],0,atol=1e-10)
