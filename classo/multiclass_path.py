@@ -99,9 +99,6 @@ def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None, weig
     if not np.allclose(hessians, hessians.transpose(0, 2, 1)):
         raise ValueError("Loss Hessians must be symmetric")
     # Column-major B_A: one a-by-a Gram block for each class.
-    H = np.zeros((a*K+a, a*K+a))
-    for k in range(K):
-        H[k*a:(k+1)*a, k*a:(k+1)*a] = hessians[k]
     rows = []
     for k in range(K):
         for c in C[:, active]:
@@ -125,15 +122,28 @@ def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None, weig
             row[k*a+j], row[a*K+j] = sign, -1
             rows.append(row)
     E = np.asarray(rows)
-    # Remove redundant equality rows (e.g. dependent tree constraints).
-    _, singular, vh = np.linalg.svd(E, full_matrices=False)
+    # Eliminate the homogeneous equality block once. Solving on ker(E) is
+    # algebraically equivalent to the bordered KKT solve, without forming
+    # that larger indefinite matrix or repeating its rank decompositions.
+    _, singular, vh = np.linalg.svd(E, full_matrices=True)
     rank = np.sum(singular > tol * singular[0])
     E = vh[:rank]
-    M = np.block([[H, E.T], [E, np.zeros((rank, rank))]])
-    rhs = np.r_[np.zeros(a*K), -weights, np.zeros(rank)]
-    if np.linalg.matrix_rank(M, tol=tol * np.linalg.norm(M, 2)) < len(M):
-        raise np.linalg.LinAlgError("Nonunique fixed-face direction; pivot or reduce the face")
-    direction = np.linalg.solve(M, rhs)
-    if not np.allclose(M @ direction, rhs, atol=tol, rtol=tol):
+    N = vh[rank:].T
+    if N.shape[1]:
+        r = N.shape[1]
+        blocks = N[:a*K].reshape(K, a, r)
+        reduced = sum(block.T.dot(hessians[k]).dot(block) for k, block in enumerate(blocks))
+        reduced = (reduced+reduced.T)/2
+        eigenvalues = np.linalg.eigvalsh(reduced)
+        if eigenvalues[-1] <= 0 or eigenvalues[0] <= tol*eigenvalues[-1]:
+            raise np.linalg.LinAlgError("Nonunique fixed-face direction; pivot or reduce the face")
+        rhs = -N[a*K:].T.dot(weights)
+        coordinates = np.linalg.solve(reduced, rhs)
+        if not np.allclose(reduced.dot(coordinates), rhs, atol=tol, rtol=tol):
+            raise np.linalg.LinAlgError("Reduced KKT residual exceeds tolerance")
+        direction = N.dot(coordinates)
+    else:
+        direction = np.zeros(a*K+a)
+    if not np.allclose(E.dot(direction), 0., atol=tol, rtol=tol):
         raise np.linalg.LinAlgError("KKT residual exceeds tolerance")
     return direction[:a*K].reshape((a, K), order="F"), direction[a*K:a*K+a]

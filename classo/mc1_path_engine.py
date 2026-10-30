@@ -46,19 +46,16 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
                         E = np.vstack([E, row])
                     else:
                         inequalities.append(row)
-    if len(E):
-        _, singular, vh = np.linalg.svd(E, full_matrices=False)
-        rank = np.sum(singular > tol*max(1., singular[0]))
-        E = vh[:rank]
-    else:
-        E = np.empty((0, a*K+a))
     J = np.asarray(inequalities).reshape(-1, a*K+a)
     # Eliminate equalities before the numerical QP. On constrained starts,
     # tangent inequalities can become identically zero in this subspace;
     # leaving them in SLSQP can falsely certify the zero direction.
-    _, se, ve = np.linalg.svd(E, full_matrices=True)
-    erank = np.sum(se > tol)
-    N = ve[erank:].T
+    if len(E):
+        _, singular, vh = np.linalg.svd(E, full_matrices=True)
+        rank = np.sum(singular > tol*max(1., singular[0]))
+        E, N = vh[:rank], vh[rank:].T
+    else:
+        E, N = np.empty((0, a*K+a)), np.eye(a*K+a)
     if not N.shape[1]:
         raise RuntimeError("MC1 critical cone has no free directions")
     JN = J.dot(N)
@@ -140,6 +137,87 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
     return refined, refined_t, active, faces, quadratic, len(working)
 
 
+def _certificate_system(pb, grad, gdot, lam, upper, active, faces):
+    """Assemble the certificate LP with COO triplets, not per-entry LIL rows.
+
+    Variable order and inequality row order match the original formulation.
+    The fixed stationarity block is cached only for the current path run.
+    No pK-by-pK dense matrix is constructed.
+    """
+    C = pb.matrix[1]
+    p, K = grad.shape
+    weights = pb.weights
+    nu, ns = len(C)*K, p*K
+    start_s, start_t = 1+nu, 1+nu+ns
+    total = 1+nu+2*ns
+    cache = getattr(pb, '_mc1_certificate_cache', None)
+    if cache is None:
+        cache = pb._mc1_certificate_cache = {}
+    if 'stationarity' not in cache:
+        cache['stationarity'] = sparse.hstack([
+            sparse.kron(sparse.csc_matrix(C.T), sparse.eye(K), format='csc'),
+            sparse.eye(ns, format='csc'), sparse.csc_matrix((ns, ns))], format='csc')
+    stationarity = sparse.hstack([
+        sparse.csc_matrix(gdot.reshape(-1, 1)), cache['stationarity']], format='csc')
+
+    active_mask = np.zeros(p, dtype=bool)
+    active_mask[active] = True
+    free = np.flatnonzero(weights == 0)
+    selected = np.flatnonzero(active_mask & (weights > 0))
+    inactive = np.flatnonzero(~active_mask & (weights > 0))
+    bounds = np.empty((total, 2))
+    bounds[:, 0], bounds[:, 1] = -np.inf, np.inf
+    bounds[0] = 0., upper
+    bounds[start_t:, 0] = 0.
+    pinned = np.r_[selected, free]
+    coordinates = (pinned[:, None]*K+np.arange(K)).ravel()
+    bounds[start_s+coordinates] = 0.
+    bounds[start_t+coordinates] = 0.
+
+    # Only the small active face list is traversed in Python.
+    entries = [(j, k, sign) for j, binding in zip(active, faces)
+               if weights[j] > 0 for k, sign in binding]
+    if entries:
+        feature, klass, sign = np.asarray(entries, dtype=int).T
+        position = start_s+feature*K+klass
+        positive = sign > 0
+        bounds[position[positive], 1] = np.inf
+        bounds[position[~positive], 0] = -np.inf
+    else:
+        feature = klass = sign = np.empty(0, dtype=int)
+    row_number = np.full(p, -1, dtype=int)
+    row_number[selected] = np.arange(len(selected))
+    face_matrix = sparse.coo_matrix((
+        np.r_[weights[selected], sign],
+        (np.r_[np.arange(len(selected)), row_number[feature]],
+         np.r_[np.zeros(len(selected), dtype=int), start_s+feature*K+klass])),
+        shape=(len(selected), total)).tocsc()
+    A_eq = sparse.vstack([stationarity, face_matrix], format='csc')
+    b_eq = np.r_[-grad.ravel(), lam*weights[selected]]
+
+    if len(inactive):
+        # For each inactive row: -S-T<=0, S-T<=0, sum(T)+delta*w<=lambda*w.
+        q = len(inactive)
+        coordinate = (inactive[:, None]*K+np.arange(K)).ravel()
+        row = (np.arange(q)[:, None]*(2*K+1)+2*np.arange(K)).ravel()
+        sum_row = np.arange(q)*(2*K+1)+2*K
+        rows = np.r_[row, row, row+1, row+1, sum_row, np.repeat(sum_row, K)]
+        columns = np.r_[start_s+coordinate, start_t+coordinate,
+                        start_s+coordinate, start_t+coordinate,
+                        np.zeros(q, dtype=int), start_t+coordinate]
+        values = np.r_[-np.ones(q*K), -np.ones(q*K), np.ones(q*K),
+                       -np.ones(q*K), weights[inactive], np.ones(q*K)]
+        A_ub = sparse.coo_matrix((values, (rows, columns)),
+                                 shape=(q*(2*K+1), total)).tocsc()
+        b_ub = np.zeros(q*(2*K+1))
+        b_ub[sum_row] = lam*weights[inactive]
+    else:
+        A_ub = b_ub = None
+    objective = np.zeros(total)
+    objective[0] = -1.
+    return objective, A_eq, b_eq, A_ub, b_ub, bounds
+
+
 def _segment_end(pb, B, lam, D, dt, active, faces, quadratic, cap, tol):
     """Maximize the certified affine interval, including all dual events.
 
@@ -181,55 +259,10 @@ def _segment_end(pb, B, lam, D, dt, active, faces, quadratic, cap, tol):
     # Variables: delta, vec(U), vec(S), vec(abs(S)) (row-major).
     nu, ns = m*K, p*K
     start_s, start_t = 1+nu, 1+nu+ns
-    total = 1+nu+2*ns
-    stationarity = sparse.hstack([
-        sparse.csc_matrix(gdot.reshape(-1, 1)),
-        sparse.kron(sparse.csc_matrix(C.T), sparse.eye(K)),
-        sparse.eye(ns), sparse.csc_matrix((ns, ns))], format="csc")
-    eq = [stationarity]
-    eq_rhs = [-grad.ravel()]
-    bounds = [(0., upper)] + [(None, None)]*nu + [(None, None)]*ns + [(0., None)]*ns
-    active_set = set(active)
-    rows, rhs = [], []
-    for j in range(p):
-        if weights[j] == 0:
-            for k in range(K):
-                bounds[start_s+j*K+k] = (0., 0.)
-                bounds[start_t+j*K+k] = (0., 0.)
-            continue
-        if j in active_set:
-            allowed = dict(faces[list(active).index(j)])
-            row = sparse.lil_matrix((1, total))
-            row[0, 0] = weights[j]
-            for k in range(K):
-                pos = start_s+j*K+k
-                if k in allowed:
-                    sign = allowed[k]
-                    bounds[pos] = (0., None) if sign == 1 else (None, 0.)
-                    row[0, pos] = sign
-                else:
-                    bounds[pos] = (0., 0.)
-                bounds[start_t+j*K+k] = (0., 0.)
-            eq.append(row.tocsc())
-            eq_rhs.append(np.array([lam*weights[j]]))
-        else:
-            for k in range(K):
-                for sign in (-1, 1):
-                    row = sparse.lil_matrix((1, total))
-                    row[0, start_s+j*K+k] = sign
-                    row[0, start_t+j*K+k] = -1.
-                    rows.append(row.tocsc())
-                    rhs.append(0.)
-            row = sparse.lil_matrix((1, total))
-            row[0, 0] = weights[j]
-            row[0, start_t+j*K:start_t+(j+1)*K] = 1.
-            rows.append(row.tocsc())
-            rhs.append(lam*weights[j])
-    objective = np.zeros(total)
-    objective[0] = -1.
-    fit = linprog(objective, A_ub=sparse.vstack(rows) if rows else None,
-                  b_ub=rhs if rows else None, A_eq=sparse.vstack(eq),
-                  b_eq=np.concatenate(eq_rhs), bounds=bounds, method="highs",
+    objective, A_eq, b_eq, A_ub, b_ub, bounds = _certificate_system(
+        pb, grad, gdot, lam, upper, active, faces)
+    fit = linprog(objective, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq,
+                  b_eq=b_eq, bounds=bounds, method="highs",
                   options=dict(primal_feasibility_tolerance=1e-9,
                                dual_feasibility_tolerance=1e-9))
     if not fit.success:
@@ -276,6 +309,7 @@ def solve_path_MC1(pb, lamin=.01, max_events=2000, tol=1e-8, n_active=0):
     BETA, LAMBDAS = [B.copy()], [1.]
     info = dict(events=[], working_sizes=[], residuals=[], completed=False, stop_reason=None)
     pb.path_info = info
+    pb._mc1_certificate_cache = {}
     if lam == 0 or lamin == 1:
         info["completed"] = True
         info["stop_reason"] = "lambda_target"

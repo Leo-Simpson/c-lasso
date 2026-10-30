@@ -143,3 +143,18 @@ counts; the MATLAB taxonomy table itself is opaque to SciPy.
 This is an exploratory full-data support comparison, not predictive validation.
 The example needs biom-format and pandas; neither is added as a core solver
 dependency. Run it with `--output /absolute/path/to/results`.
+
+### Numerical performance update
+
+Certificate constraints are assembled directly as sparse COO/CSC matrices, with
+constant stationarity blocks cached for each path. Fixed-face directions use
+SVD to eliminate homogeneous equalities and solve the reduced positive-definite
+system; singular directions are still rejected. The outgoing-direction step
+also reuses a single SVD for its equality basis and nullspace. These changes
+retain the directional QP, dual-certificate LP and endpoint residual checks.
+
+On the 88-soils, 10-class example with support capped at 20, serial local runs
+fell from 54.8 seconds to 9.2 seconds. All 130 knots were retained; coefficients
+at 30 common lambda values differed by at most 2.85e-15 and the maximum endpoint
+residual was 3.74e-13. These are illustrative single-run timings, not a general
+scaling guarantee. The certificate LP is now the largest measured cost.
