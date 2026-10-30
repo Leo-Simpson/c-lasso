@@ -196,16 +196,26 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
 def _C1_inverse(matrix):
     """Symmetric inverse, with a minimum-norm policy for tied directions.
 
-    Rank-deficient active sets (e.g. duplicated columns) use the Moore-Penrose
-    inverse, not a ridge-perturbed objective. Returned knots must still pass
+    Rank-deficient active sets (e.g. duplicated columns) use a minimum-norm
+    inverse in equilibrated coordinates, not a ridge-perturbed objective. Returned knots must still pass
     the actual primal/dual certificate; inconsistent directions are rejected.
     """
-    eigenvalues, vectors = LA.eigh(matrix)
+    # Symmetric equilibration prevents large feature scales from causing
+    # genuine constraint directions to be mistaken for numerical nullspace.
+    scaling = np.ones(len(matrix))
+    balanced = matrix.copy()
+    for _ in range(5):
+        norm = np.max(np.abs(balanced), axis=1, initial=0.)
+        factor = np.ones_like(norm)
+        factor[norm > 0] = 1./np.sqrt(norm[norm > 0])
+        scaling *= factor
+        balanced = factor[:, None]*balanced*factor[None, :]
+    eigenvalues, vectors = LA.eigh(balanced)
     cutoff = 1e-12*np.max(np.abs(eigenvalues), initial=0.)
     nonzero = np.abs(eigenvalues) > cutoff
     inverse = np.zeros_like(eigenvalues)
     inverse[nonzero] = 1./eigenvalues[nonzero]
-    return (vectors*inverse).dot(vectors.T)
+    return scaling[:, None]*(vectors*inverse).dot(vectors.T)*scaling[None, :]
 
 
 def check_C1_certificate(param, tol=1e-7):
@@ -603,7 +613,8 @@ def up_cl(param):
     activity = param.activity
     F = param.F
     beta = param.beta
-    s = param.s
+    # Roundoff at a saturated dual coordinate must not suppress its event.
+    s = np.where(np.abs(np.abs(param.s)-1.) < 1e-10, np.sign(param.s), param.s)
     lam = param.lam
     M = param.M
     r = param.r
@@ -615,7 +626,9 @@ def up_cl(param):
     for i in range(d):
         bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
         if activity[i]:
-            if abs(bi * di) > 1e-10 and bi * di > 0:
+            # A small coefficient can still cross zero before any other
+            # event. A product threshold here is not invariant to X scaling.
+            if abs(bi) > 1e-12 and bi * di > 0:
                 L[i] = bi / (di * lambdamax)
         else:
             if abs(e + s0) < 1e-10 or abs(s0) > 1:
@@ -627,8 +640,6 @@ def up_cl(param):
             L[i] = dl * lam
 
     dlamb = min(min(L), lam, lam - lamin)
-    max_up = False
-    j_switch = None
     yADl = -y * A.dot(beta_dot) * lambdamax
     if param.intercept:
         # The intercept derivative uses the CURRENT quadratic sample set.
@@ -646,7 +657,14 @@ def up_cl(param):
         else:
             dl = -1
         if dl < dlamb and dl > 0:
-            max_up, j_switch, dlamb = True, j, dl
+            dlamb = dl
+
+    # Several samples can reach the same boundary at exactly one knot.
+    # Switch all of them, including ties with a coefficient event.
+    sample_switches = np.flatnonzero(
+        (np.abs(r + yADl*dlamb - 1.) <= 1e-10)
+        & (np.abs(r - 1.) > 1e-10))
+    max_up = len(sample_switches) > 0
 
     beta = beta - lambdamax * beta_dot * dlamb
     if dlamb < lam:
@@ -659,7 +677,7 @@ def up_cl(param):
         beta0 = param.beta0 - lambdamax * beta0_dot * dlamb
 
     if max_up:
-        F[j_switch] = not F[j_switch]
+        F[sample_switches] = ~F[sample_switches]
         # sufficient :
         # F = F | (r < 1. - 1e-10)
         # necessary :
@@ -669,26 +687,24 @@ def up_cl(param):
             M[:d, :][:, :d] = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
         else:
             M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + eps_L2 * np.eye(d)
-    else:
-        # Update matrix inverse, list of rows in C and activity
-        for i in range(d):
-            if L[i] < dlamb + 1e-10:
-                if activity[i]:
-                    activity[i], number_act = False, number_act - 1
-                    if len(M) > d:
-                        to_ad = next_idr2(idr, M[d:, :d][:, activity])
-                        if type(to_ad) == int:
-                            idr[to_ad] = False
-                else:
-                    # x = M[:,activity+idr][i]
-                    # al = M[i,i]-np.vdot(x,Xt.dot(x))
-                    # if (abs(al)<1e-10): break
-                    activity[i], number_act = True, number_act + 1
-                    if len(M) > d:
-                        to_ad = next_idr1(idr, M[d:, :d][:, activity])
-                        if type(to_ad) == int:
-                            idr[to_ad] = True
-
+    # Update matrix inverse, list of rows in C and activity
+    for i in range(d):
+        if L[i] < dlamb + 1e-10:
+            if activity[i]:
+                activity[i], number_act = False, number_act - 1
+                if len(M) > d:
+                    to_ad = next_idr2(idr, M[d:, :d][:, activity])
+                    if type(to_ad) == int:
+                        idr[to_ad] = False
+            else:
+                # x = M[:,activity+idr][i]
+                # al = M[i,i]-np.vdot(x,Xt.dot(x))
+                # if (abs(al)<1e-10): break
+                activity[i], number_act = True, number_act + 1
+                if len(M) > d:
+                    to_ad = next_idr1(idr, M[d:, :d][:, activity])
+                    if type(to_ad) == int:
+                        idr[to_ad] = True
     N = M[activity + idr, :][:, activity + idr]
 
     Xt = _C1_inverse(N)
