@@ -60,6 +60,10 @@ class parameters_for_update:
         self.intercept = intercept
         n, d, k = len(self.A), len(self.A[0]), len(self.C)
         self.number_act = 0
+        # C1 follows the unregularized squared-hinge objective. A hidden
+        # ridge changes directions and can change which margin event is next.
+        if typ == "C1":
+            eps_L2 = 0.
         self.eps_L2 = eps_L2
         self.idr = [False] * k
         self.activity = [False] * d
@@ -112,10 +116,13 @@ class parameters_for_update:
             )
 
         N = self.M[self.activity + self.idr, :][:, self.activity + self.idr]
-        try:
-            self.Xt = LA.inv(N)
-        except LA.LinAlgError:
-            self.Xt = LA.inv(N + self.eps_L2 * np.eye(len(N)))
+        if typ == "C1":
+            self.Xt = _C1_inverse(N)
+        else:
+            try:
+                self.Xt = LA.inv(N)
+            except LA.LinAlgError:
+                self.Xt = LA.inv(N + self.eps_L2 * np.eye(len(N)))
 
 
 # iteration of the function up to solve the path at each breaking points.
@@ -142,6 +149,8 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
     if intercept:
         BETA0 = [param.beta0]
     BETA, LAM = [param.beta], [param.lam]
+    if typ == "C1":
+        check_C1_certificate(param)
     if param.lam < lamin:
         if intercept:
             return BETA0, BETA, LAM
@@ -167,6 +176,8 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
         #                      "with rho equal to {} ".format(i, typ, intercept, rho ))
 
         up(param)
+        if typ == "C1":
+            check_C1_certificate(param)
         BETA.append(param.beta), LAM.append(param.lam)
 
         # print("inside : ", param.r[ param.F], np.nonzero(param.F)[0] )
@@ -180,6 +191,78 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
         "and with lamin=%f" % lamin,
         " and with n_active =" + str(n_active),
     )
+
+
+def _C1_inverse(matrix):
+    """Symmetric inverse, with a minimum-norm policy for tied directions.
+
+    Rank-deficient active sets (e.g. duplicated columns) use the Moore-Penrose
+    inverse, not a ridge-perturbed objective. Returned knots must still pass
+    the actual primal/dual certificate; inconsistent directions are rejected.
+    """
+    eigenvalues, vectors = LA.eigh(matrix)
+    cutoff = 1e-12*np.max(np.abs(eigenvalues), initial=0.)
+    nonzero = np.abs(eigenvalues) > cutoff
+    inverse = np.zeros_like(eigenvalues)
+    inverse[nonzero] = 1./eigenvalues[nonzero]
+    return (vectors*inverse).dot(vectors.T)
+
+
+def check_C1_certificate(param, tol=1e-7):
+    """Check the actual squared-hinge KKT conditions at a returned C1 knot.
+
+    First try the small active stationarity multiplier solve. If its choice
+    of nonunique multipliers fails, minimize the residual over all multipliers
+    with a small LP. Never confuse a failed multiplier candidate with failure
+    of the primal solution. No coefficient refit or numerical ridge is used.
+    """
+    A, C, y = param.A, param.C, param.y
+    margin = y*(A.dot(param.beta)+param.beta0)
+    v = 2*y*np.minimum(margin-1., 0.)
+    gradient = A.T.dot(v)
+    lam = param.lam*param.lambdamax
+    scale = max(1., lam, np.max(np.abs(gradient), initial=0.))
+    allowance = tol*scale
+    active = np.abs(param.beta) > 1e-9
+    rhs = -gradient[active]-lam*np.sign(param.beta[active])
+    if len(C) and np.any(active):
+        dual = LA.lstsq(C[:, active].T, rhs, rcond=None)[0]
+    else:
+        dual = np.zeros(len(C))
+
+    def stationarity_residual(dual):
+        adjusted = gradient+C.T.dot(dual)
+        return max(np.max(np.maximum(np.abs(adjusted)-lam, 0.), initial=0.),
+                   np.max(np.abs(adjusted[active]+lam*np.sign(param.beta[active])), initial=0.))
+
+    residual = stationarity_residual(dual)
+    if residual > allowance and len(C):
+        from scipy.optimize import linprog
+        # Minimize the infinity-norm KKT error over all equality multipliers.
+        blocks = [C.T, -C.T, C[:, active].T, -C[:, active].T]
+        M = np.vstack(blocks)
+        fit = linprog(np.r_[np.zeros(len(C)), 1.],
+                      A_ub=np.c_[M, -np.ones(len(M))],
+                      b_ub=np.r_[lam-gradient, lam+gradient, rhs, -rhs],
+                      bounds=[(None, None)]*len(C)+[(0., None)], method="highs")
+        if not fit.success:
+            raise RuntimeError("C1 certificate multiplier LP failed: " + fit.message)
+        dual = fit.x[:-1]
+        residual = stationarity_residual(dual)
+    margin_error = np.max(np.abs(margin-param.r), initial=0.)
+    equality_error = np.max(np.abs(C.dot(param.beta)), initial=0.)
+    intercept_error = abs(v.sum()) if param.intercept else 0.
+    if (residual > allowance or intercept_error > allowance
+            or equality_error > tol*max(1., np.max(np.abs(param.beta), initial=0.))
+            or margin_error > tol*max(1., np.max(np.abs(margin), initial=0.))):
+        raise RuntimeError(
+            "C1 path failed its KKT certificate at lambda={:.8g}: "
+            "stationarity={:.3g}, intercept={:.3g}, equality={:.3g}, margins={:.3g}"
+            .format(lam, residual, intercept_error, equality_error, margin_error))
+    param.certificate = dict(dual=dual, stationarity=residual,
+                             intercept=intercept_error, equality=equality_error,
+                             margins=margin_error)
+    return param.certificate
 
 
 def solve_path_Conc(matrices, stop, n_active=False, lassopath=True, true_lam=False):
@@ -548,7 +631,9 @@ def up_cl(param):
     j_switch = None
     yADl = -y * A.dot(beta_dot) * lambdamax
     if param.intercept:
-        yADl += y * np.vdot(param.Abar, beta_dot) * lambdamax
+        # The intercept derivative uses the CURRENT quadratic sample set.
+        # Using the original full-sample mean makes tracked margins drift.
+        yADl += y * np.vdot(np.mean(A[F], axis=0), beta_dot) * lambdamax
     for j in range(len(r)):
         #     find if there is a  0< dl < dlamb such that F[j] and r[j]+yADl[j]*dl > 1
         # or  find if there is a  0< dl < dlamb such that not F[j] r[j]+yADl[j]*dl < 1
@@ -604,10 +689,7 @@ def up_cl(param):
 
     N = M[activity + idr, :][:, activity + idr]
 
-    try:
-        Xt = LA.inv(N)
-    except LA.LinAlgError:
-        Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
+    Xt = _C1_inverse(N)
 
     param.number_act = number_act
     param.idr = idr
