@@ -111,7 +111,7 @@ def Classo(
         if true_lam:
             out = solve_path(
                 matrices,
-                lam / lambdamax,
+                (lam / lambdamax if lambdamax else 1.),
                 False,
                 rho_classification,
                 "C2",
@@ -134,7 +134,7 @@ def Classo(
         lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept=intercept)
         if true_lam:
             out = solve_path(
-                matrices, lam / lambdamax, False, 0, "C1", intercept=intercept
+                matrices, (lam / lambdamax if lambdamax else 1.), False, 0, "C1", intercept=intercept
             )
         else:
             out = solve_path(matrices, lam, False, 0, "C1", intercept=intercept)
@@ -217,6 +217,7 @@ def pathlasso(
     else:
         matrices = matrix
 
+    raw_lambdass = list(lambdass)
     X, C, y = matrices
 
     if typ == "R2":
@@ -276,7 +277,7 @@ def pathlasso(
             matrices, rho_classification, typ="C2", intercept=intercept
         )
         if true_lam:
-            lambdass = [lamb / lambdamax for lamb in lambdass]
+            lambdass = [lamb / lambdamax if lambdamax else 1. for lamb in lambdass]
         BETA = pathalgo_general(
             matrices,
             lambdass,
@@ -292,7 +293,7 @@ def pathlasso(
 
         lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept=intercept)
         if true_lam:
-            lambdass = [lamb / lambdamax for lamb in lambdass]
+            lambdass = [lamb / lambdamax if lambdamax else 1. for lamb in lambdass]
         BETA = pathalgo_general(
             matrices, lambdass, "C1", n_active=Nactive, intercept=intercept
         )
@@ -314,7 +315,8 @@ def pathlasso(
         if intercept:
             BETA = np.array([[ybar - Xbar.dot(beta)] + list(beta) for beta in BETA])
 
-    real_path = [lam * lambdamax for lam in lambdass]
+    real_path = (raw_lambdass if true_lam and typ in ["C1", "C2"] and lambdamax == 0
+                 else [lam * lambdamax for lam in lambdass])
 
     if w is not None:
         if intercept:
