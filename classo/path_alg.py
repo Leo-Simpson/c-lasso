@@ -655,6 +655,12 @@ def up_cl(param):
     L = [lam] * d
     Mat = M[:d, :d]
     beta_dot, lam_s_dot = derivatives(activity, s, Mat, M[d:, :d], Xt, idr, number_act)
+    # At a zero coefficient the L1 sign is a one-sided constraint. An
+    # equality-only active solve can point into the opposite orthant.
+    zero_active=np.asarray(activity)&(np.abs(beta)<=1e-12)
+    curvature_scale=max(np.max(np.abs(Mat),initial=0.),np.finfo(float).tiny)
+    if np.any(zero_active & (s*beta_dot>1e-10/curvature_scale)):
+        return _classification_curved_step(param)
     if param.formulation=="C2":
         # At rho/one choose the outgoing one-sided quadratic region before
         # solving event times, including starts exactly at a hinge boundary.
@@ -687,7 +693,9 @@ def up_cl(param):
             if abs(bi) > 1e-12 and bi * di > 0:
                 L[i] = bi / (di * lambdamax)
         else:
-            if abs(e - s0 if param.formulation=="C2" else e + s0) < 1e-10 or abs(s0) > 1:
+            # s_new = e + lam/(lam-delta)*(s0-e). It is constant
+            # only when e == s0; e == -s0 can be an immediate entry.
+            if abs(e - s0) < 1e-10 or abs(s0) > 1:
                 continue
             if e > s0:
                 dl = (1 + s0) / (1 + e)
@@ -778,25 +786,33 @@ def _classification_curved_step(param):
     offset=int(param.intercept)
     X=np.c_[np.ones(len(A)),A] if offset else A
     constraints=np.c_[np.zeros((len(C),offset)),C]
-    B=(np.r_[param.beta0,param.beta] if offset else param.beta)[:,None]
+    # theta=scale*beta, X_new=X/scale, lambda_new=lambda/scale.
+    # The objective and equality constraints are unchanged; this prevents
+    # feature units from ill-conditioning the one-sided directional QP.
+    scale=np.max(np.abs(A),initial=0.) or 1.
+    X=X/scale
+    B=(np.r_[param.beta0,param.beta] if offset else param.beta)[:,None]*scale
     def loss_gradient(beta):
         m=y*X.dot(beta)[:,0]
+        if param.formulation=="C1":
+            hinge=np.maximum(1.-m,0.)
+            return hinge.dot(hinge),-2*X.T.dot((y*hinge)[:,None])
         loss=np.where(m<param.rho,(1-param.rho)**2+2*(1-param.rho)*(param.rho-m),np.maximum(1-m,0)**2)
         return loss.sum(),2*X.T.dot((y*np.minimum(np.maximum(m,param.rho)-1.,0.))[:,None])
     pb=SimpleNamespace(matrix=(X,constraints,y),targets=y[:,None],weights=np.r_[np.zeros(offset),np.ones(A.shape[1])],
-        loss_gradient=loss_gradient,_hinge_lower=param.rho,_mc1_allow_tree_nullspace=True,
+        loss_gradient=loss_gradient,_hinge_lower=(param.rho if param.formulation=="C2" else None),_mc1_allow_tree_nullspace=True,
         path_info=dict(direction_linear=0,direction_qp=0,certificate_linear=0,certificate_lp=0))
     cert=check_C1_certificate(param)
     _,gradient=loss_gradient(B)
-    certificate=-gradient-constraints.T.dot(cert['dual'][:,None])
-    absolute=param.lam*param.lambdamax
+    certificate=-gradient-constraints.T.dot(cert['dual'][:,None]/scale)
+    absolute=param.lam*param.lambdamax/scale
     D,dt,active,faces,quadratic,_=_outgoing_direction(pb,B,absolute,certificate,1e-9)
     step,_,_,_=_segment_end(pb,B,absolute,D,dt,active,faces,quadratic,
-                           absolute-param.lamin*param.lambdamax,1e-9)
-    beta=(B+step*D)[:,0]
+                           absolute-param.lamin*param.lambdamax/scale,1e-9)
+    beta=(B+step*D)[:,0]/scale
     param.beta=beta[offset:].copy()
     if offset:param.beta0=float(beta[0])
-    remaining=absolute-step
+    remaining=(absolute-step)*scale
     target=param.lamin*param.lambdamax
     param.lam=(param.lamin if remaining-target<=1e-10*max(1.,param.lambdamax)
                else remaining/param.lambdamax)
