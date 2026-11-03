@@ -36,6 +36,6 @@ setup(
         "Programming Language :: Python :: 3.9",
     ],
     long_description_content_type="text/markdown",
-    long_description=open("README.md").read(),
+    long_description=open("README.md", encoding="utf-8").read(),
     zip_safe=False,
 )
