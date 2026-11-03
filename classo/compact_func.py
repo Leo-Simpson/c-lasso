@@ -31,6 +31,30 @@ def Classo(
     intercept=False,
     return_sigm=True,
 ):
+    """Solve the constrained Lasso problem of formulation ``typ`` at a single lambda.
+
+    Args:
+        matrix (tuple) : the data ``(X, C, y)``.
+        lam (float) : the penalty, as a fraction of lambda_max (unless ``true_lam`` is True).
+        typ (str, optional) : formulation, one of "R1", "R2", "R3", "R4", "C1", "C2".
+        meth (str, optional) : numerical method, "Path-Alg", "DR", "P-PDS" or "PF-PDS".
+        get_lambdamax (bool, optional) : if True, lambda_max is returned first.
+        intercept (bool, optional) : if True, an unpenalized intercept is fitted and returned first in beta.
+
+    Returns:
+        ndarray : the solution beta, preceded by lambda_max if ``get_lambdamax``,
+        and followed by sigma for the concomitant formulations "R3" and "R4".
+
+    Example:
+        >>> import numpy as np
+        >>> from classo import random_data, Classo
+        >>> (X, C, y), sol = random_data(50, 10, 3, 1, 0.5, zerosum=True, seed=4)
+        >>> beta = Classo((X, C, y), 0.1, meth="Path-Alg")
+        >>> np.nonzero(np.abs(beta) > 1e-3)[0]
+        array([1, 2, 5])
+        >>> bool(abs(C @ beta).max() < 1e-8)
+        True
+    """
 
     if w is not None:
         matrices = (matrix[0] / w, matrix[1] / w, matrix[2])
@@ -198,6 +222,33 @@ def pathlasso(
     w=None,
     intercept=False,
 ):
+    """Compute the solutions of formulation ``typ`` along a path of lambdas.
+
+    Args:
+        matrix (tuple) : the data ``(X, C, y)``.
+        lambdas (ndarray, optional) : lambdas as fractions of lambda_max; by default 100 values from 1 to ``lamin``.
+        n_active (int, optional) : if positive, stop once this many coefficients are active.
+        typ (str, optional) : formulation, one of "R1", "R2", "R3", "R4", "C1", "C2".
+        meth (str, optional) : numerical method, "Path-Alg", "DR", "P-PDS" or "PF-PDS".
+        return_sigm (bool, optional) : for "R3" and "R4", also return the sigmas.
+        intercept (bool, optional) : if True, an unpenalized intercept is fitted and returned first in each beta.
+
+    Returns:
+        tuple : ``(BETAS, lambdas)`` with one beta per row of BETAS and the lambdas
+        rescaled by lambda_max, plus the sigmas when ``return_sigm`` applies.
+
+    Example:
+        >>> import numpy as np
+        >>> from classo import random_data, pathlasso
+        >>> (X, C, y), sol = random_data(50, 10, 3, 1, 0.5, zerosum=True, seed=4)
+        >>> BETAS, lambdas = pathlasso((X, C, y), lambdas=np.linspace(1.0, 0.1, 5))
+        >>> BETAS.shape
+        (5, 10)
+        >>> np.count_nonzero(np.abs(BETAS) > 1e-3, axis=1)
+        array([0, 0, 2, 3, 3])
+        >>> bool(np.abs(BETAS @ C.T).max() < 1e-8)
+        True
+    """
 
     Nactive = n_active
     if Nactive == 0:
