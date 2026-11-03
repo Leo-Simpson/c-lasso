@@ -245,3 +245,6 @@ dmypy.json
 .pyre/
 
 # End of https://www.gitignore.io/api/osx,code,python,intellij,jupyternotebooks
+
+# marimo session caches
+__marimo__/
