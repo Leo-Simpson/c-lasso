@@ -12,46 +12,46 @@ and show how to predict Body Mass Index (BMI) from microbial genus abundances an
 import sys, os
 from os.path import join, dirname, abspath
 
-classo_dir = dirname(dirname(abspath("__file__")))
+# this file is in classo/examples/scripts, so we need to go up three levels to get the classo directory
+classo_dir = dirname(dirname(dirname(abspath(__file__))))
 sys.path.append(classo_dir)
 from classo import classo_problem, clr
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 # %%
 #  Define how to read csv
 # ^^^^^^^^^^^^^^^^^^^^^^^^
 
-
-def csv_to_np(file, begin=1, header=None):
+data_dir = join(classo_dir, "examples/COMBO_data")
+def csv_to_np(filename, begin=1, header=None):
     """Function to read a csv file and to create an ndarray with this
 
     Args:
-        file (str): Name of csv file
+        filename (str): Name of csv file
         begin (int, optional): First colomn where it should read the matrix
         header (None or int, optional): Same parameter as in the function :func:`pandas.read_csv`
 
     Returns:
         ndarray : matrix of the csv file
     """
-    tab1 = pd.read_csv(file, header=header)
+    tab1 = pd.read_csv(join(data_dir, filename), header=header)
     return np.array(tab1)[:, begin:]
 
 
 # %%
 #  Load microbiome and covariate data X
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-data_dir = join(classo_dir, "examples/COMBO_data")
-X0 = csv_to_np(join(data_dir, "complete_data/GeneraCounts.csv"), begin=0).astype(float)
-X_C = csv_to_np(join(data_dir, "CaloriData.csv"), begin=0).astype(float)
-X_F = csv_to_np(join(data_dir, "FatData.csv"), begin=0).astype(float)
+
+X0 = csv_to_np("complete_data/GeneraCounts.csv", begin=0).astype(float)
+X_C = csv_to_np("CaloriData.csv", begin=0).astype(float)
+X_F = csv_to_np("FatData.csv", begin=0).astype(float)
 
 # %%
 #  Load BMI measurements y
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-y = csv_to_np(join(data_dir, "BMI.csv"), begin=0).astype(float)[:, 0]
-labels = csv_to_np(join(data_dir, "complete_data/GeneraPhylo.csv")).astype(str)[:, -1]
+y = csv_to_np("BMI.csv", begin=0).astype(float)[:, 0]
+labels = csv_to_np("complete_data/GeneraPhylo.csv").astype(str)[:, -1]
 
 
 # %%

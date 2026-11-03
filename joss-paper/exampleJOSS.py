@@ -1,5 +1,8 @@
-# here is the path of the directory where one wants to save its figures
-path = "/Users/lsimpson/Desktop/GitHub/c-lasso/paper/figures/"
+import sys, os
+from os.path import join, dirname, abspath
+figure_dir = join(dirname(abspath(__file__)), "figures")
+
+
 import numpy
 from classo import classo_problem, random_data
 
@@ -20,23 +23,12 @@ problem.model_selection.LAMfixedparameters.lam = 0.1
 
 problem.solve()
 
-
-problem.solution.StabSel.save1 = (
-    path + problem.model_selection.StabSelparameters.numerical_method + "-StabSel"
-)
-problem.solution.StabSel.save2 = (
-    path + problem.model_selection.StabSelparameters.numerical_method + "-StabSel-path"
-)
-problem.solution.StabSel.save3 = (
-    path + problem.model_selection.StabSelparameters.numerical_method + "-StabSel-beta"
-)
-# problem.solution.CV.save = path+'CV-beta'
-problem.solution.LAMfixed.save = (
-    path + problem.model_selection.PATHparameters.numerical_method + "-LAM-beta"
-)
-problem.solution.PATH.save = (
-    path + problem.model_selection.LAMfixedparameters.numerical_method + "-PATH"
-)
-
+name_method = problem.model_selection.LAMfixedparameters.numerical_method
+problem.solution.StabSel.save1 = f"{figure_dir}/{name_method}-StabSel"
+problem.solution.StabSel.save2 = f"{figure_dir}/{name_method}-StabSel-path"
+problem.solution.StabSel.save3 = f"{figure_dir}/{name_method}-StabSel-beta"
+# problem.solution.CV.save = path+'CV-beta
+problem.solution.LAMfixed.save = f"{figure_dir}/{problem.model_selection.PATHparameters.numerical_method}-LAM-beta"
+problem.solution.PATH.save = f"{figure_dir}/{problem.model_selection.LAMfixedparameters.numerical_method}-PATH"
 
 print(problem.solution)

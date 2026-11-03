@@ -1,17 +1,24 @@
-path = "../../figures/examplePH/"
 import sys, os
-from os.path import join, dirname
+from os.path import join, dirname, abspath
 
-classo_dir = dirname(dirname(__file__))
+# this file is in classo/examples/scripts, so we need to go up three levels to get the classo directory
+classo_dir = dirname(dirname(dirname(abspath(__file__))))
 sys.path.append(classo_dir)
+from classo import classo_problem
+import numpy as np
+
+figure_dir = join(classo_dir, "figures/examplePH")
+
 
 from classo import classo_problem
 import numpy as np
 from copy import deepcopy as dc
 import scipy.io as sio
 
-pH = sio.loadmat("pH_data/matlab/pHData.mat")
-tax = sio.loadmat("pH_data/matlab/taxTablepHData.mat")["None"][0]
+data_dir = join(classo_dir, "examples", "pH_data/matlab")
+
+pH = sio.loadmat(join(data_dir, "pHData.mat"))
+# tax = sio.loadmat(join(data_dir, "taxTablepHData.mat"))["None"][0]
 
 X, Y_uncent = pH["X"], pH["Y"].T[0]
 y = Y_uncent - np.mean(Y_uncent)  # Center Y
@@ -20,17 +27,17 @@ problem = classo_problem(X, y)  # zero sum is default C
 # Solve the entire path
 problem.model_selection.PATH = True
 problem.solve()
-problem.solution.PATH.save = path + "R3-"
-problem.solution.StabSel.save1 = path + "R3-StabSel"
-problem.solution.StabSel.save3 = path + "R3-StabSel-beta"
+problem.solution.PATH.save = join(figure_dir, "R3-")
+problem.solution.StabSel.save1 = join(figure_dir, "R3-StabSel")
+problem.solution.StabSel.save3 = join(figure_dir, "R3-StabSel-beta")
 problem1 = dc(problem)
 
 # problem.formulation.huber = True
 
 problem.solve()
-problem.solution.PATH.save = path + "R4-"
-problem.solution.StabSel.save1 = path + "R4-StabSel"
-problem.solution.StabSel.save3 = path + "R4-StabSel-beta"
+problem.solution.PATH.save = join(figure_dir, "R4-")
+problem.solution.StabSel.save1 = join(figure_dir, "R4-StabSel")
+problem.solution.StabSel.save3 = join(figure_dir, "R4-StabSel-beta")
 problem2 = dc(problem)
 
 print(problem1, problem1.solution)

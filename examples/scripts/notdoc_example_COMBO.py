@@ -1,34 +1,35 @@
-path = "../../figures/exampleCOMBO/"
 import sys, os
-from os.path import join, dirname
+from os.path import join, dirname, abspath
 
-classo_dir = dirname(dirname(__file__))
+# this file is in classo/examples/scripts, so we need to go up three levels to get the classo directory
+classo_dir = dirname(dirname(dirname(abspath(__file__))))
 sys.path.append(classo_dir)
 from classo import classo_problem, clr
 import pandas as pd
 import numpy as np
 
-
-def csv_to_np(file, begin=1, header=None):
+figure_dir = join(classo_dir, "figures/exampleCOMBO")
+data_file = join(classo_dir, "examples", "COMBO_data")
+def csv_to_np(filename, begin=1, header=None):
     """Function to read a csv file and to create an ndarray with this
 
     Args:
-        file (str): Name of csv file
+        filename (str): Name of csv file
         begin (int, optional): First colomn where it should read the matrix
         header (None or int, optional): Same parameter as in the function :func:`pandas.read_csv`
 
     Returns:
         ndarray : matrix of the csv file
     """
-    tab1 = pd.read_csv(file, header=header)
+    tab1 = pd.read_csv(join(data_file, filename), header=header)
     return np.array(tab1)[:, begin:]
 
 
-X0 = csv_to_np("COMBO_data/GeneraCounts.csv", begin=0).astype(float)
-X_C = csv_to_np("COMBO_data/CaloriData.csv", begin=0).astype(float)
-X_F = csv_to_np("COMBO_data/FatData.csv", begin=0).astype(float)
-y = csv_to_np("COMBO_data/BMI.csv", begin=0).astype(float)[:, 0]
-labels = csv_to_np("COMBO_data/GeneraPhylo.csv").astype(str)[:, -1]
+X0 = csv_to_np("complete_data/GeneraCounts.csv", begin=0).astype(float)
+X_C = csv_to_np("CaloriData.csv", begin=0).astype(float)
+X_F = csv_to_np("FatData.csv", begin=0).astype(float)
+y = csv_to_np("BMI.csv", begin=0).astype(float)[:, 0]
+labels = csv_to_np("complete_data/GeneraPhylo.csv").astype(str)[:, -1]
 
 y = y - np.mean(y)  # BMI data (n=96)
 X_C = X_C - np.mean(X_C, axis=0)  # Covariate data (Calorie)
@@ -53,9 +54,9 @@ problem.model_selection.PATH = True
 
 # for R3
 problem.solve()
-problem.solution.PATH.save = path + "R3-"
-problem.solution.StabSel.save1 = path + "R3-StabSel"
-problem.solution.StabSel.save3 = path + "R3-StabSel-beta"
+problem.solution.PATH.save = join(figure_dir, "R3-")
+problem.solution.StabSel.save1 = join(figure_dir, "R3-StabSel")
+problem.solution.StabSel.save3 = join(figure_dir, "R3-StabSel-beta")
 print(problem, problem.solution)
 
 
@@ -63,23 +64,23 @@ print(problem, problem.solution)
 problem.formulation.huber = True
 problem.solve()
 
-problem.solution.PATH.save = path + "R4-"
-problem.solution.StabSel.save1 = path + "R4-StabSel"
-problem.solution.StabSel.save3 = path + "R4-StabSel-beta"
+problem.solution.PATH.save = join(figure_dir, "R4-")
+problem.solution.StabSel.save1 = join(figure_dir, "R4-StabSel")
+problem.solution.StabSel.save3 = join(figure_dir, "R4-StabSel-beta")
 print(problem, problem.solution)
 
 # for R2
 problem.formulation.concomitant = False
 problem.solve()
-problem.solution.PATH.save = path + "R2-"
-problem.solution.StabSel.save1 = path + "R2-StabSel"
-problem.solution.StabSel.save3 = path + "R2-StabSel-beta"
+problem.solution.PATH.save = join(figure_dir, "R2-")
+problem.solution.StabSel.save1 = join(figure_dir, "R2-StabSel")
+problem.solution.StabSel.save3 = join(figure_dir, "R2-StabSel-beta")
 print(problem, problem.solution)
 
 # for R1
 problem.formulation.huber = False
 problem.solve()
-problem.solution.PATH.save = path + "R1-"
-problem.solution.StabSel.save1 = path + "R1-StabSel"
-problem.solution.StabSel.save3 = path + "R1-StabSel-beta"
+problem.solution.PATH.save = join(figure_dir, "R1-")
+problem.solution.StabSel.save1 = join(figure_dir, "R1-StabSel")
+problem.solution.StabSel.save3 = join(figure_dir, "R1-StabSel-beta")
 print(problem, problem.solution)

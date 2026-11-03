@@ -21,7 +21,8 @@ A similar analysis is also done in `Tree-Aggregated Predictive Modeling of Micro
 import sys, os
 from os.path import join, dirname, abspath
 
-classo_dir = dirname(dirname(abspath("__file__")))
+# this file is in classo/examples/scripts, so we need to go up three levels to get the classo directory
+classo_dir = dirname(dirname(dirname(abspath(__file__))))
 sys.path.append(classo_dir)
 from classo import classo_problem
 import numpy as np
@@ -32,10 +33,10 @@ import pandas as pd
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-
-t = pd.read_csv("pH_data/qiime2/news/table.csv", index_col=0)
+data_dir = join(classo_dir, "examples", "pH_data")
+t = pd.read_csv(join(data_dir, "qiime2/news/table.csv"), index_col=0)
 metadata = pd.read_table(
-    "pH_data/qiime2/originals/88soils_modified_metadata.txt", index_col=0
+    join(data_dir, "qiime2/originals/88soils_modified_metadata.txt"), index_col=0
 )
 y_uncent = metadata["ph"].values
 
@@ -43,11 +44,10 @@ y_uncent = metadata["ph"].values
 X = t.values
 label = t.columns
 
-
-# second option to load the data
+# # second option to load the data
 # import scipy.io as sio
-# pH = sio.loadmat("pH_data/matlab/pHData.mat")
-# tax = sio.loadmat("pH_data/matlab/taxTablepHData.mat")["None"][0]
+# pH = sio.loadmat(join(data_dir, "matlab/pHData.mat"))
+# tax = sio.loadmat(join(data_dir, "matlab/taxTablepHData.mat"))["None"][0]
 # X, y_uncent = pH["X"], pH["Y"].T[0]
 # label = None
 

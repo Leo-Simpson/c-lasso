@@ -29,7 +29,8 @@ and the classes Alpha and Gammaproteobacteria being positively associated with m
 import sys, os
 from os.path import join, dirname, abspath
 
-classo_dir = dirname(dirname(abspath("__file__")))
+# this file is in classo/examples/scripts, so we need to go up three levels to get the classo directory
+classo_dir = dirname(dirname(dirname(abspath(__file__))))
 sys.path.append(classo_dir)
 from classo import classo_problem
 import matplotlib.pyplot as plt
@@ -38,7 +39,16 @@ import numpy as np
 # %%
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^
-data_dir = join(classo_dir, "examples/Tara")
+data_dir = join(classo_dir, "examples", "Tara")
+
+assert os.path.exists(join(data_dir, "tara.npz")), (
+    "Data file not found. "
+    f"Please run the preprocessing python file in {data_dir}."
+)
+assert os.path.exists(join(data_dir, "A.npy")), (
+    "Data file not found. "
+    f"Please run the preprocessing python file in {data_dir}."
+)
 
 data = np.load(join(data_dir, "tara.npz"))
 
@@ -46,6 +56,7 @@ x = data["x"]
 label = data["label"]
 y = data["y"]
 tr = data["tr"]
+
 
 A = np.load(join(data_dir, "A.npy"))
 

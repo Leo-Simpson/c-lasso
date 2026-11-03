@@ -16,7 +16,8 @@ This task is also done in `Tree-Aggregated Predictive Modeling of Microbiome Dat
 import sys, os
 from os.path import join, dirname, abspath
 
-classo_dir = dirname(dirname(abspath("__file__")))
+# this file is in classo/examples/scripts, so we need to go up three levels to get the classo directory
+classo_dir = dirname(dirname(dirname(abspath(__file__))))
 sys.path.append(classo_dir)
 
 from classo import classo_problem
@@ -26,13 +27,23 @@ import numpy as np
 # %%
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^
-data_dir = join(classo_dir, "examples/CentralParkSoil")
+
+data_dir = join(classo_dir, "examples", "CentralParkSoil")
+
+assert os.path.exists(join(data_dir, "cps.npz")), (
+    "Data file not found. "
+    f"Please run the preprocessing python file in {data_dir}."
+)
 data = np.load(join(data_dir, "cps.npz"))
 
 x = data["x"]
 label = data["label"]
 y = data["y"]
 
+assert os.path.exists(join(data_dir, "A.npy")), (
+    "Data file not found. "
+    f"Please run the preprocessing python file in {data_dir}."
+)
 A = np.load(join(data_dir, "A.npy"))
 
 # %%
