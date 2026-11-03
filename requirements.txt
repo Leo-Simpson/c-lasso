@@ -1,9 +1,5 @@
-matplotlib 
+matplotlib
 numpy
 pandas
 scipy
 pytest
-pytest-cov
-sphinx
-sphinx-gallery
-sphinx_rtd_theme
