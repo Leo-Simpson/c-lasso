@@ -27,6 +27,7 @@ the kingdom bacteria and the phylum Bacteroidetes being negatively associated
 and the classes Alpha and Gammaproteobacteria being positively associated with marine salinity.
 """
 import sys, os
+import runpy
 from os.path import join, dirname, abspath
 from pathlib import Path
 if "__file__" in globals():
@@ -46,14 +47,9 @@ import numpy as np
 # ^^^^^^^^^^^^^^^^^^^
 data_dir = join(classo_dir, "examples", "Tara")
 
-assert os.path.exists(join(data_dir, "tara.npz")), (
-    "Data file not found. "
-    f"Please run the preprocessing python file {data_dir}/preprocessing.py."
-)
-assert os.path.exists(join(data_dir, "A.npy")), (
-    "Data file not found. "
-    f"Please run the preprocessing python file {data_dir}/preprocessing.py."
-)
+if not os.path.exists(join(data_dir, "tara.npz")) or not os.path.exists(join(data_dir, "A.npy")):
+    print("Preprocessing Tara data...")
+    runpy.run_path(join(data_dir, "preprocessing.py"), run_name="__main__")
 
 data = np.load(join(data_dir, "tara.npz"))
 

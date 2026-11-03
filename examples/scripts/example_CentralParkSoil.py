@@ -14,6 +14,7 @@ This task is also done in `Tree-Aggregated Predictive Modeling of Microbiome Dat
 # Import the package
 # ^^^^^^^^^^^^^^^^^^^^
 import sys, os
+import runpy
 from os.path import join, dirname, abspath
 from pathlib import Path
 if "__file__" in globals():
@@ -35,20 +36,15 @@ import numpy as np
 
 data_dir = join(classo_dir, "examples", "CentralParkSoil")
 
-assert os.path.exists(join(data_dir, "cps.npz")), (
-    "Data file not found. "
-    f"Please run the preprocessing python file {data_dir}/preprocessing.py."
-)
+if not os.path.exists(join(data_dir, "cps.npz")) or not os.path.exists( join(data_dir, "A.npy")):
+    print("Preprocessing Central Park Soil data...")
+    runpy.run_path(join(data_dir, "preprocessing.py"), run_name="__main__")
 data = np.load(join(data_dir, "cps.npz"))
 
 x = data["x"]
 label = data["label"]
 y = data["y"]
 
-assert os.path.exists(join(data_dir, "A.npy")), (
-    "Data file not found. "
-    f"Please run the preprocessing python file {data_dir}/preprocessing.py."
-)
 A = np.load(join(data_dir, "A.npy"))
 
 # %%
