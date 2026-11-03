@@ -1,45 +1,37 @@
-# %%
-# !pip install rpy2
+"""Convert the bundled Central Park Soil R data to NumPy files, without R."""
 
-# %%
+from pathlib import Path
+import warnings
+
 import numpy as np
-# import rpy in order to read data generated on R
-import rpy2.robjects as ro
-from rpy2.robjects.packages import importr
+import rdata
+from scipy.sparse import csc_matrix
 
-# %%
-# this code code be used in order to import R library Matrix
-# utils = importr('utils')    
-# utils.chooseCRANmirror(ind=1) #
-# utils.install_packages('Matrix')
-# importr('Matrix')
+DATA_DIR = Path(__file__).resolve().parent
 
-# %%
-#Open R file tara_sal_processed.RDS
-file = 'cps_pH_processed.RDS'
-rds = ro.r['readRDS'](file)
+A_path = DATA_DIR / "A.npy"
+A_path.unlink(missing_ok=True)
 
-# %%
-rA = ro.r["as.matrix"](rds[4])
+cps_path = DATA_DIR / "cps.npz"
+cps_path.unlink(missing_ok=True)
 
-# %%
-x = np.array(rds[1])
-y = np.array(rds[0])
-A = np.array(rA)
+with warnings.catch_warnings():
+    # rdata exposes unsupported R classes as their underlying slots.
+    warnings.filterwarnings("ignore", message="Missing constructor for R class")
+    data = rdata.read_rds(DATA_DIR / "cps_pH_processed.RDS")
 
-label_OTU = rds[1].colnames
-label_sample =rds[1].rownames
-label_nodes = np.array(list(rA.colnames))
-label_short = np.array([l.split("::")[-1] for l in label_nodes])
-print(y.shape)
-print(x.shape)
-print(A.shape)
+y = data["y"]
+x = data["x"].values
 
-# %%
-np.savez('cps.npz', y=y, x=x, label=label_nodes)
-np.save('A.npy', A)
-
-# %%
+# R's dgCMatrix slots use the same compressed-column layout as SciPy.
+rA = data["A"]
+A = csc_matrix((rA.x, rA.i, rA.p), shape=tuple(rA.Dim)).toarray()
+label_nodes = np.asarray(rA.Dimnames[1], dtype=str)
 
 
+np.save(A_path, A)
+print(f"Saved A.npy,  {A.shape=}")
 
+
+np.savez(cps_path, y=y, x=x, label=label_nodes)
+print(f"Saved cps.npz: y {y.shape}, x {x.shape}, A {A.shape}")
