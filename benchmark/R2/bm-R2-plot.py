@@ -8,7 +8,10 @@ my_path = os.path.dirname(__file__)
 
 output = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "output"))
 
-
+assert os.path.exists(os.path.join(my_path, "bm-R2.npz")), (
+    "Data file not found. "
+    f"Please run the preprocessing python file bm-R2.py"
+)
 data = np.load(os.path.join(my_path, "bm-R2.npz"))
 
 ticks = [str(tuple(size)) for size in data["SIZES"]]
