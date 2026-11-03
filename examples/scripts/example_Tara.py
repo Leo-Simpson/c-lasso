@@ -48,11 +48,11 @@ data_dir = join(classo_dir, "examples", "Tara")
 
 assert os.path.exists(join(data_dir, "tara.npz")), (
     "Data file not found. "
-    f"Please run the preprocessing python file in {data_dir}."
+    f"Please run the preprocessing python file {data_dir}/preprocessing.py."
 )
 assert os.path.exists(join(data_dir, "A.npy")), (
     "Data file not found. "
-    f"Please run the preprocessing python file in {data_dir}."
+    f"Please run the preprocessing python file {data_dir}/preprocessing.py."
 )
 
 data = np.load(join(data_dir, "tara.npz"))
