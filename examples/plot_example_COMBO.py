@@ -2,7 +2,7 @@ r"""
 BMI prediction using the COMBO dataset 
 ==========================================
 
-We first consider the `COMBO data set <https://github.com/Leo-Simpson/c-lasso/tree/master/examples/COMBO_data>`_
+We first consider the `COMBO data set <https://github.com/bio-datascience/c-lasso/tree/master/examples/COMBO_data>`_
 and show how to predict Body Mass Index (BMI) from microbial genus abundances and two non-compositional covariates  using "filtered_data".
 """
 

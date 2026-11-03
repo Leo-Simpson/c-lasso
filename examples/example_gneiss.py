@@ -3,12 +3,12 @@ pH prediction using the 88 soils dataset
 ===================================================
 
 The next microbiome example considers a
-`Soil dataset <https://github.com/Leo-Simpson/c-lasso/tree/master/examples/pH_data>`_ .
+`Soil dataset <https://github.com/bio-datascience/c-lasso/tree/master/examples/pH_data>`_ .
 
-The data are generated thanks to a `qiime2 workflow <https://github.com/Leo-Simpson/c-lasso/blob/master/examples/pH_data/qiime2/read%20data.ipynb>`_
+The data are generated thanks to a `qiime2 workflow <https://github.com/bio-datascience/c-lasso/blob/master/examples/pH_data/qiime2/read%20data.ipynb>`_
 similar to `a gneiss tutorial <https://github.com/biocore/gneiss/blob/master/ipynb/88soils/88soils-qiime2-tutorial.ipynb>`_.
 
-This workflow treat `some files <https://github.com/Leo-Simpson/c-lasso/blob/master/examples/pH_data/qiime2/originals>`_ 
+This workflow treat `some files <https://github.com/bio-datascience/c-lasso/blob/master/examples/pH_data/qiime2/originals>`_
 taken from `gneiss GitHub <https://github.com/biocore/gneiss/tree/master/ipynb/88soils>`_.
 
 

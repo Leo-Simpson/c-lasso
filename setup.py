@@ -7,7 +7,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     license="MIT",
     author="Leo Simpson",
-    url="https://github.com/Leo-Simpson/CLasso",
+    url="https://github.com/bio-datascience/c-lasso",
     author_email="leo.bill.simpson@gmail.com",
     description="Algorithms for constrained Lasso problems",
     packages=["classo"],
