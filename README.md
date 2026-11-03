@@ -155,7 +155,7 @@ print(problem)
 
 This gives you a summary of the form:
 
-```
+```text
 FORMULATION: R3
  
 MODEL SELECTION COMPUTED:  
@@ -192,7 +192,7 @@ print(problem.solution)
 
 The command shows the running time(s) for the c-lasso problem instance, and the selected variables for sability selection
 
-```
+```text
 STABILITY SELECTION : 
    Selected variables :  7    63    148    164    168    
    Running time :  1.546s
@@ -238,7 +238,7 @@ print(problem.solution)
 ```
 
 Results : 
-```
+```text
      FORMULATION: R2
      
      MODEL SELECTION COMPUTED:  
@@ -393,7 +393,7 @@ with Central Park soil data from [Ramirez et al.](https://royalsocietypublishing
 
 Code to run this application is available in [the accompanying notebook](./examples/example-notebook.ipynb) under `pH data`. Below is a summary of a c-lasso problem instance (using the R3 formulation).
  
-```
+```text
 FORMULATION: R3
  
 MODEL SELECTION COMPUTED:  
@@ -427,7 +427,7 @@ STABILITY SELECTION PARAMETERS:
 
 The c-lasso estimation results are summarized below:
 
-```
+```text
 LAMBDA FIXED : 
    Sigma  =  0.198
    Selected variables :  14    18    19    39    43    57    62    85    93    94    104    107    
