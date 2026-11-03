@@ -394,398 +394,144 @@ def up(param):
         )
 
 
-def up_LS(param):
-    """
-    Function to call to go from a breaking point to the next one
-    """
-    # parameters that does not change
-    lambdamax = param.lambdamax
-    lamin = param.lamin
-    M = param.M
-    C = param.C
-    eps_L2 = param.eps_L2
+def _active_event_product(bi, di):
+    """An active coefficient reaches zero (threshold on beta_i * dbeta_i)."""
+    return abs(bi * di) > 1e-10 and bi * di > 0
 
-    # parameters to be updated
-    number_act = param.number_act
-    idr = param.idr
-    Xt = param.Xt
-    activity = param.activity
-    beta = param.beta
-    s = param.s
-    lam = param.lam
 
-    d = len(activity)
-    L = [lam] * d
-    Mat = M[:d, :d]
-    beta_dot, lam_s_dot = derivatives(activity, s, Mat, M[d:, :d], Xt, idr, number_act)
-    for i in range(d):
+def _active_event_cl(bi, di):
+    """An active coefficient reaches zero.
+
+    A small coefficient can still cross zero before any other event, and a
+    product threshold is not invariant to X scaling.
+    """
+    return abs(bi) > 1e-12 and bi * di > 0
+
+
+def _skip_inactive_ls(e, s0):
+    return abs(e - s0) < 1e-10
+
+
+def _skip_inactive_huber(e, s0):
+    return abs(e + s0) < 1e-10 or abs(s0) > 1
+
+
+def _skip_inactive_huber_cl(e, s0):
+    return abs(e - s0) < 1e-10 or abs(s0) > 1
+
+
+def _coefficient_events(
+    lam, lambdamax, activity, beta, beta_dot, lam_s_dot, s, active_event, skip_inactive
+):
+    """For each coefficient, the decrease of lambda at which its activity changes.
+
+    Active coefficients leave when they reach zero; inactive ones enter when their
+    subgradient reaches +-1. Coefficients without an event keep ``lam``.
+    """
+    L = [lam] * len(activity)
+    for i in range(len(activity)):
         bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
         if activity[i]:
-            if abs(bi * di) > 1e-10 and bi * di > 0:
+            if active_event(bi, di):
                 L[i] = bi / (di * lambdamax)
-        else:
-            if abs(e - s0) < 1e-10:
-                continue
-            if e > s0:
-                dl = (1 + s0) / (1 + e)
-            else:
-                dl = (1 - s0) / (1 - e)
+        elif not skip_inactive(e, s0):
+            dl = (1 + s0) / (1 + e) if e > s0 else (1 - s0) / (1 - e)
             L[i] = dl * lam
-    dlamb = min(min(L), lam - lamin)
-    # Update matrix inverse, list of rows in C and activity
-    for i in range(d):
-        if L[i] < dlamb + 1e-10:
-            if activity[i]:
-                activity[i], number_act = False, number_act - 1
-                if len(M) > d:
-                    to_ad = next_idr2(idr, C[:, activity])
-                    if type(to_ad) == int:
-                        idr[to_ad] = False
-            else:
-                # x = M[:, activity + idr][i]
-                # al = M[i, i] - np.vdot(x, Xt.dot(x))
-                # if (abs(al) < 1e-10): break
-                activity[i], number_act = True, number_act + 1
-                if len(M) > d:
-                    to_ad = next_idr1(idr, C[:, activity])
-                    if type(to_ad) == int:
-                        idr[to_ad] = True
+    return L
 
-    N = M[activity + idr, :][:, activity + idr]
 
-    try:
-        Xt = LA.inv(N)
-    except LA.LinAlgError:
-        Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
+def _update_activity(L, dlamb, activity, number_act, idr, constraints, has_constraints):
+    """Switch the coefficients whose event happens at dlamb, and the rows of C kept in idr.
 
+    ``activity`` and ``idr`` are updated in place; the new number of active
+    coefficients is returned.
+    """
+    for i in range(len(activity)):
+        if not L[i] < dlamb + 1e-10:  # (also skips NaN, as before)
+            continue
+        activity[i] = not activity[i]
+        number_act += 1 if activity[i] else -1
+        if has_constraints:
+            next_idr = next_idr1 if activity[i] else next_idr2
+            to_ad = next_idr(idr, constraints[:, activity])
+            if type(to_ad) == int:
+                idr[to_ad] = activity[i]
+    return number_act
+
+
+def _advance(beta, beta_dot, s, lam_s_dot, lam, dlamb, lambdamax):
+    """Move beta and the subgradient s from lam to lam - dlamb."""
     beta = beta - lambdamax * beta_dot * dlamb
     if dlamb < lam:
         s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
-    lam -= dlamb
-
-    param.number_act = number_act
-    param.idr = idr
-    param.Xt = Xt
-    param.activity = activity
-    param.beta = beta
-    param.s = s
-    param.lam = lam
+    return beta, s, lam - dlamb
 
 
-def up_huber(param):
+def _next_beta0(param, A, F, beta_dot, dlamb, lambdamax):
+    """Move the intercept along with beta, using the current quadratic sample set F."""
+    beta0_dot = -np.vdot(np.mean(A[F], axis=0), beta_dot)
+    return param.beta0 - lambdamax * beta0_dot * dlamb
+
+
+def _refresh_quadratic_block(M, A, F, d, eps_L2, intercept):
+    """Recompute the X^T X block of M for the samples in F."""
+    if intercept:
+        P = A[F] - np.mean(A[F], axis=0)
+        M[:d, :][:, :d] = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
+    else:
+        M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + eps_L2 * np.eye(d)
+
+
+def _regularised_inverse(N, eps_L2):
+    try:
+        return LA.inv(N)
+    except LA.LinAlgError:
+        return LA.inv(N + eps_L2 * np.eye(len(N)))
+
+
+def _store(param, **values):
+    for name, value in values.items():
+        setattr(param, name, value)
+
+
+def _huber_sample_event(r, ADl, rho, dlamb):
+    """First sample whose residual crosses +-rho before dlamb, if any.
+
+    Looks for 0 < dl < dlamb such that F[j] and |r[j] + ADl[j] * dl| > rho,
+    or not F[j] and |r[j] + ADl[j] * dl| < rho.
     """
-    Function to call to go from a breaking point to the next one
-    """
-
-    # parameters that does not change
-    lambdamax = param.lambdamax
-    lamin = param.lamin
-    A = param.A
-    y = param.y
-    C = param.C
-    rho = param.rho
-    eps_L2 = param.eps_L2
-
-    # parameters to be updated
-    number_act = param.number_act
-    idr = param.idr
-    Xt = param.Xt
-    activity = param.activity
-    F = param.F
-    beta = param.beta
-    s = param.s
-    lam = param.lam
-    M = param.M
-    r = param.r
-
-    d = len(activity)
-    L = [lam] * d
-    Mat = M[:d, :d]
-    beta_dot, lam_s_dot = derivatives(activity, s, Mat, M[d:, :d], Xt, idr, number_act)
-    for i in range(d):
-        bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
-        if activity[i]:
-            if abs(bi * di) > 1e-10 and bi * di > 0:
-                L[i] = bi / (di * lambdamax)
-        else:
-            if abs(e + s0) < 1e-10 or abs(s0) > 1:
-                continue
-            if e > s0:
-                dl = (1 + s0) / (1 + e)
-            else:
-                dl = (1 - s0) / (1 - e)
-            L[i] = dl * lam
-
-    dlamb = min(min(L), lam, lam - lamin)
-    huber_up = False
-    ADl = -A.dot(beta_dot) * lambdamax
-    if param.intercept:
-        ADl += np.vdot(param.Abar, beta_dot) * lambdamax
-
-    huber_up = False
-    j_switch = None
+    huber_up, j_switch = False, None
     for j in range(len(r)):
-        #     find if there is a  0< dl < dlamb such that F[j] and |r[j]+ADl[j]*dl|>rho
-        # or  find if there is a  0< dl < dlamb such that not F[j] |r[j]+ADl[j]*dl|<rho
         if abs(ADl[j]) < 1e-6 or abs(r[j]) < 1e-6 or abs(abs(r[j]) - rho) < 1e-6:
             continue
         c = -r[j] / ADl[j]
         dl = (1 - rho / abs(r[j])) * c
         if dl < 0:
-            if c > 0:
-                dl = (1 + rho / abs(r[j])) * c
-            else:
-                dl = dlamb
+            dl = (1 + rho / abs(r[j])) * c if c > 0 else dlamb
         if dl < dlamb:
             huber_up, j_switch, dlamb = True, j, dl
-    beta = beta - lambdamax * beta_dot * dlamb
-    if dlamb < lam:
-        s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
-    r = r + ADl * dlamb
-    lam = lam - dlamb
-    if param.intercept:
-        beta0_dot = -np.vdot(np.mean(A[F], axis=0), beta_dot)
-        beta0 = param.beta0 - lambdamax * beta0_dot * dlamb
-
-    if huber_up:
-        F[j_switch] = not F[j_switch]
-        # sufficient :
-        # F = F | (abs(r) < rho - 1e-6)
-        # necessary :
-        # F = F & (abs(r) <= rho + 1e-6)
-
-        if param.intercept:
-            P = A[F] - np.mean(A[F], axis=0)
-            M[:d, :][:, :d] = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
-        else:
-            M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + eps_L2 * np.eye(d)
-    else:
-        # Update matrix inverse, list of rows in C and activity
-        for i in range(d):
-            if L[i] < dlamb + 1e-10:
-                if activity[i]:
-                    activity[i], number_act = False, number_act - 1
-                    if len(M) > d:
-                        to_ad = next_idr2(idr, M[d:, :d][:, activity])
-                        if type(to_ad) == int:
-                            idr[to_ad] = False
-                else:
-                    activity[i], number_act = True, number_act + 1
-                    if len(M) > d:
-                        to_ad = next_idr1(idr, M[d:, :d][:, activity])
-                        if type(to_ad) == int:
-                            idr[to_ad] = True
-
-    N = M[activity + idr, :][:, activity + idr]
-
-    try:
-        Xt = LA.inv(N)
-    except LA.LinAlgError:
-        Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
-
-    param.number_act = number_act
-    param.idr = idr
-    param.Xt = Xt
-    param.activity = activity
-    param.F = F
-    param.beta = beta
-    param.s = s
-    param.lam = lam
-    param.M = M
-    param.r = r
-    if param.intercept:
-        param.beta0 = beta0
+    return huber_up, j_switch, dlamb
 
 
-def up_cl(param):
+def _hinge_sample_event(r, yADl, dlamb):
+    """Smallest 0 < dl < dlamb at which a margin r[j] + yADl[j] * dl reaches 1.
+
+    The boundary itself is skipped, not distinct nearby margin crossings:
+    a wider band can leave a sample on the wrong loss piece.
     """
-    Function to call to go from a breaking point to the next one
-    """
-    lambdamax = param.lambdamax
-    lamin = param.lamin
-    A = param.A
-    y = param.y
-    eps_L2 = param.eps_L2
-
-    number_act = param.number_act
-    idr = param.idr
-    Xt = param.Xt
-    activity = param.activity
-    F = param.F
-    beta = param.beta
-    # Roundoff at a saturated dual coordinate must not suppress its event.
-    s = np.where(np.abs(np.abs(param.s)-1.) < 1e-10, np.sign(param.s), param.s)
-    lam = param.lam
-    M = param.M
-    r = param.r
-
-    d = len(activity)
-    L = [lam] * d
-    Mat = M[:d, :d]
-    beta_dot, lam_s_dot = derivatives(activity, s, Mat, M[d:, :d], Xt, idr, number_act)
-    for i in range(d):
-        bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
-        if activity[i]:
-            # A small coefficient can still cross zero before any other
-            # event. A product threshold here is not invariant to X scaling.
-            if abs(bi) > 1e-12 and bi * di > 0:
-                L[i] = bi / (di * lambdamax)
-        else:
-            if abs(e + s0) < 1e-10 or abs(s0) > 1:
-                continue
-            if e > s0:
-                dl = (1 + s0) / (1 + e)
-            else:
-                dl = (1 - s0) / (1 - e)
-            L[i] = dl * lam
-
-    dlamb = min(min(L), lam, lam - lamin)
-    yADl = -y * A.dot(beta_dot) * lambdamax
-    if param.intercept:
-        # The intercept derivative uses the CURRENT quadratic sample set.
-        # Using the original full-sample mean makes tracked margins drift.
-        yADl += y * np.vdot(np.mean(A[F], axis=0), beta_dot) * lambdamax
     for j in range(len(r)):
-        #     find if there is a  0< dl < dlamb such that F[j] and r[j]+yADl[j]*dl > 1
-        # or  find if there is a  0< dl < dlamb such that not F[j] r[j]+yADl[j]*dl < 1
-        # Skip the boundary itself, not distinct nearby margin crossings.
-        # A 1e-4 band can leave a sample on the wrong loss piece.
         if abs(r[j] - 1) < 1e-10:
             continue
-        if yADl[j] != 0.0:
-            dl = (1 - r[j]) / yADl[j]
-        else:
-            dl = -1
-        if dl < dlamb and dl > 0:
+        dl = (1 - r[j]) / yADl[j] if yADl[j] != 0.0 else -1
+        if 0 < dl < dlamb:
             dlamb = dl
-
-    # Several samples can reach the same boundary at exactly one knot.
-    # Switch all of them, including ties with a coefficient event.
-    sample_switches = np.flatnonzero(
-        (np.abs(r + yADl*dlamb - 1.) <= 1e-10)
-        & (np.abs(r - 1.) > 1e-10))
-    max_up = len(sample_switches) > 0
-
-    beta = beta - lambdamax * beta_dot * dlamb
-    if dlamb < lam:
-        s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
-    r = r + yADl * dlamb
-    lam = lam - dlamb
-    if param.intercept:
-        AbarF = np.mean(A[F], axis=0)
-        beta0_dot = -np.vdot(AbarF, beta_dot)
-        beta0 = param.beta0 - lambdamax * beta0_dot * dlamb
-
-    if max_up:
-        F[sample_switches] = ~F[sample_switches]
-        # sufficient :
-        # F = F | (r < 1. - 1e-10)
-        # necessary :
-        # F = F & (r <= 1. + 1e-10)
-        if param.intercept:
-            P = A[F] - np.mean(A[F], axis=0)
-            M[:d, :][:, :d] = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
-        else:
-            M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + eps_L2 * np.eye(d)
-    # Update matrix inverse, list of rows in C and activity
-    for i in range(d):
-        if L[i] < dlamb + 1e-10:
-            if activity[i]:
-                activity[i], number_act = False, number_act - 1
-                if len(M) > d:
-                    to_ad = next_idr2(idr, M[d:, :d][:, activity])
-                    if type(to_ad) == int:
-                        idr[to_ad] = False
-            else:
-                # x = M[:,activity+idr][i]
-                # al = M[i,i]-np.vdot(x,Xt.dot(x))
-                # if (abs(al)<1e-10): break
-                activity[i], number_act = True, number_act + 1
-                if len(M) > d:
-                    to_ad = next_idr1(idr, M[d:, :d][:, activity])
-                    if type(to_ad) == int:
-                        idr[to_ad] = True
-    N = M[activity + idr, :][:, activity + idr]
-
-    Xt = _C1_inverse(N)
-
-    param.number_act = number_act
-    param.idr = idr
-    param.Xt = Xt
-    param.activity = activity
-    param.F = F
-    param.beta = beta
-    param.s = s
-    param.lam = lam
-    param.M = M
-    param.r = r
-    if param.intercept:
-        param.beta0 = beta0
+    return dlamb
 
 
-def up_huber_cl(param):
-    """
-    Function to call to go from a breaking point to the next one
-    """
-
-    # parameters that does not change
-    lambdamax = param.lambdamax
-    lamin = param.lamin
-    A = param.A
-    y = param.y
-    rho = param.rho
-    eps_L2 = param.eps_L2
-
-    # parameters to be updated
-    number_act = param.number_act
-    idr = param.idr
-    Xt = param.Xt
-    activity = param.activity
-    F = param.F
-    beta = param.beta
-    s = param.s
-    lam = param.lam
-    M = param.M
-    r = param.r
-
-    d = len(activity)
-    L = [lam] * d
-    Mat = M[:d, :d]
-    beta_dot, lam_s_dot = derivatives(
-        activity,
-        s,
-        Mat,
-        M[d:, :d],
-        Xt,
-        idr,
-        number_act,
-    )
-    for i in range(d):
-        bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
-        if activity[i]:
-            if abs(bi * di) > 1e-10 and bi * di > 0:
-                L[i] = bi / (di * lambdamax)
-        else:
-            if abs(e - s0) < 1e-10 or abs(s0) > 1:
-                continue
-            if e > s0:
-                dl = (1 + s0) / (1 + e)
-            else:
-                dl = (1 - s0) / (1 - e)
-            L[i] = dl * lam
-
-    dlamb = min(min(L), lam, lam - lamin)
-    max_up = False
-    j_switch = None
-    yADl = -y * A.dot(beta_dot) * lambdamax
-    if param.intercept:
-        yADl += y * np.vdot(param.Abar, beta_dot) * lambdamax
+def _huber_hinge_sample_event(r, yADl, rho, dlamb):
+    """First sample whose margin reaches 1 or rho before dlamb, if any."""
+    max_up, j_switch = False, None
     for j in range(len(r)):
-        #     find if there is a  0< dl < dlamb such that F[j] and r[j]+yADl[j]*dl > 1
-        # or  find if there is a  0< dl < dlamb such that not F[j] r[j]+yADl[j]*dl < 1
-        #     find if there is a  0< dlhuber < dlamb such that F[j] and r[j]+yADl[j]*dl < rho
-        # or  find if there is a  0< dlhuber < dlamb such that not F[j] r[j]+yADl[j]*dl > rho
-
         if yADl[j] != 0.0:
             dlmax = (1 - r[j]) / yADl[j]
             dlhuber = (rho - r[j]) / yADl[j]
@@ -795,74 +541,211 @@ def up_huber_cl(param):
             dlmax = dlamb + 1
         if dlhuber <= 0.0:
             dlhuber = dlamb + 1
-
         dl = min(dlhuber, dlmax)
-
         if dl < dlamb:
             max_up, j_switch, dlamb = True, j, dl
+    return max_up, j_switch, dlamb
 
-    beta = beta - lambdamax * beta_dot * dlamb
-    if dlamb < lam:
-        s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
-    r = r + yADl * dlamb
-    lam = lam - dlamb
+
+def up_LS(param):
+    """
+    Function to call to go from a breaking point to the next one
+    """
+    lambdamax, M, activity, s, lam = (
+        param.lambdamax,
+        param.M,
+        param.activity,
+        param.s,
+        param.lam,
+    )
+    number_act, idr = param.number_act, param.idr
+
+    d = len(activity)
+    beta_dot, lam_s_dot = derivatives(
+        activity, s, M[:d, :d], M[d:, :d], param.Xt, idr, number_act
+    )
+    L = _coefficient_events(
+        lam, lambdamax, activity, param.beta, beta_dot, lam_s_dot, s,
+        _active_event_product, _skip_inactive_ls,
+    )
+    dlamb = min(min(L), lam - param.lamin)
+    # Update matrix inverse, list of rows in C and activity
+    number_act = _update_activity(
+        L, dlamb, activity, number_act, idr, param.C, len(M) > d
+    )
+    N = M[activity + idr, :][:, activity + idr]
+    Xt = _regularised_inverse(N, param.eps_L2)
+    beta, s, lam = _advance(param.beta, beta_dot, s, lam_s_dot, lam, dlamb, lambdamax)
+
+    _store(param, number_act=number_act, idr=idr, Xt=Xt, activity=activity,
+           beta=beta, s=s, lam=lam)
+
+
+def up_huber(param):
+    """
+    Function to call to go from a breaking point to the next one
+    """
+    lambdamax, A, rho, eps_L2 = param.lambdamax, param.A, param.rho, param.eps_L2
+    activity, F, s, lam, M, r = (
+        param.activity,
+        param.F,
+        param.s,
+        param.lam,
+        param.M,
+        param.r,
+    )
+    number_act, idr = param.number_act, param.idr
+
+    d = len(activity)
+    beta_dot, lam_s_dot = derivatives(
+        activity, s, M[:d, :d], M[d:, :d], param.Xt, idr, number_act
+    )
+    L = _coefficient_events(
+        lam, lambdamax, activity, param.beta, beta_dot, lam_s_dot, s,
+        _active_event_product, _skip_inactive_huber,
+    )
+    dlamb = min(min(L), lam, lam - param.lamin)
+
+    ADl = -A.dot(beta_dot) * lambdamax
     if param.intercept:
-        beta0_dot = -np.vdot(np.mean(A[F], axis=0), beta_dot)
-        beta0 = param.beta0 - lambdamax * beta0_dot * dlamb
+        ADl += np.vdot(param.Abar, beta_dot) * lambdamax
+    huber_up, j_switch, dlamb = _huber_sample_event(r, ADl, rho, dlamb)
+
+    beta, s, lam_next = _advance(
+        param.beta, beta_dot, s, lam_s_dot, lam, dlamb, lambdamax
+    )
+    r = r + ADl * dlamb
+    if param.intercept:
+        param.beta0 = _next_beta0(param, A, F, beta_dot, dlamb, lambdamax)
+
+    if huber_up:
+        F[j_switch] = not F[j_switch]
+        _refresh_quadratic_block(M, A, F, d, eps_L2, param.intercept)
+    else:
+        # Update matrix inverse, list of rows in C and activity
+        number_act = _update_activity(
+            L, dlamb, activity, number_act, idr, M[d:, :d], len(M) > d
+        )
+
+    N = M[activity + idr, :][:, activity + idr]
+    Xt = _regularised_inverse(N, eps_L2)
+
+    _store(param, number_act=number_act, idr=idr, Xt=Xt, activity=activity, F=F,
+           beta=beta, s=s, lam=lam_next, M=M, r=r)
+
+
+def up_cl(param):
+    """
+    Function to call to go from a breaking point to the next one
+    """
+    lambdamax, A, y = param.lambdamax, param.A, param.y
+    activity, F, lam, M, r = param.activity, param.F, param.lam, param.M, param.r
+    number_act, idr = param.number_act, param.idr
+    # Roundoff at a saturated dual coordinate must not suppress its event.
+    s = np.where(np.abs(np.abs(param.s) - 1.0) < 1e-10, np.sign(param.s), param.s)
+
+    d = len(activity)
+    beta_dot, lam_s_dot = derivatives(
+        activity, s, M[:d, :d], M[d:, :d], param.Xt, idr, number_act
+    )
+    L = _coefficient_events(
+        lam, lambdamax, activity, param.beta, beta_dot, lam_s_dot, s,
+        _active_event_cl, _skip_inactive_huber,
+    )
+    dlamb = min(min(L), lam, lam - param.lamin)
+
+    yADl = -y * A.dot(beta_dot) * lambdamax
+    if param.intercept:
+        # The intercept derivative uses the CURRENT quadratic sample set.
+        # Using the original full-sample mean makes tracked margins drift.
+        yADl += y * np.vdot(np.mean(A[F], axis=0), beta_dot) * lambdamax
+    dlamb = _hinge_sample_event(r, yADl, dlamb)
+
+    # Several samples can reach the same boundary at exactly one knot.
+    # Switch all of them, including ties with a coefficient event.
+    sample_switches = np.flatnonzero(
+        (np.abs(r + yADl * dlamb - 1.0) <= 1e-10) & (np.abs(r - 1.0) > 1e-10)
+    )
+
+    beta, s, lam_next = _advance(
+        param.beta, beta_dot, s, lam_s_dot, lam, dlamb, lambdamax
+    )
+    r = r + yADl * dlamb
+    if param.intercept:
+        param.beta0 = _next_beta0(param, A, F, beta_dot, dlamb, lambdamax)
+
+    if len(sample_switches) > 0:
+        F[sample_switches] = ~F[sample_switches]
+        _refresh_quadratic_block(M, A, F, d, param.eps_L2, param.intercept)
+    # Update matrix inverse, list of rows in C and activity
+    number_act = _update_activity(
+        L, dlamb, activity, number_act, idr, M[d:, :d], len(M) > d
+    )
+    N = M[activity + idr, :][:, activity + idr]
+    Xt = _C1_inverse(N)
+
+    _store(param, number_act=number_act, idr=idr, Xt=Xt, activity=activity, F=F,
+           beta=beta, s=s, lam=lam_next, M=M, r=r)
+
+
+def up_huber_cl(param):
+    """
+    Function to call to go from a breaking point to the next one
+    """
+    lambdamax, A, y, rho, eps_L2 = (
+        param.lambdamax,
+        param.A,
+        param.y,
+        param.rho,
+        param.eps_L2,
+    )
+    activity, F, s, lam, M, r = (
+        param.activity,
+        param.F,
+        param.s,
+        param.lam,
+        param.M,
+        param.r,
+    )
+    number_act, idr = param.number_act, param.idr
+
+    d = len(activity)
+    beta_dot, lam_s_dot = derivatives(
+        activity, s, M[:d, :d], M[d:, :d], param.Xt, idr, number_act
+    )
+    L = _coefficient_events(
+        lam, lambdamax, activity, param.beta, beta_dot, lam_s_dot, s,
+        _active_event_product, _skip_inactive_huber_cl,
+    )
+    dlamb = min(min(L), lam, lam - param.lamin)
+
+    yADl = -y * A.dot(beta_dot) * lambdamax
+    if param.intercept:
+        yADl += y * np.vdot(param.Abar, beta_dot) * lambdamax
+    max_up, j_switch, dlamb = _huber_hinge_sample_event(r, yADl, rho, dlamb)
+
+    beta, s, lam_next = _advance(
+        param.beta, beta_dot, s, lam_s_dot, lam, dlamb, lambdamax
+    )
+    r = r + yADl * dlamb
+    if param.intercept:
+        param.beta0 = _next_beta0(param, A, F, beta_dot, dlamb, lambdamax)
 
     if max_up:
         F[j_switch] = not F[j_switch]
-        # sufficient :
-        # F = F | ( (r < 1. - 1e-10) & (r > rho + 1e-10) )
-        # necessary :
-        # F = F & ( (r <= 1. + 1e-10) & (r >= rho - 1e-10) )
-
         if np.any(F):
-            if param.intercept:
-                P = A[F] - np.mean(A[F], axis=0)
-                M[:d, :][:, :d] = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
-            else:
-                M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + eps_L2 * np.eye(d)
-
+            _refresh_quadratic_block(M, A, F, d, eps_L2, param.intercept)
     else:
         # Update matrix inverse, list of rows in C and activity
-        for i in range(d):
-            if L[i] < dlamb + 1e-10:
-                if activity[i]:
-                    activity[i], number_act = False, number_act - 1
-                    if len(M) > d:
-                        to_ad = next_idr2(idr, M[d:, :d][:, activity])
-                        if type(to_ad) == int:
-                            idr[to_ad] = False
-                else:
-                    # x = M[:,activity+idr][i]
-                    # al = M[i,i]-np.vdot(x,Xt.dot(x))
-                    # if (abs(al)<1e-10): break
-                    activity[i], number_act = True, number_act + 1
-                    if len(M) > d:
-                        to_ad = next_idr1(idr, M[d:, :d][:, activity])
-                        if type(to_ad) == int:
-                            idr[to_ad] = True
+        number_act = _update_activity(
+            L, dlamb, activity, number_act, idr, M[d:, :d], len(M) > d
+        )
 
     N = M[activity + idr, :][:, activity + idr]
+    Xt = _regularised_inverse(N, eps_L2)
 
-    try:
-        Xt = LA.inv(N)
-    except LA.LinAlgError:
-        Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
-
-    param.number_act = number_act
-    param.idr = idr
-    param.Xt = Xt
-    param.activity = activity
-    param.F = F
-    param.beta = beta
-    param.s = s
-    param.lam = lam
-    param.M = M
-    param.r = r
-    if param.intercept:
-        param.beta0 = beta0
+    _store(param, number_act=number_act, idr=idr, Xt=Xt, activity=activity, F=F,
+           beta=beta, s=s, lam=lam_next, M=M, r=r)
 
 
 # Compute the derivatives of the solution Beta and the derivative of lambda*subgradient thanks to the ODE
