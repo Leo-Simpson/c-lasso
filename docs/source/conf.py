@@ -102,7 +102,7 @@ sphinx_gallery_conf = {
     "doc_module": ("classo", "numpy", "py2r", "matplotlib"),
     "examples_dirs": "../../examples",
     "filename_pattern": "/plot_",  # pattern for files to compute.
-    "ignore_pattern": r"/notdoc_",  # pattern for files to ignore (not even show the code).
+    "ignore_pattern": r"notdoc_",  # pattern for files to ignore (not even show the code).
     "gallery_dirs": "auto_examples",
     "plot_gallery": "True",
 }

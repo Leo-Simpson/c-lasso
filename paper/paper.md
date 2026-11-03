@@ -267,13 +267,13 @@ Each model selection procedure has additional meta-parameters that are described
 
 # Numerical benchmarks
 
-To evaluate optimization accuracy and running time of the different algorithms available in `c-lasso`, we provide [micro-benchmark](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark) experiments which also include [cvxpy](https://www.cvxpy.org), an open source convex optimization software, for baseline comparison. All experiments have been computed using Python 3.9.1 on a `MacBook Air` with a `1.8 GHz Intel Core i5` processor and `8 Gb 1600 MHz DDR3` memory, operating on macOS High Sierra. 
+To evaluate optimization accuracy and running time of the different algorithms available in `c-lasso`, we provide [micro-benchmark](https://github.com/bio-datascience/c-lasso/tree/master/benchmark) experiments which also include [cvxpy](https://www.cvxpy.org), an open source convex optimization software, for baseline comparison. All experiments have been computed using Python 3.9.1 on a `MacBook Air` with a `1.8 GHz Intel Core i5` processor and `8 Gb 1600 MHz DDR3` memory, operating on macOS High Sierra.
 
 Figure 1 summarizes the results for the *Path-Alg*, *DR*, and *P-PDS* algorithms solving the regression formulation [R1](#R1) for different samples sizes $n$ and problem dimensions $p$ on synthetic data (using `c-lasso`'s data generator). We observe that `c-lasso`'s algorithms are faster and more accurate than the `cvx` baseline. For instance, for $d=500$ features and $n=500$ samples, the *Path-Alg* algorithm is about $70$ times faster than `cvx`.
 
 ![Average running times (left panel) of *Path-Alg* (blue), *P-PDS* (yellow), *DR* (green), and cvx (red) at fixed $\lambda = 0.1$ and corresponding average objective function value differences (with respect to the function value obtained by the *Path-Alg* solution as baseline) (right panel). Mean (and standard deviation) running time is calculated over 20 data replications for each sample size/dimension scenario $(n,d)$. On a single data set, the reported running time of an algorithm is the average time of five algorithm runs (to guard against system background process fluctuations).](figures/figure_benchmark.png)
 
-The complete reproducible micro-benchmark is avaialable [here](https://github.com/Leo-Simpson/c-lasso/tree/master/benchmark).
+The complete reproducible micro-benchmark is avaialable [here](https://github.com/bio-datascience/c-lasso/tree/master/benchmark).
 
 # Computational examples  
 
@@ -352,7 +352,7 @@ Note that the run time for this $d=100$-dimensional example for a single path co
 
 ## Log-contrast regression on gut microbiome data
 
-We next illustrate the application of `c-lasso` on the [`COMBO` microbiome dataset](https://github.com/Leo-Simpson/c-lasso/tree/master/examples/COMBO_data) [@Lin:2014;@Shi:2016;@Combettes:2020b]. Here, the task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, and absolute calorie and fat intake measurements. The code snippet for this example is available in the [`README.md`](https://github.com/Leo-Simpson/c-lasso/README.md) and the [example notebook](https://github.com/Leo-Simpson/c-lasso/blob/master/examples/example-notebook.ipynb).
+We next illustrate the application of `c-lasso` on the [`COMBO` microbiome dataset](https://github.com/bio-datascience/c-lasso/tree/master/examples/COMBO_data) [@Lin:2014;@Shi:2016;@Combettes:2020b]. Here, the task is to predict the Body Mass Index (BMI) of $n=96$ participants from $d=45$ relative abundances of bacterial genera, and absolute calorie and fat intake measurements. The code snippet for this example is available in the [`README.md`](https://github.com/bio-datascience/c-lasso/README.md) and the [example notebook](https://github.com/bio-datascience/c-lasso/blob/master/examples/example-notebook.ipynb).
 
 ![Stability selection profiles of problems R3/R4 on the COMBO data](figures/StabSelFilteredCOMBO.png)
 

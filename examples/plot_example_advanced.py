@@ -110,6 +110,8 @@ problem.data.label = labels
 problem.formulation.intercept = False
 problem.formulation.huber = False
 problem.model_selection.ALO = True
+# Keep the ALO fit sparse: its active-design Gram matrix must be invertible.
+problem.model_selection.ALOparameters.n_active = 30
 problem.model_selection.CV = False
 problem.model_selection.LAMfixed = False
 problem.solve()
