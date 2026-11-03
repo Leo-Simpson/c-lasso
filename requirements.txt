@@ -2,6 +2,7 @@ matplotlib
 numpy
 pandas
 scipy
+rdata
 pytest
 pytest-cov
 sphinx

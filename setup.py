@@ -21,6 +21,7 @@ setup(
             "numpydoc",
             "matplotlib",
             "pandas",
+            "rdata"
         ],
     },
     classifiers=[
