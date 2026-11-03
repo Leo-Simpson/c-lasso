@@ -209,7 +209,7 @@ class problem_R1:
         self.type = algo  # type of algorithm used
         self.mu = 1.95
         self.Aty = (self.matrix[0].T).dot(self.matrix[2])
-        self.lambdamax = 2 * LA.norm(self.Aty, np.infty)
+        self.lambdamax = 2 * LA.norm(self.Aty, np.inf)
         self.gam = 1.0
         self.tau = 0.5  # equation for the convergence of 'PF-PDS' and LS algorithms : gam + tau < 1
         if algo == "DR":

@@ -208,7 +208,7 @@ class problem_R4:
         # sigmax = LA.norm(yy)/np.sqrt(m)
         self.sigmax = find_sigmax(yy, rho, m)
         self.lambdamax = 2 * LA.norm(
-            (AA.T).dot(h_prime(yy / self.sigmax, rho)), np.infty
+            (AA.T).dot(h_prime(yy / self.sigmax, rho)), np.inf
         )
 
         self.init = (

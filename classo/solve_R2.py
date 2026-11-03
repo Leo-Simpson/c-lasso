@@ -236,7 +236,7 @@ class problem_R2:
         self.tau = 0.5  # equation for the convergence of Noproj and LS algorithms : gam + tau < 1
         if not intercept:
             yy = y
-        self.lambdamax = 2 * LA.norm(AA.T.dot(h_prime(yy, rho)), np.infty)
+        self.lambdamax = 2 * LA.norm(AA.T.dot(h_prime(yy, rho)), np.inf)
 
     """
     this is a method of the class pb that is used to computed the expensive multiplications only once. (espacially usefull for warm start. )
@@ -290,7 +290,7 @@ class problem_R2:
         prob.AtA[d:, :d] = prob.matrix[0][:, :d] * r
         prob.AtA[:d, d:] = prob.AtA[d:, :d].T
         prob.Aty = np.append(prob.Aty[:d], prob.matrix[2] * r)
-        prob.lambdamax = 2 * LA.norm(prob.Aty, np.infty)
+        prob.lambdamax = 2 * LA.norm(prob.Aty, np.inf)
         extension = np.eye(m)
         if self.intercept:
             # self.init_R1(r=r)
