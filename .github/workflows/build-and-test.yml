@@ -1,7 +1,7 @@
 # Workflow: Test
 #
 # Lints once, then runs the test suite on every supported Python version.
-# Coverage is gated by `fail_under` in .coveragerc, so a coverage drop fails CI.
+# Lint rules, pytest options and the coverage `fail_under` all live in pyproject.toml.
 #
 # Third-party actions are pinned to commit SHAs (version in the trailing comment);
 # bump them together with the comment.
@@ -38,13 +38,12 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install flake8
-        run: python -m pip install flake8==7.5.0
+      - name: Install ruff
+        run: python -m pip install ruff==0.17.1
 
-      # Blocking: syntax errors and undefined names. Style rules arrive with a
-      # ruff configuration (see #33) rather than as an advisory run that cannot fail.
-      - name: Lint with flake8
-        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      # Rules come from [tool.ruff.lint] in pyproject.toml.
+      - name: Lint with ruff
+        run: ruff check --output-format=github .
 
   test:
     needs: lint
@@ -71,7 +70,7 @@ jobs:
       - name: Install package with test extras
         run: python -m pip install ".[tests]"
 
-      - name: Test with pytest (coverage gate from .coveragerc)
+      - name: Test with pytest (coverage gate from pyproject.toml)
         env:
           MPLBACKEND: Agg
-        run: python -m pytest --cov --cov-config=.coveragerc --cov-report=term-missing
+        run: python -m pytest --cov --cov-report=term-missing

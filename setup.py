@@ -1,42 +1,10 @@
-from setuptools import setup, find_packages
-import versioneer
+# Project metadata lives in pyproject.toml; this file only wires in versioneer.
+import os
+import sys
 
-setup(
-    name="c-lasso",
-    version=versioneer.get_version(),
-    cmdclass=versioneer.get_cmdclass(),
-    license="MIT",
-    author="Leo Simpson",
-    url="https://github.com/bio-datascience/c-lasso",
-    author_email="leo.bill.simpson@gmail.com",
-    description="Algorithms for constrained Lasso problems",
-    packages=["classo"],
-    install_requires=["numpy", "scipy", "matplotlib", "pandas"],
-    extras_require={
-        "tests": ["pytest", "pytest-cov"],
-        "docs": [
-            "sphinx",
-            "sphinx-gallery",
-            "sphinx_rtd_theme",
-            "numpydoc",
-            "matplotlib",
-            "pandas",
-            "rdata"
-        ],
-    },
-    classifiers=[
-        "Intended Audience :: Science/Research",
-        "Operating System :: Microsoft :: Windows",
-        "Operating System :: POSIX",
-        "Operating System :: Unix",
-        "Operating System :: MacOS",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-    ],
-    long_description_content_type="text/markdown",
-    long_description=open("README.md", encoding="utf-8").read(),
-    zip_safe=False,
-)
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
+import versioneer  # noqa: E402
+from setuptools import setup  # noqa: E402
+
+setup(version=versioneer.get_version(), cmdclass=versioneer.get_cmdclass())
