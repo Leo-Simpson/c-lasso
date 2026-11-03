@@ -97,7 +97,7 @@ class classo_problem:
             sup = len(data.label) - d
             data.label = data.label[sup:]
             print(
-                "too many labels, there for the labels {} have been deleted".format(
+                "too many labels, therefore the labels {} have been deleted".format(
                     data.label[:sup]
                 )
             )

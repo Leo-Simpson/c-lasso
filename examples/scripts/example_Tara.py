@@ -28,9 +28,14 @@ and the classes Alpha and Gammaproteobacteria being positively associated with m
 """
 import sys, os
 from os.path import join, dirname, abspath
+from pathlib import Path
+if "__file__" in globals():
+    this_dir = Path(__file__).resolve().parent
+else:
+    this_dir = Path.cwd()
 
 # this file is in classo/examples/scripts, so we need to go up three levels to get the classo directory
-classo_dir = dirname(dirname(dirname(abspath(__file__))))
+classo_dir = dirname(dirname(this_dir))
 sys.path.append(classo_dir)
 from classo import classo_problem
 import matplotlib.pyplot as plt
