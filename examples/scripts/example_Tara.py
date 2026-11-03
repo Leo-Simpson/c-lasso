@@ -97,6 +97,7 @@ print(problem)
 
 problem.solve()
 print(problem.solution)
+problem.solution.plot()
 
 
 selection = problem.solution.CV.selected_param[1:]  # exclude the intercept
@@ -134,6 +135,7 @@ problem.model_selection.CV = False
 problem.solve()
 
 print(problem, problem.solution)
+problem.solution.plot()
 
 selection = problem.solution.StabSel.selected_param[1:]  # exclude the intercept
 print(label[selection])

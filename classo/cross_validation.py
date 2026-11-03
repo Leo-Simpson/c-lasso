@@ -226,16 +226,3 @@ def accuracy_func(
         return misclassification_rate(Aprime, y, beta)
     else:
         return LA.norm(Aprime.dot(beta) - y, 2) ** 2 / n
-
-
-"""
-def huber_hinge(A, y, beta, rho):
-    h = np.maximum(0, 1 - y * A.dot(beta))
-    s = 0
-    for i in range(len(h)):
-        if h[i] < rho:
-            s += 2 * h[i] * rho - rho ** 2
-        else:
-            s += h[i] ** 2
-    return s
-"""

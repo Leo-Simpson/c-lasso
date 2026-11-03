@@ -1,5 +1,9 @@
 import numpy as np
+import subprocess
+import sys
+
 import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 from ..solver import classo_problem, choose_numerical_method, Formulation
 from ..misc_functions import random_data
 
@@ -132,6 +136,7 @@ def aux_test_solve_PATH_StabSel(mode, close_window=True):
     pb.solve()
 
     print(pb, pb.solution)
+    assert_plots(pb.solution)
 
     if close_window:
         plt.close("all")
@@ -170,6 +175,7 @@ def aux_test_solve_PATH_CV(mode, close_window=True):
     pb.solve()
 
     print(pb, pb.solution)
+    assert_plots(pb.solution)
 
     if close_window:
         plt.close("all")
@@ -207,6 +213,7 @@ def aux_test_solve_PATH_LAMfixed(mode, close_window=True):
     pb.solve()
 
     print(pb, pb.solution)
+    assert_plots(pb.solution)
 
     if close_window:
         plt.close("all")
@@ -253,7 +260,8 @@ def aux_test_solve_CV_StabSel(mode, close_window=True):
     pb.solve()
 
     print(pb, pb.solution)
-    pb.solution.CV.graphic(se_max=5)
+    assert_plots(pb.solution)
+    assert isinstance(pb.solution.CV.graphic(se_max=5), Figure)
 
     if close_window:
         plt.close("all")
@@ -291,6 +299,7 @@ def aux_test_solve_CV_LAMfixed(mode, close_window=True):
     pb.solve()
 
     print(pb, pb.solution)
+    assert_plots(pb.solution)
 
     if close_window:
         plt.close("all")
@@ -334,6 +343,7 @@ def aux_test_solve_StabSel_LAMfixed(mode, close_window=True):
     pb.solve()
 
     print(pb, pb.solution)
+    assert_plots(pb.solution)
 
     if close_window:
         plt.close("all")
@@ -363,3 +373,19 @@ def test_choose_numerical_method_2():
             formulation.classification = True
             value = choose_numerical_method(meth, model, formulation)
             assert value == "Path-Alg"
+
+
+def assert_plots(solution):
+    """Printing must not draw; plot() must return the figures it draws."""
+    before = plt.get_fignums()
+    repr(solution)
+    assert plt.get_fignums() == before
+    figures = solution.plot()
+    assert figures
+    assert all(isinstance(fig, Figure) for fig in figures)
+    assert len(plt.get_fignums()) == len(before) + len(figures)
+
+
+def test_import_classo_does_not_import_matplotlib():
+    code = "import sys, classo; assert 'matplotlib' not in sys.modules"
+    subprocess.run([sys.executable, "-c", code], check=True)

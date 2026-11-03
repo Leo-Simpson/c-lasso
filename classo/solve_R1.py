@@ -237,12 +237,6 @@ class problem_R1:
             self.AAt = A.dot(A.T)
 
 
-"""
-Functions used in the algorithms, modules needed :
-import numpy as np
-import numpy.linalg as LA
-from .../class_of_problem import problem
-"""
 
 
 # compute the prox of the function : f(b)= sum (wi * |bi| )

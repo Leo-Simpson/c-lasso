@@ -17,8 +17,9 @@ The package is organized as follow :
 
 
 from time import time
+import warnings
+
 import numpy as np
-import matplotlib.pyplot as plt
 
 from .misc_functions import theoretical_lam, min_LS, affichage, check_size
 
@@ -27,7 +28,13 @@ from .compact_func import Classo, pathlasso
 from .cross_validation import CV
 from .stability_selection import stability, selected_param
 from .alo import alo_classo_risk
-import matplotlib.patches as mpatches
+
+
+def _pyplot():
+    """Import matplotlib lazily, so that importing classo does not require it."""
+    import matplotlib.pyplot as plt
+
+    return plt
 
 
 class classo_problem:
@@ -96,7 +103,7 @@ class classo_problem:
         if len(data.label) > d:
             sup = len(data.label) - d
             data.label = data.label[sup:]
-            print(
+            warnings.warn(
                 "too many labels, therefore the labels {} have been deleted".format(
                     data.label[:sup]
                 )
@@ -104,7 +111,7 @@ class classo_problem:
 
         elif len(data.label) < d:
             missing = d - len(data.label)
-            print(
+            warnings.warn(
                 " too few labels, therefore {} labels have been inserted in the end".format(
                     missing
                 )
@@ -796,6 +803,19 @@ class Solution:
 
         return string
 
+    def plot(self):
+        """Plot the graphics of every computed model selection.
+
+        Returns:
+            list of matplotlib.figure.Figure: the figures, in the order
+            LAMfixed, PATH, ALO, CV, StabSel.
+        """
+        figures = []
+        for obj in [self.LAMfixed, self.PATH, self.ALO, self.CV, self.StabSel]:
+            if not type(obj) is str:
+                figures += obj.plot()
+        return figures
+
 
 # Here, the main function used is pathlasso ; from the file compact_func
 class solution_PATH:
@@ -808,7 +828,7 @@ class solution_PATH:
         LAMBDAS (numpy.ndarray) : array of size Npath with the lambdas (real lambdas, not divided by lambda_max) for which the solution is computed.
         logscale (bool): whether or not the path should be plotted with a logscale.
         method (str) : name of the numerical method that has been used. It can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'.
-        save (bool or str) : if it is a str, then it gives the name of the file where the graphics has been/will be saved (after using print(solution) ).
+        save (bool or str) : if it is a str, then it gives the name of the file where the graphics has been/will be saved (after using solution.plot() ).
         formulation (Formulation) : object containing the info about the formulation of the minimization problem we solve.
         time (float) : running time of this action.
 
@@ -872,6 +892,21 @@ class solution_PATH:
     def __repr__(self):
 
         string = "\n PATH COMPUTATION : "
+        if self.formulation.intercept:
+            string += "\n   There is also an intercept.  "
+        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
+        return string
+
+    def plot(self):
+        """Plot the coefficients (and, if computed, the scale) along the lambda-path.
+
+        If :attr:`save` is a string, the figures are also saved with that prefix.
+
+        Returns:
+            list of matplotlib.figure.Figure: the beta-path figure, followed by
+            the sigma-path figure when it is computed and requested.
+        """
+        plt = _pyplot()
         d = len(self.BETAS[0])
 
         if (
@@ -880,13 +915,11 @@ class solution_PATH:
             avg_betas = np.mean(abs(np.array(self.BETAS)), axis=0)
             if self.formulation.intercept:
                 avg_betas[0] = 0  # trick to exclude intercept in the graph
-                string += "\n   There is also an intercept.  "
             top = np.argpartition(avg_betas, -20)[-20:]
 
         else:
             if self.formulation.intercept:
                 top = np.arange(1, d)
-                string += "\n   There is also an intercept.  "
             else:
                 top = np.arange(d)
 
@@ -896,7 +929,7 @@ class solution_PATH:
         else:
             xGraph = self.LAMBDAS
             xlabel = PATH_beta_path["xlabel"]
-        plt.figure(figsize=(10, 3), dpi=80)
+        figures = [plt.figure(figsize=(10, 3), dpi=80)]
         affichage(
             self.BETAS[:, top],
             xGraph,
@@ -910,9 +943,8 @@ class solution_PATH:
         plt.tight_layout()
         if type(self.save) == str:
             plt.savefig(self.save + "Beta-path")
-        plt.show(block=False)
         if type(self.SIGMAS) != str and self.plot_sigma:
-            plt.figure(figsize=(10, 3), dpi=80)
+            figures.append(plt.figure(figsize=(10, 3), dpi=80))
             plt.plot(self.LAMBDAS, self.SIGMAS), plt.ylabel(
                 PATH_sigma_path["ylabel"]
             ), plt.xlabel(PATH_sigma_path["xlabel"])
@@ -920,10 +952,8 @@ class solution_PATH:
             plt.tight_layout()
             if type(self.save) == str:
                 plt.savefig(self.save + "Sigma-path")
-            plt.show(block=False)
 
-        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
-        return string
+        return figures
 
 
 # Here, the main function used is CV ; from the file cross_validation
@@ -1021,14 +1051,34 @@ class solution_CV:
     def __repr__(self):
 
         string = "\n CROSS VALIDATION : "
-        d = len(self.refit)
-        selected = self.selected_param[:]
+        selected = self.selected_param.copy()
+        if self.formulation.intercept:
+            selected[0] = False  # the intercept is reported on its own line
+            string += "\n    Intercept : " + str(self.refit[0])
+
+        string += "\n   Selected variables :  "
+        for i in np.where(selected)[0]:
+            string += self.label[i] + "    "
+
+        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
+        return string
+
+    def plot(self):
+        """Plot the cross-validation profile and the refitted coefficients.
+
+        If :attr:`save1` / :attr:`save2` are strings, the figures are also saved there.
+
+        Returns:
+            list of matplotlib.figure.Figure: the CV profile and the refitted coefficients.
+        """
+        plt = _pyplot()
+        # copy, so that excluding the intercept does not modify selected_param
+        selected = self.selected_param.copy()
         # this trick is done to plot only selected parameters, excluding intercept
         if self.formulation.intercept:
             selected[0] = False
-            string += "\n    Intercept : " + str(self.refit[0])
 
-        self.graphic(save=self.save1, logscale=self.logscale)
+        figures = [self.graphic(save=self.save1, logscale=self.logscale)]
 
         nb_select = sum(selected)
         if nb_select > 10:
@@ -1036,7 +1086,7 @@ class solution_CV:
             top = np.sort(top)
         else:
             top = np.arange(nb_select)
-        plt.figure(figsize=(10, 3), dpi=80)
+        figures.append(plt.figure(figsize=(10, 3), dpi=80))
         plt.bar(range(nb_select), self.refit[selected])
         plt.title(CV_beta["title"])
         plt.xlabel(CV_beta["xlabel"]), plt.ylabel(CV_beta["ylabel"])
@@ -1044,14 +1094,7 @@ class solution_CV:
         plt.tight_layout()
         if type(self.save2) == str:
             plt.savefig(self.save2)
-        plt.show(block=False)
-
-        string += "\n   Selected variables :  "
-        for i in np.where(self.selected_param)[0]:
-            string += self.label[i] + "    "
-
-        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
-        return string
+        return figures
 
     def graphic(self, se_max=None, save=None, logscale=True, errorevery=5):
         """Method to plot the graphic showing mean squared error over along lambda path once cross validation is computed.
@@ -1067,8 +1110,12 @@ class solution_CV:
             save (string) : path to the file where the figure should be saved. If None, then the figure will not be saved.
                 Default value : None
 
+        Returns:
+            matplotlib.figure.Figure: the figure of the cross-validation profile.
+
         """
-        plt.figure(figsize=(10, 3), dpi=80)
+        plt = _pyplot()
+        figure = plt.figure(figsize=(10, 3), dpi=80)
 
         i_min, i_1SE = self.index_min, self.index_1SE
 
@@ -1120,7 +1167,7 @@ class solution_CV:
         plt.tight_layout()
         if save is not None and type(save) == str:
             plt.savefig(save)
-        plt.show(block=False)
+        return figure
 
 
 # Here, the main function used is pathlasso ; from the file compact_func
@@ -1227,9 +1274,26 @@ class solution_ALO:
         string = "\n ALO COMPUTATION : "
         if self.formulation.intercept:
             string += "\n   There is also an intercept.  "
-        selected = self.selected_param[:]
-        # this trick is done to plot only selected parameters, excluding intercept
-        plot_path(
+
+        string += "\n   Selected variables :  "
+        for i in np.where(self.selected_param)[0]:
+            string += self.label[i] + "    "
+
+        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
+        return string
+
+    def plot(self):
+        """Plot the lambda-path, the ALO profile and the refitted coefficients.
+
+        If :attr:`save1` / :attr:`save2` / :attr:`save3` are strings, the figures are also saved there.
+
+        Returns:
+            list of matplotlib.figure.Figure: the path figure(s), the ALO profile
+            and the refitted coefficients.
+        """
+        plt = _pyplot()
+        selected = self.selected_param
+        figures = plot_path(
             self.BETAS,
             self.LAMBDAS,
             self.label,
@@ -1240,7 +1304,9 @@ class solution_ALO:
             plot_sigma=self.plot_sigma,
             save=self.save1,
         )
-        plot_alo(self.LAMBDAS, self.alo, logscale=self.logscale, save=self.save2)
+        figures.append(
+            plot_alo(self.LAMBDAS, self.alo, logscale=self.logscale, save=self.save2)
+        )
 
         nb_select = sum(selected)
         if nb_select > 10:
@@ -1248,7 +1314,7 @@ class solution_ALO:
             top = np.sort(top)
         else:
             top = np.arange(nb_select)
-        plt.figure(figsize=(10, 3), dpi=80)
+        figures.append(plt.figure(figsize=(10, 3), dpi=80))
         plt.bar(range(nb_select), self.refit[selected])
         plt.title(ALO_beta["title"])
         plt.xlabel(ALO_beta["xlabel"]), plt.ylabel(ALO_beta["ylabel"])
@@ -1256,14 +1322,7 @@ class solution_ALO:
         plt.tight_layout()
         if type(self.save3) == str:
             plt.savefig(self.save3 + "ALO-beta")
-        plt.show(block=False)
-
-        string += "\n   Selected variables :  "
-        for i in np.where(self.selected_param)[0]:
-            string += self.label[i] + "    "
-
-        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
-        return string
+        return figures
 
 
 # Here, the main function used is stability ; from the file stability selection
@@ -1361,6 +1420,7 @@ class solution_StabSel:
         self.selected_param = self.distribution > param.threshold
         self.threshold_label = param.threshold_label
         self.threshold = param.threshold
+        self.to_label = self.distribution > self.threshold_label
         self.refit = min_LS(
             matrices,
             self.selected_param,
@@ -1376,7 +1436,22 @@ class solution_StabSel:
     def __repr__(self):
 
         string = "\n STABILITY SELECTION : "
+        string += "\n   Selected variables :  "
+        for i in np.where(self.selected_param)[0]:
+            string += self.label[i] + "    "
 
+        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
+        return string
+
+    def plot(self):
+        """Plot the stability selection profile and the refitted coefficients.
+
+        If :attr:`save1` / :attr:`save2` are strings, the figures are also saved there.
+
+        Returns:
+            list of matplotlib.figure.Figure: the selection profile and the refitted coefficients.
+        """
+        plt = _pyplot()
         d = len(self.distribution)
         if d > 20:
             top = np.argpartition(self.distribution + np.random.randn(d) * 1e-5, -20)[
@@ -1386,9 +1461,7 @@ class solution_StabSel:
         else:
             top = np.arange(d)
 
-        self.to_label = self.distribution > self.threshold_label
         D = self.distribution[top]
-        Dpath = (self.distribution_path,)
         selected = self.selected_param[top]
 
         unselected = [not i for i in selected]
@@ -1397,7 +1470,7 @@ class solution_StabSel:
             D[selected],
             D[unselected],
         )
-        plt.figure(figsize=(10, 3), dpi=80)
+        figures = [plt.figure(figsize=(10, 3), dpi=80)]
         plt.bar(
             range(len(Dselected)),
             Dselected,
@@ -1431,37 +1504,7 @@ class solution_StabSel:
         if type(self.save1) == str:
             plt.savefig(self.save1)
 
-        plt.show(block=False)
-        """
-        plot_path = False  # do not plot this graphic for now because it is confusing
-        if type(Dpath) != str and plot_path:
-            plt.figure(figsize = (10, 3), dpi = 80)
-            lambdas = self.lambdas_path
-            N = len(lambdas)
-            for i1, i2 in enumerate(top):
-                if selected[i1]:
-                    c = "r"
-                else:
-                    c = "b"
-                plt.plot(lambdas, [Dpath[j][i2] for j in range(N)], c)
-            p1 = mpatches.Patch(color = "red", label = "selected coefficients")
-            p2 = mpatches.Patch(color = "blue", label = "unselected coefficients")
-            p3 = mpatches.Patch(
-                color = "green",
-                label = "Threshold : thresh = " + str(self.threshold),
-            )
-            plt.legend(handles=[p1, p2, p3], loc = 1)
-            plt.axhline(y = self.threshold, color = "g")
-            plt.xlabel(StabSel_path["xlabel"])
-            plt.ylabel(StabSel_path["ylabel"])
-            plt.title(
-                StabSel_path["title"] + self.method + " using " + self.formulation
-            )
-            plt.tight_layout()
-            plt.show(block=False)
-        """
-
-        plt.figure(figsize=(10, 3), dpi=80)
+        figures.append(plt.figure(figsize=(10, 3), dpi=80))
         plt.bar(range(len(self.refit[top])), self.refit[top])
         plt.xlabel(StabSel_beta["xlabel"]), plt.ylabel(
             StabSel_beta["ylabel"]
@@ -1474,14 +1517,7 @@ class solution_StabSel:
         plt.tight_layout()
         if type(self.save2) == str:
             plt.savefig(self.save2)
-        plt.show(block=False)
-
-        string += "\n   Selected variables :  "
-        for i in np.where(self.selected_param)[0]:
-            string += self.label[i] + "    "
-
-        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
-        return string
+        return figures
 
 
 # Here, the main function used is Classo ; from the file compact_func
@@ -1569,6 +1605,25 @@ class solution_LAMfixed:
     def __repr__(self):
 
         string = "\n LAMBDA FIXED : "
+        if self.formulation.concomitant:
+            string += "\n   Sigma  =  " + str(round(self.sigma, 3))
+
+        string += "\n   Selected variables :  "
+        for i in np.where(self.selected_param)[0]:
+            string += self.label[i] + "    "
+
+        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
+        return string
+
+    def plot(self):
+        """Plot the coefficients of the solution at the fixed lambda.
+
+        If :attr:`save` is a string, the figure is also saved there.
+
+        Returns:
+            list of matplotlib.figure.Figure: a single figure with the coefficients.
+        """
+        plt = _pyplot()
         d = len(self.beta)
         if d > 20:
             top = np.argpartition(abs(self.beta) + np.random.randn(d) * 1e-5, -20)[-20:]
@@ -1576,7 +1631,7 @@ class solution_LAMfixed:
         else:
             top = np.arange(d)
 
-        plt.figure(figsize=(10, 3), dpi=80)
+        figure = plt.figure(figsize=(10, 3), dpi=80)
         plt.bar(range(len(top)), self.beta[top]), plt.title(
             LAM_beta["title"] + str(round(self.lam, 3))
         ), plt.xlabel(LAM_beta["xlabel"]), plt.ylabel(LAM_beta["ylabel"])
@@ -1590,17 +1645,7 @@ class solution_LAMfixed:
         if type(self.save) == str:
             plt.savefig(self.save)
 
-        plt.show(block=False)
-
-        if self.formulation.concomitant:
-            string += "\n   Sigma  =  " + str(round(self.sigma, 3))
-
-        string += "\n   Selected variables :  "
-        for i in np.where(self.selected_param)[0]:
-            string += self.label[i] + "    "
-
-        string += "\n   Running time :  " + str(round(self.time, 3)) + "s"
-        return string
+        return [figure]
 
 
 def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=None):
@@ -1677,6 +1722,7 @@ def plot_path(
     plot_sigma=False,
     save=False,
 ):
+    plt = _pyplot()
     d = len(BETAS[0])
     if d > 20:
         # this trick is to plot only the biggest value, excluding the intercept
@@ -1694,7 +1740,7 @@ def plot_path(
     xGraph = LAMBDAS
     xlabel = PATH_beta_path["xlabel"]
 
-    plt.figure(figsize=(10, 3), dpi=80)
+    figures = [plt.figure(figsize=(10, 3), dpi=80)]
     affichage(
         BETAS[:, top],
         xGraph,
@@ -1709,11 +1755,9 @@ def plot_path(
     plt.tight_layout()
     if type(save) == str:
         plt.savefig(save + "Beta-path")
-    
-    plt.show(block=False)
-    
+
     if type(SIGMAS) != str and plot_sigma:
-        plt.figure(figsize=(10, 3), dpi=80)
+        figures.append(plt.figure(figsize=(10, 3), dpi=80))
         plt.plot(LAMBDAS, SIGMAS), plt.ylabel(PATH_sigma_path["ylabel"]), plt.xlabel(
             PATH_sigma_path["xlabel"]
         )
@@ -1721,10 +1765,12 @@ def plot_path(
         plt.tight_layout()
         if type(save) == str:
             plt.savefig(save + "Sigma-path")
-        plt.show(block=False)
+
+    return figures
 
 
 def plot_alo(lambdas, alo, logscale=False, save=False):
+    plt = _pyplot()
     imin = np.argmin(alo)
     alomin = alo[imin]
     ymin = 0.5 * alomin
@@ -1732,7 +1778,7 @@ def plot_alo(lambdas, alo, logscale=False, save=False):
     xmin = lambdas[np.max(np.argwhere(alo < ymax))]
     xmax = lambdas[np.min(np.argwhere(alo < ymax))]
 
-    plt.figure(figsize=(10, 3), dpi=80)
+    figure = plt.figure(figsize=(10, 3), dpi=80)
     plt.plot(lambdas, alo)
     plt.axvline(x=lambdas[imin], color="r", label=r"$\lambda$ chosen ")
     if logscale:
@@ -1744,7 +1790,7 @@ def plot_alo(lambdas, alo, logscale=False, save=False):
     plt.title(ALO_graph["title"])
     if type(save) == str:
         plt.savefig(save + "ALO-path")
-    plt.show(block=False)
+    return figure
 
 
 CV_beta = {

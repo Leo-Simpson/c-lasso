@@ -218,9 +218,6 @@ class problem_R3:
         self.QA = self.Q1.dot(A)
 
 
-"""
-Functions used in the algorithms, modules needed :
-"""
 
 
 # compute the prox of the function : f(b)= sum (wi * |bi| )

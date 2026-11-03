@@ -188,9 +188,10 @@ can be visualized using
 
 ```python
 print(problem.solution)
+problem.solution.plot()
 ```
 
-The command shows the running time(s) for the c-lasso problem instance, and the selected variables for sability selection
+Printing shows the running time(s) for the c-lasso problem instance, and the selected variables for sability selection. `problem.solution.plot()` draws the corresponding graphics and returns them as a list of matplotlib figures
 
 ```
 STABILITY SELECTION : 
@@ -234,6 +235,7 @@ problem.solve()
 print(problem)
 
 print(problem.solution)
+problem.solution.plot()
 
 ```
 
@@ -357,6 +359,7 @@ problem.formulation.concomitant = True
 problem.solve()
 print(problem)
 print(problem.solution)
+problem.solution.plot()
 
 # Use formulation R4
 problem.formulation.huber = True
@@ -365,6 +368,7 @@ problem.formulation.concomitant = True
 problem.solve()
 print(problem)
 print(problem.solution)
+problem.solution.plot()
 
 ```
 
