@@ -98,6 +98,7 @@ problem.formulation.concomitant = True
 problem.solve()
 print(problem)
 print(problem.solution)
+problem.solution.plot()
 
 # %%
 # Use formulation R4
@@ -109,6 +110,7 @@ problem.formulation.concomitant = True
 problem.solve()
 print(problem)
 print(problem.solution)
+problem.solution.plot()
 
 
 # %%
@@ -126,3 +128,4 @@ problem.model_selection.ALO = True
 problem.solve()
 print(problem)
 print(problem.solution)
+problem.solution.plot()
