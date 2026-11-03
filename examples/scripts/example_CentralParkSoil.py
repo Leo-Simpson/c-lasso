@@ -34,7 +34,7 @@ import numpy as np
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^
 
-data_dir = join(classo_dir, "examples", "CentralParkSoil")
+data_dir = join(classo_dir, "examples", "datasets", "CentralParkSoil")
 
 if not os.path.exists(join(data_dir, "cps.npz")) or not os.path.exists( join(data_dir, "A.npy")):
     print("Preprocessing Central Park Soil data...")

@@ -45,7 +45,7 @@ import numpy as np
 # %%
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^
-data_dir = join(classo_dir, "examples", "Tara")
+data_dir = join(classo_dir, "examples", "datasets", "Tara")
 
 if not os.path.exists(join(data_dir, "tara.npz")) or not os.path.exists(join(data_dir, "A.npy")):
     print("Preprocessing Tara data...")

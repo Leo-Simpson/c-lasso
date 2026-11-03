@@ -28,7 +28,7 @@ import pandas as pd
 #  Define how to read csv
 # ^^^^^^^^^^^^^^^^^^^^^^^^
 
-data_dir = join(classo_dir, "examples/COMBO_data")
+data_dir = join(classo_dir, "examples", "datasets", "COMBO_data")
 def csv_to_np(filename, begin=1, header=None):
     """Function to read a csv file and to create an ndarray with this
 
