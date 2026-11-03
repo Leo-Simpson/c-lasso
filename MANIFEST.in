@@ -1,2 +1,5 @@
 include versioneer.py
 include classo/_version.py
+
+include CHANGELOG.md
+include RELEASING.md
