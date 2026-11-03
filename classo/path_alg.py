@@ -60,6 +60,10 @@ class parameters_for_update:
         self.intercept = intercept
         n, d, k = len(self.A), len(self.A[0]), len(self.C)
         self.number_act = 0
+        # C1 follows the unregularized squared-hinge objective. A hidden
+        # ridge changes directions and can change which margin event is next.
+        if typ == "C1":
+            eps_L2 = 0.
         self.eps_L2 = eps_L2
         self.idr = [False] * k
         self.activity = [False] * d
@@ -112,10 +116,13 @@ class parameters_for_update:
             )
 
         N = self.M[self.activity + self.idr, :][:, self.activity + self.idr]
-        try:
-            self.Xt = LA.inv(N)
-        except LA.LinAlgError:
-            self.Xt = LA.inv(N + self.eps_L2 * np.eye(len(N)))
+        if typ == "C1":
+            self.Xt = _C1_inverse(N)
+        else:
+            try:
+                self.Xt = LA.inv(N)
+            except LA.LinAlgError:
+                self.Xt = LA.inv(N + self.eps_L2 * np.eye(len(N)))
 
 
 # iteration of the function up to solve the path at each breaking points.
@@ -142,6 +149,8 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
     if intercept:
         BETA0 = [param.beta0]
     BETA, LAM = [param.beta], [param.lam]
+    if typ == "C1":
+        check_C1_certificate(param)
     if param.lam < lamin:
         if intercept:
             return BETA0, BETA, LAM
@@ -167,6 +176,8 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
         #                      "with rho equal to {} ".format(i, typ, intercept, rho ))
 
         up(param)
+        if typ == "C1":
+            check_C1_certificate(param)
         BETA.append(param.beta), LAM.append(param.lam)
 
         # print("inside : ", param.r[ param.F], np.nonzero(param.F)[0] )
@@ -180,6 +191,88 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
         "and with lamin=%f" % lamin,
         " and with n_active =" + str(n_active),
     )
+
+
+def _C1_inverse(matrix):
+    """Symmetric inverse, with a minimum-norm policy for tied directions.
+
+    Rank-deficient active sets (e.g. duplicated columns) use a minimum-norm
+    inverse in equilibrated coordinates, not a ridge-perturbed objective. Returned knots must still pass
+    the actual primal/dual certificate; inconsistent directions are rejected.
+    """
+    # Symmetric equilibration prevents large feature scales from causing
+    # genuine constraint directions to be mistaken for numerical nullspace.
+    scaling = np.ones(len(matrix))
+    balanced = matrix.copy()
+    for _ in range(5):
+        norm = np.max(np.abs(balanced), axis=1, initial=0.)
+        factor = np.ones_like(norm)
+        factor[norm > 0] = 1./np.sqrt(norm[norm > 0])
+        scaling *= factor
+        balanced = factor[:, None]*balanced*factor[None, :]
+    eigenvalues, vectors = LA.eigh(balanced)
+    cutoff = 1e-12*np.max(np.abs(eigenvalues), initial=0.)
+    nonzero = np.abs(eigenvalues) > cutoff
+    inverse = np.zeros_like(eigenvalues)
+    inverse[nonzero] = 1./eigenvalues[nonzero]
+    return scaling[:, None]*(vectors*inverse).dot(vectors.T)*scaling[None, :]
+
+
+def check_C1_certificate(param, tol=1e-7):
+    """Check the actual squared-hinge KKT conditions at a returned C1 knot.
+
+    First try the small active stationarity multiplier solve. If its choice
+    of nonunique multipliers fails, minimize the residual over all multipliers
+    with a small LP. Never confuse a failed multiplier candidate with failure
+    of the primal solution. No coefficient refit or numerical ridge is used.
+    """
+    A, C, y = param.A, param.C, param.y
+    margin = y*(A.dot(param.beta)+param.beta0)
+    v = 2*y*np.minimum(margin-1., 0.)
+    gradient = A.T.dot(v)
+    lam = param.lam*param.lambdamax
+    scale = max(1., lam, np.max(np.abs(gradient), initial=0.))
+    allowance = tol*scale
+    active = np.abs(param.beta) > 1e-9
+    rhs = -gradient[active]-lam*np.sign(param.beta[active])
+    if len(C) and np.any(active):
+        dual = LA.lstsq(C[:, active].T, rhs, rcond=None)[0]
+    else:
+        dual = np.zeros(len(C))
+
+    def stationarity_residual(dual):
+        adjusted = gradient+C.T.dot(dual)
+        return max(np.max(np.maximum(np.abs(adjusted)-lam, 0.), initial=0.),
+                   np.max(np.abs(adjusted[active]+lam*np.sign(param.beta[active])), initial=0.))
+
+    residual = stationarity_residual(dual)
+    if residual > allowance and len(C):
+        from scipy.optimize import linprog
+        # Minimize the infinity-norm KKT error over all equality multipliers.
+        blocks = [C.T, -C.T, C[:, active].T, -C[:, active].T]
+        M = np.vstack(blocks)
+        fit = linprog(np.r_[np.zeros(len(C)), 1.],
+                      A_ub=np.c_[M, -np.ones(len(M))],
+                      b_ub=np.r_[lam-gradient, lam+gradient, rhs, -rhs],
+                      bounds=[(None, None)]*len(C)+[(0., None)], method="highs")
+        if not fit.success:
+            raise RuntimeError("C1 certificate multiplier LP failed: " + fit.message)
+        dual = fit.x[:-1]
+        residual = stationarity_residual(dual)
+    margin_error = np.max(np.abs(margin-param.r), initial=0.)
+    equality_error = np.max(np.abs(C.dot(param.beta)), initial=0.)
+    intercept_error = abs(v.sum()) if param.intercept else 0.
+    if (residual > allowance or intercept_error > allowance
+            or equality_error > tol*max(1., np.max(np.abs(param.beta), initial=0.))
+            or margin_error > tol*max(1., np.max(np.abs(margin), initial=0.))):
+        raise RuntimeError(
+            "C1 path failed its KKT certificate at lambda={:.8g}: "
+            "stationarity={:.3g}, intercept={:.3g}, equality={:.3g}, margins={:.3g}"
+            .format(lam, residual, intercept_error, equality_error, margin_error))
+    param.certificate = dict(dual=dual, stationarity=residual,
+                             intercept=intercept_error, equality=equality_error,
+                             margins=margin_error)
+    return param.certificate
 
 
 def solve_path_Conc(matrices, stop, n_active=False, lassopath=True, true_lam=False):
@@ -520,7 +613,8 @@ def up_cl(param):
     activity = param.activity
     F = param.F
     beta = param.beta
-    s = param.s
+    # Roundoff at a saturated dual coordinate must not suppress its event.
+    s = np.where(np.abs(np.abs(param.s)-1.) < 1e-10, np.sign(param.s), param.s)
     lam = param.lam
     M = param.M
     r = param.r
@@ -532,7 +626,9 @@ def up_cl(param):
     for i in range(d):
         bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
         if activity[i]:
-            if abs(bi * di) > 1e-10 and bi * di > 0:
+            # A small coefficient can still cross zero before any other
+            # event. A product threshold here is not invariant to X scaling.
+            if abs(bi) > 1e-12 and bi * di > 0:
                 L[i] = bi / (di * lambdamax)
         else:
             if abs(e + s0) < 1e-10 or abs(s0) > 1:
@@ -544,22 +640,31 @@ def up_cl(param):
             L[i] = dl * lam
 
     dlamb = min(min(L), lam, lam - lamin)
-    max_up = False
-    j_switch = None
     yADl = -y * A.dot(beta_dot) * lambdamax
     if param.intercept:
-        yADl += y * np.vdot(param.Abar, beta_dot) * lambdamax
+        # The intercept derivative uses the CURRENT quadratic sample set.
+        # Using the original full-sample mean makes tracked margins drift.
+        yADl += y * np.vdot(np.mean(A[F], axis=0), beta_dot) * lambdamax
     for j in range(len(r)):
         #     find if there is a  0< dl < dlamb such that F[j] and r[j]+yADl[j]*dl > 1
         # or  find if there is a  0< dl < dlamb such that not F[j] r[j]+yADl[j]*dl < 1
-        if abs(r[j] - 1) < 1e-4:
+        # Skip the boundary itself, not distinct nearby margin crossings.
+        # A 1e-4 band can leave a sample on the wrong loss piece.
+        if abs(r[j] - 1) < 1e-10:
             continue
         if yADl[j] != 0.0:
             dl = (1 - r[j]) / yADl[j]
         else:
             dl = -1
         if dl < dlamb and dl > 0:
-            max_up, j_switch, dlamb = True, j, dl
+            dlamb = dl
+
+    # Several samples can reach the same boundary at exactly one knot.
+    # Switch all of them, including ties with a coefficient event.
+    sample_switches = np.flatnonzero(
+        (np.abs(r + yADl*dlamb - 1.) <= 1e-10)
+        & (np.abs(r - 1.) > 1e-10))
+    max_up = len(sample_switches) > 0
 
     beta = beta - lambdamax * beta_dot * dlamb
     if dlamb < lam:
@@ -572,7 +677,7 @@ def up_cl(param):
         beta0 = param.beta0 - lambdamax * beta0_dot * dlamb
 
     if max_up:
-        F[j_switch] = not F[j_switch]
+        F[sample_switches] = ~F[sample_switches]
         # sufficient :
         # F = F | (r < 1. - 1e-10)
         # necessary :
@@ -582,32 +687,27 @@ def up_cl(param):
             M[:d, :][:, :d] = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
         else:
             M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + eps_L2 * np.eye(d)
-    else:
-        # Update matrix inverse, list of rows in C and activity
-        for i in range(d):
-            if L[i] < dlamb + 1e-10:
-                if activity[i]:
-                    activity[i], number_act = False, number_act - 1
-                    if len(M) > d:
-                        to_ad = next_idr2(idr, M[d:, :d][:, activity])
-                        if type(to_ad) == int:
-                            idr[to_ad] = False
-                else:
-                    # x = M[:,activity+idr][i]
-                    # al = M[i,i]-np.vdot(x,Xt.dot(x))
-                    # if (abs(al)<1e-10): break
-                    activity[i], number_act = True, number_act + 1
-                    if len(M) > d:
-                        to_ad = next_idr1(idr, M[d:, :d][:, activity])
-                        if type(to_ad) == int:
-                            idr[to_ad] = True
-
+    # Update matrix inverse, list of rows in C and activity
+    for i in range(d):
+        if L[i] < dlamb + 1e-10:
+            if activity[i]:
+                activity[i], number_act = False, number_act - 1
+                if len(M) > d:
+                    to_ad = next_idr2(idr, M[d:, :d][:, activity])
+                    if type(to_ad) == int:
+                        idr[to_ad] = False
+            else:
+                # x = M[:,activity+idr][i]
+                # al = M[i,i]-np.vdot(x,Xt.dot(x))
+                # if (abs(al)<1e-10): break
+                activity[i], number_act = True, number_act + 1
+                if len(M) > d:
+                    to_ad = next_idr1(idr, M[d:, :d][:, activity])
+                    if type(to_ad) == int:
+                        idr[to_ad] = True
     N = M[activity + idr, :][:, activity + idr]
 
-    try:
-        Xt = LA.inv(N)
-    except LA.LinAlgError:
-        Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
+    Xt = _C1_inverse(N)
 
     param.number_act = number_act
     param.idr = idr
