@@ -20,7 +20,7 @@ import numpy as np
 from copy import deepcopy as dc
 import scipy.io as sio
 
-data_dir = join(classo_dir, "examples", "pH_data/matlab")
+data_dir = join(classo_dir, "examples", "datasets", "pH_data/matlab")
 
 pH = sio.loadmat(join(data_dir, "pHData.mat"))
 # tax = sio.loadmat(join(data_dir, "taxTablepHData.mat"))["None"][0]

@@ -38,7 +38,7 @@ import pandas as pd
 #  Load data
 # ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-data_dir = join(classo_dir, "examples", "pH_data")
+data_dir = join(classo_dir, "examples", "datasets", "pH_data")
 t = pd.read_csv(join(data_dir, "qiime2/news/table.csv"), index_col=0)
 metadata = pd.read_table(
     join(data_dir, "qiime2/originals/88soils_modified_metadata.txt"), index_col=0
