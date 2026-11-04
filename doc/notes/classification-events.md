@@ -51,3 +51,19 @@ in both numerical environments (48 C2 comparisons total). The maximum relative
 objective difference is 1.54e-10. These datasets remain private and
 are not added to the repository. Production dependencies remain NumPy/SciPy;
 CVXPY is used only for the external independent audit.
+
+## Avoid redundant flat-face searches
+
+A history of flat events no longer triggers LPs before every later segment.
+C2 first attempts a certified curved segment; only a failed direction/segment
+falls back to the optimal-face LP. A genuinely empty quadratic sample set still
+uses the flat-face solver directly. Failed attempts restore the primal state
+and rebuild derived state before the fallback. Certificate tolerances and
+returned-knot checks are unchanged.
+
+On the 143-by-353 supplied tree design, the instrumented long C2 path to relative
+lambda 0.001 fell from about 48 seconds to 2.9 seconds, and flat-face calls fell
+from 101 to zero. These are single-run development measurements with one BLAS
+thread. Paths can choose different representatives at degenerate knots; both
+paths were independently objective-checked. The active-set-cap-30 path takes
+about 0.6 seconds and already required no flat-face LPs.
