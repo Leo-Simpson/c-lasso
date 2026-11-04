@@ -23,14 +23,31 @@ repository. They complete to relative lambda 0.001 for both C1 and C2 with
 NumPy 2.4.2 / SciPy 1.17.1. C1 also passed 24 independent objective checks (maximum
 relative difference 3.54e-11) with NumPy 2.5.4 / SciPy 1.18.1.
 
-## Review limitation
+## Stable C2 rank and dual-event calculations
 
-C2 is not yet ready to merge: additional interleaved reference-solver audits
-exposed remaining outgoing-face refinement / segment LP failures on nearly
-singular tree designs, including with NumPy 2.4.2 / SciPy 1.17.1 and with
-NumPy 2.5.4 / SciPy 1.18.1. The isolated six-case completion run passes, but this
-does not establish robustness to other numerical execution contexts.
-Certificates reject these cases rather than return an uncertified path.
-The draft PR records this explicitly; cross-environment C2 validation must pass
-before merging. The production implementation uses NumPy/SciPy only; CVXPY was
-used outside the repository for independent numerical auditing.
+The follow-up removes two numerical causes of the draft failures:
+
+- The curved C2 direction is solved from the reduced quadratic design by SVD,
+  without forming its Gram matrix. This reveals weak curvature without
+  squaring the condition number, while retaining a true nullspace and checking
+  the resulting linear-system residual. No ridge is added.
+- Active stationarity determines an affine equality-multiplier trajectory,
+  plus any remaining multiplier nullspace. Only inactive coefficient bounds
+  enter the dual-event problem. Active saturated bounds must not be imposed
+  again as inequalities: tiny roundoff in these duplicates produced false
+  negative event times and infeasible event LPs. Unique multipliers give
+  analytic event times; nonunique multipliers use a smaller inequality LP.
+
+The captured failing direction and segment both pass after this change.
+Synthetic regressions cover weak curvature, true nullspaces, redundant active
+bounds, exact inactive entry times, and nonunique equality multipliers.
+Returned knots still pass the original relative KKT tolerance of 1e-7;
+inconsistent directions and true nullspace inconsistencies still raise.
+
+Final validation: 135 tests pass with NumPy 2.4.2 / SciPy 1.17.1. The 45 focused
+C2 tests also pass with NumPy 2.5.4 / SciPy 1.18.1. Independent objective audits
+check three path interiors and the endpoint on each of the six supplied cases
+in both numerical environments (48 C2 comparisons total). The maximum relative
+objective difference is 1.54e-10. These datasets remain private and
+are not added to the repository. Production dependencies remain NumPy/SciPy;
+CVXPY is used only for the external independent audit.

@@ -37,6 +37,32 @@ def _solve(H, rhs, reference=None):
     return result
 
 
+def _solve_design(Z, rhs, reference=None):
+    """Solve 2 Z.T Z d = rhs without forming normal equations.
+
+    The SVD reveals rank at the design scale; testing eigenvalues of the
+    Gram matrix instead squares its condition number and can discard a
+    genuine weak curvature direction in dependent tree designs.
+    """
+    _, singular, vh = np.linalg.svd(Z, full_matrices=True)
+    cutoff = 1e-10*np.max(singular, initial=0.)
+    rank = int(np.sum(singular > cutoff))
+    kept, null = vh[:rank].T, vh[rank:].T
+    if np.max(abs(null.T@rhs), initial=0.) > 1e-8:
+        raise np.linalg.LinAlgError('Classification direction requires another outgoing face')
+    result = kept@((kept.T@rhs)/(2*singular[:rank]**2))
+    if reference is not None:
+        result += null@(null.T@reference)
+    residual = 2*Z.T@(Z@result)-rhs
+    scale = max(1., 2*np.linalg.norm(Z.T, np.inf)*np.linalg.norm(Z, np.inf)
+                *np.linalg.norm(result, np.inf), np.linalg.norm(rhs, np.inf))
+    allowance = max(1e-10*(1+np.linalg.norm(rhs, np.inf)),
+                    32*np.finfo(float).eps*scale)
+    if not np.isfinite(result).all() or np.max(abs(residual), initial=0.) > allowance:
+        raise np.linalg.LinAlgError('Classification design solve failed its backward-error check')
+    return result
+
+
 def _gradient(X,y,beta,lower=None):
     hinge = np.maximum(1-y*(X@beta),0.)
     if lower is not None: hinge = np.minimum(hinge,1-lower)
@@ -78,7 +104,9 @@ def direction(X,C,y,beta,lam,certificate,free=0,lower=None):
         if region.tobytes() in seen: break
         seen.add(region.tobytes())
         Z = A[region]@N
-        try: v = _solve(2*Z.T@Z,N.T@signs)
+        try:
+            v = (_solve_design(Z,N.T@signs) if lower is not None
+                 else _solve(2*Z.T@Z,N.T@signs))
         except np.linalg.LinAlgError: break
         if (np.max(abs(objective(v)[1]),initial=0.)<=1e-8
                 and np.min(J@v,initial=0.)>=-1e-9):
@@ -117,8 +145,10 @@ def direction(X,C,y,beta,lam,certificate,free=0,lower=None):
         active_signs = np.where(nonzero[active],np.sign(beta[active]),np.sign(certificate[active]))
         active_signs[active<free] = 0.
         if tangent.shape[1]:
-            H = 2*(Z[quadratic]@tangent).T@(Z[quadratic]@tangent)
-            v = _solve(H,tangent.T@active_signs,tangent.T@D[active])
+            reduced = Z[quadratic]@tangent
+            v = (_solve_design(reduced,tangent.T@active_signs,tangent.T@D[active])
+                 if lower is not None else _solve(2*reduced.T@reduced,
+                     tangent.T@active_signs,tangent.T@D[active]))
             refined = np.zeros_like(beta);refined[active] = tangent@v
         else: refined = np.zeros_like(beta)
         # A numerically moving tight zero row can refine to a direction
@@ -154,6 +184,56 @@ def _certificate(C,gradient,lam,active,signs,free):
     return dual,residual
 
 
+def _dual_segment(C, gradient, gdot, lam, upper, active, signs, free):
+    """Eliminate active stationarity before finding the next dual event.
+
+    u(t)=u0+t*udot+V*w satisfies active-row stationarity throughout
+    the segment. Redundant active equalities never enter the event LP.
+    """
+    selected = np.r_[np.arange(free), active[active >= free]]
+    E = C[:, selected].T
+    rhs = -gradient[selected]-lam*signs[selected]
+    slope = signs[selected]-gdot[selected]
+    if len(C):
+        u0 = np.linalg.lstsq(E, rhs, rcond=1e-12)[0]
+        udot = np.linalg.lstsq(E, slope, rcond=1e-12)[0]
+        V = _nullspace(E, tol=1e-12)
+    else:
+        u0 = udot = np.empty(0)
+        V = np.empty((0, 0))
+    scale = max(1., lam, np.max(abs(gradient), initial=0.))
+    error = max(np.max(abs(E@u0-rhs), initial=0.),
+                upper*np.max(abs(E@udot-slope), initial=0.))
+    if error > 5e-9*scale:
+        raise RuntimeError('Classification direction is not stationary on its active face')
+    adjusted = gradient+C.T@u0
+    rate = gdot+C.T@udot
+    # Active bounds are already stationarity equalities. Reintroducing them
+    # as inequalities turns their roundoff into spurious negative event times.
+    penalized = np.setdiff1d(np.arange(free, len(gradient)), active)
+    slack = np.r_[lam-adjusted[penalized], lam+adjusted[penalized]]
+    rates = np.r_[rate[penalized]+1., 1.-rate[penalized]]
+    if not V.shape[1]:
+        # Unique equality multiplier: every inactive condition is a scalar
+        # affine inequality, so the next event is available analytically.
+        moving = rates > 0.
+        roots = slack[moving]/rates[moving]
+        delta = min(upper, np.min(roots, initial=upper))
+        if delta < 0. and delta >= -64*np.finfo(float).eps*scale:
+            delta = 0.
+        return delta, u0+delta*udot
+    K = C[:, penalized].T@V
+    A = np.c_[upper*rates, np.vstack([K, -K])]
+    fit = linprog(np.r_[-1., np.zeros(V.shape[1])], A_ub=A, b_ub=slack,
+                  bounds=[(0., 1.)]+[(None, None)]*V.shape[1], method='highs',
+                  options=dict(primal_feasibility_tolerance=1e-9,
+                               dual_feasibility_tolerance=1e-9))
+    if not fit.success:
+        raise RuntimeError('Classification reduced dual-event LP failed: '+fit.message)
+    delta = upper*fit.x[0]
+    return delta, u0+delta*udot+V@fit.x[1:]
+
+
 def segment(X,C,y,beta,lam,D,active,quadratic,cap,free=0,lower=None):
     """Largest dual-certified interval, including nearby and simultaneous events."""
     eps = 64*np.finfo(float).eps*max(1.,lam)
@@ -178,6 +258,8 @@ def segment(X,C,y,beta,lam,D,active,quadratic,cap,free=0,lower=None):
     allowance = 5e-9*max(1.,lam,np.max(abs(gradient),initial=0.))
     if residual<=allowance:
         step = upper
+    elif lower is not None:
+        step, dual = _dual_segment(C, gradient, gdot, lam, upper, active, signs, free)
     else:
         # Variables: unit interval fraction, equality multipliers. Eliminating
         # the scalar L1 subgradient leaves only m+1 LP variables.
