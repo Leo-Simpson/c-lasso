@@ -25,9 +25,12 @@ relative difference 3.54e-11) with NumPy 2.5.4 / SciPy 1.18.1.
 
 ## Review limitation
 
-C2 is not yet ready to merge: the additional NumPy 2.5.4 / SciPy 1.18.1 audit
-exposed a remaining outgoing-face refinement failure on a nearly singular tree
-design. Certificates reject this case rather than return an uncertified path.
+C2 is not yet ready to merge: additional interleaved reference-solver audits
+exposed remaining outgoing-face refinement / segment LP failures on nearly
+singular tree designs, including with NumPy 2.4.2 / SciPy 1.17.1 and with
+NumPy 2.5.4 / SciPy 1.18.1. The isolated six-case completion run passes, but this
+does not establish robustness to other numerical execution contexts.
+Certificates reject these cases rather than return an uncertified path.
 The draft PR records this explicitly; cross-environment C2 validation must pass
 before merging. The production implementation uses NumPy/SciPy only; CVXPY was
 used outside the repository for independent numerical auditing.
