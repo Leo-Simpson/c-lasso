@@ -47,3 +47,20 @@ def test_repeated_flat_cells_against_independent_slack_qp(rho,intercept,constrai
     for fraction,beta in zip(fractions,B):
         _,value=qp_reference(X,C,y,rho,fraction*p.lambdamax,intercept)
         np.testing.assert_allclose(loss_value(X,y,beta,rho,fraction*p.lambdamax,intercept),value,atol=1e-7,rtol=1e-8)
+
+
+def test_curved_segment_after_flat_pivot_does_not_attempt_another_lp(monkeypatch):
+    import classo.path_alg as path
+    X, C, y = data(False)
+    state = parameters_for_update((X, C, y), .03, .5, 'C2', intercept=True)
+    path.up_huber_cl(state)
+    assert state.flat_events and np.any(state.F)
+    previous = state.lam
+
+    def unnecessary_lp(*args, **kwargs):
+        pytest.fail('A valid curved post-flat segment must not attempt a flat-face LP')
+
+    monkeypatch.setattr(path, '_classification_flat_step', unnecessary_lp)
+    path.up_huber_cl(state)
+    assert state.lam < previous
+    path.check_C2_certificate(state)

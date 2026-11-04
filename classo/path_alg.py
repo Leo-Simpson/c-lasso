@@ -786,13 +786,9 @@ def _up_C2(param):
     if not np.any(param.F):
         return _classification_flat_step(param)
     if param.formulation=="C2" and getattr(param,'flat_events',None):
-        # Curvature can also vanish along a direction when F is nonempty
-        # but its active design is rank deficient. Preserve those margins
-        # during the optimal-face LP before requesting a curved direction.
-        if _classification_flat_step(param,allow_no_progress=True):
-            return
-        from ._classification_path import step
-        return step(param)
+        # A previous flat event does not imply that the current face is flat.
+        # First try a certified curved segment; pivot only if it cannot move.
+        return _scalar_classification_step(param)
     lambdamax = param.lambdamax
     lamin = param.lamin
     A = param.A
@@ -1062,10 +1058,22 @@ def _classification_flat_step(param,allow_no_progress=False):
 
 def _scalar_classification_step(param):
     from ._classification_path import step
-    if param.formulation == "C2":
+    if param.formulation != "C2":
+        return step(param)
+    # Most post-flat knots have a perfectly valid curved direction. Solving
+    # two LPs before every such segment dominated the long C2 path runtime.
+    previous = (param.beta.copy(), param.beta0, param.lam)
+    try:
+        return step(param)
+    except (LA.LinAlgError, RuntimeError):
+        # A singular/unbounded cone or an unresolved zero-length segment can
+        # require a same-lambda optimal-face pivot. Restore the primal state
+        # before this fallback, including failures during state rebuilding.
+        param.beta, param.beta0, param.lam = previous
+        _refresh_classification_state(param)
         if _classification_flat_step(param, allow_no_progress=True):
             return
-    return step(param)
+        raise
 
 
 def up_huber_cl(param):
