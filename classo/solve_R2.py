@@ -22,133 +22,131 @@ def Classo_R2(pb, lam, compute=True):
 
     pb_type = pb.type  # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
-    (m, d, k), (A, C, y) = pb.dim, pb.matrix
-    lamb, rho = lam * pb.lambdamax, pb.rho
-
     if lam < 1e-5:
+        # here we simply refer to Classo_R1, through the DR branch
         pb_type = "DR"
         compute = "True"
-        # here we simply refer to Classo_R1 that is called line 42.
-
-    # Path-Alg
-    # here we compute the path algo until our lambda, and just take the last beta
 
     if pb_type == "Path-Alg":
-        if pb.intercept:
-            AA, CC = A[:, 1:], C[:, 1:]
-        else:
-            AA, CC = A[:, :], C[:, :]
-        out = solve_path((AA, CC, y), lam, False, rho, "R2", intercept=pb.intercept)
-        if pb.intercept:
-            beta0, beta = out[0][-1], out[1][-1]
-            beta = np.array([beta0] + list(beta))
-        else:
-            beta = out[0][-1]
+        return _classo_R2_path(pb, lam)
 
-        return beta
-
-    # DR :
-    regpath = pb.regpath
-    r = lamb / (2 * rho)
+    lamb = lam * pb.lambdamax
+    r = lamb / (2 * pb.rho)
     if pb_type == "DR":
-        if compute:
-            pb.init_R1(r=r)
-            x = Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)
-            beta = x[:-m]
-            if pb.intercept:
-                betaO = pb.prob_R1.ybar - np.vdot(pb.prob_R1.Abar, x)
-                beta = np.array([betaO] + list(beta))
-            return beta
-        else:
-            pb.add_r(r=r)
-            if len(pb.init) == 3:
-                pb.prob_R1.init = pb.init
-            x, warm_start = Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)
-            beta = x[:-m]
-            if pb.intercept:
-                betaO = pb.prob_R1.ybar - np.vdot(pb.prob_R1.Abar, x)
-                beta = np.array([betaO] + list(beta))
-            return (beta, warm_start)
+        return _classo_R2_dr(pb, lamb, r, compute)
+    return _classo_R2_pds(pb, pb_type, lamb, r, compute)
 
+
+def _classo_R2_path(pb, lam):
+    """Compute the path algorithm until lam, and take the last beta."""
+    A, C, y = pb.matrix
+    if pb.intercept:
+        AA, CC = A[:, 1:], C[:, 1:]
+    else:
+        AA, CC = A[:, :], C[:, :]
+    out = solve_path((AA, CC, y), lam, False, pb.rho, "R2", intercept=pb.intercept)
+    if pb.intercept:
+        beta0, beta = out[0][-1], out[1][-1]
+        return np.array([beta0] + list(beta))
+    return out[0][-1]
+
+
+def _classo_R2_dr(pb, lamb, r, compute):
+    """Solve the equivalent R1 problem with Douglas-Rachford."""
+    m = pb.dim[0]
+    if compute:
+        pb.init_R1(r=r)
+        x = Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)
+    else:
+        pb.add_r(r=r)
+        if len(pb.init) == 3:
+            pb.prob_R1.init = pb.init
+        x, warm_start = Classo_R1(pb.prob_R1, lamb / pb.prob_R1.lambdamax)
+    beta = x[:-m]
+    if pb.intercept:
+        betaO = pb.prob_R1.ybar - np.vdot(pb.prob_R1.Abar, x)
+        beta = np.array([betaO] + list(beta))
+    return beta if compute else (beta, warm_start)
+
+
+def _classo_R2_pds(pb, pb_type, lamb, r, compute):
+    """Projected (P-PDS) or projection-free (PF-PDS, any other type) primal-dual splitting."""
+    m, d = pb.dim[0], pb.dim[1]
+    A, C, y = pb.matrix
+    regpath = pb.regpath
     tol = pb.tol * LA.norm(y) / LA.norm(A, "fro")  # tolerance rescaled
 
     if compute:
         pb.compute_param()
-    tau, Proj, AtA, Aty = pb.tauN, proj_c(C, d), pb.AtA, pb.Aty
+    Proj = proj_c(C, d)
     gamma = pb.gam / (2 * (pb.AtAnorm + r ** 2))
     t = lamb * gamma
-    w, tm, zerom, zerod = (
-        t * pb.weights,
-        t * np.ones(m),
-        np.zeros(m),
-        np.zeros(d),
+    state = dict(
+        A=A, C=C, y=y, AtA=pb.AtA, Aty=pb.Aty, tau=pb.tauN, gamma=gamma, r=r,
+        w=t * pb.weights, tm=t * np.ones(m), zerom=np.zeros(m), zerod=np.zeros(d),
+        tol=tol, N=pb.N, regpath=regpath, init=pb.init,
     )
-    o, xbar, x, v = pb.init
-    # vectors usefull to compute the prox of f(b)= sum(wi |bi|)
-
-    # FORWARD BACKWARD
     if pb_type == "P-PDS":
+        return _ppds_R2(Proj=Proj, **state)
+    return _pfpds_R2(**state)
 
-        for i in range(pb.N):
-            grad = AtA.dot(x) - Aty
-            v = v + tau * C.dot(xbar)
-            S = x - 2 * gamma * grad - 2 * gamma * r * (A.T).dot(o) - (C.T).dot(v)
-            o = prox(
-                o * (1 - 2 * gamma * r ** 2) + 2 * gamma * r * (y - A.dot(x)),
-                tm,
-                zerom,
-            )
-            p = prox(S, w, zerod)
-            nw_x = Proj.dot(p)
-            eps = nw_x - x
-            xbar = p + eps
 
-            if i % 10 == 2 and LA.norm(eps) < tol:  # 0.6
-                if regpath:
-                    return (x, (o, xbar, x, v))
-                else:
-                    return x
-            x = nw_x
-            if LA.norm(x) > 1e10:
-                raise ValueError("The algorithm of P-PDS diverges")
-
-        raise ValueError(
-            "The algorithm of P-PDS did not converge after %i iterations " % pb.N
+def _ppds_R2(A, C, y, AtA, Aty, tau, gamma, r, w, tm, zerom, zerod, tol, N, regpath,
+             init, Proj):
+    """Projected primal-dual splitting (forward-backward)."""
+    o, xbar, x, v = init
+    for i in range(N):
+        grad = AtA.dot(x) - Aty
+        v = v + tau * C.dot(xbar)
+        S = x - 2 * gamma * grad - 2 * gamma * r * (A.T).dot(o) - (C.T).dot(v)
+        o = prox(
+            o * (1 - 2 * gamma * r ** 2) + 2 * gamma * r * (y - A.dot(x)),
+            tm,
+            zerom,
         )
+        p = prox(S, w, zerod)
+        nw_x = Proj.dot(p)
+        eps = nw_x - x
+        xbar = p + eps
 
-    else:  # "PF-PDS"
-        for i in range(pb.N):
-            grad = AtA.dot(x) - Aty
+        if i % 10 == 2 and LA.norm(eps) < tol:  # 0.6
+            return (x, (o, xbar, x, v)) if regpath else x
+        x = nw_x
+        if LA.norm(x) > 1e10:
+            raise ValueError("The algorithm of P-PDS diverges")
 
-            S1 = x - 2 * gamma * grad - 2 * gamma * r * (A.T).dot(o) - (C.T).dot(v)
-            S2 = o * (1 - 2 * gamma * r ** 2) + 2 * gamma * r * (y - A.dot(x))
+    raise ValueError("The algorithm of P-PDS did not converge after %i iterations " % N)
 
-            p1 = prox(S1, w, zerod)
-            p2 = prox(S2, tm, zerom)
 
-            v = v + tau * C.dot(p1)
-            v2 = v + tau * C.dot(x)
+def _pfpds_R2(A, C, y, AtA, Aty, tau, gamma, r, w, tm, zerom, zerod, tol, N, regpath,
+              init):
+    """Projection-free primal-dual splitting."""
+    o, xbar, x, v = init
+    for i in range(N):
+        grad = AtA.dot(x) - Aty
 
-            eps1 = (
-                p1 + 2 * gamma * (Aty - AtA.dot(p1) - r * A.T.dot(o)) - C.T.dot(v2) - S1
-            )
-            eps2 = p2 + 2 * r * gamma * (y - r * p2 - A.dot(x)) - S2
+        S1 = x - 2 * gamma * grad - 2 * gamma * r * (A.T).dot(o) - (C.T).dot(v)
+        S2 = o * (1 - 2 * gamma * r ** 2) + 2 * gamma * r * (y - A.dot(x))
 
-            x = x + eps1
-            o = o + eps2
+        p1 = prox(S1, w, zerod)
+        p2 = prox(S2, tm, zerom)
 
-            if i % 10 == 2 and LA.norm(eps1) + LA.norm(eps2) < tol:
-                if regpath:
-                    return (x, (o, xbar, x, v))
-                else:
-                    return x
+        v = v + tau * C.dot(p1)
+        v2 = v + tau * C.dot(x)
 
-            if LA.norm(x) + LA.norm(o) + LA.norm(v) > 1e6:
-                raise ValueError("The algorithm of PF-PDS diverges")
+        eps1 = p1 + 2 * gamma * (Aty - AtA.dot(p1) - r * A.T.dot(o)) - C.T.dot(v2) - S1
+        eps2 = p2 + 2 * r * gamma * (y - r * p2 - A.dot(x)) - S2
 
-        raise ValueError(
-            "The algorithm of PF-PDS did not converge after %i iterations " % pb.N
-        )
+        x = x + eps1
+        o = o + eps2
+
+        if i % 10 == 2 and LA.norm(eps1) + LA.norm(eps2) < tol:
+            return (x, (o, xbar, x, v)) if regpath else x
+
+        if LA.norm(x) + LA.norm(o) + LA.norm(v) > 1e6:
+            raise ValueError("The algorithm of PF-PDS diverges")
+
+    raise ValueError("The algorithm of PF-PDS did not converge after %i iterations " % N)
 
 
 """
