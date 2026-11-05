@@ -46,4 +46,6 @@ problem.solution.StabSel.save3 = join(figure_dir, "R4-StabSel-beta")
 problem2 = dc(problem)
 
 print(problem1, problem1.solution)
+problem1.solution.plot()
 print(problem2, problem2.solution)
+problem2.solution.plot()

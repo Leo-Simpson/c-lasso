@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import numpy.linalg as LA
 from .solve_R3 import problem_R3, Classo_R3
@@ -233,12 +235,6 @@ class problem_R4:
         # for numerical issues...
 
 
-"""
-Functions used in the algorithms, modules needed:
-import numpy as np
-import numpy.linalg as LA
-from .../class_of_problem import problem
-"""
 
 
 # compute the prox of the function : f(b)= sum (wi * |bi| )
@@ -335,4 +331,4 @@ def find_sigmax(y, rho, e):
                     F[j], evol = True, True
         return s
     else:
-        print("rho too little ==> sigma is always 0")
+        warnings.warn("rho too little ==> sigma is always 0")
