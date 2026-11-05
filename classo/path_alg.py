@@ -182,7 +182,6 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
                 return BETA, LAM
 
         # elif not np.any(param.F):
-        #    print(param.r)
         #    raise ValueError("The problem looks infeasible because the set of active sample became zero, "
         #                     "at the iteration {} "
         #                      "for formulation {} "
@@ -205,8 +204,6 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
                 check_C1_certificate(param)
         BETA.append(param.beta), LAM.append(param.lam)
 
-        # print("inside : ", param.r[ param.F], np.nonzero(param.F)[0] )
-        # print(" outside : ", param.r[~param.F], np.nonzero(~param.F)[0])
 
         if intercept:
             BETA0.append(param.beta0)
@@ -1206,8 +1203,6 @@ def find_beta0(r, dbeta0, y, rho, typ):
 def binary_search(f, a, b, tol=1e-8):
     c = (a + b) / 2
     # if f(a) * f(b) > 0:
-    #    print("gradh(min(y)) = ", f(a))
-    #    print("gradh(max(y)) = ", f(b))
     #    raise ValueError("Error in binary search for initial intercept")
     while abs(f(c)) > tol:
         if f(c) * f(a) < 0:
@@ -1226,37 +1221,4 @@ then we use it to find sigma and so the solution, using the equation for sigma:
 sigma = || A*B(lambda*sigma) - y ||_2       (where B(lambda) is found thanks to solve_path)
 
             teta = (sp_path[i]-lam)/(sp_path[i]-sp_path[i+1])
-"""
-
-
-"""
-# Update the invers of a matrix whom we add a line, which is useul to compute the derivatives
-def next_inv(Xt, B, al, ligne):
-    n = len(Xt)
-    Yt = np.zeros((n + 1, n + 1))
-    alpha = 1 / al
-    B = np.array([B])
-    b1 = Xt[:ligne, :][:, :ligne] + alpha * B[:, :ligne].T.dot(B[:, :ligne])
-    b2 = Xt[ligne:, :][:, :ligne] + alpha * B[:, ligne:].T.dot(B[:, :ligne])
-    b4 = Xt[ligne:, :][:, ligne:] + alpha * B[:, ligne:].T.dot(B[:, ligne:])
-    col1 = np.concatenate((b1, -alpha * B[:, :ligne], b2), axis=0)
-    col2 = np.concatenate((b2.T, -alpha * B[:, ligne:], b4), axis=0)
-    col = np.concatenate(
-        (-alpha * B[0, :ligne], [alpha], -alpha * B[0, ligne:]), axis=0
-    )
-    return np.concatenate((col1, np.array([col]).T, col2), axis=1)
-
-
-
-def pathalgo_huber_cl(matrix, path, rho, n_active = False, intercept = False):
-    return pathalgo_general(
-        matrix, path, "C2", n_active=n_active, rho=rho, intercept=intercept
-    )
-
-
-def pathalgo_cl(matrix, path, n_active = False, intercept = False):
-    return pathalgo_general(matrix, path, "C1", n_active, intercept=intercept)
-
-
-
 """

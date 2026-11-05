@@ -75,3 +75,4 @@ problem.solve()
 # can be visualized using
 
 print(problem.solution)
+problem.solution.plot()

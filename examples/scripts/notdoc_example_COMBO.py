@@ -63,6 +63,7 @@ problem.solution.PATH.save = join(figure_dir, "R3-")
 problem.solution.StabSel.save1 = join(figure_dir, "R3-StabSel")
 problem.solution.StabSel.save3 = join(figure_dir, "R3-StabSel-beta")
 print(problem, problem.solution)
+problem.solution.plot()
 
 
 # for R4
@@ -73,6 +74,7 @@ problem.solution.PATH.save = join(figure_dir, "R4-")
 problem.solution.StabSel.save1 = join(figure_dir, "R4-StabSel")
 problem.solution.StabSel.save3 = join(figure_dir, "R4-StabSel-beta")
 print(problem, problem.solution)
+problem.solution.plot()
 
 # for R2
 problem.formulation.concomitant = False
@@ -81,6 +83,7 @@ problem.solution.PATH.save = join(figure_dir, "R2-")
 problem.solution.StabSel.save1 = join(figure_dir, "R2-StabSel")
 problem.solution.StabSel.save3 = join(figure_dir, "R2-StabSel-beta")
 print(problem, problem.solution)
+problem.solution.plot()
 
 # for R1
 problem.formulation.huber = False
@@ -89,3 +92,4 @@ problem.solution.PATH.save = join(figure_dir, "R1-")
 problem.solution.StabSel.save1 = join(figure_dir, "R1-StabSel")
 problem.solution.StabSel.save3 = join(figure_dir, "R1-StabSel-beta")
 print(problem, problem.solution)
+problem.solution.plot()
