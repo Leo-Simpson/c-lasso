@@ -107,6 +107,7 @@ problem.solve()
 # can be visualized using
 
 print(problem.solution)
+problem.solution.plot()
 
 # %%
 # R1 formulation with ALO
@@ -123,3 +124,4 @@ problem.model_selection.LAMfixed = False
 problem.solve()
 print(problem)
 print(problem.solution)
+problem.solution.plot()

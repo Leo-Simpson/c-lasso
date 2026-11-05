@@ -32,3 +32,4 @@ problem.solution.LAMfixed.save = f"{figure_dir}/{problem.model_selection.PATHpar
 problem.solution.PATH.save = f"{figure_dir}/{problem.model_selection.LAMfixedparameters.numerical_method}-PATH"
 
 print(problem.solution)
+problem.solution.plot()

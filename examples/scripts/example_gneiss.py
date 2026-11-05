@@ -77,6 +77,7 @@ problem.model_selection.PATHparameters.n_active = X.shape[1] + 1
 problem.formulation.concomitant = False
 problem.solve()
 print(problem, problem.solution)
+problem.solution.plot()
 
 # %%
 # Solve for R2
@@ -84,6 +85,7 @@ print(problem, problem.solution)
 problem.formulation.huber = True
 problem.solve()
 print(problem, problem.solution)
+problem.solution.plot()
 
 
 # %%
@@ -93,6 +95,7 @@ problem.formulation.concomitant = True
 problem.formulation.huber = False
 problem.solve()
 print(problem, problem.solution)
+problem.solution.plot()
 
 
 # %%
@@ -109,3 +112,4 @@ problem.model_selection.PATHparameters.numerical_method = "DR"
 problem.formulation.huber = True
 problem.solve()
 print(problem, problem.solution)
+problem.solution.plot()
