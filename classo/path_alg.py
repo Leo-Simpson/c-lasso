@@ -441,8 +441,11 @@ def up_LS(param):
     for i in range(d):
         bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
         if activity[i]:
-            if (abs(bi)>1e-12 if param.formulation=="R1" else abs(bi*di)>1e-10) and bi*di>0:
-                L[i] = bi / (di * lambdamax)
+            # Sign comparisons avoid a dimensional product threshold (and
+            # product underflow). The relative-lambda crossing is invariant
+            # when both beta and lambdamax change response units.
+            if (bi > 0 and di > 0) or (bi < 0 and di < 0):
+                L[i] = (bi / lambdamax) / di
         else:
             if abs(e - s0) < 1e-10:
                 continue
