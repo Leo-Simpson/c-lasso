@@ -15,3 +15,8 @@ part of this release.
 - Correct C1 boundary entry signs and zero-coefficient directions (#30).
 - Update repository links and restore documentation builds (#31).
 - Modernize release validation and use PyPI Trusted Publishing.
+
+- Correct R3 concomitant path curvature, interpolation, and scale units.
+- Correct R4 intercept constraints, symmetric scale initialization, zero-scale
+  boundaries, and requested path method dispatch.
+- Safeguard concomitant proximal roots and require DR splitting residual convergence.

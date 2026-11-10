@@ -320,73 +320,43 @@ def check_C1_certificate(param, tol=1e-7):
 
 
 def solve_path_Conc(matrices, stop, n_active=False, lassopath=True, true_lam=False):
+    """Trace the certified R1 path until its concomitant parameter reaches stop.
+
+    If t is the relative least-squares penalty and R its residual divided by
+    ||y||, the relative concomitant penalty is t/||R||. No numerical ridge
+    belongs in this auxiliary least-squares path.
     """
-    This functions will compute the path for all the breaking points :
-    beta is a piecewise linear function of lambda, and only value on the breaking points
-    is computed here
-
-    Args :
-        matrices : A (aka X),C,y the matrices of the problem
-        stop : fraction of lambda_R3 that gives one criteria to stop :
-            continue while lambda_R3 > stop * lambda_R3_max
-            but this is the lambda of R3, which live in another space..
-        n_active : another criteria to stop
-
-    Return :
-        BETA : list of beta(lambda) for lambda in LAMBDA
-        LAM : list of breaking points
-        R : list of residuals rescaled
-    """
-
-    (A, C, y) = matrices
-    n, d, k = len(A), len(A[0]), len(C)
-    # to compute r = (A beta - y)/||y|| more efficientely ; and we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
-    A_over_NORMy, y_over_NORMy, reduclam = (
-        A / (LA.norm(y)),
-        y / (LA.norm(y)),
-        2.0,
-    )
-    if lassopath:
-        lamin, R = 0, [-y_over_NORMy]
-    else:
-        lamin, beta_old, reduclam_old, r_old = (
-            0,
-            np.zeros(d),
-            1.0,
-            -y_over_NORMy,
-        )
-
-    param = parameters_for_update(matrices, lamin, 0, "R3")
-    BETA, LAM = [param.beta], [param.lam]
-    for i in range(d * N_frac):
-
+    A, C, y = matrices
+    size = LA.norm(y)
+    zero = np.zeros(A.shape[1])
+    if size == 0:
+        if lassopath: return [zero, zero.copy()], [1., 0.], [np.zeros(len(y))]*2
+        return (zero, zero.copy()), (0., 0.), (np.zeros(len(y)), np.zeros(len(y)))
+    param = parameters_for_update(matrices, 0., 0., "R1")
+    check_C1_certificate(param)
+    BETA, LAM, R = [param.beta.copy()], [param.lam], [-y/size]
+    for _ in range(A.shape[1]*N_frac):
+        if param.lam <= stop*LA.norm(R[-1]) or param.lam == 0.:
+            break
+        previous = (param.beta.copy(), param.beta0, param.r.copy(), param.lam)
         up(param)
-        BETA.append(param.beta), LAM.append(param.lam)
-        param.r = A_over_NORMy.dot(param.beta) - y_over_NORMy
-        if stop != 0:
-            reduclam = param.lam / stop
-        if lassopath:
-            R.append(param.r)
-            if (
-                (reduclam <= LA.norm(param.r))
-                or (param.number_act >= n - k)
-                or (n_active > 0 and param.number_act >= n_active)
-            ):
-                return (BETA, LAM, R)
-        else:
-            if reduclam <= LA.norm(param.r):
-                return (
-                    (beta_old, param.beta),
-                    (reduclam_old, reduclam),
-                    (r_old, param.r),
-                )
-            beta_old, reduclam_old, r_old = param.beta, reduclam, param.r
-
-    raise ValueError(
-        "The concomitant path algorithm did not finsh after %i iterations " % N,
-        "and with lamin=" + str(stop),
-        " and with n_active =" + str(n_active),
-    )
+        try:
+            check_C1_certificate(param)
+        except RuntimeError:
+            param.beta, param.beta0, param.r, param.lam = previous
+            from ._regression_path import step
+            step(param)
+            check_C1_certificate(param)
+        BETA.append(param.beta.copy()); LAM.append(param.lam)
+        R.append((A@param.beta-y)/size)
+        if n_active and np.count_nonzero(abs(param.beta)>1e-9)>=n_active:
+            break
+    else:
+        raise RuntimeError("Concomitant path exceeded its knot limit")
+    if lassopath: return BETA, LAM, R
+    if len(BETA)==1:
+        return (BETA[0], BETA[0]), (1., 1.), (R[0], R[0])
+    return (BETA[-2], BETA[-1]), (LAM[-2]/stop, LAM[-1]/stop), (R[-2], R[-1])
 
 
 def pathalgo_general(matrix, path, typ, n_active=False, rho=0, intercept=False):

@@ -23,10 +23,12 @@ def Classo_R3(pb, lam):
     (m, d, k), (A, C, y) = pb.dim, pb.matrix
     sigmax = pb.sigmax
 
-    if lam < 1e-5:
+    if pb.lambdamax == 0. or lam >= 1.:
+        return (np.zeros(d), pb.init, pb.sigmax) if pb.regpath else (np.zeros(d), pb.sigmax)
+    if lam == 0.:
         beta = unpenalized(pb.matrix)
         sigma = LA.norm(A.dot(beta) - y) / np.sqrt(m / 2)
-        return beta, sigma
+        return (beta, pb.init, sigma) if pb.regpath else (beta, sigma)
 
     # Path algorithm
     # here we compute the path algo until our lambda, and just take the last beta
@@ -44,8 +46,8 @@ def Classo_R3(pb, lam):
             np.vdot(dr, r2) - s2 * ds,
             LA.norm(r2) ** 2 - s2 ** 2,
         )
-        sigma = (s1 * teta + s2 * (1 - teta)) * sigmax
         beta = beta1 * teta + beta2 * (1 - teta)
+        sigma = LA.norm(A@beta-y)/np.sqrt(m/2)
         return (beta, sigma)
 
     else:  # DR
@@ -55,7 +57,6 @@ def Classo_R3(pb, lam):
 
         lamb = lam * pb.lambdamax
         Anorm = pb.Anorm
-        tol = pb.tol * LA.norm(y) / Anorm  # tolerance rescaled
         Proj = proj_c(C, d)  # Proj = I - C^t . (C . C^t )^-1 . C
         QA = pb.QA
         Q1 = pb.Q1
@@ -73,13 +74,6 @@ def Classo_R3(pb, lam):
         for i in range(pb.N):
             nv_b = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar)
             nv_s = (xs + nu) / 2
-            if i % 10 == 2 and LA.norm(b - nv_b) + LA.norm(s - nv_s) / Anorm < 2 * tol:
-                s = s / np.sqrt(m)
-                if regpath:
-                    return (b, (xs, nu, o, xbar, x), s)
-                else:
-                    return (b, s)
-
             s, b = nv_s, nv_b
             Ab = A.dot(b)
             p1, p2, root = prox_phi_1(xs, 2 * Ab - o - y, np.sqrt(m) * gamma / c, root)
@@ -88,6 +82,15 @@ def Classo_R3(pb, lam):
             sup3 = p2 + y - Ab
             sup4 = prox(2 * b - xbar, w, zerod) - b
             sup5 = Proj.dot(2 * b - x) - b
+
+            # Check the splitting equations, not only successive iterates.
+            residual = (LA.norm(sup1) + LA.norm(sup2) + LA.norm(sup3)
+                        + Anorm * (LA.norm(sup4) + LA.norm(sup5)))
+            if residual <= pb.tol * max(1., LA.norm(y)):
+                sigma = max(0., s / np.sqrt(m))
+                if regpath:
+                    return b, (xs, nu, o, xbar, x), sigma
+                return b, sigma
 
             xs = xs + mu * sup1
             nu = nu + mu * sup2
@@ -116,35 +119,31 @@ def pathlasso_R3(pb, path, n_active=False):
     n, d, k = pb.dim
     BETA, SIGMA, tol = [], [], pb.tol
 
+    if pb.lambdamax == 0.:
+        return [np.zeros(d) for _ in path], [pb.sigmax for _ in path]
     if pb.type == "Path-Alg":
         y = pb.matrix[2]
-        sigmax = LA.norm(y)
         X, LAM, R = solve_path_Conc(pb.matrix, path[-1], n_active=n_active)
-        LAM.append(path[-1]), X.append(X[-1]), R.append(R[-1])
-        beta2, l2, r2, j = X[0], path[0] + 0.1, -y / LA.norm(y), 0
         for lam in path:
-            if lam == 0:
-                lam = 1e-4
-            while (LA.norm(r2) < l2 / lam) and (j < len(LAM)):
-                beta1, l1, r1, beta2, l2, r2, j = (
-                    beta2,
-                    l2,
-                    r2,
-                    X[j],
-                    LAM[j],
-                    R[j],
-                    j + 1,
-                )
-            s1, s2 = l1 / lam, l2 / lam
-            dr, ds = r1 - r2, s1 - s2
-            teta = root_2(
-                LA.norm(dr) ** 2 - ds ** 2,
-                np.vdot(dr, r2) - s2 * ds,
-                LA.norm(r2) ** 2 - s2 ** 2,
-            )
-            SIGMA.append((s1 * teta + s2 * (1 - teta)) * sigmax)
-            BETA.append(beta1 * teta + beta2 * (1 - teta))
-        return (BETA, SIGMA)
+            if lam >= 1.:
+                BETA.append(np.zeros(d)); SIGMA.append(pb.sigmax)
+                continue
+            j = 0
+            while j+1 < len(LAM) and LAM[j] > lam*LA.norm(R[j]):
+                j += 1
+            if j == 0:
+                beta = X[0].copy()
+            elif lam == 0. or LAM[j] > lam*LA.norm(R[j]):
+                beta = X[j].copy()  # requested active-set truncation
+            else:
+                dr = R[j-1]-R[j]
+                ds = (LAM[j-1]-LAM[j])/lam
+                s2 = LAM[j]/lam
+                theta = root_2(dr@dr-ds*ds, dr@R[j]-s2*ds, R[j]@R[j]-s2*s2)
+                beta = theta*X[j-1]+(1-theta)*X[j]
+            BETA.append(beta)
+            SIGMA.append(LA.norm(pb.matrix[0]@beta-y)/np.sqrt(n/2))
+        return BETA, SIGMA
 
     save_init = pb.init
     pb.regpath = True
@@ -202,7 +201,7 @@ class problem_R3:
         self.gam = 1.0  # np.sqrt(d/m)
         self.Aty = (A.T).dot(y)
         self.sigmax = LA.norm(y) / np.sqrt(m / 2)
-        self.lambdamax = 2 * LA.norm(self.Aty, np.inf) / self.sigmax
+        self.lambdamax = 2 * LA.norm(self.Aty, np.inf) / self.sigmax if self.sigmax else 0.
         self.init = 0.0, 0.0, np.zeros(m), np.zeros(d), np.zeros(d)
 
     # Here we compute the costful matrices products and inverts in order to compute it only once, which is especially helpful for warmstarts.
@@ -230,19 +229,29 @@ def prox(b, w, zeros):
 
 # Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
 def proj_c(M, d):
-    if LA.matrix_rank(M) == 0:
+    if M.size == 0 or LA.matrix_rank(M) == 0:
         return np.eye(d)
-    return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)), M])
+    return np.eye(d) - LA.pinv(M)@M
 
 
 # Compute the real positive root of a polynomial of degree 3 in the form :
 #  X^3 + a*X - b with Newton method and a warm start (for Comcomitant problem)
 def calc_Newton(a, b, root):
-    er = -b
-    while abs(er) > 1e-6:
-        root = root - er / (3 * root ** 2 + a)
-        er = root ** 3 + a * root - b
-    return root
+    """Safeguarded positive root of x**3+a*x-b, without a fixed error floor."""
+    low = np.sqrt(max(0.,-a))
+    if b == 0.: return low
+    high = low+np.cbrt(b)
+    x = min(high,max(low,float(root)))
+    for _ in range(100):
+        error = x*x*x+a*x-b
+        allowance = 16*np.finfo(float).eps*max(1.,b,abs(x*x*x),abs(a*x))
+        if abs(error)<=allowance: return x
+        if error>0: high=x
+        else: low=x
+        derivative = 3*x*x+a
+        candidate = x-error/derivative if derivative>0 else (low+high)/2
+        x = candidate if low<candidate<high else (low+high)/2
+    raise RuntimeError("Concomitant cubic root did not converge")
 
 
 def QQ(coef, A):
@@ -264,6 +273,8 @@ def L_LS(pb, lam, sol):
 # phi = ||(y-Ab)||2^2 /sigma + 1/2 * sigma with the warm start on the computation of the root
 def prox_phi_1(sig, u, gamma, warm_start):
     l2u = LA.norm(u)
+    if l2u == 0.:
+        return max(0., sig-gamma/2), np.zeros_like(u), 0.
     Po0 = 4 * gamma * sig + l2u ** 2
     if Po0 < 2 * gamma ** 2:
         return (0.0, 0.0, 0.0)
@@ -278,13 +289,20 @@ def prox_phi_1(sig, u, gamma, warm_start):
 
 # Return the positive root in [0,1] of the polynomial aX^2 + 2bX + c if it exists, 1. if not
 def root_2(a, b, c):
-
-    if a == 0.0:
-        return c / (2 * b)
-    root = (-np.sqrt(b ** 2 - a * c) - b) / a
-    if root > 1:
-        return 1.0
-    return root
+    """Largest root of a*t**2+2*b*t+c=0 in [0,1], or the clipped endpoint."""
+    scale = max(abs(a), abs(b), abs(c))
+    if scale == 0.: return 0.
+    a, b, c = a/scale, b/scale, c/scale
+    if abs(a) <= 32*np.finfo(float).eps:
+        return float(np.clip(-c/(2*b),0.,1.)) if b else 1.
+    discriminant = b*b-a*c
+    if discriminant < -64*np.finfo(float).eps*(b*b+abs(a*c)):
+        raise RuntimeError("Concomitant interpolation has no real root")
+    root = np.sqrt(max(0.,discriminant))
+    q = -b-np.copysign(root,b)
+    candidates = [q/a, c/q] if q else [-b/a]
+    valid = [t for t in candidates if -1e-10<=t<=1+1e-10]
+    return float(np.clip(max(valid),0.,1.)) if valid else 1.
 
 
 # The aim :

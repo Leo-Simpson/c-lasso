@@ -1,6 +1,6 @@
 import numpy as np
 import numpy.linalg as LA
-from .solve_R3 import problem_R3, Classo_R3
+from .solve_R3 import problem_R3, Classo_R3, calc_Newton
 
 r"""
 Problem    :   min h_rho((Ab - y)/sigma)sigma + simga + lambda ||b||1 with C.b= 0, sigma>0
@@ -24,8 +24,12 @@ def Classo_R4(pb, lam):
     rho = pb.rho
     regpath = pb.regpath
 
-    if lam < 1e-5:
-        pb_type = "Path-Alg"  # in this case, we will simply use R3.
+    if pb.lambdamax == 0. or lam >= 1.:
+        beta = np.zeros(d)
+        if pb.intercept: beta[0] = pb.beta0
+        return (beta, pb.init, pb.sigmax) if regpath else (beta, pb.sigmax)
+    if lam == 0.:
+        pb_type = "DR"  # the lambda-dependent augmentation degenerates at zero
 
     # Only alternative to 2prox : one can use the other formulation of the problem which shows that
     #  we can augment the data and then simply solve a concomitant problem
@@ -53,7 +57,7 @@ def Classo_R4(pb, lam):
         s = s / 2
         beta = beta_aug[:-m]
         if pb.intercept:
-            betaO = ybar - np.vdot(Abar, beta_aug)
+            betaO = (ybar - np.vdot(Abar, beta_aug))/np.sqrt(2)
             beta = np.array([betaO] + list(beta))
         return beta, s
 
@@ -73,7 +77,6 @@ def Classo_R4(pb, lam):
         Proj = pb.Proj
         Anorm = pb.Anorm
 
-        tol = pb.tol * LA.norm(y)  # tolerance rescaled
         gamma = LA.norm(y) * pb.gam / (Anorm ** 2)
         # two vectors usefull to compute the prox of f(b)= sum(wi |bi|)
         w = lamb * gamma * pb.weights
@@ -86,16 +89,6 @@ def Classo_R4(pb, lam):
         for i in range(pb.N):
             nv_b = x + Q1.dot(o) - QA.dot(x) - Q2.dot(x - xbar)
             nv_s = (xs + nu) / 2
-            if i > 0 and LA.norm(b - nv_b) * Anorm + LA.norm(s - nv_s) < 2 * tol:
-                if regpath:
-                    return (
-                        b,
-                        (xs, nu, o, xbar, x),
-                        sum(s) / len(s) / pb.sigmax,
-                    )
-                else:
-                    return (b, sum(s) / len(s))
-
             s, b = nv_s, nv_b
             Ab = A.dot(b)
             p1, p2, root = prox_phi_2(xs, 2 * Ab - o - y, gamma / c, root, rho)
@@ -105,6 +98,15 @@ def Classo_R4(pb, lam):
             sup3 = p2 + y - Ab
             sup4 = prox(2 * b - xbar, w, zerod) - b
             sup5 = Proj.dot(2 * b - x) - b
+
+            # Check the splitting equations, not only successive iterates.
+            residual = (LA.norm(sup1) + LA.norm(sup2) + LA.norm(sup3)
+                        + Anorm * (LA.norm(sup4) + LA.norm(sup5)))
+            if residual <= pb.tol * max(1., LA.norm(y)):
+                sigma = max(0., float(np.mean(s)))
+                if regpath:
+                    return b, (xs, nu, o, xbar, x), sigma
+                return b, sigma
 
             xs = xs + mu * sup1
             nu = nu + mu * sup2
@@ -132,7 +134,19 @@ that rules Beta and the subgradient s, and then to evaluate it in the given fini
 def pathlasso_R4(pb, path, n_active=False):
     n, d, k = pb.dim
     BETA, SIGMA, tol = [], [], pb.tol
-    pb.type = "DR"
+    if pb.lambdamax == 0.:
+        beta = np.zeros(d)
+        if pb.intercept: beta[0] = pb.beta0
+        return [beta.copy() for _ in path], [pb.sigmax for _ in path]
+    if pb.type == "Path-Alg":
+        for i, lam in enumerate(path):
+            beta, sigma = Classo_R4(pb, lam)
+            BETA.append(beta); SIGMA.append(sigma)
+            if n_active and np.count_nonzero(abs(beta[int(pb.intercept):])>1e-5)>=n_active:
+                BETA.extend([beta.copy()]*(len(path)-i-1))
+                SIGMA.extend([sigma]*(len(path)-i-1))
+                break
+        return BETA, SIGMA
     save_init = pb.init
     pb.regpath = True
     pb.compute_param()
@@ -169,7 +183,8 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 class problem_R4:
     def __init__(self, data, algo, rho, intercept=False):
         self.N = 500000
-
+        if not np.isfinite(rho) or rho <= 0:
+            raise ValueError("Concomitant Huber requires finite rho > 0")
         (AA, C, y) = data
         A = AA[:, :]
         self.weights = np.ones(A.shape[1])
@@ -177,10 +192,8 @@ class problem_R4:
         if intercept:
             # add a column of 1 in A, and change weight.
             A = np.concatenate([np.ones((len(A), 1)), A], axis=1)
-            C = np.concatenate([np.ones((len(C), 1)), C], axis=1)
+            C = np.concatenate([np.zeros((len(C), 1)), C], axis=1)
             self.weights = np.concatenate([[0.0], self.weights])
-            # not exactly what it should be...
-            yy = y - np.mean(y)
 
         self.dim = (
             A.shape[0],
@@ -199,17 +212,19 @@ class problem_R4:
         self.mu = 1.95
 
         self.c = (
-            d / LA.norm(A, 2)
+            d / max(LA.norm(A, 2), np.finfo(float).eps)
         ) ** 2  # parameter for Concomitant problem : the matrix is scaled as c*A^2
         self.gam = np.sqrt(d)
 
-        if not intercept:
-            yy = y
-        # sigmax = LA.norm(yy)/np.sqrt(m)
-        self.sigmax = find_sigmax(yy, rho, m)
-        self.lambdamax = 2 * LA.norm(
-            (AA.T).dot(h_prime(yy / self.sigmax, rho)), np.inf
-        )
+        self.beta0, self.sigmax = initial_location_scale(y, rho, m, intercept)
+        residual = y-self.beta0
+        if self.sigmax:
+            score = np.clip(residual/self.sigmax,-rho,rho)
+        else:
+            score = rho*np.sign(residual)
+            zero = residual == 0.
+            if intercept and np.any(zero): score[zero] = -score[~zero].sum()/zero.sum()
+        self.lambdamax = 2*LA.norm(AA.T@score,np.inf)
 
         self.init = (
             self.sigmax * np.ones(m),
@@ -248,9 +263,9 @@ def prox(b, w, zeros):
 
 # Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
 def proj_c(M, d):
-    if LA.matrix_rank(M) == 0:
+    if M.size == 0 or LA.matrix_rank(M) == 0:
         return np.eye(d)
-    return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)), M])
+    return np.eye(d) - LA.pinv(M)@M
 
 
 def QQ(coef, A):
@@ -261,23 +276,6 @@ def QQ(coef, A):
 
 
 # Compute the real positive root of a polynomial of degree 3 in the form : X^3 + a*X - b with Newton method and a warm start (for Comcomitant problem)
-def calc_Newton(a, b, root):
-    er = root ** 3 + a * root - b
-    i = 0
-    bound = min(np.cbrt(b), b / a)
-    while abs(er) > 1e-6 and i < 20:
-        if root < 0.0:
-            root, er = 0.0, -b
-        elif root > bound:
-            root, er = bound, bound ** 3 + a * bound - b
-        root = root - er / (3 * root ** 2 + a)
-        er = root ** 3 + a * root - b
-        i += 1
-    if i == 20:
-        r = np.roots([1.0, 0.0, a, -b])
-        root = np.amax((r[np.isreal(r)]).real)
-    return root
-
 
 def prox_phi_2(sig, u, gamma, warm_start, rho):
     p, q, ws = np.zeros(len(u)), np.zeros(len(u)), np.zeros(len(u))
@@ -290,7 +288,7 @@ def prox_phi_2(sig, u, gamma, warm_start, rho):
 # It is the prox of the function (u,s) --> (0.5*h_rho(u/sigma) + 0.5)*sigma
 def prox_phi_i(s, u, gamma, root, rho):
     if u == 0.0:
-        return (0, 0, root)
+        return (max(0.,s-gamma/2), 0., 0.)
     frac = gamma * rho / abs(u)
     term = s + gamma * (rho ** 2 - 1) / 2
     bool1 = frac >= 1
@@ -321,18 +319,34 @@ def h_prime(y, rho):
 
 # useful for computing lambdamax.
 def find_sigmax(y, rho, e):
-    m, evol = len(y), True
-    F = [True] * m
-    if rho > 1:
-        while evol:
-            evol = False
-            s = LA.norm(y[F]) / np.sqrt(e - (m - sum(F)) * rho ** 2)
-            cste = rho * s
-            for j in range(m):
-                if F[j] and y[j] > cste:
-                    F[j], evol = False, True
-                elif not F[j] and not y[j] > cste:
-                    F[j], evol = True, True
-        return s
-    else:
-        print("rho too little ==> sigma is always 0")
+    """Exact nonnegative scale minimizer, with symmetric Huber tails."""
+    y = np.asarray(y)
+    if np.count_nonzero(y)*rho*rho <= e:
+        return 0.
+    active = np.ones(len(y),bool)
+    for _ in range(len(y)+1):
+        denominator = e-(~active).sum()*rho*rho
+        scale = LA.norm(y[active])/np.sqrt(denominator)
+        next_active = active & (abs(y)<=rho*scale)
+        if np.array_equal(active,next_active): return float(scale)
+        active = next_active
+    raise RuntimeError("Huber scale initialization failed to stabilize")
+
+
+def initial_location_scale(y, rho, e, intercept):
+    """Initialize at the unpenalized intercept/scale optimum with beta=0."""
+    if not intercept: return 0., find_sigmax(y,rho,e)
+    from scipy.optimize import brentq
+    low, high = float(np.min(y)), float(np.max(y))
+    if low == high: return low, 0.
+    location = float(np.median(y))
+    scale = find_sigmax(y-location,rho,e)
+    for _ in range(1000):
+        if scale == 0.: return location, scale
+        new_location = brentq(lambda b: np.clip((b-y)/scale,-rho,rho).sum(),
+                              low,high,xtol=1e-13)
+        new_scale = find_sigmax(y-new_location,rho,e)
+        error = abs(new_location-location)+abs(new_scale-scale)
+        location,scale = new_location,new_scale
+        if error <= 1e-12*max(1.,abs(location),scale): return location,scale
+    raise RuntimeError("Huber location/scale initialization did not converge")
