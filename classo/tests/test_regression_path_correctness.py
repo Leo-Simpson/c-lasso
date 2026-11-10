@@ -91,4 +91,5 @@ def test_zero_crossing_does_not_depend_on_response_units(scale):
     up_LS(state)
     assert state.lam == pytest.approx(.9)
     assert state.activity == [True, False]
+    assert state.beta[1] == 0.
     np.testing.assert_allclose(state.beta/scale, [1.3, 0.], atol=1e-14)

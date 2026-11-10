@@ -445,6 +445,7 @@ def up_LS(param):
         if np.any(zero & (beta_dot*s>1e-10*max(1.,np.max(abs(beta_dot),initial=0.)))):
             from ._regression_path import step
             return step(param)
+    exits = np.zeros(d, dtype=bool)
     for i in range(d):
         bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
         if activity[i]:
@@ -453,6 +454,7 @@ def up_LS(param):
             # when both beta and lambdamax change response units.
             if (bi > 0 and di > 0) or (bi < 0 and di < 0):
                 L[i] = (bi / lambdamax) / di
+                exits[i] = True
         else:
             if abs(e - s0) < 1e-10:
                 continue
@@ -492,6 +494,11 @@ def up_LS(param):
             Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
 
     beta = beta - lambdamax * beta_dot * dlamb
+    # This event is an analytic zero, not a small coefficient to threshold.
+    # Retaining its cancellation residue can repeatedly schedule the same exit.
+    hit = exits & (np.abs(np.asarray(L)-dlamb) <=
+                   64*np.finfo(float).eps*max(1.,lam))
+    beta[hit] = 0.
     if dlamb < lam:
         s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
     lam -= dlamb
