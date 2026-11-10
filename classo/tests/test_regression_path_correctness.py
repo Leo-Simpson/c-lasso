@@ -75,3 +75,20 @@ def test_regression_zero_lambda_max_returns_constant_path(typ):
     assert L==[1.,.01]
     np.testing.assert_allclose(B,0.)
     np.testing.assert_allclose(bias,2.)
+
+
+@pytest.mark.parametrize("scale", [1., 1e-8, 1e-12, 1e-100])
+def test_zero_crossing_does_not_depend_on_response_units(scale):
+    """An active coefficient must leave at relative step .1 at every scale."""
+    from types import SimpleNamespace
+    from classo.path_alg import up_LS
+    gram = np.array([[1., 2.], [2., 5.]])
+    state = SimpleNamespace(
+        formulation="R3", lambdamax=scale, lamin=0., M=gram,
+        C=np.empty((0, 2)), eps_L2=0., number_act=2, idr=[],
+        Xt=np.linalg.inv(gram), activity=[True, True],
+        beta=scale*np.array([1., .1]), s=np.ones(2), lam=1.)
+    up_LS(state)
+    assert state.lam == pytest.approx(.9)
+    assert state.activity == [True, False]
+    np.testing.assert_allclose(state.beta/scale, [1.3, 0.], atol=1e-14)
