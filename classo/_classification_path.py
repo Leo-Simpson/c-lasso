@@ -1,4 +1,4 @@
-"""Private scalar C1/C2 pivots for degenerate coefficient and sample events.
+"""Shared scalar pivots for degenerate coefficient and sample events.
 
 The usual active linear solve remains in path_alg. This module selects a
 feasible outgoing direction only when that solve gives an incompatible sign
@@ -13,7 +13,7 @@ def _nullspace(C, tol=1e-10):
     if not len(C):
         return np.eye(C.shape[1])
     _, singular, vh = np.linalg.svd(C, full_matrices=True)
-    rank = np.sum(singular > tol*max(1., singular[0]))
+    rank = np.sum(singular > tol*max(1., np.max(singular,initial=0.)))
     return vh[rank:].T
 
 
@@ -63,13 +63,13 @@ def _solve_design(Z, rhs, reference=None):
     return result
 
 
-def _gradient(X,y,beta,lower=None):
-    hinge = np.maximum(1-y*(X@beta),0.)
+def _gradient(X,y,beta,lower=None,offset=0.):
+    hinge = np.maximum(1-y*(X@beta)-offset,0.)
     if lower is not None: hinge = np.minimum(hinge,1-lower)
     return -2*X.T@(y*hinge)
 
 
-def direction(X,C,y,beta,lam,certificate,free=0,lower=None):
+def direction(X,C,y,beta,lam,certificate,free=0,lower=None,offset=0.):
     """Descending-lambda direction in the scalar L1 critical cone."""
     tol = 1e-9
     nonzero = abs(beta)>tol
@@ -81,10 +81,10 @@ def direction(X,C,y,beta,lam,certificate,free=0,lower=None):
     zero = ~nonzero[working] & (working>=free)
     N = _nullspace(C[:,working])
     if not N.shape[1]:
-        return np.zeros_like(beta),np.flatnonzero(nonzero|(np.arange(len(beta))<free)),y*(X@beta)<1.
+        return np.zeros_like(beta),np.flatnonzero(nonzero|(np.arange(len(beta))<free)),y*(X@beta)+offset<1.
     J = signs[zero,None]*N[zero]
     J = J[np.linalg.norm(J,axis=1)>1e-10]
-    margin = y*(X@beta)
+    margin = y*(X@beta)+offset
     interior = margin < 1.-2e-11
     if lower is not None: interior &= margin > lower+2e-11
     lower_boundary = abs(margin-lower)<=2e-11 if lower is not None else np.zeros(len(y),bool)
@@ -234,10 +234,10 @@ def _dual_segment(C, gradient, gdot, lam, upper, active, signs, free):
     return delta, u0+delta*udot+V@fit.x[1:]
 
 
-def segment(X,C,y,beta,lam,D,active,quadratic,cap,free=0,lower=None):
+def segment(X,C,y,beta,lam,D,active,quadratic,cap,free=0,lower=None,offset=0.):
     """Largest dual-certified interval, including nearby and simultaneous events."""
     eps = 64*np.finfo(float).eps*max(1.,lam)
-    margin,rate = y*(X@beta),y*(X@D)
+    margin,rate = y*(X@beta)+offset,y*(X@D)
     candidates = [cap]
     crossing = ((quadratic&(rate>0))|(~quadratic&(rate<0)))&(rate!=0)
     roots = (1-margin[crossing])/rate[crossing]
@@ -252,7 +252,7 @@ def segment(X,C,y,beta,lam,D,active,quadratic,cap,free=0,lower=None):
     signs = np.sign(beta)
     zero = abs(beta)<=1e-9
     signs[zero] = np.sign(D[zero]);signs[:free] = 0.
-    gradient = _gradient(X,y,beta,lower)
+    gradient = _gradient(X,y,beta,lower,offset)
     gdot = 2*X.T@(quadratic*(X@D))
     dual,residual = _certificate(C,gradient+upper*gdot,lam-upper,active,signs,free)
     allowance = 5e-9*max(1.,lam,np.max(abs(gradient),initial=0.))
@@ -277,7 +277,7 @@ def segment(X,C,y,beta,lam,D,active,quadratic,cap,free=0,lower=None):
         step = upper*fit.x[0];dual = fit.x[1:]
     if step<=eps: raise RuntimeError('Classification zero-length segment; unresolved outgoing face')
     new_beta = beta+step*D
-    actual = _gradient(X,y,new_beta,lower)+C.T@dual
+    actual = _gradient(X,y,new_beta,lower,offset)+C.T@dual
     residual = max(np.max(np.maximum(abs(actual[free:])-(lam-step),0.),initial=0.),
                    np.max(abs(actual[active]+(lam-step)*signs[active]),initial=0.),
                    np.max(abs(C@new_beta),initial=0.))
