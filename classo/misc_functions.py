@@ -64,6 +64,11 @@ def theoretical_lam(n, d):
     Returns:
         float : theoretical lambda
 
+    Example:
+        >>> from classo import theoretical_lam
+        >>> round(float(theoretical_lam(50, 10)), 4)
+        0.1702
+
     """
     x = 0.0
     dx = 0.1
@@ -179,6 +184,17 @@ def random_data(
     Returns:
         tuple : tuple of three ndarray that corresponds to the data :  (X,C,y).
         ndarray : array corresponding to sol which is the real solution of the problem y = Xbeta + noise s.t. beta sparse and Cbeta = 0.
+
+    Example:
+        >>> import numpy as np
+        >>> from classo import random_data
+        >>> (X, C, y), sol = random_data(50, 10, 3, 1, 0.5, zerosum=True, seed=4)
+        >>> X.shape, C.shape, y.shape
+        ((50, 10), (1, 10), (50,))
+        >>> np.nonzero(sol)[0]
+        array([1, 2, 5])
+        >>> bool(abs(C @ sol).max() < 1e-10)
+        True
     """
     if type(seed) == int:
         np.random.seed(seed)
@@ -246,6 +262,17 @@ def clr(array, coef=0.5):
 
     Returns:
         ndarray : clr transformed matrix nxd
+
+    Example:
+        >>> import numpy as np
+        >>> from classo import clr
+        >>> M = clr(np.array([[1.0, 2.0], [4.0, 8.0], [0.0, 1.0]]))
+        >>> M.round(3)
+        array([[-0.231, -0.231],
+               [ 1.155,  1.155],
+               [-0.924, -0.924]])
+        >>> np.allclose(M.mean(axis=0), 0)
+        True
 
     """
     M = np.copy(array)
