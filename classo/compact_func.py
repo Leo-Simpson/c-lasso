@@ -59,7 +59,7 @@ def Classo(
             pb = problem_R3((matrices[0] * r, matrices[1], matrices[2] * r), meth)
         lambdamax = pb.lambdamax
         if true_lam:
-            beta, s = Classo_R3(pb, lam / lambdamax)
+            beta, s = Classo_R3(pb, lam / lambdamax if lambdamax else 0.)
         else:
             beta, s = Classo_R3(pb, lam)
 
@@ -86,7 +86,7 @@ def Classo(
 
         lambdamax = pb.lambdamax
         if true_lam:
-            beta, s = Classo_R4(pb, lam / lambdamax)
+            beta, s = Classo_R4(pb, lam / lambdamax if lambdamax else 0.)
         else:
             beta, s = Classo_R4(pb, lam)
 
@@ -166,6 +166,9 @@ def Classo(
             betaO = ybar - np.vdot(Xbar, beta)
             beta = np.array([betaO] + list(beta))
 
+    if typ in ["R3", "R4"]:
+        s = s/r**2
+        if typ == "R4" and intercept: beta[0] /= r
     if w is not None:
         if intercept:
             beta[1:] = beta[1:] / w
@@ -240,7 +243,7 @@ def pathlasso(
             pb = problem_R3((matrices[0] * r, matrices[1], matrices[2] * r), meth)
         lambdamax = pb.lambdamax
         if true_lam:
-            lambdass = [lamb / lambdamax for lamb in lambdass]
+            lambdass = [lamb / lambdamax if lambdamax else 0. for lamb in lambdass]
         BETA, S = pathlasso_R3(pb, lambdass, n_active=Nactive)
         S = np.array(S) / r ** 2
         BETA = np.array(BETA)
@@ -263,10 +266,11 @@ def pathlasso(
 
         lambdamax = pb.lambdamax
         if true_lam:
-            lambdass = [lamb / lambdamax for lamb in lambdass]
+            lambdass = [lamb / lambdamax if lambdamax else 0. for lamb in lambdass]
         BETA, S = pathlasso_R4(pb, lambdass, n_active=Nactive)
         S = np.array(S) / r ** 2
         BETA = np.array(BETA)
+        if intercept: BETA[:,0] /= r
 
     elif typ == "C2":
 
@@ -314,7 +318,8 @@ def pathlasso(
         if intercept:
             BETA = np.array([[ybar - Xbar.dot(beta)] + list(beta) for beta in BETA])
 
-    real_path = [lam * lambdamax for lam in lambdass]
+    real_path = ([float(lam) for lam in (lambdas if lambdas[0]>=lambdas[-1] else lambdas[::-1])]
+                 if true_lam and lambdamax == 0. else [lam*lambdamax for lam in lambdass])
 
     if w is not None:
         if intercept:
