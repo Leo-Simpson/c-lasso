@@ -146,6 +146,36 @@ def CV(
     w=None,
     intercept=False,
 ):
+    """Select lambda by k-fold cross validation, then solve the problem at that lambda.
+
+    Args:
+        matrices (tuple) : the data ``(X, C, y)``.
+        k (int) : number of folds.
+        typ (str, optional) : formulation, one of "R1", "R2", "R3", "R4", "C1", "C2".
+        num_meth (str, optional) : numerical method, "Path-Alg", "DR", "P-PDS" or "PF-PDS".
+        seed (int, optional) : seed of the random split into folds.
+        lambdas (ndarray, optional) : candidate lambdas, as fractions of lambda_max.
+        oneSE (bool, optional) : if True, use the largest lambda within one standard
+            error of the minimal validation error; otherwise the minimiser itself.
+
+    Returns:
+        tuple : ``(out, MSE, SE, i_min, i_1SE)`` -- the solution at the selected lambda
+        (as returned by :func:`Classo`), the mean and standard error of the validation
+        error for each lambda, and the indices of the minimiser and of the 1SE choice.
+
+    Example:
+        >>> import numpy as np
+        >>> from classo import random_data, CV
+        >>> (X, C, y), sol = random_data(50, 10, 3, 1, 0.5, zerosum=True, seed=4)
+        >>> lambdas = np.linspace(1.0, 1e-2, 20)
+        >>> beta, MSE, SE, i_min, i_1SE = CV((X, C, y), 5, lambdas=lambdas, seed=0)
+        >>> beta.shape, MSE.shape
+        ((10,), (20,))
+        >>> bool(lambdas[i_1SE] >= lambdas[i_min])
+        True
+        >>> np.nonzero(np.abs(beta) > 1e-3)[0]
+        array([0, 1, 2, 5, 7])
+    """
 
     if lambdas is None:
         lambdas = np.linspace(1.0, 1e-3, Nlam)

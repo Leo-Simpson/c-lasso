@@ -52,6 +52,23 @@ class classo_problem:
             'Path-Alg' (path algorithm) , 'P-PDS' (Projected primal-dual splitting method) , 'PF-PDS' (Projection-free primal-dual splitting method) or 'DR' (Douglas-Rachford-type splitting method).
             Default value : 'not specified', which means that the function :func:`choose_numerical_method` will choose it accordingly to the formulation.
 
+    Example:
+        By default the problem uses formulation R3 with stability selection,
+        which here recovers the support of the true solution:
+
+        >>> import numpy as np
+        >>> from classo import random_data, classo_problem
+        >>> (X, C, y), sol = random_data(100, 20, 4, 1, 0.5, zerosum=True, seed=1)
+        >>> problem = classo_problem(X, y, C)
+        >>> problem.model_selection.StabSelparameters.seed = 0
+        >>> problem.solve()
+        >>> problem.formulation.name()
+        'R3'
+        >>> np.nonzero(problem.solution.StabSel.selected_param)[0]
+        array([ 4, 11, 17, 18])
+        >>> np.nonzero(sol)[0]
+        array([ 4, 11, 17, 18])
+
     """
 
     def __init__(
@@ -1623,6 +1640,21 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
 
     Returns :
         str : method that should be used. Can be "Path-Alg", "DR", "P-PDS" or "PF-PDS"
+
+    Example:
+        >>> from classo import choose_numerical_method
+        >>> from classo.solver import Formulation
+        >>> formulation = Formulation()  # R3 by default
+        >>> choose_numerical_method("not specified", "PATH", formulation)
+        'Path-Alg'
+        >>> choose_numerical_method("P-PDS", "LAM", formulation, lam=0.01)  # invalid for R3
+        'DR'
+        >>> formulation.huber = True  # R4: Path-Alg does not compute its path
+        >>> choose_numerical_method("not specified", "PATH", formulation)
+        'DR'
+        >>> formulation.concomitant, formulation.huber = False, False  # R1
+        >>> choose_numerical_method("P-PDS", "LAM", formulation, lam=0.1)  # valid, kept
+        'P-PDS'
 
     """
 

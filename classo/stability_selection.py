@@ -39,6 +39,34 @@ def stability(
     w=None,
     intercept=False,
 ):
+    """Stability selection: how often each variable is selected over ``B`` subsamples.
+
+    Args:
+        matrix (tuple) : the data ``(X, C, y)``.
+        StabSelmethod (str, optional) : "first", "max" or "lam" (see the module docstring).
+        numerical_method (str, optional) : "Path-Alg", "DR", "P-PDS" or "PF-PDS".
+        q (int, optional) : number of variables selected on each subsample.
+        B (int, optional) : number of subsamples.
+        percent_nS (float, optional) : size of each subsample, as a fraction of the samples.
+        formulation (str, optional) : one of "R1", "R2", "R3", "R4", "C1", "C2".
+        seed (int, optional) : seed of the random subsampling.
+
+    Returns:
+        ndarray or tuple : the selection probability of each variable. For "first",
+        the tuple ``(distribution, distribution_path, lambdas)``.
+
+    Example:
+        >>> import numpy as np
+        >>> from classo import random_data, stability
+        >>> (X, C, y), sol = random_data(50, 10, 3, 1, 0.5, zerosum=True, seed=4)
+        >>> distribution = stability((X, C, y), StabSelmethod="max", q=5, B=20, seed=0)
+        >>> distribution.shape
+        (10,)
+        >>> np.nonzero(distribution > 0.7)[0]
+        array([1, 2, 5])
+        >>> np.nonzero(sol)[0]
+        array([1, 2, 5])
+    """
 
     rd.seed(seed)
     n, d = len(matrix[2]), len(matrix[0][0])

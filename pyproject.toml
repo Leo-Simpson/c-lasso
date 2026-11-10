@@ -1,0 +1,68 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "c-lasso"
+# Versioneer derives the version from git tags; setup.py supplies it.
+dynamic = ["version"]
+description = "Algorithms for constrained Lasso problems"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Leo Simpson", email = "leo.bill.simpson@gmail.com" }]
+# Keep in step with the test matrix in .github/workflows/build-and-test.yml.
+requires-python = ">=3.10"
+dependencies = ["numpy", "scipy", "matplotlib", "pandas"]
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX",
+    "Operating System :: Unix",
+    "Operating System :: MacOS",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+
+[project.optional-dependencies]
+# coverage[toml] lets coverage read [tool.coverage] on Python 3.10 (no tomllib).
+tests = ["pytest", "pytest-cov", "coverage[toml]"]
+docs = [
+    "sphinx",
+    "sphinx-gallery",
+    "sphinx_rtd_theme",
+    "numpydoc",
+    "matplotlib",
+    "pandas",
+    "rdata",
+]
+
+[project.urls]
+Homepage = "https://github.com/bio-datascience/c-lasso"
+Documentation = "https://c-lasso.readthedocs.io"
+
+[tool.setuptools]
+packages = ["classo"]
+
+[tool.ruff.lint]
+# Blocking rules: syntax errors and undefined names (the former flake8 gate).
+# The default rule set reports ~110 findings in classo/; widen this once they are fixed.
+select = ["E9", "F63", "F7", "F82"]
+
+[tool.pytest.ini_options]
+# Collect only the package, and run the examples in its docstrings as tests.
+testpaths = ["classo"]
+addopts = "--doctest-modules"
+
+[tool.coverage.run]
+branch = true
+omit = ["*/tests*", "*/__init__.py", "classo/_version.py", "versioneer.py"]
+
+[tool.coverage.report]
+# CI fails when total coverage drops below this (measured 90.10% when introduced).
+fail_under = 90
+omit = ["*/tests*", "*/__init__.py", "classo/_version.py", "versioneer.py"]
