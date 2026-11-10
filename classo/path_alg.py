@@ -201,7 +201,15 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
             # Preserve only the primal state, not a copy of the dense Hessian.
             # A numerically rejected legacy candidate must never enter BETA.
             previous = (param.beta.copy(), param.beta0, param.r.copy(), param.lam)
-        up(param)
+        if (typ in ["C1", "C2"] and len(LAM)>1
+                and LAM[-2]-LAM[-1] <= 1e-9*max(1.,param.lam)):
+            # Repeated near-zero legacy exits need an outgoing cone pivot,
+            # not thousands of almost identical certified path points.
+            _classification_flat_step(param, allow_no_progress=True,
+                                      allow_equal_norm=True)
+            _scalar_classification_step(param)
+        else:
+            up(param)
         if typ in ["C1", "C2"]:
             try:
                 check_C1_certificate(param)
@@ -228,9 +236,8 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
             BETA0.append(param.beta0)
 
     raise ValueError(
-        "The path algorithm did not finsh after %i iterations " % N,
-        "and with lamin=%f" % lamin,
-        " and with n_active =" + str(n_active),
+        "The path algorithm did not finish after %i iterations "
+        "(lamin=%g, n_active=%s)" % (d*N_frac, lamin, n_active)
     )
 
 
@@ -438,6 +445,7 @@ def up_LS(param):
         if np.any(zero & (beta_dot*s>1e-10*max(1.,np.max(abs(beta_dot),initial=0.)))):
             from ._regression_path import step
             return step(param)
+    exits = np.zeros(d, dtype=bool)
     for i in range(d):
         bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
         if activity[i]:
@@ -446,6 +454,7 @@ def up_LS(param):
             # when both beta and lambdamax change response units.
             if (bi > 0 and di > 0) or (bi < 0 and di < 0):
                 L[i] = (bi / lambdamax) / di
+                exits[i] = True
         else:
             if abs(e - s0) < 1e-10:
                 continue
@@ -485,6 +494,11 @@ def up_LS(param):
             Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
 
     beta = beta - lambdamax * beta_dot * dlamb
+    # This event is an analytic zero, not a small coefficient to threshold.
+    # Retaining its cancellation residue can repeatedly schedule the same exit.
+    hit = exits & (np.abs(np.asarray(L)-dlamb) <=
+                   64*np.finfo(float).eps*max(1.,lam))
+    beta[hit] = 0.
     if dlamb < lam:
         s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
     lam -= dlamb
@@ -860,13 +874,15 @@ def _refresh_classification_state(param):
     param.Xt=_C1_inverse(param.M[selected,:][:,selected])
 
 
-def _classification_flat_step(param,allow_no_progress=False):
-    """Continue a no-curvature C1/C2 state without adding a ridge.
+def _classification_flat_step(param,allow_no_progress=False,allow_equal_norm=False):
+    """Resolve a scalar optimal face without adding a ridge.
 
     First minimize lambda over KKT multipliers with the primal point fixed.
     If lambda cannot decrease, maximize the L1 norm over the current optimal
     polyhedral loss cell: a lower lambda selects the largest norm on this face.
     This is a primal pivot at the SAME lambda, not interpolation across a jump.
+    With allow_equal_norm, also choose a vertex representation of a curved
+    optimum to resolve repeated tiny coefficient exits in a dependent design.
     """
     from scipy.optimize import linprog
     A,C,y=param.A,param.C,param.y
@@ -879,13 +895,18 @@ def _classification_flat_step(param,allow_no_progress=False):
     # Variables [constraint multipliers, absolute lambda].
     inequalities=np.vstack([np.c_[C.T,-np.ones(d)],np.c_[-C.T,-np.ones(d)]])
     equalities=np.c_[C[:,active].T,np.sign(param.beta[active])]
-    fit=linprog(np.r_[np.zeros(k),1.],A_ub=inequalities,b_ub=np.r_[-gradient,gradient],
-                A_eq=equalities if np.any(active) else None,
-                b_eq=-gradient[active] if np.any(active) else None,
-                bounds=[(None,None)]*k+[(0.,absolute)],method='highs',
-                options=dict(primal_feasibility_tolerance=1e-9,dual_feasibility_tolerance=1e-9))
-    if not fit.success:raise RuntimeError('Classification flat-state certificate LP failed: '+fit.message)
-    lower=float(fit.x[-1]);next_lambda=max(target,lower)
+    if allow_equal_norm:
+        # A canonical representation of a curved optimum keeps lambda fixed;
+        # no redundant multiplier/lambda LP is needed before that pivot.
+        next_lambda=absolute
+    else:
+        fit=linprog(np.r_[np.zeros(k),1.],A_ub=inequalities,b_ub=np.r_[-gradient,gradient],
+                    A_eq=equalities if np.any(active) else None,
+                    b_eq=-gradient[active] if np.any(active) else None,
+                    bounds=[(None,None)]*k+[(0.,absolute)],method='highs',
+                    options=dict(primal_feasibility_tolerance=1e-9,dual_feasibility_tolerance=1e-9))
+        if not fit.success:raise RuntimeError('Classification flat-state certificate LP failed: '+fit.message)
+        lower=float(fit.x[-1]);next_lambda=max(target,lower)
     if next_lambda<absolute-1e-10*max(1.,absolute):
         param.lam=(param.lamin if next_lambda==target or not param.lambdamax
                    else next_lambda/param.lambdamax)
@@ -927,7 +948,8 @@ def _classification_flat_step(param,allow_no_progress=False):
     if not pivot.success:raise RuntimeError('Classification optimal-face pivot LP failed: '+pivot.message)
     old=np.r_[param.beta0,param.beta] if param.intercept else param.beta.copy()
     if (np.max(np.abs(pivot.x[:q]-old),initial=0.)<=1e-9
-            or (allow_no_progress and np.abs(pivot.x[offset:q]).sum()<=np.abs(param.beta).sum()+1e-9)):
+            or (allow_no_progress and not allow_equal_norm
+                and np.abs(pivot.x[offset:q]).sum()<=np.abs(param.beta).sum()+1e-9)):
         if allow_no_progress:return False
         raise RuntimeError('Classification flat-face pivot made no primal or lambda progress')
     previous_beta, previous_bias = param.beta.copy(), param.beta0
@@ -947,8 +969,6 @@ def _classification_flat_step(param,allow_no_progress=False):
 
 def _scalar_classification_step(param):
     from ._classification_path import step
-    if param.formulation != "C2":
-        return step(param)
     # Most post-flat knots have a perfectly valid curved direction. Solving
     # two LPs before every such segment dominated the long C2 path runtime.
     previous = (param.beta.copy(), param.beta0, param.lam)
@@ -960,7 +980,8 @@ def _scalar_classification_step(param):
         # before this fallback, including failures during state rebuilding.
         param.beta, param.beta0, param.lam = previous
         _refresh_classification_state(param)
-        if _classification_flat_step(param, allow_no_progress=True):
+        if _classification_flat_step(param, allow_no_progress=True,
+                                     allow_equal_norm=param.formulation=="C1"):
             return
         raise
 

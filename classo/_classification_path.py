@@ -17,26 +17,6 @@ def _nullspace(C, tol=1e-10):
     return vh[rank:].T
 
 
-def _solve(H, rhs, reference=None):
-    """Solve a PSD reduced system, preserving a certified null-space choice."""
-    H = (H+H.T)/2
-    values, vectors = np.linalg.eigh(H)
-    cutoff = 1e-10*max(np.finfo(float).tiny, values[-1])
-    flat = values <= cutoff
-    if np.any(values < -cutoff) or np.max(abs(vectors[:, flat].T@rhs), initial=0.) > 1e-8:
-        raise np.linalg.LinAlgError('Classification direction requires another outgoing face')
-    keep = ~flat
-    result = vectors[:, keep]@((vectors[:, keep].T@rhs)/values[keep])
-    if reference is not None:
-        result += vectors[:, flat]@(vectors[:, flat].T@reference)
-    scale = max(1., np.linalg.norm(H,np.inf)*np.linalg.norm(result,np.inf),
-                np.linalg.norm(rhs,np.inf))
-    allowance = max(1e-10*(1+np.linalg.norm(rhs,np.inf)),32*np.finfo(float).eps*scale)
-    if not np.isfinite(result).all() or np.max(abs(H@result-rhs),initial=0.) > allowance:
-        raise np.linalg.LinAlgError('Classification reduced direction failed its backward-error check')
-    return result
-
-
 def _solve_design(Z, rhs, reference=None):
     """Solve 2 Z.T Z d = rhs without forming normal equations.
 
@@ -105,8 +85,7 @@ def direction(X,C,y,beta,lam,certificate,free=0,lower=None,offset=0.):
         seen.add(region.tobytes())
         Z = A[region]@N
         try:
-            v = (_solve_design(Z,N.T@signs) if lower is not None
-                 else _solve(2*Z.T@Z,N.T@signs))
+            v = _solve_design(Z,N.T@signs)
         except np.linalg.LinAlgError: break
         if (np.max(abs(objective(v)[1]),initial=0.)<=1e-8
                 and np.min(J@v,initial=0.)>=-1e-9):
@@ -146,9 +125,7 @@ def direction(X,C,y,beta,lam,certificate,free=0,lower=None,offset=0.):
         active_signs[active<free] = 0.
         if tangent.shape[1]:
             reduced = Z[quadratic]@tangent
-            v = (_solve_design(reduced,tangent.T@active_signs,tangent.T@D[active])
-                 if lower is not None else _solve(2*reduced.T@reduced,
-                     tangent.T@active_signs,tangent.T@D[active]))
+            v = _solve_design(reduced,tangent.T@active_signs,tangent.T@D[active])
             refined = np.zeros_like(beta);refined[active] = tangent@v
         else: refined = np.zeros_like(beta)
         # A numerically moving tight zero row can refine to a direction
@@ -258,23 +235,8 @@ def segment(X,C,y,beta,lam,D,active,quadratic,cap,free=0,lower=None,offset=0.):
     allowance = 5e-9*max(1.,lam,np.max(abs(gradient),initial=0.))
     if residual<=allowance:
         step = upper
-    elif lower is not None:
-        step, dual = _dual_segment(C, gradient, gdot, lam, upper, active, signs, free)
     else:
-        # Variables: unit interval fraction, equality multipliers. Eliminating
-        # the scalar L1 subgradient leaves only m+1 LP variables.
-        penalized = np.arange(free,len(beta))
-        A = np.vstack([np.c_[upper*(gdot[penalized]+1),C[:,penalized].T],
-                       np.c_[upper*(1-gdot[penalized]),-C[:,penalized].T]])
-        b = np.r_[lam-gradient[penalized],lam+gradient[penalized]]
-        selected = np.r_[np.arange(free),active[active>=free]]
-        E = np.c_[upper*(gdot[selected]-signs[selected]),C[:,selected].T]
-        rhs = -gradient[selected]-lam*signs[selected]
-        fit = linprog(np.r_[-1.,np.zeros(len(C))],A_ub=A,b_ub=b,A_eq=E,b_eq=rhs,
-                      bounds=[(0.,1.)]+[(None,None)]*len(C),method='highs',
-                      options=dict(primal_feasibility_tolerance=1e-9,dual_feasibility_tolerance=1e-9))
-        if not fit.success: raise RuntimeError('Classification segment certificate LP failed: '+fit.message)
-        step = upper*fit.x[0];dual = fit.x[1:]
+        step, dual = _dual_segment(C, gradient, gdot, lam, upper, active, signs, free)
     if step<=eps: raise RuntimeError('Classification zero-length segment; unresolved outgoing face')
     new_beta = beta+step*D
     actual = _gradient(X,y,new_beta,lower,offset)+C.T@dual

@@ -3,3 +3,5 @@ include classo/_version.py
 
 include CHANGELOG.md
 include RELEASING.md
+
+recursive-include classo/tests/fixtures *.npz *.md

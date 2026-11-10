@@ -20,3 +20,5 @@ part of this release.
 - Correct R4 intercept constraints, symmetric scale initialization, zero-scale
   boundaries, and requested path method dispatch.
 - Safeguard concomitant proximal roots and require DR splitting residual convergence.
+
+- Continue tied C1/C2 paths with reduced dual events and certified optimal-face pivots.
