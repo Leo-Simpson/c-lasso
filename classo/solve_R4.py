@@ -1,3 +1,4 @@
+from .misc_functions import proj_c
 import numpy as np
 import numpy.linalg as LA
 from .solve_R3 import problem_R3, Classo_R3, calc_Newton
@@ -259,13 +260,6 @@ from .../class_of_problem import problem
 # compute the prox of the function : f(b)= sum (wi * |bi| )
 def prox(b, w, zeros):
     return np.minimum(b + w, zeros) + np.maximum(b - w, zeros)
-
-
-# Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
-def proj_c(M, d):
-    if M.size == 0 or LA.matrix_rank(M) == 0:
-        return np.eye(d)
-    return np.eye(d) - LA.pinv(M)@M
 
 
 def QQ(coef, A):

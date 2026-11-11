@@ -22,3 +22,11 @@ part of this release.
 - Safeguard concomitant proximal roots and require DR splitting residual convergence.
 
 - Continue tied C1/C2 paths with reduced dual events and certified optimal-face pivots.
+
+- Preserve positive R1/R2 penalties and the Huber objective at zero penalty.
+- Use one rank-aware constraint projection across regression solvers; support
+  equivalent rescaled/redundant equality rows consistently in all formulations.
+- Compute R2 lambda normalization at the Huber intercept optimum and retain
+  weak design directions in unpenalized constrained least squares.
+- Validate penalty grids and concomitant scale penalties; handle zero-gradient
+  absolute paths without division by zero.

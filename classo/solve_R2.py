@@ -1,3 +1,4 @@
+from .misc_functions import proj_c
 from .path_alg import solve_path, pathalgo_general
 import numpy as np
 import numpy.linalg as LA
@@ -25,15 +26,10 @@ def Classo_R2(pb, lam, compute=True):
     (m, d, k), (A, C, y) = pb.dim, pb.matrix
     lamb, rho = lam * pb.lambdamax, pb.rho
 
-    if lam < 1e-5:
-        pb_type = "DR"
-        compute = "True"
-        # here we simply refer to Classo_R1 that is called line 42.
-
     # Path-Alg
     # here we compute the path algo until our lambda, and just take the last beta
 
-    if pb_type == "Path-Alg":
+    if pb_type == "Path-Alg" or lam == 0. or pb.lambdamax == 0.:
         if pb.intercept:
             AA, CC = A[:, 1:], C[:, 1:]
         else:
@@ -45,7 +41,7 @@ def Classo_R2(pb, lam, compute=True):
         else:
             beta = out[0][-1]
 
-        return beta
+        return (beta, pb.init) if pb.regpath else beta
 
     # DR :
     regpath = pb.regpath
@@ -162,6 +158,9 @@ and then to evaluate it in the given finite path.
 def pathlasso_R2(pb, path, n_active=False):
     n, d, k = pb.dim
     BETA, tol = [], pb.tol
+    if pb.lambdamax == 0.:
+        beta = Classo_R2(pb, 0.)
+        return [beta.copy() for _ in path]
     if pb.type == "Path-Alg":
         (A, C, y) = pb.matrix
         if pb.intercept:
@@ -206,6 +205,8 @@ Class of problem : we define a type, which will contain as keys, all the paramet
 class problem_R2:
     def __init__(self, data, algo, rho, intercept=False):
         self.N = 500000
+        if not np.isfinite(rho) or rho <= 0.:
+            raise ValueError("Huber requires finite rho > 0")
 
         (AA, CC, y) = data
         A = AA[:, :]
@@ -236,6 +237,12 @@ class problem_R2:
         self.tau = 0.5  # equation for the convergence of Noproj and LS algorithms : gam + tau < 1
         if not intercept:
             yy = y
+        else:
+            from scipy.optimize import brentq
+            low, high = float(np.min(y)), float(np.max(y))
+            location = (low if low == high else brentq(
+                lambda value: np.clip(value-y, -rho, rho).sum(), low, high))
+            yy = y-location
         self.lambdamax = 2 * LA.norm(AA.T.dot(h_prime(yy, rho)), np.inf)
 
     """
@@ -251,7 +258,7 @@ class problem_R2:
 
         self.AtA = (A.T).dot(A)
         self.Aty = (A.T).dot(y)
-        self.Cnorm = LA.norm(C, 2) ** 2 + 1e-5
+        self.Cnorm = (LA.norm(C, 2) ** 2 if C.size else 0.) + 1e-5
         self.tauN = self.tau / self.Cnorm
         self.AtAnorm = LA.norm(self.AtA, 2)
 
@@ -306,13 +313,6 @@ class problem_R2:
 # compute the prox of the function : f(b) = sum (wi * |bi| )
 def prox(b, w, zeros):
     return np.minimum(b + w, zeros) + np.maximum(b - w, zeros)
-
-
-# Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
-def proj_c(M, d):
-    if LA.matrix_rank(M) == 0:
-        return np.eye(d)
-    return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)), M])
 
 
 # Compute the derivative of the huber function, particulary useful for the computing of lambdamax
