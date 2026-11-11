@@ -23,3 +23,5 @@ from ._version import get_versions
 
 __version__ = get_versions()["version"]
 del get_versions
+
+from .elastic_net import problem_elastic_net, solve_path_elastic_net

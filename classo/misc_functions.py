@@ -437,3 +437,20 @@ def tree_to_matrix(tree, label, with_repr = False):
 
 
 """
+
+
+def _constraint_rows(M, d):
+    """Orthonormal row basis for homogeneous equalities, independent of row units."""
+    M = np.asarray(M, dtype=float)
+    if M.ndim != 2 or M.shape[1] != d or not np.isfinite(M).all():
+        raise ValueError("C must be a finite matrix with one column per feature")
+    if not M.size:
+        return np.empty((0, d))
+    scale = np.max(abs(M), axis=1)
+    rows = M[scale>0]/scale[scale>0,None]
+    if not len(rows):
+        return np.empty((0, d))
+    rows /= LA.norm(rows, axis=1)[:,None]
+    _, singular, vectors = LA.svd(rows, full_matrices=False)
+    cutoff = np.finfo(float).eps*max(rows.shape)*singular[0]
+    return vectors[singular>cutoff]

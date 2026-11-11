@@ -1,0 +1,5 @@
+{
+  "source": "/Users/cmueller/Documents/GitHub/c-lasso",
+  "commit": "016b3d0e0241133914ed5045a77c3d99c367e656",
+  "local_changes": " M classo/compact_func.py\n M classo/mc1_path_engine.py\n M classo/multiclass_path.py\n M classo/path_alg.py\n M classo/solve_MC1.py\n?? classo/tests/reference_classification.py\n?? classo/tests/test_C2_certificates.py\n?? classo/tests/test_MC1_metadata.py\n?? classo/tests/test_classification_flat_faces.py\n"
+}

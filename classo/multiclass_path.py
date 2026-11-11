@@ -16,11 +16,13 @@ def initialize_path(X, Y, C=None, tol=1e-8):
     Boundary candidates are NOT necessarily the support immediately below
     lambda_max. Degenerate starts require a joint feasible-face pivot.
     """
-    X, Y = np.asarray(X, float), np.asarray(Y, float)
+    from scipy import sparse
+    X = sparse.csr_matrix(X, dtype=float) if sparse.issparse(X) else np.asarray(X, float)
+    Y = np.asarray(Y, float)
     if X.ndim != 2 or Y.ndim != 2 or X.shape[0] != Y.shape[0]:
         raise ValueError("X and Y must be matrices with matching sample counts")
     p, K = X.shape[1], Y.shape[1]
-    if not p or not K or not np.isfinite(X).all() or not np.isfinite(Y).all():
+    if not p or not K or not np.isfinite(X.data if sparse.issparse(X) else X).all() or not np.isfinite(Y).all():
         raise ValueError("Require nonempty feature/class axes and finite inputs")
     C = np.empty((0, p)) if C is None else np.asarray(C, float)
     if C.ndim != 2 or C.shape[1] != p or not np.isfinite(C).all():
@@ -60,7 +62,7 @@ def initialize_path(X, Y, C=None, tol=1e-8):
                 dual=U, adjusted_correlations=adjusted)
 
 
-def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None, weights=None):
+def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None, weights=None, reference=None, allow_nonunique=False, hessian_designs=None):
     """Compute dB_A/dlambda and dt_A/dlambda on a valid fixed face.
 
     faces[a] is a sequence of (class_index, sign) pairs binding on active
@@ -76,8 +78,11 @@ def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None, weig
     hide nonunique paths and requires an explicit degeneracy policy.
     Optional hessians has shape (K, a, a) and supplies class-specific loss
     Hessians, for example the local unhalved squared-hinge pieces in MC1.
+    Optional hessian_designs supplies Z_k with H_k=Z_k.T@Z_k (or a lazy
+    callable). Only active designs are used to resolve weak-curvature rank.
     """
-    X = np.asarray(X, float)
+    from scipy import sparse
+    X = sparse.csr_matrix(X, dtype=float) if sparse.issparse(X) else np.asarray(X, float)
     active = np.asarray(active, dtype=int)
     K, a = int(n_classes), len(active)
     weights = np.ones(a) if weights is None else np.asarray(weights, float)
@@ -92,7 +97,12 @@ def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None, weig
         return np.empty((0, K)), np.empty(0)
     if hessians is None:
         G = X[:, active].T @ X[:, active]
+        if sparse.issparse(G): G = G.toarray()
         hessians = np.repeat(G[None], K, axis=0)
+        if hessian_designs is None:
+            XA = X[:, active]
+            if sparse.issparse(XA): XA = XA.toarray()
+            hessian_designs = lambda: [XA]*K
     hessians = np.asarray(hessians, float)
     if hessians.shape != (K, a, a) or not np.isfinite(hessians).all():
         raise ValueError("hessians must be finite with shape (classes, active, active)")
@@ -134,16 +144,55 @@ def face_direction(X, C, active, faces, n_classes, tol=1e-9, hessians=None, weig
         blocks = N[:a*K].reshape(K, a, r)
         reduced = sum(block.T.dot(hessians[k]).dot(block) for k, block in enumerate(blocks))
         reduced = (reduced+reduced.T)/2
-        eigenvalues = np.linalg.eigvalsh(reduced)
-        if eigenvalues[-1] <= 0 or eigenvalues[0] <= tol*eigenvalues[-1]:
-            raise np.linalg.LinAlgError("Nonunique fixed-face direction; pivot or reduce the face")
+        eigenvalues, eigenvectors = np.linalg.eigh(reduced)
         rhs = -N[a*K:].T.dot(weights)
-        coordinates = np.linalg.solve(reduced, rhs)
-        if not np.allclose(reduced.dot(coordinates), rhs, atol=tol, rtol=tol):
+        cutoff = tol*max(np.finfo(float).tiny, eigenvalues[-1])
+        flat = eigenvalues <= cutoff
+        if np.any(flat) and hessian_designs is not None:
+            # Resolve weak curvature on active loss designs, whose singular
+            # values have not been squared into a Gram rank threshold.
+            designs = hessian_designs() if callable(hessian_designs) else hessian_designs
+            design = np.vstack([Z@block for Z,block in zip(designs,blocks)])
+            _, values, vectors = np.linalg.svd(design, full_matrices=design.shape[0]<r)
+            eigenvectors = vectors.T
+            eigenvalues = np.r_[values**2, np.zeros(r-len(values))]
+            flat = np.r_[values <= 1e-10*np.max(values, initial=0.),
+                         np.ones(r-len(values),dtype=bool)]
+        if np.any(flat):
+            # Allow only loss-flat nuisance directions. Nonuniqueness of
+            # penalized feature coefficients still requires an explicit pivot.
+            null = N.dot(eigenvectors[:, flat])[:a*K].reshape(K, a, -1)
+            if (np.any(eigenvalues < -cutoff)
+                    or (np.max(np.abs(null[:, weights > 0]), initial=0.) > 1e-7
+                        and not (allow_nonunique and reference is not None))
+                    or np.max(np.abs(eigenvectors[:, flat].T.dot(rhs)), initial=0.) > 1e-8):
+                raise np.linalg.LinAlgError("Nonunique fixed-face direction; pivot or reduce the face")
+            keep = ~flat
+            coordinates = eigenvectors[:, keep].dot(
+                eigenvectors[:, keep].T.dot(rhs)/eigenvalues[keep])
+            if reference is not None:
+                # A flat nuisance direction can still be restricted by sample
+                # margin inequalities. Preserve the directional-QP choice in
+                # this nullspace while refining all identified components.
+                projected=eigenvectors[:, flat].T.dot(N.T.dot(reference))
+                coordinates+=eigenvectors[:, flat].dot(projected)
+        else:
+            coordinates = eigenvectors@((eigenvectors.T@rhs)/eigenvalues)
+        residual=np.max(np.abs(reduced.dot(coordinates)-rhs),initial=0.)
+        # A large, ill-conditioned active Hessian can have a small backward
+        # error but cancellation above an absolute tol. Account for arithmetic
+        # roundoff here; full primal KKT certificates still guard every step.
+        arithmetic_scale=max(1.,np.linalg.norm(reduced,np.inf)*np.linalg.norm(coordinates,np.inf),
+                             np.linalg.norm(rhs,np.inf))
+        allowance=max(tol*(1+np.linalg.norm(rhs,np.inf)),
+                      32*np.finfo(float).eps*arithmetic_scale)
+        if not np.isfinite(coordinates).all() or residual>allowance:
             raise np.linalg.LinAlgError("Reduced KKT residual exceeds tolerance")
         direction = N.dot(coordinates)
     else:
         direction = np.zeros(a*K+a)
-    if not np.allclose(E.dot(direction), 0., atol=tol, rtol=tol):
+    equality_scale=max(1.,np.linalg.norm(E,np.inf)*np.linalg.norm(direction,np.inf))
+    equality_allowance=max(tol,32*np.finfo(float).eps*equality_scale)
+    if np.max(abs(E@direction),initial=0.)>equality_allowance:
         raise np.linalg.LinAlgError("KKT residual exceeds tolerance")
     return direction[:a*K].reshape((a, K), order="F"), direction[a*K:a*K+a]

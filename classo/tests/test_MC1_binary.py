@@ -28,7 +28,10 @@ def reference_MC1(pb, lam):
     if len(C):
         E = np.c_[np.kron(C, np.eye(K)), np.zeros((len(C)*K, p))]
         constraints.append(dict(type="eq", fun=lambda z: E.dot(z), jac=lambda z: E))
-    result = minimize(objective, np.zeros(size+p), jac=True, method="SLSQP",
+    # Start at the feasible nuisance-only fit. A zero epigraph for free bias
+    # rows can make SLSQP stop at a nonstationary all-zero intercept.
+    initial = np.r_[pb.init.ravel(), np.max(abs(pb.init),axis=1)]
+    result = minimize(objective, initial, jac=True, method="SLSQP",
                       bounds=[(None, None)]*size + [(0, None)]*p,
                       constraints=constraints, options=dict(ftol=1e-12, maxiter=2000))
     assert result.success, result.message

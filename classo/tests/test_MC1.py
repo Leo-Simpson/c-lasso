@@ -40,7 +40,8 @@ def test_constrained_zero_optimality_certificate():
     X, C = np.eye(3), np.ones((1, 3))
     pb = problem_MC1((X, C, [0, 1, 2]))
     _, grad = pb.loss_gradient(pb.init)
-    adjusted = -grad - C.T.dot(pb.dual)
+    # Multipliers refer to the normalized working constraint representation.
+    adjusted = -grad - pb.matrix[1].T.dot(pb.dual)
     np.testing.assert_allclose(adjusted, pb.adjusted_correlations)
     assert np.abs(adjusted).sum(axis=1).max() == pytest.approx(pb.lambdamax)
     # U=(-2,-2,-2) gives a tight row L1 norm of 4, improving the raw norm 6.

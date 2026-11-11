@@ -1,18 +1,19 @@
-"""Event-driven MC1 homotopy, with directional face selection.
+"""Event-driven polyhedral-penalty homotopy, with directional face selection.
 
 Small working-set dense direction solves and sparse full-feature certificate
-LPs. No lambda grid, finite-difference direction, or implicit ridge is used.
+LPs. Supports an explicit fixed diagonal ridge and piecewise quadratic losses.
+No lambda grid, finite-difference direction, or implicit ridge is used.
 This floating-point implementation rejects unresolved singular/zero-step states;
 it does not claim a general finite-termination theorem for degenerate MC1.
 """
 import numpy as np
 from scipy import sparse
-from scipy.optimize import linprog, minimize
+from scipy.optimize import linprog, minimize, nnls
 
 from .multiclass_path import face_direction
 
 
-def _linear_direction(N, JN, XA, targets, interior, boundary, weights, objective, tol):
+def _linear_direction(N, JN, XA, targets, interior, boundary, weights, objective, tol, lower_boundary=None, ridge=None):
     """Try equality-only piecewise-quadratic solves; certify global optimality.
 
     A feasible point with zero reduced gradient minimizes the convex directional
@@ -22,7 +23,8 @@ def _linear_direction(N, JN, XA, targets, interior, boundary, weights, objective
     a, K = len(weights), targets.shape[1]
     blocks = N[:a*K].reshape(a, K, -1)
     scores = np.einsum('ij,jkr->ikr', XA, blocks)
-    region = interior | boundary
+    lower_boundary=np.zeros_like(boundary) if lower_boundary is None else lower_boundary
+    region = interior | boundary | lower_boundary
     seen = set()
     for _ in range(8):
         key = region.tobytes()
@@ -31,9 +33,23 @@ def _linear_direction(N, JN, XA, targets, interior, boundary, weights, objective
         seen.add(key)
         selected_scores = scores[region]
         H = 2*selected_scores.T.dot(selected_scores)
+        if ridge is not None:
+            H += blocks.reshape(a*K, -1).T.dot(
+                np.repeat(ridge, K)[:, None]*blocks.reshape(a*K, -1))
         rhs = N[a*K:].T.dot(weights)
         try:
-            v = np.linalg.solve(H, rhs)
+            if np.linalg.cond(H)>1e12:
+                # Remove collinear directions before solving. A candidate is
+                # accepted only after stationarity and cone checks below.
+                # Test rank on the design, not on squared singular values.
+                _, singular, vectors = np.linalg.svd(selected_scores, full_matrices=False)
+                kept = singular > 1e-10*np.max(singular, initial=0.)
+                basis = vectors[kept].T
+                if np.max(abs(rhs-basis@(basis.T@rhs)), initial=0.) > 1e-8:
+                    return None
+                v = basis@((basis.T@rhs)/(2*singular[kept]**2))
+            else:
+                v = np.linalg.solve(H, rhs)
         except np.linalg.LinAlgError:
             return None
         if not np.isfinite(v).all():
@@ -44,7 +60,7 @@ def _linear_direction(N, JN, XA, targets, interior, boundary, weights, objective
                 and np.min(JN.dot(v), initial=0.) >= -1e-9):
             return z
         rate = targets*np.einsum('ikr,r->ik', scores, v)
-        region = interior | (boundary & (rate < 0))
+        region = interior | (boundary & (rate < 0)) | (lower_boundary & (rate > 0))
     return None
 
 
@@ -110,6 +126,7 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
     if not a:
         raise RuntimeError("No outgoing MC1 working set")
     XA, BA, ta = X[:, working], B[working], t[working]
+    if sparse.issparse(XA): XA = XA.toarray()
     wa = weights[working]
     _, gradient = pb.loss_gradient(B)
     # Critical cone: tree tangent and equality for faces carrying strictly
@@ -125,7 +142,9 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
             continue
         for k in range(K):
             for sign in (-1, 1):
-                if ta[j] - sign*BA[j, k] <= 20*tol*max(1., ta[j]):
+                face_tol=20*tol*max(1.,ta[j])
+                if ta[j]>tol: face_tol=min(face_tol,.25*ta[j])
+                if ta[j] - sign*BA[j, k] <= face_tol:
                     row = np.zeros(a*K+a)
                     row[a*K+j], row[j*K+k] = 1., -sign
                     if sign*certificate[working[j], k] > 20*tol*max(1., lam*wa[j]):
@@ -146,9 +165,16 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
         raise RuntimeError("MC1 critical cone has no free directions")
     JN = J.dot(N)
     JN = JN[np.linalg.norm(JN, axis=1) > 10*tol]
-    margins = pb.targets * X.dot(B)
-    interior = margins < 1. - 20*tol
-    boundary = np.abs(margins-1.) <= 20*tol
+    margins = pb.targets * X.dot(B) + getattr(pb, "_margin_offset", 0.)
+    upper_margin = getattr(pb, "_margin_upper", 1.)
+    sample_tol=getattr(pb,"_sample_tol",tol)
+    interior = margins < upper_margin - 20*sample_tol
+    boundary = np.abs(margins-upper_margin) <= 20*sample_tol
+    lower=getattr(pb,"_hinge_lower",None)
+    lower_boundary=np.zeros_like(boundary)
+    if lower is not None:
+        interior &= margins>lower+20*sample_tol
+        lower_boundary=np.abs(margins-lower)<=20*sample_tol
 
     def objective(z):
         D = z[:a*K].reshape(a, K)
@@ -156,8 +182,10 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
         # One-sided second-order loss at sample-margin boundaries.
         r = np.where(interior, scores, 0.)
         r += np.where(boundary, pb.targets*np.minimum(pb.targets*scores, 0.), 0.)
-        return (np.sum(r*r) - wa.dot(z[a*K:]),
-                np.r_[2*XA.T.dot(r).ravel(), -wa])
+        r += np.where(lower_boundary, pb.targets*np.maximum(pb.targets*scores, 0.), 0.)
+        ridge = getattr(pb, "ridge_diagonal", np.zeros(p))[working]
+        return (np.sum(r*r) + .5*np.sum(ridge[:, None]*D*D) - wa.dot(z[a*K:]),
+                np.r_[(2*XA.T.dot(r)+ridge[:, None]*D).ravel(), -wa])
 
     def reduced_objective(v):
         value, gradient_v = objective(N.dot(v))
@@ -166,13 +194,29 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
     constraints = []
     if len(JN):
         constraints.append(dict(type="ineq", fun=lambda v: JN.dot(v), jac=lambda v: JN))
-    z = (_linear_direction(N, JN, XA, pb.targets, interior, boundary, wa, objective, tol)
+    z = (_linear_direction(N, JN, XA, pb.targets, interior, boundary, wa, objective, tol, lower_boundary=lower_boundary,
+                           ridge=getattr(pb, "ridge_diagonal", np.zeros(p))[working])
          if getattr(pb, "_mc1_fast", True) else None)
     if z is None:
         fit = minimize(reduced_objective, np.zeros(N.shape[1]), jac=True, method="SLSQP",
                        constraints=constraints, options=dict(ftol=1e-12, maxiter=2000))
         if not fit.success:
-            raise RuntimeError("MC1 directional face selection failed: " + fit.message)
+            # SLSQP can report a line-search failure at an optimal QP point.
+            # Accept only an independently checked cone KKT certificate;
+            # the subsequent fixed-face solve and endpoint checks still run.
+            gradient_v = reduced_objective(fit.x)[1]
+            if len(JN):
+                multipliers, _ = nnls(JN.T, gradient_v, maxiter=10000)
+                stationarity = gradient_v-JN.T.dot(multipliers)
+            else:
+                stationarity = gradient_v
+            feasible = np.min(JN.dot(fit.x),initial=0.) >= -1e-8
+            complementarity = (np.max(np.abs(multipliers*JN.dot(fit.x)),initial=0.)
+                               if len(JN) else 0.)
+            threshold = 1e-7*max(1.,np.max(wa))
+            if (not feasible or np.max(abs(stationarity),initial=0.)>threshold
+                    or complementarity>threshold):
+                raise RuntimeError("MC1 directional face selection failed: " + fit.message)
         z = N.dot(fit.x)
         pb.path_info["direction_qp"] += 1
     else:
@@ -195,34 +239,67 @@ def _outgoing_direction(pb, B, lam, certificate, tol):
         face = []
         for k in range(K):
             for sign in (-1, 1):
-                if (t[j]-sign*B[j, k] <= 20*tol*max(1., t[j])
+                face_tol=20*tol*max(1.,t[j])
+                if t[j]>tol: face_tol=min(face_tol,.25*t[j])
+                if (t[j]-sign*B[j, k] <= face_tol
                         and abs(dt[j]-sign*D[j, k]) <= 2e-6*max(1., abs(dt[j]))):
                     face.append((k, sign))
         if not face:
             raise RuntimeError("Cannot identify an outgoing MC1 maximum face")
         faces.append(face)
     margin_rate = pb.targets * X.dot(D)
-    quadratic = interior | (boundary & (margin_rate < 0))
-    H = np.asarray([2*X[quadratic[:, k]][:, active].T.dot(
-        X[quadratic[:, k]][:, active]) for k in range(K)])
-    # As in c-lasso, refine the selected state by linear algebra before moving.
-    beta_dot, t_dot = face_direction(X, C, active, faces, K, tol=tol,
-                                    hessians=H, weights=weights[active])
-    refined = np.zeros_like(B)
-    refined[active] = -beta_dot  # derivative w.r.t. decrease in lambda
-    refined_t = np.zeros(p)
-    refined_t[active] = -t_dot
-    # SLSQP selects the face; its direction need not have linear-solve
-    # accuracy. Validate the refined direction itself, not proximity to the
-    # approximate QP iterate. The subsequent LP also requires a valid KKT
-    # certificate for an interval of positive length.
-    local = np.r_[refined[working].ravel(), refined_t[working]]
-    if (np.min(J.dot(local), initial=0.) < -1e-7
-            or np.max(np.abs(E.dot(local)), initial=0.) > 1e-7):
-        raise RuntimeError("MC1 refined direction violates the outgoing cone")
-    refined_rate = pb.targets*X.dot(refined)
-    if np.any(boundary & np.where(quadratic, refined_rate > 1e-7, refined_rate < -1e-7)):
-        raise RuntimeError("MC1 refined direction changes its selected sample region")
+    quadratic = interior | (boundary & (margin_rate < 0)) | (lower_boundary & (margin_rate > 0))
+    # Refine both coefficient faces and one-sided sample regions. A QP
+    # iterate may have the wrong sign at an almost-tangent margin; recompute
+    # the exact quadratic direction after pivoting that sample's region.
+    seen_regions=set()
+    for _ in range(12):
+        key=quadratic.tobytes()
+        if key in seen_regions:
+            raise RuntimeError("MC1 sample-region refinement cycled")
+        seen_regions.add(key)
+        active_design = X[:, active]
+        if sparse.issparse(active_design): active_design = active_design.toarray()
+        H = np.asarray([2*active_design[quadratic[:, k]].T.dot(
+            active_design[quadratic[:, k]]) for k in range(K)])
+        H += np.diag(getattr(pb, "ridge_diagonal", np.zeros(p))[active])[None, :, :]
+        beta_dot, t_dot = face_direction(X, C, active, faces, K, tol=tol,
+                                        hessians=H, weights=weights[active],
+                                        reference=np.r_[-D[active].ravel(order="F"),-dt[active]],
+                                        allow_nonunique=getattr(pb,"_mc1_allow_tree_nullspace",False),
+                                        hessian_designs=lambda: [np.vstack([
+                                            np.sqrt(2)*active_design[quadratic[:,k]],
+                                            np.diag(np.sqrt(getattr(pb,"ridge_diagonal",np.zeros(p))[active]))])
+                                            for k in range(K)])
+        refined = np.zeros_like(B)
+        refined[active] = -beta_dot
+        refined_t = np.zeros(p)
+        refined_t[active] = -t_dot
+        local = np.r_[refined[working].ravel(), refined_t[working]]
+        if (np.min(J.dot(local), initial=0.) < -1e-7
+                or np.max(np.abs(E.dot(local)), initial=0.) > 1e-7):
+            raise RuntimeError("MC1 refined direction violates the outgoing cone")
+        refined_rate = pb.targets*X.dot(refined)
+        # A mathematically tangent margin can pick up cancellation error
+        # when large active directions cancel. Do not alternate its region
+        # based on a sign below the matrix-product roundoff bound.
+        rate_scale=max(1.,float(np.max(np.asarray(abs(X).sum(axis=1))))*
+                       np.max(np.abs(refined),initial=0.))
+        rate_tol=max(1e-12,64*np.finfo(float).eps*rate_scale)
+        bad=boundary & np.where(quadratic, refined_rate > rate_tol, refined_rate < -rate_tol)
+        bad|=lower_boundary & np.where(quadratic, refined_rate < -rate_tol, refined_rate > rate_tol)
+        if not np.any(bad):
+            break
+        quadratic[bad]=(refined_rate[bad]<0) if lower is None else np.where(lower_boundary[bad],refined_rate[bad]>0,refined_rate[bad]<0)
+    else:
+        raise RuntimeError("MC1 sample-region refinement did not converge")
+    # A directional QP can give a tight zero row a tiny apparent motion.
+    # If fixed-face refinement makes it stationary, it remains INACTIVE:
+    # imposing both +/- faces would incorrectly force its subgradient to 0.
+    retained=((t[active]>tol) | (np.max(np.abs(refined[active]),axis=1)>tol)
+              | (weights[active]==0))
+    faces=[face for face,keep in zip(faces,retained) if keep]
+    active=active[retained]
     critical = np.sum(gradient*refined) + lam*weights.dot(refined_t)
     if abs(critical) > 2e-6*max(1., abs(lam*weights.dot(refined_t))):
         raise RuntimeError("MC1 outgoing direction is outside the critical cone")
@@ -324,14 +401,22 @@ def _segment_end(pb, B, lam, D, dt, active, faces, quadratic, cap, tol):
     weights = getattr(pb, "weights", np.ones(p))
     t = np.max(np.abs(B), axis=1)
     t[weights == 0] = 0.
-    margins, rate = pb.targets*X.dot(B), pb.targets*X.dot(D)
+    margins, rate = pb.targets*X.dot(B)+getattr(pb, "_margin_offset", 0.), pb.targets*X.dot(D)
+    upper_margin = getattr(pb, "_margin_upper", 1.)
+    event_epsilon=64*np.finfo(float).eps*max(1.,lam)
     candidates = [(float(cap), "endpoint")]
     for i, k in np.ndindex(margins.shape):
         r = rate[i, k]
         if ((quadratic[i, k] and r > 0) or (not quadratic[i, k] and r < 0)):
-            root = (1.-margins[i, k])/r
-            if root > 20*tol:
+            root = (upper_margin-margins[i, k])/r
+            if root > event_epsilon:
                 candidates.append((float(root), "sample_margin"))
+    lower=getattr(pb,"_hinge_lower",None)
+    if lower is not None:
+        for i,k in np.ndindex(margins.shape):
+            if rate[i,k]!=0:
+                root=(lower-margins[i,k])/rate[i,k]
+                if root>event_epsilon:candidates.append((float(root),"sample_margin"))
     for j in active:
         if weights[j] == 0:
             continue
@@ -343,11 +428,12 @@ def _segment_end(pb, B, lam, D, dt, active, faces, quadratic, cap, tol):
                 slack, speed = t[j]-sign*B[j, k], dt[j]-sign*D[j, k]
                 if (k, sign) not in binding and speed < -tol:
                     root = slack/(-speed)
-                    if root > 20*tol:
+                    if root > event_epsilon:
                         candidates.append((float(root), "maximum_face"))
     upper = min(value for value, _ in candidates)
     _, grad = pb.loss_gradient(B)
-    gdot = 2*X.T.dot(quadratic*X.dot(D))
+    gdot = (2*X.T.dot(quadratic*X.dot(D))
+            + getattr(pb, "ridge_diagonal", np.zeros(p))[:, None]*D)
     # The primal event gives an upper bound. If its endpoint admits a dual
     # certificate, that bound is attained: no optimization LP is necessary.
     endpoint = (_endpoint_certificate(pb, grad+upper*gdot, lam-upper, active, faces, tol)
@@ -368,14 +454,23 @@ def _segment_end(pb, B, lam, D, dt, active, faces, quadratic, cap, tol):
     start_s, start_t = 1+nu, 1+nu+ns
     objective, A_eq, b_eq, A_ub, b_ub, bounds = _certificate_system(
         pb, grad, gdot, lam, upper, active, faces)
+    # Optimize a unit interval fraction rather than an absolute delta.
+    # Near-coincident knots can have upper << 1 with a very large gdot;
+    # multiplying the delta column by upper avoids a badly scaled LP.
+    if upper<=0:
+        raise RuntimeError("MC1 nonpositive event interval")
+    column_scale=sparse.diags(np.r_[upper,np.ones(len(objective)-1)],format="csc")
+    A_eq=A_eq@column_scale
+    A_ub=A_ub@column_scale if A_ub is not None else None
+    bounds=list(bounds);bounds[0]=(0.,1.)
     fit = linprog(objective, A_ub=A_ub, b_ub=b_ub, A_eq=A_eq,
                   b_eq=b_eq, bounds=bounds, method="highs",
                   options=dict(primal_feasibility_tolerance=1e-9,
                                dual_feasibility_tolerance=1e-9))
     if not fit.success:
         raise RuntimeError("MC1 segment certificate LP failed: " + fit.message)
-    step = float(fit.x[0])
-    if step <= tol*max(1., lam):
+    step = upper*float(fit.x[0])
+    if step <= event_epsilon:
         raise RuntimeError("MC1 zero-length segment; unresolved face or degeneracy")
     S = fit.x[start_s:start_s+ns].reshape(p, K)
     U = fit.x[1:1+nu].reshape(m, K)
@@ -431,18 +526,23 @@ def solve_path_MC1(pb, lamin=.01, max_events=2000, tol=1e-8, n_active=0):
     target = lamin*pb.lambdamax
     for _ in range(max_events):
         D, dt, active, faces, quadratic, size = _outgoing_direction(pb, B, lam, certificate, tol)
-        if n_active and np.count_nonzero(pb.weights[active] > 0) > n_active:
+        if n_active and np.count_nonzero((pb.weights[active] > 0)
+                & getattr(pb,"_budget_rows",np.ones(len(pb.weights),bool))[active]) > n_active:
             info["stop_reason"] = "n_active"
             return BETA, LAMBDAS
+        cap = lam-target
+        if hasattr(pb,"_path_endpoint"):
+            cap = pb._path_endpoint(B,lam,D,cap)
         step, certificate, reasons, residual = _segment_end(
-            pb, B, lam, D, dt, active, faces, quadratic, lam-target, tol)
+            pb, B, lam, D, dt, active, faces, quadratic, cap, tol)
         B, lam = B+step*D, max(target, lam-step)
         BETA.append(B.copy())
         LAMBDAS.append(lam/pb.lambdamax)
         info["events"].append(reasons)
         info["working_sizes"].append(size)
         info["residuals"].append(residual)
-        if lam <= target + tol*max(1., pb.lambdamax):
+        if (lam <= target + tol*max(1., pb.lambdamax)
+                or (hasattr(pb,"_path_reached") and pb._path_reached(B,lam))):
             info["completed"] = True
             info["stop_reason"] = "lambda_target"
             return BETA, LAMBDAS

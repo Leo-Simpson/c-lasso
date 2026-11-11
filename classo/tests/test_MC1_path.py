@@ -116,6 +116,14 @@ def test_redundant_equalities_and_zero_threshold():
 
 def test_nonunique_direction_does_not_silently_add_ridge():
     pb = problem_MC1((np.array([[1., 1.], [-1., -1.]]), None, [0, 1]))
-    with pytest.raises(np.linalg.LinAlgError, match='Nonunique'):
-        solve_path_MC1(pb, .2)
-    assert not pb.path_info['completed']
+    B,L = solve_path_MC1(pb, .2)
+    assert pb.path_info['completed']
+    assert pb.ridge == 0.
+    # Duplicate columns admit many coefficient representations. The fitted
+    # scores and original un-ridged optimum are nevertheless determined.
+    for beta,fraction in zip(B,L):
+        magnitude=1.-fraction
+        np.testing.assert_allclose(pb.matrix[0]@beta,
+            [[magnitude,-magnitude],[-magnitude,magnitude]],atol=1e-8)
+        objective=pb.loss_gradient(beta)[0]+fraction*pb.lambdamax*np.max(abs(beta),axis=1).sum()
+        assert objective==pytest.approx(4*fraction**2+fraction*pb.lambdamax*magnitude,abs=1e-8)

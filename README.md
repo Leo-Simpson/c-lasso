@@ -510,3 +510,13 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 * [8] J. Bien, X. Yan, L. Simpson, and C. L. Müller,   [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1), biorxiv, 2020.
 
 
+
+## Fixed-ridge elastic net (development)
+
+`Classo(..., ridge=2.0)` and `pathlasso(..., ridge=2.0)` add a fixed quadratic
+coefficient penalty to R1–R4, C1–C2 and joint MC1–MC2. R1/R2/C1/C2/MC1/MC2
+retain event-driven piecewise-affine paths. In R3/R4 ridge shares the scale
+perspective: R3 reparameterizes a quadratic path, and R4 uses its mean-shift
+reduction to the same solver. No conic dependency is required. Zero ridge
+preserves existing behavior.
+See [the interface, solver distinctions and examples](docs/elastic-net.md).

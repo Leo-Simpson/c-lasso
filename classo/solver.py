@@ -322,6 +322,10 @@ class Formulation:
         w (numpy ndarray) : array of size d with the weights of the L1 penalization. This has to be positive.
             Default value : None (which makes it the 1,...,1 vector)
 
+        ridge (float) : Fixed nonnegative coefficient of ||beta||^2 / 2;
+            for R3/R4 this quadratic term is divided by sigma.
+            The intercept is excluded. Default: 0.0.
+
         intercept (bool)  : set to true if we should use an intercept.
             Default value : False
 
@@ -335,6 +339,10 @@ class Formulation:
         self.scale_rho = True
         self.rho_classification = -1.0
         self.e = "not specified"
+        # Ridge/2 * ||beta||^2 in original coefficient coordinates;
+        # R3/R4 share the concomitant scale: ridge/(2*sigma).
+        # The intercept is excluded; lambda varies while ridge stays fixed.
+        self.ridge = 0.0
         self.w = None
         self.intercept = False
 
@@ -853,6 +861,7 @@ class solution_PATH:
             e=e,
             rho_classification=rho_classification,
             w=param.formulation.w,
+            ridge=param.formulation.ridge,
             intercept=param.formulation.intercept,
             true_lam=not param.rescaled_lam,
         )
@@ -994,6 +1003,7 @@ class solution_CV:
             oneSE=param.oneSE,
             e=e,
             w=param.formulation.w,
+            ridge=param.formulation.ridge,
             intercept=param.formulation.intercept,
         )
 
@@ -1142,6 +1152,9 @@ class solution_ALO:
     """
 
     def __init__(self, matrices, param, formulation, numerical_method, label):
+        alo_formulation = formulation if param.formulation == "not specified" else param.formulation
+        if alo_formulation.ridge:
+            raise ValueError("ALO with ridge is not implemented; use cross validation")
         t0 = time()
 
         # Formulation choosing
@@ -1179,6 +1192,7 @@ class solution_ALO:
             e=e,
             rho_classification=rho_classification,
             w=param.formulation.w,
+            ridge=param.formulation.ridge,
             intercept=param.formulation.intercept,
             true_lam=not param.rescaled_lam,
         )
@@ -1343,6 +1357,7 @@ class solution_StabSel:
             true_lam=not param.rescaled_lam,
             e=e,
             w=param.formulation.w,
+            ridge=param.formulation.ridge,
             intercept=param.formulation.intercept,
         )
 
@@ -1540,6 +1555,7 @@ class solution_LAMfixed:
             e=e,
             rho_classification=rho_classification,
             w=param.formulation.w,
+            ridge=param.formulation.ridge,
             intercept=param.formulation.intercept,
         )
 
@@ -1625,6 +1641,9 @@ def choose_numerical_method(method, model, formulation, StabSelmethod=None, lam=
         str : method that should be used. Can be "Path-Alg", "DR", "P-PDS" or "PF-PDS"
 
     """
+
+    if formulation.ridge:
+        return "Path-Alg"
 
     if formulation.classification:
         return "Path-Alg"

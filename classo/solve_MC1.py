@@ -1,3 +1,4 @@
+from .misc_functions import _constraint_rows
 import numpy as np
 
 from .multiclass_path import initialize_path
@@ -12,10 +13,49 @@ are coupled by the row penalty: this is a joint problem, not K binary fits.
 The squared loss is unhalved, consistently with C1 and R1.
 
 Classo_MC1 and pathlasso_MC1 use an event-driven path engine, with explicit
-failure on unresolved singular/zero-step states. No implicit ridge is added.
+failure on unresolved singular/zero-step states. Explicit fixed ridge is
+supported; no implicit ridge is added.
 """
 
 tol = 1e-8
+
+
+def fit_unpenalized_hinge(Z, targets, tol=1e-9):
+    """Fit the metadata-only starting point and certify free stationarity.
+
+    Classwise convex squared hinge, with analytic gradient and local quadratic
+    refinement. Full-column-rank Z is required; flat loss directions use the
+    minimum correction to the numerical optimizer's representative.
+    """
+    from scipy.optimize import minimize
+    coefficients = np.zeros((Z.shape[1], targets.shape[1]))
+    for k, target in enumerate(targets.T):
+        def objective(gamma):
+            r = np.minimum(target*Z.dot(gamma)-1., 0.)
+            return r.dot(r), 2*Z.T.dot(target*r)
+        initial = np.linalg.lstsq(Z, target, rcond=None)[0]
+        fit = minimize(objective, initial, jac=True, method="L-BFGS-B",
+                       options=dict(gtol=1e-11, ftol=1e-15, maxiter=3000,
+                                    maxls=50))
+        gamma = fit.x
+        for _ in range(20):
+            _, gradient = objective(gamma)
+            if np.max(np.abs(gradient), initial=0.) <= tol:
+                break
+            active = target*Z.dot(gamma) < 1.
+            correction = np.linalg.lstsq(Z[active], target[active]-Z[active].dot(gamma), rcond=None)[0]
+            old = objective(gamma)[0]
+            for step in 2.**(-np.arange(30)):
+                candidate = gamma+step*correction
+                if objective(candidate)[0] <= old+1e-13:
+                    gamma = candidate
+                    break
+            else:
+                break
+        if np.max(np.abs(objective(gamma)[1]), initial=0.) > 2e-8:
+            raise RuntimeError("Metadata-only squared-hinge initialization failed its stationarity check")
+        coefficients[:, k] = gamma
+    return coefficients
 
 
 class problem_MC1:
@@ -35,11 +75,17 @@ class problem_MC1:
     init has zero feature coefficients and fitted constant class biases when
     requested. active is empty at lambdamax;
     candidates contains dual-tight rows, not a selected entering face.
+    covariates is an optional full-rank unpenalized n-by-q design. Returned
+    rows are [intercept (if requested), covariates, penalized features]. Only
+    the last p rows enter the block penalty and feature budget. Covariate
+    encodings and transformations must be fit on training samples only.
     """
 
-    def __init__(self, data, algo="Path-Alg", w=None, intercept=False):
+    def __init__(self, data, algo="Path-Alg", w=None, intercept=False, covariates=None, ridge=0.0):
         if algo != "Path-Alg":
             raise ValueError("MC1 currently reserves only the Path-Alg method")
+        from .elastic_net import validate_ridge
+        self.ridge = validate_ridge(ridge)
         X, C, y = data
         X, y = np.asarray(X, dtype=float), np.asarray(y)
         if X.ndim != 2 or not all(X.shape) or not np.isfinite(X).all():
@@ -53,6 +99,8 @@ class problem_MC1:
         C = np.empty((0, X.shape[1])) if C is None else np.asarray(C, dtype=float)
         if C.ndim != 2 or C.shape[1] != X.shape[1] or not np.isfinite(C).all():
             raise ValueError("C must be finite with one column per feature")
+        self.original_constraints = C.copy()
+        C = _constraint_rows(C, X.shape[1])
 
         self.classes, encoded = np.unique(y, return_inverse=True)
         self.n_classes = len(self.classes)
@@ -65,22 +113,34 @@ class problem_MC1:
         self.targets[np.arange(len(X)), encoded] = 1.0
         self.type, self.name = algo, algo + " MC1"
         self.tol, self.regpath = tol, False
+        # The directional cone QP supplies a verified null-space reference;
+        # dependent tree columns need not define a unique coefficient path.
+        self._mc1_allow_tree_nullspace = True
         self.weights = np.ones(X.shape[1]) if w is None else np.asarray(w, float).copy()
         if (self.weights.shape != (X.shape[1],) or not np.isfinite(self.weights).all()
                 or np.any(self.weights <= 0)):
             raise ValueError("w must contain one finite positive weight per feature")
 
         self.intercept = bool(intercept)
-        self.unpenalized = np.zeros(X.shape[1], dtype=bool)
-        base = np.zeros((X.shape[1], self.n_classes))
-        if self.intercept:
-            X, C, y = self.matrix
-            self.matrix = np.c_[np.ones(len(X)), X], np.c_[np.zeros(len(C)), C], y
-            self.weights = np.r_[0., self.weights]
-            self.unpenalized = np.r_[True, self.unpenalized]
-            self.dim = self.dim[0], self.dim[1]+1, self.dim[2]
-            base = np.zeros((self.dim[1], self.n_classes))
-            base[0] = self.targets.mean(axis=0)
+        metadata = np.empty((len(X), 0)) if covariates is None else np.asarray(covariates, float)
+        if metadata.ndim != 2 or len(metadata) != len(X) or not np.isfinite(metadata).all():
+            raise ValueError("covariates must be a finite sample-by-covariate matrix")
+        self.n_covariates = metadata.shape[1]
+        free = np.c_[np.ones(len(X)), metadata] if self.intercept else metadata.copy()
+        if free.shape[1] and np.linalg.matrix_rank(free) < free.shape[1]:
+            raise ValueError("Unpenalized covariates (including the intercept) must have full column rank; remove redundant encodings")
+        self.feature_offset = free.shape[1]
+        self.unpenalized = np.r_[np.ones(self.feature_offset, bool), np.zeros(X.shape[1], bool)]
+        self.matrix = np.c_[free, X], np.c_[np.zeros((len(C), self.feature_offset)), C], y.copy()
+        self.weights = np.r_[np.zeros(self.feature_offset), self.weights]
+        self.ridge_diagonal = np.where(self.unpenalized, 0., self.ridge)
+        self.dim = len(X), self.matrix[0].shape[1], len(C)
+        base = np.zeros((self.dim[1], self.n_classes))
+        if self.feature_offset:
+            if not self.n_covariates and self.intercept:
+                base[0] = self.targets.mean(axis=0)
+            else:
+                base[:self.feature_offset] = fit_unpenalized_hinge(free, self.targets)
         X, C, _ = self.matrix
         penalized = ~self.unpenalized
         margins = self.targets*X.dot(base)
@@ -104,7 +164,7 @@ class problem_MC1:
         return B
 
     def loss_gradient(self, B):
-        """Return the unpenalized squared-hinge loss and its p-by-K gradient.
+        """Return squared-hinge loss plus explicit ridge and its p-by-K gradient.
 
         No feasibility requirement is imposed; this is also useful for KKT
         checks. The loss is differentiable even at margin=1.
@@ -112,7 +172,8 @@ class problem_MC1:
         B = self._coefficient_matrix(B)
         X = self.matrix[0]
         residual = np.minimum(self.targets * X.dot(B) - 1.0, 0.0)
-        return np.sum(residual ** 2), 2 * X.T.dot(self.targets * residual)
+        return (np.sum(residual ** 2)+.5*np.sum(self.ridge_diagonal[:, None]*B*B),
+                2 * X.T.dot(self.targets * residual)+self.ridge_diagonal[:, None]*B)
 
     def active_hessians(self, B, active):
         """Return K class-specific active-row Hessians and quadratic masks.
@@ -137,7 +198,7 @@ class problem_MC1:
         H = np.empty((self.n_classes, len(active), len(active)))
         for k in range(self.n_classes):
             Xk = XA[quadratic[:, k]]
-            H[k] = 2 * Xk.T.dot(Xk)
+            H[k] = 2 * Xk.T.dot(Xk)+np.diag(self.ridge_diagonal[active])
         return H, quadratic
 
 
