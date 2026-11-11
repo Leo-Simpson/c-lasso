@@ -1,7 +1,7 @@
 from .path_alg import solve_path_Conc
 import numpy as np
 import numpy.linalg as LA
-from .misc_functions import unpenalized
+from .misc_functions import unpenalized, proj_c
 
 r"""
 Problem    :   min ||Ab - y||^2/sigma + n/2 sigma + lambda ||b||1 with C.b= 0 and sigma > 0
@@ -225,13 +225,6 @@ Functions used in the algorithms, modules needed :
 # compute the prox of the function : f(b)= sum (wi * |bi| )
 def prox(b, w, zeros):
     return np.minimum(b + w, zeros) + np.maximum(b - w, zeros)
-
-
-# Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
-def proj_c(M, d):
-    if M.size == 0 or LA.matrix_rank(M) == 0:
-        return np.eye(d)
-    return np.eye(d) - LA.pinv(M)@M
 
 
 # Compute the real positive root of a polynomial of degree 3 in the form :

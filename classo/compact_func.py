@@ -1,3 +1,4 @@
+from .misc_functions import _constraint_rows
 import numpy as np
 import numpy.linalg as LA
 
@@ -32,12 +33,19 @@ def Classo(
     return_sigm=True,
 ):
 
+    if not np.isfinite(lam) or lam < 0.:
+        raise ValueError("lambda must be finite and nonnegative")
+    if typ in ["R3", "R4"] and e is not None and (not np.isfinite(e) or e <= 0.):
+        raise ValueError("e must be finite and positive")
+
     if w is not None:
         matrices = (matrix[0] / w, matrix[1] / w, matrix[2])
     else:
         matrices = matrix
 
     X, C, y = matrices
+    C = _constraint_rows(C, X.shape[1])
+    matrices = (X, C, y)
 
     if typ == "R3":
         if intercept:
@@ -97,7 +105,7 @@ def Classo(
         pb = problem_R2(matrices, meth, rho, intercept=intercept)
         lambdamax = pb.lambdamax
         if true_lam:
-            beta = Classo_R2(pb, lam / lambdamax)
+            beta = Classo_R2(pb, lam / lambdamax if lambdamax else 0.)
         else:
             beta = Classo_R2(pb, lam)
 
@@ -111,7 +119,7 @@ def Classo(
         if true_lam:
             out = solve_path(
                 matrices,
-                lam / lambdamax,
+                lam / lambdamax if lambdamax else 0.,
                 False,
                 rho_classification,
                 "C2",
@@ -134,7 +142,7 @@ def Classo(
         lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept=intercept)
         if true_lam:
             out = solve_path(
-                matrices, lam / lambdamax, False, 0, "C1", intercept=intercept
+                matrices, lam / lambdamax if lambdamax else 0., False, 0, "C1", intercept=intercept
             )
         else:
             out = solve_path(matrices, lam, False, 0, "C1", intercept=intercept)
@@ -158,7 +166,7 @@ def Classo(
         pb = problem_R1(matrices, meth)
         lambdamax = pb.lambdamax
         if true_lam:
-            beta = Classo_R1(pb, lam / lambdamax)
+            beta = Classo_R1(pb, lam / lambdamax if lambdamax else 0.)
         else:
             beta = Classo_R1(pb, lam)
 
@@ -208,6 +216,15 @@ def pathlasso(
     if type(lambdas) is bool:
         lambdas = lamin ** (np.linspace(0.0, 1, 100))
 
+    lambdas = np.asarray(lambdas, dtype=float)
+    if (lambdas.ndim != 1 or not len(lambdas) or
+            not np.isfinite(lambdas).all() or np.any(lambdas < 0.)):
+        raise ValueError("lambdas must be a nonempty finite nonnegative vector")
+    if not (np.all(np.diff(lambdas)>=0.) or np.all(np.diff(lambdas)<=0.)):
+        raise ValueError("lambdas must be ordered")
+    if typ in ["R3", "R4"] and e is not None and (not np.isfinite(e) or e <= 0.):
+        raise ValueError("e must be finite and positive")
+
     if lambdas[0] < lambdas[-1]:
         lambdass = [
             lambdas[i] for i in range(len(lambdas) - 1, -1, -1)
@@ -215,19 +232,23 @@ def pathlasso(
     else:
         lambdass = [lambdas[i] for i in range(len(lambdas))]
 
+    absolute_path = list(lambdass)
+
     if w is not None:
         matrices = (matrix[0] / w, matrix[1] / w, matrix[2])
     else:
         matrices = matrix
 
     X, C, y = matrices
+    C = _constraint_rows(C, X.shape[1])
+    matrices = (X, C, y)
 
     if typ == "R2":
 
         pb = problem_R2(matrices, meth, rho, intercept=intercept)
         lambdamax = pb.lambdamax
         if true_lam:
-            lambdass = [lamb / lambdamax for lamb in lambdass]
+            lambdass = [lamb / lambdamax if lambdamax else 0. for lamb in lambdass]
         BETA = pathlasso_R2(pb, lambdass, n_active=Nactive)
 
     elif typ == "R3":
@@ -280,7 +301,7 @@ def pathlasso(
             matrices, rho_classification, typ="C2", intercept=intercept
         )
         if true_lam:
-            lambdass = [lamb / lambdamax for lamb in lambdass]
+            lambdass = [lamb / lambdamax if lambdamax else 0. for lamb in lambdass]
         BETA = pathalgo_general(
             matrices,
             lambdass,
@@ -296,7 +317,7 @@ def pathlasso(
 
         lambdamax = h_lambdamax(matrices, 0, typ="C1", intercept=intercept)
         if true_lam:
-            lambdass = [lamb / lambdamax for lamb in lambdass]
+            lambdass = [lamb / lambdamax if lambdamax else 0. for lamb in lambdass]
         BETA = pathalgo_general(
             matrices, lambdass, "C1", n_active=Nactive, intercept=intercept
         )
@@ -312,14 +333,13 @@ def pathlasso(
         pb = problem_R1(matrices, meth)
         lambdamax = pb.lambdamax
         if true_lam:
-            lambdass = [lamb / lambdamax for lamb in lambdass]
+            lambdass = [lamb / lambdamax if lambdamax else 0. for lamb in lambdass]
         BETA = pathlasso_R1(pb, lambdass, n_active=n_active)
 
         if intercept:
             BETA = np.array([[ybar - Xbar.dot(beta)] + list(beta) for beta in BETA])
 
-    real_path = ([float(lam) for lam in (lambdas if lambdas[0]>=lambdas[-1] else lambdas[::-1])]
-                 if true_lam and lambdamax == 0. else [lam*lambdamax for lam in lambdass])
+    real_path = absolute_path if true_lam else [lam*lambdamax for lam in lambdass]
 
     if w is not None:
         if intercept:
