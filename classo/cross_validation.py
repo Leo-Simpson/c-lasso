@@ -38,7 +38,6 @@ def training(
     lambdas,
     w,
     intercept,
-    ridge=0.0,
 ):
     (A, C, y) = matrices
     mat = (A[training_set], C, y[training_set])
@@ -52,7 +51,6 @@ def training(
         rho_classification=rho_classification,
         w=w,
         intercept=intercept,
-        ridge=ridge,
     )[0]
     return sol
 
@@ -69,7 +67,6 @@ def cv_test_i(
     lambdas,
     w,
     intercept,
-    ridge=0.0,
 ):
     training_set, test_set = train_test_i(SUBLIST, i)
     BETA = training(
@@ -83,7 +80,6 @@ def cv_test_i(
         lambdas,
         w,
         intercept,
-        ridge,
     )
     n_lam = len(lambdas)
     residual = np.zeros(n_lam)
@@ -112,7 +108,6 @@ def average_test(
     lambdas,
     w,
     intercept,
-    ridge=0.0,
 ):
     k = len(SUBLIST)
     n_lam = len(lambdas)
@@ -130,7 +125,6 @@ def average_test(
             lambdas,
             w,
             intercept,
-            ridge,
         )
     MSE = np.mean(RESIDUAL, axis=0)
     SE = np.std(RESIDUAL, axis=0) / np.sqrt(k)
@@ -151,7 +145,6 @@ def CV(
     oneSE=True,
     w=None,
     intercept=False,
-    ridge=0.0,
 ):
 
     if lambdas is None:
@@ -172,7 +165,6 @@ def CV(
         lambdas,
         w,
         intercept,
-        ridge,
     )
     i = np.argmin(MSE)
     i_1SE = np.min(np.where(MSE <= MSE[i] + SE[i]))
@@ -191,7 +183,6 @@ def CV(
         rho_classification=rho_classification,
         w=w,
         intercept=intercept,
-        ridge=ridge,
     )
     return (out, MSE, SE, i, i_1SE)
 

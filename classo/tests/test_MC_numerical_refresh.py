@@ -13,11 +13,10 @@ def data():
 
 
 @pytest.mark.parametrize('typ',['MC1','MC2'])
-@pytest.mark.parametrize('ridge',[0.,2.])
 @pytest.mark.parametrize('intercept',[False,True])
-def test_constraint_row_units_and_redundancy(typ,ridge,intercept):
+def test_constraint_row_units_and_redundancy(typ,intercept):
     X,C,y=data();other=np.vstack([C,1e-8*C,-1e8*C,np.zeros_like(C)])
-    kwargs=dict(meth="Path-Alg",typ=typ,ridge=ridge,intercept=intercept,true_lam=True)
+    kwargs=dict(meth="Path-Alg",typ=typ,intercept=intercept,true_lam=True)
     a=Classo((X,C,y),1.2,**kwargs);b=Classo((X,other,y),1.2,**kwargs)
     np.testing.assert_allclose(X@a[int(intercept):],X@b[int(intercept):],rtol=2e-6,atol=2e-6)
     np.testing.assert_allclose(C@b[int(intercept):],0.,atol=1e-7)

@@ -2,8 +2,7 @@
 import numpy as np
 import pytest
 from classo.path_alg import parameters_for_update, up_cl, solve_path, check_C1_certificate
-from classo.solve_MC1 import problem_MC1
-from classo.tests.test_MC1_binary import reference_MC1
+from scipy.optimize import minimize, LinearConstraint
 
 
 def sample():
@@ -37,12 +36,26 @@ def test_C1_endpoint_matches_independent_epigraph_solve(intercept,constrained):
         b0,B,L=out;beta=np.r_[b0[-1],B[-1]]
     else:
         B,L=out;beta=B[-1]
-    pb=problem_MC1((X,C,y),intercept=intercept)
-    # C1 and MC1 may use different constrained lambda_max conventions.
     original=parameters_for_update((X,C,y),.08,0,'C1',intercept=intercept)
     lam=L[-1]*original.lambdamax
-    reference=reference_MC1(pb,2*lam)
-    np.testing.assert_allclose(beta,reference[:,1],atol=3e-6,rtol=3e-6)
+    design=np.c_[np.ones(len(X)),X] if intercept else X
+    p=X.shape[1];d=design.shape[1]
+    select=np.c_[np.zeros(p),np.eye(p)] if intercept else np.eye(p)
+    inequalities=np.vstack([np.c_[-select,np.eye(p)],np.c_[select,np.eye(p)]])
+    constraints=[LinearConstraint(inequalities,0,np.inf)]
+    if len(C):
+        E=np.c_[np.zeros(len(C)),C] if intercept else C
+        constraints.append(LinearConstraint(np.c_[E,np.zeros((len(C),p))],0,0))
+
+    def objective(z):
+        residual=np.maximum(1-y*design.dot(z[:d]),0)
+        return ((residual.dot(residual)+lam*z[d:].sum())/len(y),
+                np.r_[-2*design.T.dot(y*residual),np.full(p,lam)]/len(y))
+
+    reference=minimize(objective,np.zeros(d+p),jac=True,method="SLSQP",
+                       constraints=constraints,options=dict(ftol=1e-12,maxiter=2000))
+    assert reference.success,reference.message
+    np.testing.assert_allclose(beta,reference.x[:d],atol=3e-6,rtol=3e-6)
 
 
 def test_C1_certificate_rejects_corrupt_actual_coefficients():

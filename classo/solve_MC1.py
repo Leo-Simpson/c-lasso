@@ -13,8 +13,7 @@ are coupled by the row penalty: this is a joint problem, not K binary fits.
 The squared loss is unhalved, consistently with C1 and R1.
 
 Classo_MC1 and pathlasso_MC1 use an event-driven path engine, with explicit
-failure on unresolved singular/zero-step states. Explicit fixed ridge is
-supported; no implicit ridge is added.
+failure on unresolved singular/zero-step states. No ridge penalty is added.
 """
 
 tol = 1e-8
@@ -81,11 +80,10 @@ class problem_MC1:
     encodings and transformations must be fit on training samples only.
     """
 
-    def __init__(self, data, algo="Path-Alg", w=None, intercept=False, covariates=None, ridge=0.0):
+    def __init__(self, data, algo="Path-Alg", w=None, intercept=False, covariates=None):
         if algo != "Path-Alg":
             raise ValueError("MC1 currently reserves only the Path-Alg method")
-        from .elastic_net import validate_ridge
-        self.ridge = validate_ridge(ridge)
+        self.ridge = 0.0
         X, C, y = data
         X, y = np.asarray(X, dtype=float), np.asarray(y)
         if X.ndim != 2 or not all(X.shape) or not np.isfinite(X).all():

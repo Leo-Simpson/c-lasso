@@ -7,11 +7,11 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     license="MIT",
     author="Leo Simpson",
-    url="https://github.com/Leo-Simpson/CLasso",
+    url="https://github.com/bio-datascience/c-lasso",
     author_email="leo.bill.simpson@gmail.com",
     description="Algorithms for constrained Lasso problems",
     packages=["classo"],
-    install_requires=["numpy", "h5py", "scipy"],
+    install_requires=["numpy", "scipy", "matplotlib", "pandas"],
     extras_require={
         "tests": ["pytest", "pytest-cov"],
         "docs": [
@@ -21,6 +21,7 @@ setup(
             "numpydoc",
             "matplotlib",
             "pandas",
+            "rdata"
         ],
     },
     classifiers=[
@@ -36,6 +37,6 @@ setup(
         "Programming Language :: Python :: 3.9",
     ],
     long_description_content_type="text/markdown",
-    long_description=open("README.md").read(),
+    long_description=open("README.md", encoding="utf-8").read(),
     zip_safe=False,
 )

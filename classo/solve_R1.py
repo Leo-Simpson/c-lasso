@@ -1,7 +1,7 @@
 from .path_alg import solve_path
 import numpy as np
 import numpy.linalg as LA
-from .misc_functions import unpenalized
+from .misc_functions import unpenalized, proj_c
 
 r"""
 Problem    :   min ||Ab - y||^2 + lambda ||b||1 with C.b= 0
@@ -19,8 +19,9 @@ tol = 1e-5
 def Classo_R1(pb, lam):
     pb_type = pb.type  # can be 'Path-Alg', 'P-PDS' , 'PF-PDS' or 'DR'
 
-    if lam < 1e-5:
-        return unpenalized(pb.matrix)
+    if lam == 0. or pb.lambdamax == 0.:
+        beta = unpenalized(pb.matrix)
+        return (beta, pb.init) if pb.regpath else beta
 
     # ODE
     # here we compute the path algo until our lambda, and just take the last beta
@@ -138,6 +139,9 @@ and then to evaluate it in the given finite path.
 def pathlasso_R1(pb, path, n_active=False):
     n, d, k = pb.dim
     BETA, tol = [], pb.tol
+    if pb.lambdamax == 0.:
+        beta = unpenalized(pb.matrix)
+        return [beta.copy() for _ in path]
     if pb.type == "Path-Alg":
         beta, sp_path = solve_path(pb.matrix, path[-1], n_active, 0, "R1")
         # in the method ODE, we only compute the solution for breaking points. We can stop here if return_sp_path = True
@@ -147,9 +151,10 @@ def pathlasso_R1(pb, path, n_active=False):
         sp_path.append(path[-1]), beta.append(beta[-1])
         i = 0
         for lam in path:
-            while lam < sp_path[i + 1]:
+            while i+1 < len(sp_path)-1 and lam < sp_path[i + 1]:
                 i += 1
-            teta = (sp_path[i] - lam) / (sp_path[i] - sp_path[i + 1])
+            span = sp_path[i]-sp_path[i+1]
+            teta = (sp_path[i]-lam)/span if span else 1.
             BETA.append(beta[i] * (1 - teta) + beta[i + 1] * teta)
         return BETA
 
@@ -229,7 +234,7 @@ class problem_R1:
         self.c = d ** 2 / np.trace(
             self.AtA
         )  # parameter for Concomitant problem : the matrix is scaled as c*A^2
-        self.Cnorm = LA.norm(C, 2) ** 2 + 1e-5
+        self.Cnorm = (LA.norm(C, 2) ** 2 if C.size else 0.) + 1e-5
         self.tauN = self.tau / self.Cnorm
         self.AtAnorm = LA.norm(self.AtA, 2)
 
@@ -248,14 +253,6 @@ from .../class_of_problem import problem
 # compute the prox of the function : f(b)= sum (wi * |bi| )
 def prox(b, w, zeros):
     return np.minimum(b + w, zeros) + np.maximum(b - w, zeros)
-
-
-# Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
-def proj_c(M, d):
-    k = len(M)
-    return np.eye(d) - LA.multi_dot(
-        [M.T, np.linalg.inv(M.dot(M.T) + 1e-4 * np.eye(k)), M]
-    )
 
 
 def QQ(coef, A, AtA=None, AAt=None):

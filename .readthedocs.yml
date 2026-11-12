@@ -17,15 +17,16 @@ sphinx:
 formats:
   - pdf
 
-# Apparently needed for python3.9
+# Explicit build environment for current Read the Docs runners
 build:
-  image: testing
+  os: ubuntu-24.04
+  tools:
+    python: "3.12"
 
 
 # Optionally set the version of Python and requirements required to build your docs
 python:
-  version: 3.9
   install:
     - requirements: requirements.txt
-    - method: setuptools
+    - method: pip
       path: .

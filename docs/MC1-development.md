@@ -6,8 +6,8 @@ MC1 extends C1 to signed multiclass targets T (observed class +1, others -1):
           + lambda sum_j w_j max_k |B_jk|, subject to CB=0.
 
 The loss is unhalved. All weights must be finite and strictly positive. Classes
-are sorted by `numpy.unique`; their order defines the columns of B. MC2 remains
-reserved for a future Huberized-hinge extension. This is a joint block-penalized
+are sorted by `numpy.unique`; their order defines the columns of B. MC2 uses the same joint row penalty with the C2 Huberized squared-hinge loss.
+Its lower margin is configured by `rho_classification` (default -1). This is a joint block-penalized
 fit, not independent binary fits or a pairwise multiclass margin loss.
 
 ## Use
@@ -192,3 +192,11 @@ respectively, with zero coefficient difference at 100 common lambda values.
 Binary used 85 linear direction selections and 5 QPs, and 65 linear certificates
 and 24 LPs; ten-class used 121/9 and 86/43. This is an initial fast-path
 implementation, not a complete incremental primal-dual pivot algorithm.
+
+## Development scope
+
+This branch adds MC1/MC2 without a ridge argument. Scalar R1–R4/C1–C2 solvers
+come from the current maintenance baseline. Fixed ridge lives on `ridge`;
+combining it with the multiclass interface is a separate integration step.
+MC2 is selected with `typ="MC2"` and `meth="Path-Alg"`, with optional metadata,
+weights, intercept and lower margin `rho_classification < 1`.

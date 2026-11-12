@@ -38,7 +38,6 @@ def stability(
     e=1.0,
     w=None,
     intercept=False,
-    ridge=0.0,
 ):
 
     rd.seed(seed)
@@ -58,25 +57,22 @@ def stability(
             subset = build_subset(n, nS)
             submatrix = build_submatrix(matrix, subset)
             # compute the path until n_active = q.
-            path_result = pathlasso(
-                submatrix, lambdas=lambdas, n_active=q+1, lamin=0,
-                typ=formulation, meth=numerical_method, rho=rho,
-                rho_classification=rho_classification, e=e*percent_nS,
-                w=w, intercept=intercept, ridge=ridge,
+            BETA = np.array(
+                pathlasso(
+                    submatrix,
+                    lambdas=lambdas,
+                    n_active=q + 1,
+                    lamin=0,
+                    typ=formulation,
+                    meth=numerical_method,
+                    rho=rho,
+                    rho_classification=rho_classification,
+                    e=e * percent_nS,
+                    w=w,
+                    intercept=intercept,
+                )[0]
             )
-            BETA = np.asarray(path_result[0])
-            if ridge:
-                # A sparse path returns only achieved lambda points. Hold
-                # the stopped SUPPORT fixed for the frequency plot; never
-                # extrapolate coefficients beyond the budget stop.
-                # Returned lambdas are absolute; compare on that scale.
-                absolute_grid = lambdas*path_result[1][0]/lambdas[0]
-                positions = np.searchsorted(-np.asarray(path_result[1]),
-                                             -absolute_grid, side="left")
-                positions = np.minimum(positions,len(BETA)-1)
-                distr_path += abs(BETA[positions]) >= 1e-5
-            else:
-                distr_path = distr_path + (abs(BETA) >= 1e-5)
+            distr_path = distr_path + (abs(BETA) >= 1e-5)
             pop = biggest_indexes(BETA[-1], q)
             distribution[pop] += 1.0
             # to do : output, instead of lambdas, the average aciv
@@ -102,7 +98,6 @@ def stability(
                 true_lam=true_lam,
                 w=w,
                 intercept=intercept,
-                ridge=ridge,
             )
             if type(regress) == tuple:
                 beta = regress[0]
@@ -129,7 +124,6 @@ def stability(
                 e=e * percent_nS,
                 w=w,
                 intercept=intercept,
-                ridge=ridge,
             )[0]
             betamax = np.amax(abs(np.array(BETA)), axis=0)
             qmax = biggest_indexes(betamax, q)

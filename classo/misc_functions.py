@@ -270,15 +270,14 @@ def unpenalized(cmatrices, intercept=False):
     else:
         A, C, y = cmatrices
 
-    k = len(C)
-    d = len(A[0])
-    M1 = np.concatenate([A.T.dot(A), C.T], axis=1)
-    M2 = np.concatenate([C, np.zeros((k, k))], axis=1)
-    M = np.concatenate([M1, M2], axis=0)
-    b = np.concatenate([A.T.dot(y), np.zeros(k)])
-    sol = LA.lstsq(M, b, rcond=None)[0]
-    beta = sol[:d]
-    return beta
+    # Work with the design, not its squared-condition normal equations.
+    from scipy.linalg import null_space
+    rows = _constraint_rows(C, A.shape[1])
+    if not len(rows):
+        return LA.lstsq(A, y, rcond=None)[0]
+    basis = null_space(rows)
+    return basis@LA.lstsq(A@basis, y, rcond=None)[0]
+
 
 
 """
@@ -306,11 +305,28 @@ def influence(BETAS, ntop):
     return np.sort(top)
 
 
+def _constraint_rows(M, d):
+    """Orthonormal row basis for homogeneous equalities, independent of row units."""
+    M = np.asarray(M, dtype=float)
+    if M.ndim != 2 or M.shape[1] != d or not np.isfinite(M).all():
+        raise ValueError("C must be a finite matrix with one column per feature")
+    if not M.size:
+        return np.empty((0, d))
+    scale = np.max(abs(M), axis=1)
+    rows = M[scale>0]/scale[scale>0,None]
+    if not len(rows):
+        return np.empty((0, d))
+    rows /= LA.norm(rows, axis=1)[:,None]
+    _, singular, vectors = LA.svd(rows, full_matrices=False)
+    cutoff = np.finfo(float).eps*max(rows.shape)*singular[0]
+    return vectors[singular>cutoff]
+
+
 def proj_c(M, d):
-    # Compute I - C^t (C.C^t)^-1 . C : the projection on Ker(C)
-    if LA.matrix_rank(M) == 0:
-        return np.eye(d)
-    return np.eye(d) - LA.multi_dot([M.T, np.linalg.inv(M.dot(M.T)), M])
+    """Orthogonal projector onto ker(C), including empty/redundant equalities."""
+    rows = _constraint_rows(M, d)
+    return np.eye(d)-rows.T@rows
+
 
 
 """
@@ -437,20 +453,3 @@ def tree_to_matrix(tree, label, with_repr = False):
 
 
 """
-
-
-def _constraint_rows(M, d):
-    """Orthonormal row basis for homogeneous equalities, independent of row units."""
-    M = np.asarray(M, dtype=float)
-    if M.ndim != 2 or M.shape[1] != d or not np.isfinite(M).all():
-        raise ValueError("C must be a finite matrix with one column per feature")
-    if not M.size:
-        return np.empty((0, d))
-    scale = np.max(abs(M), axis=1)
-    rows = M[scale>0]/scale[scale>0,None]
-    if not len(rows):
-        return np.empty((0, d))
-    rows /= LA.norm(rows, axis=1)[:,None]
-    _, singular, vectors = LA.svd(rows, full_matrices=False)
-    cutoff = np.finfo(float).eps*max(rows.shape)*singular[0]
-    return vectors[singular>cutoff]
