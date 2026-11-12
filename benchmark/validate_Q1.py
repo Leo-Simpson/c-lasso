@@ -26,8 +26,16 @@ def reference(X,y,lams,tau,k,C,intercept,divisor):
 def objective(X,y,B,lam,tau,k,divisor,intercept):
     return loss(y-(X@B[1:]+B[0] if intercept else X@B),tau,k).sum()/divisor+lam*abs(B[int(intercept):]).sum()
 
+import argparse
+parser=argparse.ArgumentParser()
+parser.add_argument('--methods',nargs='+',default=['warm','events','DR'],
+                    choices=['warm','events','DR','P-PDS','PF-PDS'])
+parser.add_argument('--output',default='validation.json')
+parser.add_argument('--seeds',nargs='+',type=int,default=list(range(8)))
+parser.add_argument('--taus',nargs='+',type=float,default=[.2,.5,.8])
+args=parser.parse_args()
 rows=[];failures=[]
-for seed in range(8):
+for seed in args.seeds:
     rng=np.random.default_rng(seed);n,p=(40,9) if seed<6 else (24,30)
     X=rng.normal(size=(n,p));C=np.ones((1,p));intercept=seed%2==0
     if seed==2:X[:,1]=X[:,0] # dependent design
@@ -36,9 +44,9 @@ for seed in range(8):
     if seed==4:y=np.round(y,0)
     divisor=n if seed!=5 else 12 # subject rather than row normalization
     lams=np.geomspace(.5,.01,14);k=.8
-    for tau in (.2,.5,.8):
+    for tau in args.taus:
         t=time.perf_counter();ref=reference(X,y,lams,tau,k,C,intercept,divisor);rt=time.perf_counter()-t
-        for method in ('warm','events','DR'):
+        for method in args.methods:
             try:
                 t=time.perf_counter();fit=quantile_path(X,y,lams,tau,k,C,intercept,divisor,method,store_segments=(method=='events'));elapsed=time.perf_counter()-t
                 gaps=[abs(objective(X,y,b,l,tau,k,divisor,intercept)-objective(X,y,r,l,tau,k,divisor,intercept)) for b,r,l in zip(fit['coefficients'],ref,lams)]
@@ -67,5 +75,7 @@ if isinstance(h,tuple):h=h[0]
 h=np.asarray(h)
 huber=dict(max_coefficient_difference=float(np.max(abs(h-q['coefficients']))),seconds=ht)
 result=dict(environment=dict(python=platform.python_version(),numpy=np.__version__,scipy=scipy.__version__,cvxpy=cp.__version__),rows=rows,failures=failures,huber=huber)
-(ROOT/'benchmark'/'q1-results'/'validation.json').write_text(json.dumps(result,indent=2))
+(ROOT/'benchmark'/'q1-results'/args.output).write_text(json.dumps(result,indent=2))
 print(json.dumps(dict(successes=len(rows),failures=failures,huber=huber),indent=2))
+
+if failures:sys.exit(1)

@@ -1,0 +1,29 @@
+seed 0 done
+seed 1 done
+seed 2 done
+seed 3 done
+seed 4 done
+seed 5 done
+seed 6 done
+seed 7 done
+{
+  "successes": 46,
+  "failures": [
+    {
+      "seed": 7,
+      "tau": 0.5,
+      "method": "P-PDS",
+      "error": "The algorithm of P-PDS did not converge after 100000 iterations "
+    },
+    {
+      "seed": 7,
+      "tau": 0.5,
+      "method": "PF-PDS",
+      "error": "The algorithm of PF-PDS did not converge after 100000 iterations "
+    }
+  ],
+  "huber": {
+    "max_coefficient_difference": 8.881784197001252e-16,
+    "seconds": 0.3282929789274931
+  }
+}

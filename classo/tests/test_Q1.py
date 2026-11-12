@@ -126,3 +126,55 @@ def test_DR_reuses_R1_loop_and_matrix_free_resolvents(monkeypatch):
     dense=QQ(.7,A);operator=QQ(.7,A,matrix_free=True)
     np.testing.assert_allclose(operator[0]@A,dense[0]@A,atol=1e-12)
     np.testing.assert_allclose(operator[1]@v,dense[1]@v,atol=1e-12)
+
+
+@pytest.mark.parametrize('method',['P-PDS','PF-PDS'])
+@pytest.mark.parametrize('tau',[.2,.5,.8])
+@pytest.mark.parametrize('intercept',[False,True])
+def test_PDS_matches_warm_with_general_constraints_and_zero_lambda(method,tau,intercept):
+    rng=np.random.default_rng(107);X=rng.normal(size=(28,6));y=.4+X[:,0]-X[:,1]+rng.normal(size=28)*.4
+    C=np.array([[1.,1.,1.,1.,1.,1.],[0.,1.,-1.,0.,0.,0.]])
+    lams=[.15,.04,0.]
+    fit=quantile_path(X,y,lams,tau,.9,C,intercept,method=method)
+    reference=quantile_path(X,y,lams,tau,.9,C,intercept,method='warm')
+    Z=np.c_[np.ones(len(y)),X] if intercept else X
+    for b,r,lam in zip(fit['coefficients'],reference['coefficients'],lams):
+        obj=lambda v:loss(y-Z@v,tau,.9).mean()+lam*abs(v[int(intercept):]).sum()
+        assert abs(obj(b)-obj(r))<1e-7
+        np.testing.assert_allclose(C@b[int(intercept):],0.,atol=1e-7)
+    assert max(fit['kkt'])<=1e-8
+    assert fit['iterations']>0
+
+
+@pytest.mark.parametrize('method',['P-PDS','PF-PDS'])
+def test_PDS_compact_interfaces_weights_and_R1_reuse(method,monkeypatch):
+    from classo import Classo,pathlasso
+    import classo._q1_dr as adapter
+    original=adapter.Classo_R1;calls=[]
+    def wrapped(pb,lam):
+        assert pb.type==method and pb.AtA.shape[0]==12+6+1
+        assert not isinstance(pb.AtA,np.ndarray)
+        calls.append(pb)
+        return original(pb,lam)
+    monkeypatch.setattr(adapter,'Classo_R1',wrapped)
+    rng=np.random.default_rng(49);X=rng.normal(size=(12,6));y=.8+X[:,0]-X[:,1]+rng.normal(size=12)*.3
+    C=np.ones((1,6));w=np.array([1.,1.3,.8,1.1,.7,1.2])
+    options=dict(typ='Q1',meth=method,tau=.2,quantile_k=.8,intercept=True,w=w)
+    maximum,b=Classo((X,C,y),.3,get_lambdamax=True,**options)
+    B,L=pathlasso((X,C,y),lambdas=[1.,.3,.1],**options)
+    np.testing.assert_allclose(B[1],b,atol=2e-5)
+    np.testing.assert_allclose(L,[maximum,.3*maximum,.1*maximum])
+    expected=Classo((X,C,y),.3*maximum,typ='Q1',meth='SLSQP',tau=.2,quantile_k=.8,intercept=True,w=w,true_lam=True)
+    np.testing.assert_allclose(b,expected,atol=2e-5)
+    assert len(calls)>=3 and calls[-1] is calls[-2] and calls[0] is not calls[-1]
+
+
+@pytest.mark.parametrize('method',['P-PDS','PF-PDS'])
+def test_PDS_empty_constraints_limit_and_support_budget(method):
+    rng=np.random.default_rng(61);X=rng.normal(size=(20,5));y=X[:,0]+rng.normal(size=20)*.2
+    fit=quantile_path(X,y,[.08],.8,.7,C=np.empty((0,5)),intercept=False,method=method)
+    assert max(fit['kkt'])<=1e-8
+    with pytest.raises(ValueError,match='did not converge'):
+        quantile_path(X,y,[.08],.8,.7,method=method,pds_max_iter=1)
+    with pytest.raises(ValueError,match='support stopping'):
+        quantile_path(X,y,[.08],method=method,n_active=2)

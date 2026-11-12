@@ -1,4 +1,4 @@
-"""Q1 mean-shift adapter to the existing R1 Douglas-Rachford solver."""
+"""Q1 mean-shift adapter to the existing R1 DR and PDS solvers."""
 import numpy as np
 from scipy.sparse.linalg import LinearOperator
 from .solve_R1 import problem_R1, Classo_R1
@@ -9,12 +9,21 @@ class _Q1Quadratic(problem_R1):
     def compute_param(self):
         A,C,y=self.matrix
         self.Anorm=np.linalg.norm(A,'fro')
-        self.AtA=None
         self.AAt=A@A.T
-        # R1's DR gamma=gam/(4*AtAnorm*relative_lambda); relative lambda is 1.
-        self.AtAnorm=1.
-        self.gam=2.
-        self.tauN=0.
+        if self.type == 'DR':
+            self.AtA=None
+            # R1's DR gamma=gam/(4*AtAnorm*relative_lambda); relative lambda is 1.
+            self.AtAnorm=1.
+            self.gam=2.
+            self.tauN=0.
+        else:
+            product=lambda v:A.T@(A@v)
+            self.AtA=LinearOperator((A.shape[1],A.shape[1]),matvec=product,matmat=product,dtype=float)
+            self.AtAnorm=float(np.linalg.eigvalsh(self.AAt)[-1])
+            # gamma*(2||A||^2)=.45, tau*||C||^2=.45 (C rows orthonormal).
+            # Use a strict margin in the existing PDS step-size condition.
+            self.gam=.45
+            self.tauN=.45 if len(C) else 0.
         self.c=1.
 
 
@@ -26,7 +35,9 @@ class Q1DR:
           + k ||o||_1 + 2*k*(tau-.5) sum(o), Cb=0.
     The asymmetry is solely a linear shift in the auxiliary L1 prox.
     """
-    def __init__(self,Z,C,y,tau,k,divisor,free):
+    def __init__(self,Z,C,y,tau,k,divisor,free,algorithm='DR'):
+        if algorithm not in ('DR','P-PDS','PF-PDS'):raise ValueError('unknown Q1 splitting method')
+        self.algorithm=algorithm
         self.Z,self.y,self.tau,self.k,self.divisor,self.free=Z,y,tau,k,divisor,free
         self.q=Z.shape[1]
         slope_scale=max(1.,np.linalg.norm(Z[:,free:],'fro')/np.sqrt(len(y)))
@@ -36,7 +47,7 @@ class Q1DR:
         self.scale[:free]=max(1.,np.sqrt(len(y)))
         A=np.c_[Z/self.scale,np.eye(len(y))]
         constraints=np.c_[C,np.zeros((len(C),len(y)))]
-        pb=_Q1Quadratic((A,constraints,y),'DR')
+        pb=_Q1Quadratic((A,constraints,y),algorithm)
         pb.matrix_free=True
         # No dense projector: C has orthonormal independent rows.
         project=lambda v:v-constraints.T@(constraints@v)
@@ -57,7 +68,9 @@ class Q1DR:
             r=self.y-self.Z@initial
             o=r-self.k*np.clip(r/self.k,self.tau-1,self.tau)
             z=np.r_[initial*self.scale,o]
-            pb.init=z.copy(),z.copy(),z.copy()
+            if self.algorithm=='DR':pb.init=z.copy(),z.copy(),z.copy()
+            elif self.algorithm=='P-PDS':pb.init=z.copy(),z.copy(),np.zeros(len(pb.matrix[1]))
+            else:pb.init=z.copy(),np.zeros(len(pb.matrix[1]))
             self.initialized=True
         pb.N=max_iter
         pb.tol=1e-7*pb.Anorm/max(1.,np.linalg.norm(self.y))
@@ -65,3 +78,10 @@ class Q1DR:
         result,state=Classo_R1(pb,1.)
         pb.init=state
         return result[:self.q]/self.scale,pb.n_iter
+
+
+class Q1PDS(Q1DR):
+    """Prepare a Q1 mean-shift problem for the existing R1 PDS iterations."""
+    def __init__(self,Z,C,y,tau,k,divisor,free,algorithm):
+        if algorithm not in ('P-PDS','PF-PDS'):raise ValueError('PDS method required')
+        super().__init__(Z,C,y,tau,k,divisor,free,algorithm)

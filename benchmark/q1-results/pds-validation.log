@@ -1,0 +1,3 @@
+48 independent PDS paths passed: 46 completed with a 100000 per-point budget;
+the two limit cases passed on retry with 500000. Original logs and results
+are preserved as pds-validation-100k.* and pds-retry-validation.*.

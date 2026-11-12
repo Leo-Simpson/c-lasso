@@ -130,19 +130,20 @@ def _flat_pivot(Z,C,y,b,lam,target,tau,k,divisor,free):
 
 def quantile_path(X, y, lambdas, tau=.5, k=1., C=None, intercept=True,
                   divisor=None, method='events', tol=2e-6, max_events=10000,
-                  n_active=0, dr_max_iter=100000, store_segments=False):
+                  n_active=0, dr_max_iter=100000, store_segments=False, pds_max_iter=500000):
     """Return coefficients [intercept, slopes], KKT errors, and diagnostics.
 
     Minimize sum rho(y-intercept-X beta)/divisor + lambda ||beta||_1,
     subject to C beta=0. C defaults to the zero-sum row. Divisor defaults n.
-    'events' is experimental: unresolved flat/singular faces raise explicitly.
+    Methods: 'events', 'DR', 'P-PDS', 'PF-PDS', or 'warm' (SLSQP).
+    Unresolved event faces and splitting iteration limits raise explicitly.
     """
     X,y,lams = np.asarray(X,float),np.asarray(y,float),np.asarray(lambdas,float)
     if X.ndim!=2 or y.shape!=(len(X),) or not len(y) or not X.shape[1]: raise ValueError('invalid data shape')
     if not np.isfinite(X).all() or not np.isfinite(y).all(): raise ValueError('nonfinite data')
     if not np.isfinite([tau,k]).all() or not 0<tau<1 or k<=0: raise ValueError('require 0<tau<1 and k>0')
     if lams.ndim!=1 or not len(lams) or not np.isfinite(lams).all() or np.any(lams<0) or np.any(np.diff(lams)>0): raise ValueError('descending nonnegative lambdas required')
-    if method not in ('warm','events','DR'): raise ValueError('unknown method')
+    if method not in ('warm','events','DR','P-PDS','PF-PDS'): raise ValueError('unknown method')
     if isinstance(n_active,bool): n_active=int(n_active)
     if not isinstance(n_active,(int,np.integer)) or n_active<0: raise ValueError('n_active must be a nonnegative integer')
     if n_active and method!='events': raise ValueError('support stopping requires Path-Alg')
@@ -180,7 +181,7 @@ def quantile_path(X, y, lambdas, tau=.5, k=1., C=None, intercept=True,
     score=-Z.T@np.clip((y-Z@b)/k,tau-1,tau)/divisor
     maximum=_lambda_max(score[free:],C[:,free:])
     current=maximum
-    certify=lambda b,l:certificate(Z,C,y,b,l,tau,k,divisor,free, min(tol,1e-8) if method=='DR' else 1e-9)
+    certify=lambda b,l:certificate(Z,C,y,b,l,tau,k,divisor,free, min(tol,1e-8) if method in ('DR','P-PDS','PF-PDS') else 1e-9)
     dr=None
     paired=None
     def record(value):
@@ -193,11 +194,13 @@ def quantile_path(X, y, lambdas, tau=.5, k=1., C=None, intercept=True,
             continue
         if method=='warm':
             b,it=solve(target,b);iterations+=it
-        elif method=='DR':
+        elif method in ('DR','P-PDS','PF-PDS'):
             if dr is None:
-                from ._q1_dr import Q1DR
-                dr=Q1DR(Z,C,y,tau,k,divisor,free)
-            b,it=dr.solve(target,b,certify,min(tol,1e-8),dr_max_iter);iterations+=it
+                from ._q1_dr import Q1DR, Q1PDS
+                dr=(Q1DR(Z,C,y,tau,k,divisor,free) if method=='DR'
+                    else Q1PDS(Z,C,y,tau,k,divisor,free,method))
+            limit=dr_max_iter if method=='DR' else pds_max_iter
+            b,it=dr.solve(target,b,certify,min(tol,1e-8),limit);iterations+=it
         else:
             while current-target>1e-12*max(1.,current):
                 err,signed=certify(b,current)
@@ -255,15 +258,15 @@ Q1_path = quantile_path
 class problem_Q1:
     """Q1 adapter with the same absolute/relative lambda convention as MC1.
 
-    Path-Alg traces knots; DR uses cached affine projections.
+    Path-Alg traces knots; DR and PDS reuse R1 splitting iterations.
     SLSQP remains available as a small-problem validation solver.
     """
     def __init__(self, matrix, algo='SLSQP', tau=.5, k=1., divisor=None,
                  w=None, intercept=False):
         from .misc_functions import _constraint_rows
-        if algo not in ('SLSQP', 'Path-Alg', 'DR'):
-            raise ValueError("Q1 supports Path-Alg, DR, or SLSQP")
-        self.method = {'Path-Alg':'events','SLSQP':'warm','DR':'DR'}[algo]
+        if algo not in ('SLSQP', 'Path-Alg', 'DR', 'P-PDS', 'PF-PDS'):
+            raise ValueError("Q1 supports Path-Alg, DR, P-PDS, PF-PDS, or SLSQP")
+        self.method = {'Path-Alg':'events','SLSQP':'warm','DR':'DR','P-PDS':'P-PDS','PF-PDS':'PF-PDS'}[algo]
         X,C,y=matrix
         X,y=np.asarray(X,float),np.asarray(y,float)
         if X.ndim!=2 or y.shape!=(len(X),) or not len(y) or not X.shape[1]:

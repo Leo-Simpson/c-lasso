@@ -1,0 +1,9 @@
+seed 7 done
+{
+  "successes": 2,
+  "failures": [],
+  "huber": {
+    "max_coefficient_difference": 8.881784197001252e-16,
+    "seconds": 0.321924717980437
+  }
+}

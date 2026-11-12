@@ -1,0 +1,47 @@
+{
+  "environment": {
+    "python": "3.12.13",
+    "numpy": "2.4.2",
+    "scipy": "1.17.1",
+    "cvxpy": "1.9.3"
+  },
+  "rows": [
+    {
+      "interior_objective_gap": 0.0,
+      "seed": 7,
+      "tau": 0.5,
+      "method": "P-PDS",
+      "n": 24,
+      "p": 30,
+      "intercept": false,
+      "seconds": 31.51894950203132,
+      "reference_seconds": 0.17803524795453995,
+      "max_objective_gap": 3.587241614866343e-11,
+      "max_prediction_difference": 5.268781947415412e-06,
+      "kkt": 9.992762558391766e-09,
+      "events": 0,
+      "iterations": 273380
+    },
+    {
+      "interior_objective_gap": 0.0,
+      "seed": 7,
+      "tau": 0.5,
+      "method": "PF-PDS",
+      "n": 24,
+      "p": 30,
+      "intercept": false,
+      "seconds": 33.603555073961616,
+      "reference_seconds": 0.17803524795453995,
+      "max_objective_gap": 2.1399548799649892e-11,
+      "max_prediction_difference": 5.268667784276265e-06,
+      "kkt": 9.995058478790009e-09,
+      "events": 0,
+      "iterations": 273450
+    }
+  ],
+  "failures": [],
+  "huber": {
+    "max_coefficient_difference": 8.881784197001252e-16,
+    "seconds": 0.321924717980437
+  }
+}

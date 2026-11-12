@@ -515,7 +515,7 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 ## Q1 development branch
 
 This branch adds constrained smoothed-quantile L1 regression as `typ="Q1"`
-in `Classo` and `pathlasso`, with `meth="Path-Alg"` and `meth="DR"`.
+in `Classo` and `pathlasso`, with `meth="Path-Alg"`, `meth="DR"`, `meth="P-PDS"`, and `meth="PF-PDS"`.
 DR reuses the existing R1 iteration through a mean-shift reduction; the
 path solver supports `n_active` stopping. See
 [Q1 development notes](doc/notes/Q1-development.md) for the objective,

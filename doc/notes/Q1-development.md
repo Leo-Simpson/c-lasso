@@ -21,7 +21,7 @@ Compact functions use relative lambda unless `true_lam=True`.
 Positive penalty weights `w` are supported; returned coefficients are in
 original units. Paths return descending absolute lambdas. The default grid has
 100 points. As with the existing compact API, Classo defaults to DR and
-pathlasso defaults to Path-Alg. Both are actual Q1 algorithms. `SLSQP` is
+pathlasso defaults to Path-Alg. P-PDS and PF-PDS are also supported. All four are actual Q1 algorithms. `SLSQP` is
 retained as a small-problem validation option.
 
 `Q1_path(X,y,lambdas,tau=.5,k=1.,C=None,intercept=True,divisor=None,
@@ -74,8 +74,8 @@ there is no hidden ridge or substitution of DR for a failed event path.
 loss-splitting variables. Path-Alg stops at the first knot reaching that count
 and returns its actual lambda, which can differ from the requested grid. If a
 tied outgoing entry would exceed the budget, it stops on the incoming side.
-A flat-face pivot exceeding the budget raises explicitly. DR has no continuous
-support-budget stopping and rejects n_active. A small support budget cannot
+A flat-face pivot exceeding the budget raises explicitly. The splitting solvers (DR, P-PDS, PF-PDS) have no continuous
+support-budget stopping and reject n_active. A small support budget cannot
 bound the number of residual-threshold events; timings report both counts.
 
 `store_segments=True` optionally stores affine segment starts and directions
@@ -160,3 +160,78 @@ imply a uniformly small residual-event count. See
 [full timing table](../../benchmark/q1-results/README.md) for all cases and
 single-run versus three-repeat distinctions. These final timings supersede
 all intermediate measurements from earlier DR adapters.
+
+## PDS completion: P-PDS and PF-PDS
+
+Both public compact functions now accept `meth='P-PDS'` and `meth='PF-PDS'`
+with `typ='Q1'`; `Q1_path` accepts the same method strings. The existing
+`Classo_R1` PDS iteration bodies are reused through the same Moreau mean-shift
+reduction as DR. No alternative objective or extra penalty is introduced.
+The auxiliary asymmetric linear term is handled by shifting the existing
+soft-thresholding input by gamma times its linear coefficient.
+
+For PDS, the augmented A'Av is applied as A'(Av), without storing A'A. The
+largest eigenvalue of AA' supplies ||A||^2. Independent constraint rows are
+orthonormal, so the adapter chooses
+
+    gamma = .45/(2 ||A||^2), tau_dual = .45 if C has rows, otherwise 0.
+
+Thus gamma times the quadratic-gradient Lipschitz constant is .45 and
+tau_dual ||C||^2 is at most .45, leaving a strict margin in the shared PDS
+step-size condition. P-PDS uses the existing projection as a matrix-free
+operator. PF-PDS performs the existing projection-free updates.
+
+Each scheme preserves its own existing warm state: (xbar,x,v) for P-PDS and
+(x,v) for PF-PDS. The state, operator, and step sizes are reused across a
+requested lambda grid. Iteration-change stopping must also pass the physical
+Q1 KKT certificate with tolerance min(requested tolerance,1e-8). The diagnostic
+API's `pds_max_iter` defaults to 500000 iterations per requested point; exceeding
+it raises an explicit nonconvergence error. Support-budget stopping remains a
+Path-Alg feature. DR and path defaults are unchanged.
+
+Examples:
+
+```python
+B, absolute_lambdas = pathlasso(
+    (X, C, y), lambdas=[1., .3, .1], typ='Q1', meth='P-PDS',
+    tau=.2, quantile_k=.8, intercept=True)
+beta = Classo((X, C, y), .1, typ='Q1', meth='PF-PDS',
+              tau=.8, quantile_k=.8, intercept=True)
+```
+
+Independent validation can now select methods and its result filename:
+
+    python benchmark/validate_Q1.py --methods P-PDS PF-PDS --output pds-validation.json
+
+The original three-method validation and sparse benchmark files remain intact;
+PDS results and test logs are stored separately in benchmark/q1-results/.
+
+### PDS validation results
+
+Both methods passed all 24 independent paths (tau=.2,.5,.8, eight data seeds),
+for 48 paths and 672 requested fits. P-PDS maximum absolute objective difference
+from Clarabel is 5.045e-11; PF-PDS is 5.287e-11. Maximum endpoint KKT errors are
+9.9995e-9 and 9.99993e-9 respectively. The tests include redundant constraints,
+dependent columns, rounded responses, both intercept choices, p>n, and a
+subject divisor different from the observation count.
+
+At the initial 100000 per-point limit, 46 paths completed. Both methods hit
+that limit on seed 7, tau=.5. Retrying these two paths at the standard R1
+500000-iteration budget passed at the unchanged tolerance, with total path
+iteration counts 273380 (P-PDS) and 273450 (PF-PDS). The final PDS default is
+500000 per point. The combined result records this provenance rather than
+hiding the initial limit cases. These methods are completeness backends;
+no large-design speed advantage is claimed over the event solver.
+
+Results: `benchmark/q1-results/pds-validation.json`; initial limits:
+`pds-validation-100k.*`; independent retry: `pds-retry-validation.*`.
+The full 48-case experiment is reproducible with the command above. The retry
+can be reproduced with `--seeds 7 --taus .5` added to that command.
+
+The added tests check general constraints, weights and compact interfaces,
+lambda zero, matrix-free R1 reuse, warm states, empty constraints, explicit
+nonconvergence, and rejection of support budgets for splitting schemes.
+
+PDS completion full regression suite: **352 passed in 408.82 seconds**,
+including 42 Q1 tests (16 added for the PDS schemes). The run overlapped
+independent validation, so its elapsed time is not a solver benchmark.

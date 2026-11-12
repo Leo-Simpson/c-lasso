@@ -48,12 +48,14 @@ def Classo_R1(pb, lam):
         d
     )  # two vectors usefull to compute the prox of f(b) = sum(wi |bi|)
 
+    linear = getattr(pb, "linear", 0.)
+
     if pb_type == "PF-PDS":  # y1 --> S ; p1 --> p . ; p2 --> y2
         (x, v) = pb.init
         for i in range(pb.N):
 
             S = x - gamma * (AtA.dot(x) - Aty) * 2 - (C.T).dot(v)
-            p = prox(S, w, zerod)
+            p = prox(S - gamma*linear, w, zerod)
 
             y2 = v + tau * C.dot(x)
             v = v + tau * C.dot(p)
@@ -62,6 +64,10 @@ def Classo_R1(pb, lam):
             x = x + eps
 
             if i % 10 == 2 and LA.norm(eps) < tol:
+                check = getattr(pb, "certificate_check", None)
+                if check is not None and not check(x):
+                    continue
+                pb.n_iter = i + 1
                 if regpath:
                     return (x, (x, v))
                 else:
@@ -80,13 +86,18 @@ def Classo_R1(pb, lam):
             grad = AtA.dot(x) - Aty
             v = v + tau * C.dot(xbar)
             s = x - 2 * gamma * grad - (C.T).dot(v)
-            p = prox(s, w, zerod)
+            p = prox(s - gamma*linear, w, zerod)
             nw_x = Proj.dot(p)
 
             eps = nw_x - x
             xbar = p + eps
 
             if i % 10 == 2 and LA.norm(eps) < tol:
+                check = getattr(pb, "certificate_check", None)
+                if check is not None and not check(x):
+                    x = nw_x
+                    continue
+                pb.n_iter = i + 1
                 if regpath:
                     return (x, (xbar, x, v))
                 else:
@@ -117,7 +128,6 @@ def Classo_R1(pb, lam):
         qy_mult = qy * (mu - 1)
 
         b, xbar, x = pb.init
-        linear = getattr(pb, "linear", 0.)
         for i in range(pb.N):
             xbar = xbar + mu * (prox(2 * b - xbar - gamma*linear, w, zerod) - b)
             x = x + mu * (Proj.dot(2 * b - x) - b)
