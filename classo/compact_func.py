@@ -31,7 +31,24 @@ def Classo(
     w=None,
     intercept=False,
     return_sigm=True,
+    tau=0.5,
+    quantile_k=1.0,
+    quantile_divisor=None,
 ):
+
+    if typ == "Q1":
+        from .solve_Q1 import problem_Q1, Classo_Q1
+        if not np.isfinite(lam) or lam < 0.:
+            raise ValueError("lambda must be finite and nonnegative")
+        pb = problem_Q1(matrix, meth, tau, quantile_k, quantile_divisor, w, intercept)
+        if true_lam and pb.lambdamax == 0.:
+            from .solve_Q1 import Q1_path
+            fit = Q1_path(pb.X, pb.y, [lam], tau, quantile_k, pb.C, intercept,
+                          pb.divisor, pb.method)
+            beta = fit['coefficients'][0]/(np.r_[1.,pb.w] if intercept else pb.w)
+        else:
+            beta = Classo_Q1(pb, lam/pb.lambdamax if true_lam else lam)
+        return (pb.lambdamax, beta) if get_lambdamax else beta
 
     if not np.isfinite(lam) or lam < 0.:
         raise ValueError("lambda must be finite and nonnegative")
@@ -208,7 +225,30 @@ def pathlasso(
     rho_classification=-1.0,
     w=None,
     intercept=False,
+    tau=0.5,
+    quantile_k=1.0,
+    quantile_divisor=None,
 ):
+
+    if typ == "Q1":
+        from .solve_Q1 import problem_Q1, Q1_path
+        pb = problem_Q1(matrix, meth, tau, quantile_k, quantile_divisor, w, intercept)
+        if type(lambdas) is bool:
+            if not np.isfinite(lamin) or not 0 <= lamin <= 1:
+                raise ValueError('lamin must lie in [0,1]')
+            values = np.linspace(1.,0.,100) if lamin == 0 else np.geomspace(1.,lamin,100)
+        else:
+            values = np.asarray(lambdas,float)
+        if values.ndim != 1 or not len(values) or not np.isfinite(values).all() or np.any(values < 0):
+            raise ValueError('lambdas must be a finite nonnegative vector')
+        if not (np.all(np.diff(values)>=0.) or np.all(np.diff(values)<=0.)):
+            raise ValueError('lambdas must be ordered')
+        values = np.sort(values)[::-1]
+        absolute = values if true_lam else values*pb.lambdamax
+        fit = Q1_path(pb.X, pb.y, absolute, tau, quantile_k, pb.C, intercept,
+                      pb.divisor, pb.method, n_active=n_active)
+        weights = np.r_[1.,pb.w] if intercept else pb.w
+        return fit['coefficients']/weights, list(fit['evaluated_lambdas'])
 
     Nactive = n_active
     if Nactive == 0:

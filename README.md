@@ -510,3 +510,13 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 * [8] J. Bien, X. Yan, L. Simpson, and C. L. Müller,   [Tree-Aggregated Predictive Modeling of Microbiome Data](https://www.biorxiv.org/content/10.1101/2020.09.01.277632v1), biorxiv, 2020.
 
 
+
+
+## Q1 development branch
+
+This branch adds constrained smoothed-quantile L1 regression as `typ="Q1"`
+in `Classo` and `pathlasso`, with `meth="Path-Alg"` and `meth="DR"`.
+DR reuses the existing R1 iteration through a mean-shift reduction; the
+path solver supports `n_active` stopping. See
+[Q1 development notes](doc/notes/Q1-development.md) for the objective,
+normalization, supported interfaces, derivations, and validation.

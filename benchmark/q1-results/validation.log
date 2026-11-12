@@ -1,0 +1,16 @@
+seed 0 done
+seed 1 done
+seed 2 done
+seed 3 done
+seed 4 done
+seed 5 done
+seed 6 done
+seed 7 done
+{
+  "successes": 72,
+  "failures": [],
+  "huber": {
+    "max_coefficient_difference": 8.881784197001252e-16,
+    "seconds": 0.20829057006631047
+  }
+}

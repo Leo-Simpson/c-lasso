@@ -220,7 +220,7 @@ def segment(X,C,y,beta,lam,D,active,quadratic,cap,free=0,lower=None,offset=0.):
     roots = (1-margin[crossing])/rate[crossing]
     candidates.extend(roots[roots>eps])
     if lower is not None:
-        roots = (lower-margin[rate!=0])/rate[rate!=0]
+        roots = (np.broadcast_to(lower, margin.shape)[rate!=0]-margin[rate!=0])/rate[rate!=0]
         candidates.extend(roots[roots>eps])
     exits = (np.arange(len(beta))>=free)&(abs(beta)>1e-9)&(beta*D<0)
     candidates.extend((-beta[exits]/D[exits]).tolist())

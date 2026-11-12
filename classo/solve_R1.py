@@ -37,7 +37,9 @@ def Classo_R1(pb, lam):
     Anorm = pb.Anorm
     tol = pb.tol * LA.norm(y) / Anorm  # tolerance rescaled
 
-    Proj = proj_c(C, d)
+    Proj = getattr(pb, "projector", None)
+    if Proj is None:
+        Proj = proj_c(C, d)
     AtA = pb.AtA
     Aty = pb.Aty
     # Save some matrix products already computed in problem.compute_param()
@@ -101,19 +103,33 @@ def Classo_R1(pb, lam):
         gamma = gamma / (2 * lam)
         w = w / (2 * lam)
         mu, ls, c, root = pb.mu, [], pb.c, 0.0
-        Q1, Q2 = QQ(2 * gamma / (mu - 1), A, AtA=pb.AtA, AAt=pb.AAt)
-        QA, qy = Q1.dot(A), Q1.dot(y)
+        coefficient = 2 * gamma / (mu - 1)
+        cached = getattr(pb, "dr_resolvents", None)
+        if cached is None or cached[0] != coefficient:
+            Q1, Q2 = QQ(coefficient, A, AtA=pb.AtA, AAt=pb.AAt,
+                        matrix_free=getattr(pb, "matrix_free", False))
+            if getattr(pb, "matrix_free", False):
+                pb.dr_resolvents = (coefficient, Q1, Q2)
+        else:
+            _, Q1, Q2 = cached
+        qy = Q1.dot(y)
 
         qy_mult = qy * (mu - 1)
 
         b, xbar, x = pb.init
+        linear = getattr(pb, "linear", 0.)
         for i in range(pb.N):
-            xbar = xbar + mu * (prox(2 * b - xbar, w, zerod) - b)
+            xbar = xbar + mu * (prox(2 * b - xbar - gamma*linear, w, zerod) - b)
             x = x + mu * (Proj.dot(2 * b - x) - b)
 
             nv_b = (2 - mu) * b
             nv_b = nv_b + qy_mult + Q2.dot(x + xbar - 2 * nv_b)
             if i % 2 == 1 and LA.norm(b - nv_b) < tol:
+                check = getattr(pb, "certificate_check", None)
+                if check is not None and not check(b):
+                    b = nv_b
+                    continue
+                pb.n_iter = i + 1
                 if regpath:
                     return (b, (b, xbar, x))
                 else:
@@ -255,7 +271,18 @@ def prox(b, w, zeros):
     return np.minimum(b + w, zeros) + np.maximum(b - w, zeros)
 
 
-def QQ(coef, A, AtA=None, AAt=None):
+def QQ(coef, A, AtA=None, AAt=None, matrix_free=False):
+    if matrix_free:
+        from scipy.linalg import cho_factor, cho_solve
+        from scipy.sparse.linalg import LinearOperator
+        if AAt is None:
+            AAt = A.dot(A.T)
+        factor = cho_factor(2*np.eye(A.shape[0])+coef*AAt, lower=True)
+        solve = lambda rhs: cho_solve(factor, rhs, check_finite=False)
+        first = lambda v: coef*A.T.dot(solve(v))
+        second = lambda v: .5*(v-coef*A.T.dot(solve(A.dot(v))))
+        return (LinearOperator((A.shape[1],A.shape[0]), matvec=first, matmat=first, dtype=float),
+                LinearOperator((A.shape[1],A.shape[1]), matvec=second, matmat=second, dtype=float))
     if AtA is None:
         AtA = (A.T).dot(A)
     if AAt is None:
