@@ -1,6 +1,6 @@
 # Q1: constrained smoothed quantile regression
 
-Branch `codex/q1-smoothed-quantile`, based on bio-datascience/c-lasso master
+Branch `quantile` (renamed from `codex/q1-smoothed-quantile`), based on bio-datascience/c-lasso master
 `d22da8d5ea54`. Q1 is fixed-smoothing constrained quantile regression with an
 L1 penalty, analogous to R1/R2 and MC1/MC2. Nonconvex penalties are excluded.
 
