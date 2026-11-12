@@ -9,12 +9,12 @@ No conic package is imported or required by this module.
 import numpy as np
 from scipy import sparse
 from scipy.optimize import brentq, least_squares, minimize
-from .multiclass_path import initialize_path
+from ._homotopy_geometry import initialize_path
 
 
 def _quadratic_path(X,C,y,w,diagonal,intercept,e,target,budget=0,budget_features=None):
     from .elastic_net import problem_elastic_net
-    from .mc1_path_engine import solve_path_MC1
+    from ._quadratic_homotopy import solve_path_quadratic
     pb=problem_elastic_net((X,C,y),typ='R1',w=w,intercept=intercept)
     pb.ridge_diagonal=np.r_[np.zeros(pb.feature_offset),diagonal]
     if budget_features is not None:
@@ -36,7 +36,7 @@ def _quadratic_path(X,C,y,w,diagonal,intercept,e,target,budget=0,budget_features
         return brentq(equation,0.,cap,xtol=1e-12*max(1.,t),rtol=1e-13)
     pb._path_endpoint=endpoint
     pb._path_reached=lambda B,t: mapped(B,t)<=target+1e-9*max(1.,target)
-    B,L=solve_path_MC1(pb,lamin=0.,n_active=budget,tol=1e-9,max_events=20000)
+    B,L=solve_path_quadratic(pb,lamin=0.,n_active=budget,tol=1e-9,max_events=20000)
     return pb,B,np.asarray(L)*pb.lambdamax,scale
 
 
@@ -116,13 +116,13 @@ def _r4_zero_lambda(X,C,y,ridge,w,intercept,e,rho,baseline_scale):
     rho*sigma and the SAME quadratic ridge. Only a scalar root remains.
     """
     from .elastic_net import problem_elastic_net
-    from .solve_MC1 import pathlasso_MC1
+    from ._path_interpolation import evaluate_path
     cache={}
     def fit(sigma):
         if sigma not in cache:
             pb=problem_elastic_net((X,C,y),'R2',ridge=ridge,w=w,
                                    intercept=intercept,rho=rho*sigma)
-            B=pathlasso_MC1(pb,[0.])[0][:,0]
+            B=evaluate_path(pb,[0.])[0][:,0]
             beta=B[int(intercept):]
             residual=X.dot(beta)+(B[0] if intercept else 0.)-y
             derivative=e-np.minimum((residual/sigma)**2,rho**2).sum()-ridge*beta.dot(beta)/(2*sigma*sigma)

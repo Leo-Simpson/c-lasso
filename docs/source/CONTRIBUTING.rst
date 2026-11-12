@@ -10,7 +10,7 @@ One can contribute either by reporting an error, requesting a new feature or add
 Reporting errors
 ^^^^^^^^^^^^^^^^^^
 
-Any errors or general problems can be reported on `GitHub's Issue tracker <https://github.com/Leo-Simpson/c-lasso/issues>`_
+Any errors or general problems can be reported on `GitHub's Issue tracker <https://github.com/bio-datascience/c-lasso/issues>`_
 
 The quickest way resolve a problem is to go through the following steps:
 
@@ -33,7 +33,7 @@ discussion.
 Feature requests
 ^^^^^^^^^^^^^^^^^^
 
-We recommend opening an issue on `issue on GitHub <https://github.com/Leo-Simpson/c-lasso/issues>`_ to discuss potential changes.
+We recommend opening an issue on `issue on GitHub <https://github.com/bio-datascience/c-lasso/issues>`_ to discuss potential changes.
 
 When preparing a feature request, consider providing the following information:
 
@@ -57,7 +57,7 @@ Adding a feature
 
 One can also contribute with a new feature or with fixing a bug.
 
-Feature should be sent as pull requests via `GitHub <https://github.com/Leo-Simpson/c-lasso>`_, specifically to the
+Feature should be sent as pull requests via `GitHub <https://github.com/bio-datascience/c-lasso>`_, specifically to the
 ``master`` branch, which acts as the main development branch.
 
 Fixes and features are very welcome to ``c-lasso``, and are greatly encouraged.

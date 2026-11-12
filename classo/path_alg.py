@@ -53,6 +53,8 @@ class parameters_for_update:
                 rho,
             )
 
+        if typ == "R2" and (not np.isfinite(rho) or rho <= 0):
+            raise ValueError("Huber regression requires finite rho > 0")
         (self.A, self.C, self.y) = matrices
         self.lamin = lamin
         self.rho = rho
@@ -60,9 +62,9 @@ class parameters_for_update:
         self.intercept = intercept
         n, d, k = len(self.A), len(self.A[0]), len(self.C)
         self.number_act = 0
-        # C1 follows the unregularized squared-hinge objective. A hidden
+        # Classification follows the specified unregularized loss. A hidden
         # ridge changes directions and can change which margin event is next.
-        if typ in ["C1", "C2"]:
+        if typ in ["R1", "R2", "C1", "C2"]:
             eps_L2 = 0.
         self.eps_L2 = eps_L2
         self.idr = [False] * k
@@ -77,8 +79,22 @@ class parameters_for_update:
             dr = 1.0
 
         if intercept:
-            self.beta0 = (float(np.mean(self.y)) if typ=="C1"
+            self.beta0 = (float(np.mean(self.y)) if typ in ["R1", "C1"]
                           else find_beta0(r_func, dr, self.y, rho, typ))
+            if typ == "C2":
+                # Refine the piecewise-linear intercept score equation exactly
+                # within its current interval after binary search.
+                for _ in range(4):
+                    margin = self.y*self.beta0
+                    interior = (margin > rho) & (margin < 1.)
+                    if not np.any(interior): break
+                    self.beta0 -= np.sum(self.y*h_prime(rho,typ)(margin))/interior.sum()
+            if typ == "R2":
+                for _ in range(4):
+                    residual = self.beta0-self.y
+                    interior = np.abs(residual) < rho
+                    if not np.any(interior): break
+                    self.beta0 -= np.clip(residual,-rho,rho).sum()/interior.sum()
             self.Abar = np.mean(self.A, axis=0)
         else:
             self.beta0 = 0.0
@@ -117,7 +133,7 @@ class parameters_for_update:
             )
 
         N = self.M[self.activity + self.idr, :][:, self.activity + self.idr]
-        if typ in ["C1", "C2"]:
+        if typ in ["R1", "R2", "C1", "C2"]:
             self.Xt = _C1_inverse(N)
         else:
             try:
@@ -150,12 +166,13 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
     if intercept:
         BETA0 = [param.beta0]
     BETA, LAM = [param.beta], [param.lam]
-    if typ in ["C1", "C2"]:
+    if typ in ["R1", "R2", "C1", "C2"]:
         check_C1_certificate(param)
-    if typ in ["C1","C2"] and param.lambdamax==0:
-        BETA.append(param.beta.copy());LAM.append(lamin)
-        if intercept:return BETA0+[param.beta0],BETA,LAM
-        return BETA,LAM
+    if typ in ["R1", "R2", "C1", "C2"] and param.lambdamax == 0:
+        if lamin != 1.:
+            BETA.append(param.beta.copy()); LAM.append(lamin)
+            if intercept: BETA0.append(param.beta0)
+        return (BETA0, BETA, LAM) if intercept else (BETA, LAM)
     if param.lam < lamin:
         if intercept:
             return BETA0, BETA, LAM
@@ -166,7 +183,7 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
         still_F = np.any(param.F)
         too_active = n_active > 0 and param.number_act >= n_active
 
-        if (not still_F and typ not in ["C1","C2"]) or too_active or param.lam == lamin:
+        if (not still_F and typ not in ["R1", "R2", "C1", "C2"]) or too_active or param.lam == lamin:
             if intercept:
                 return BETA0, BETA, LAM
             else:
@@ -180,26 +197,36 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
         #                      "with intercept ? {} "
         #                      "with rho equal to {} ".format(i, typ, intercept, rho ))
 
-        if typ=="C2" and lamin==0. and 0<param.lam<1e-8:
-            old_lam=param.lam
-            param.lam=0.
-            try:check_C2_certificate(param)
-            except RuntimeError:param.lam=old_lam
-            else:
-                BETA.append(param.beta.copy());LAM.append(0.)
-                if intercept:
-                    BETA0.append(param.beta0)
-                    return BETA0,BETA,LAM
-                return BETA,LAM
-        up(param)
-        if typ=="C2" and lamin==0. and 0<param.lam<1e-8:
-            # Reach lambda=0 only if the actual unregularized KKT check passes.
-            old_lam=param.lam
-            param.lam=0.
-            try:check_C2_certificate(param)
-            except RuntimeError:param.lam=old_lam
+        if typ in ["R1", "R2", "C1", "C2"]:
+            # Preserve only the primal state, not a copy of the dense Hessian.
+            # A numerically rejected legacy candidate must never enter BETA.
+            previous = (param.beta.copy(), param.beta0, param.r.copy(), param.lam)
+        if (typ in ["C1", "C2"] and len(LAM)>1
+                and LAM[-2]-LAM[-1] <= 1e-9*max(1.,param.lam)):
+            # Repeated near-zero legacy exits need an outgoing cone pivot,
+            # not thousands of almost identical certified path points.
+            _classification_flat_step(param, allow_no_progress=True,
+                                      allow_equal_norm=True)
+            _scalar_classification_step(param)
+        else:
+            up(param)
         if typ in ["C1", "C2"]:
-            check_C1_certificate(param)
+            try:
+                check_C1_certificate(param)
+            except RuntimeError as error:
+                if not str(error).startswith(typ+" path failed its KKT certificate"):
+                    raise
+                param.beta, param.beta0, param.r, param.lam = previous
+                _scalar_classification_step(param)
+                check_C1_certificate(param)
+        if typ in ["R1", "R2"]:
+            try:
+                check_C1_certificate(param)
+            except RuntimeError:
+                param.beta, param.beta0, param.r, param.lam = previous
+                from ._regression_path import step
+                step(param)
+                check_C1_certificate(param)
         BETA.append(param.beta), LAM.append(param.lam)
 
         # print("inside : ", param.r[ param.F], np.nonzero(param.F)[0] )
@@ -209,9 +236,8 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
             BETA0.append(param.beta0)
 
     raise ValueError(
-        "The path algorithm did not finsh after %i iterations " % N,
-        "and with lamin=%f" % lamin,
-        " and with n_active =" + str(n_active),
+        "The path algorithm did not finish after %i iterations "
+        "(lamin=%g, n_active=%s)" % (d*N_frac, lamin, n_active)
     )
 
 
@@ -241,7 +267,7 @@ def _C1_inverse(matrix):
 
 
 def check_C1_certificate(param, tol=1e-7):
-    """Check actual C1/C2 classification KKT conditions at a returned knot.
+    """Check actual scalar loss KKT conditions at a returned knot.
 
     First try the small active stationarity multiplier solve. If its choice
     of nonunique multipliers fails, minimize the residual over all multipliers
@@ -249,8 +275,11 @@ def check_C1_certificate(param, tol=1e-7):
     of the primal solution. No coefficient refit or numerical ridge is used.
     """
     A, C, y = param.A, param.C, param.y
-    margin = y*(A.dot(param.beta)+param.beta0)
-    v = 2*y*h_prime(param.rho, param.formulation)(margin)
+    regression = param.formulation in ["R1", "R2"]
+    score = A.dot(param.beta)+param.beta0
+    margin = score-y if regression else y*score
+    v = 2*h_prime(param.rho, param.formulation)(margin)
+    if not regression: v *= y
     gradient = A.T.dot(v)
     lam = param.lam*param.lambdamax
     scale = max(1., lam, np.max(np.abs(gradient), initial=0.))
@@ -298,73 +327,43 @@ def check_C1_certificate(param, tol=1e-7):
 
 
 def solve_path_Conc(matrices, stop, n_active=False, lassopath=True, true_lam=False):
+    """Trace the certified R1 path until its concomitant parameter reaches stop.
+
+    If t is the relative least-squares penalty and R its residual divided by
+    ||y||, the relative concomitant penalty is t/||R||. No numerical ridge
+    belongs in this auxiliary least-squares path.
     """
-    This functions will compute the path for all the breaking points :
-    beta is a piecewise linear function of lambda, and only value on the breaking points
-    is computed here
-
-    Args :
-        matrices : A (aka X),C,y the matrices of the problem
-        stop : fraction of lambda_R3 that gives one criteria to stop :
-            continue while lambda_R3 > stop * lambda_R3_max
-            but this is the lambda of R3, which live in another space..
-        n_active : another criteria to stop
-
-    Return :
-        BETA : list of beta(lambda) for lambda in LAMBDA
-        LAM : list of breaking points
-        R : list of residuals rescaled
-    """
-
-    (A, C, y) = matrices
-    n, d, k = len(A), len(A[0]), len(C)
-    # to compute r = (A beta - y)/||y|| more efficientely ; and we set reduclam=lam/stop to 2 so that if stop = 0, the condition reduclam < ||r|| is never furfilled
-    A_over_NORMy, y_over_NORMy, reduclam = (
-        A / (LA.norm(y)),
-        y / (LA.norm(y)),
-        2.0,
-    )
-    if lassopath:
-        lamin, R = 0, [-y_over_NORMy]
-    else:
-        lamin, beta_old, reduclam_old, r_old = (
-            0,
-            np.zeros(d),
-            1.0,
-            -y_over_NORMy,
-        )
-
-    param = parameters_for_update(matrices, lamin, 0, "R3")
-    BETA, LAM = [param.beta], [param.lam]
-    for i in range(d * N_frac):
-
+    A, C, y = matrices
+    size = LA.norm(y)
+    zero = np.zeros(A.shape[1])
+    if size == 0:
+        if lassopath: return [zero, zero.copy()], [1., 0.], [np.zeros(len(y))]*2
+        return (zero, zero.copy()), (0., 0.), (np.zeros(len(y)), np.zeros(len(y)))
+    param = parameters_for_update(matrices, 0., 0., "R1")
+    check_C1_certificate(param)
+    BETA, LAM, R = [param.beta.copy()], [param.lam], [-y/size]
+    for _ in range(A.shape[1]*N_frac):
+        if param.lam <= stop*LA.norm(R[-1]) or param.lam == 0.:
+            break
+        previous = (param.beta.copy(), param.beta0, param.r.copy(), param.lam)
         up(param)
-        BETA.append(param.beta), LAM.append(param.lam)
-        param.r = A_over_NORMy.dot(param.beta) - y_over_NORMy
-        if stop != 0:
-            reduclam = param.lam / stop
-        if lassopath:
-            R.append(param.r)
-            if (
-                (reduclam <= LA.norm(param.r))
-                or (param.number_act >= n - k)
-                or (n_active > 0 and param.number_act >= n_active)
-            ):
-                return (BETA, LAM, R)
-        else:
-            if reduclam <= LA.norm(param.r):
-                return (
-                    (beta_old, param.beta),
-                    (reduclam_old, reduclam),
-                    (r_old, param.r),
-                )
-            beta_old, reduclam_old, r_old = param.beta, reduclam, param.r
-
-    raise ValueError(
-        "The concomitant path algorithm did not finsh after %i iterations " % N,
-        "and with lamin=" + str(stop),
-        " and with n_active =" + str(n_active),
-    )
+        try:
+            check_C1_certificate(param)
+        except RuntimeError:
+            param.beta, param.beta0, param.r, param.lam = previous
+            from ._regression_path import step
+            step(param)
+            check_C1_certificate(param)
+        BETA.append(param.beta.copy()); LAM.append(param.lam)
+        R.append((A@param.beta-y)/size)
+        if n_active and np.count_nonzero(abs(param.beta)>1e-9)>=n_active:
+            break
+    else:
+        raise RuntimeError("Concomitant path exceeded its knot limit")
+    if lassopath: return BETA, LAM, R
+    if len(BETA)==1:
+        return (BETA[0], BETA[0]), (1., 1.), (R[0], R[0])
+    return (BETA[-2], BETA[-1]), (LAM[-2]/stop, LAM[-1]/stop), (R[-2], R[-1])
 
 
 def pathalgo_general(matrix, path, typ, n_active=False, rho=0, intercept=False):
@@ -385,9 +384,9 @@ def pathalgo_general(matrix, path, typ, n_active=False, rho=0, intercept=False):
     sp_path.append(path[-1]), B.append(B[-1])
     for lam in path:
         while i+1<len(sp_path)-1 and (lam<sp_path[i+1] or sp_path[i]==sp_path[i+1]):
-            i+=1
-        span=sp_path[i]-sp_path[i+1]
-        teta=(sp_path[i]-lam)/span if span else 1.
+            i += 1
+        span = sp_path[i]-sp_path[i+1]
+        teta = (sp_path[i]-lam)/span if span else 1.
         BETA.append(B[i] * (1 - teta) + B[i + 1] * teta)
         if intercept:
             BETA0.append(B0[i] * (1 - teta) + B0[i + 1] * teta)
@@ -413,7 +412,7 @@ def up(param):
         up_huber_cl(param)
     else:
         raise ValueError(
-            "Unknown formulation {}, please enter one of those : R1, R2, R3, C1, C2".format()
+            "Unknown formulation {}, please enter one of those : R1, R2, R3, C1, C2".format(formulation)
         )
 
 
@@ -441,11 +440,21 @@ def up_LS(param):
     L = [lam] * d
     Mat = M[:d, :d]
     beta_dot, lam_s_dot = derivatives(activity, s, Mat, M[d:, :d], Xt, idr, number_act)
+    if param.formulation == "R1":
+        zero = np.asarray(activity)&(np.abs(beta)<=1e-9)
+        if np.any(zero & (beta_dot*s>1e-10*max(1.,np.max(abs(beta_dot),initial=0.)))):
+            from ._regression_path import step
+            return step(param)
+    exits = np.zeros(d, dtype=bool)
     for i in range(d):
         bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
         if activity[i]:
-            if abs(bi * di) > 1e-10 and bi * di > 0:
-                L[i] = bi / (di * lambdamax)
+            # Sign comparisons avoid a dimensional product threshold (and
+            # product underflow). The relative-lambda crossing is invariant
+            # when both beta and lambdamax change response units.
+            if (bi > 0 and di > 0) or (bi < 0 and di < 0):
+                L[i] = (bi / lambdamax) / di
+                exits[i] = True
         else:
             if abs(e - s0) < 1e-10:
                 continue
@@ -476,12 +485,20 @@ def up_LS(param):
 
     N = M[activity + idr, :][:, activity + idr]
 
-    try:
-        Xt = LA.inv(N)
-    except LA.LinAlgError:
-        Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
+    if param.formulation == "R1":
+        Xt = _C1_inverse(N)
+    else:
+        try:
+            Xt = LA.inv(N)
+        except LA.LinAlgError:
+            Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
 
     beta = beta - lambdamax * beta_dot * dlamb
+    # This event is an analytic zero, not a small coefficient to threshold.
+    # Retaining its cancellation residue can repeatedly schedule the same exit.
+    hit = exits & (np.abs(np.asarray(L)-dlamb) <=
+                   64*np.finfo(float).eps*max(1.,lam))
+    beta[hit] = 0.
     if dlamb < lam:
         s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
     lam -= dlamb
@@ -491,32 +508,37 @@ def up_LS(param):
     param.Xt = Xt
     param.activity = activity
     param.beta = beta
+    if param.formulation == "R1":
+        if param.intercept: param.beta0 = np.mean(param.y)-param.Abar@beta
+        param.r = param.A@beta+param.beta0-param.y
     param.s = s
     param.lam = lam
 
 
 def up_huber(param):
+    """Advance the exact Huber regression path, including tied/flat events."""
+    from ._regression_path import step
+    return step(param)
+
+
+def up_cl(param):
     """
     Function to call to go from a breaking point to the next one
     """
-
-    # parameters that does not change
     lambdamax = param.lambdamax
     lamin = param.lamin
     A = param.A
     y = param.y
-    C = param.C
-    rho = param.rho
     eps_L2 = param.eps_L2
 
-    # parameters to be updated
     number_act = param.number_act
     idr = param.idr
     Xt = param.Xt
     activity = param.activity
     F = param.F
     beta = param.beta
-    s = param.s
+    # Roundoff at a saturated dual coordinate must not suppress its event.
+    s = np.where(np.abs(np.abs(param.s)-1.) < 1e-10, np.sign(param.s), param.s)
     lam = param.lam
     M = param.M
     r = param.r
@@ -525,13 +547,45 @@ def up_huber(param):
     L = [lam] * d
     Mat = M[:d, :d]
     beta_dot, lam_s_dot = derivatives(activity, s, Mat, M[d:, :d], Xt, idr, number_act)
+    # At a tied margin event, choose the outgoing quadratic side rather
+    # than waiting for a crossing that starts exactly on the boundary.
+    for _ in range(20):
+        rate = -y*A.dot(beta_dot)
+        if param.intercept:
+            rate += y*np.vdot(np.mean(A[F],axis=0),beta_dot)
+        chosen = F.copy()
+        boundary = np.abs(r-1.) <= 1e-10
+        chosen[boundary & (rate > 1e-12)] = False
+        chosen[boundary & (rate < -1e-12)] = True
+        if np.array_equal(chosen,F):
+            break
+        F = chosen
+        if not np.any(F):
+            from ._classification_path import step
+            return step(param)
+        P = A[F]-np.mean(A[F],axis=0) if param.intercept else A[F]
+        M[:d,:d] = 2*P.T.dot(P)
+        reduced = M[activity+idr,:][:,activity+idr]
+        Xt = _C1_inverse(reduced)
+        beta_dot,lam_s_dot = derivatives(activity,s,M[:d,:d],M[d:,:d],Xt,idr,number_act)
+    else:
+        from ._classification_path import step
+        return step(param)
+    # A dual-tight zero coefficient is a candidate face, not an automatic
+    # entry. The descending direction must respect its subgradient sign.
+    zero_active = np.asarray(activity) & (np.abs(beta) <= 1e-9)
+    if np.any(zero_active & (beta_dot*s > 1e-10*max(1.,np.max(abs(beta_dot))))):
+        from ._classification_path import step
+        return step(param)
     for i in range(d):
         bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
         if activity[i]:
-            if abs(bi * di) > 1e-10 and bi * di > 0:
+            # A small coefficient can still cross zero before any other
+            # event. A product threshold here is not invariant to X scaling.
+            if abs(bi) > 1e-12 and bi * di > 0:
                 L[i] = bi / (di * lambdamax)
         else:
-            if abs(e + s0) < 1e-10 or abs(s0) > 1:
+            if abs(e - s0) < 1e-10 or abs(s0) > 1:
                 continue
             if e > s0:
                 dl = (1 + s0) / (1 + e)
@@ -540,71 +594,74 @@ def up_huber(param):
             L[i] = dl * lam
 
     dlamb = min(min(L), lam, lam - lamin)
-    huber_up = False
-    ADl = -A.dot(beta_dot) * lambdamax
+    yADl = -y * A.dot(beta_dot) * lambdamax
     if param.intercept:
-        ADl += np.vdot(param.Abar, beta_dot) * lambdamax
-
-    huber_up = False
-    j_switch = None
+        # The intercept derivative uses the CURRENT quadratic sample set.
+        # Using the original full-sample mean makes tracked margins drift.
+        yADl += y * np.vdot(np.mean(A[F], axis=0), beta_dot) * lambdamax
     for j in range(len(r)):
-        #     find if there is a  0< dl < dlamb such that F[j] and |r[j]+ADl[j]*dl|>rho
-        # or  find if there is a  0< dl < dlamb such that not F[j] |r[j]+ADl[j]*dl|<rho
-        if abs(ADl[j]) < 1e-6 or abs(r[j]) < 1e-6 or abs(abs(r[j]) - rho) < 1e-6:
+        #     find if there is a  0< dl < dlamb such that F[j] and r[j]+yADl[j]*dl > 1
+        # or  find if there is a  0< dl < dlamb such that not F[j] r[j]+yADl[j]*dl < 1
+        # Skip the boundary itself, not distinct nearby margin crossings.
+        # A 1e-4 band can leave a sample on the wrong loss piece.
+        if abs(r[j] - 1) < 1e-10:
             continue
-        c = -r[j] / ADl[j]
-        dl = (1 - rho / abs(r[j])) * c
-        if dl < 0:
-            if c > 0:
-                dl = (1 + rho / abs(r[j])) * c
-            else:
-                dl = dlamb
-        if dl < dlamb:
-            huber_up, j_switch, dlamb = True, j, dl
+        if yADl[j] != 0.0:
+            dl = (1 - r[j]) / yADl[j]
+        else:
+            dl = -1
+        if dl < dlamb and dl > 0:
+            dlamb = dl
+
+    # Several samples can reach the same boundary at exactly one knot.
+    # Switch all of them, including ties with a coefficient event.
+    sample_switches = np.flatnonzero(
+        (np.abs(r + yADl*dlamb - 1.) <= 1e-10)
+        & (np.abs(r - 1.) > 1e-10))
+    max_up = len(sample_switches) > 0
+
     beta = beta - lambdamax * beta_dot * dlamb
     if dlamb < lam:
         s = lam_s_dot + lam / (lam - dlamb) * (s - lam_s_dot)
-    r = r + ADl * dlamb
+    r = r + yADl * dlamb
     lam = lam - dlamb
     if param.intercept:
-        beta0_dot = -np.vdot(np.mean(A[F], axis=0), beta_dot)
+        AbarF = np.mean(A[F], axis=0)
+        beta0_dot = -np.vdot(AbarF, beta_dot)
         beta0 = param.beta0 - lambdamax * beta0_dot * dlamb
 
-    if huber_up:
-        F[j_switch] = not F[j_switch]
+    if max_up:
+        F[sample_switches] = ~F[sample_switches]
         # sufficient :
-        # F = F | (abs(r) < rho - 1e-6)
+        # F = F | (r < 1. - 1e-10)
         # necessary :
-        # F = F & (abs(r) <= rho + 1e-6)
-
+        # F = F & (r <= 1. + 1e-10)
         if param.intercept:
             P = A[F] - np.mean(A[F], axis=0)
             M[:d, :][:, :d] = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
         else:
             M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + eps_L2 * np.eye(d)
-    else:
-        # Update matrix inverse, list of rows in C and activity
-        for i in range(d):
-            if L[i] < dlamb + 1e-10:
-                if activity[i]:
-                    activity[i], number_act = False, number_act - 1
-                    if len(M) > d:
-                        to_ad = next_idr2(idr, M[d:, :d][:, activity])
-                        if type(to_ad) == int:
-                            idr[to_ad] = False
-                else:
-                    activity[i], number_act = True, number_act + 1
-                    if len(M) > d:
-                        to_ad = next_idr1(idr, M[d:, :d][:, activity])
-                        if type(to_ad) == int:
-                            idr[to_ad] = True
-
+    # Update matrix inverse, list of rows in C and activity
+    for i in range(d):
+        if L[i] < dlamb + 1e-10:
+            if activity[i]:
+                activity[i], number_act = False, number_act - 1
+                if len(M) > d:
+                    to_ad = next_idr2(idr, M[d:, :d][:, activity])
+                    if type(to_ad) == int:
+                        idr[to_ad] = False
+            else:
+                # x = M[:,activity+idr][i]
+                # al = M[i,i]-np.vdot(x,Xt.dot(x))
+                # if (abs(al)<1e-10): break
+                activity[i], number_act = True, number_act + 1
+                if len(M) > d:
+                    to_ad = next_idr1(idr, M[d:, :d][:, activity])
+                    if type(to_ad) == int:
+                        idr[to_ad] = True
     N = M[activity + idr, :][:, activity + idr]
 
-    try:
-        Xt = LA.inv(N)
-    except LA.LinAlgError:
-        Xt = LA.inv(N + eps_L2 * np.eye(len(N)))
+    Xt = _C1_inverse(N)
 
     param.number_act = number_act
     param.idr = idr
@@ -620,19 +677,16 @@ def up_huber(param):
         param.beta0 = beta0
 
 
-def up_cl(param):
+def _up_C2(param):
     """
     Function to call to go from a breaking point to the next one
     """
     if not np.any(param.F):
         return _classification_flat_step(param)
     if param.formulation=="C2" and getattr(param,'flat_events',None):
-        # Curvature can also vanish along a direction when F is nonempty
-        # but its active design is rank deficient. Preserve those margins
-        # during the optimal-face LP before requesting a curved direction.
-        if _classification_flat_step(param,allow_no_progress=True):
-            return
-        return _classification_curved_step(param)
+        # A previous flat event does not imply that the current face is flat.
+        # First try a certified curved segment; pivot only if it cannot move.
+        return _scalar_classification_step(param)
     lambdamax = param.lambdamax
     lamin = param.lamin
     A = param.A
@@ -682,14 +736,14 @@ def up_cl(param):
         else:
             # Coupled sample boundaries may require a joint cone pivot rather
             # than alternating one-at-a-time region assignments.
-            return _classification_curved_step(param)
+            return _scalar_classification_step(param)
     # A dual-tight zero coefficient is only a candidate entering face.
     # The equality-constrained linear solve can point into its forbidden
     # sign (especially at simultaneous entries / dependent tree columns).
     # Select the outgoing critical cone instead of taking that invalid step.
     zero_active=np.asarray(activity)&(np.abs(beta)<=1e-9)
     if np.any(zero_active & (beta_dot*s>1e-10*max(1.,np.max(abs(beta_dot))))):
-        return _classification_curved_step(param)
+        return _scalar_classification_step(param)
     for i in range(d):
         bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
         if activity[i]:
@@ -781,59 +835,26 @@ def up_cl(param):
         param.beta0 = beta0
 
 
-def _classification_curved_step(param):
-    """Resume a flat-pivot path with the shared one-sided critical-cone engine."""
-    from types import SimpleNamespace
-    from .mc1_path_engine import _outgoing_direction,_segment_end
-    A,C,y=param.A,param.C,param.y
-    offset=int(param.intercept)
-    X=np.c_[np.ones(len(A)),A] if offset else A
-    constraints=np.c_[np.zeros((len(C),offset)),C]
-    B=(np.r_[param.beta0,param.beta] if offset else param.beta)[:,None]
-    lower=param.rho if param.formulation=="C2" else None
-    def loss_gradient(beta):
-        m=y*X.dot(beta)[:,0]
-        clipped=np.minimum(m-1.,0.)
-        loss=clipped**2
-        if lower is not None:
-            loss=np.where(m<lower,(1-lower)**2+2*(1-lower)*(lower-m),loss)
-            clipped=np.maximum(clipped,lower-1.)
-        return loss.sum(),2*X.T.dot((y*clipped)[:,None])
-    pb=SimpleNamespace(matrix=(X,constraints,y),targets=y[:,None],weights=np.r_[np.zeros(offset),np.ones(A.shape[1])],
-        loss_gradient=loss_gradient,_hinge_lower=lower,_sample_tol=1e-12,_mc1_allow_tree_nullspace=True,
-        path_info=dict(direction_linear=0,direction_qp=0,certificate_linear=0,certificate_lp=0))
-    cert=check_C1_certificate(param)
-    _,gradient=loss_gradient(B)
-    certificate=-gradient-constraints.T.dot(cert['dual'][:,None])
-    absolute=param.lam*param.lambdamax
-    D,dt,active,faces,quadratic,_=_outgoing_direction(pb,B,absolute,certificate,1e-9)
-    step,_,_,_=_segment_end(pb,B,absolute,D,dt,active,faces,quadratic,
-                           absolute-param.lamin*param.lambdamax,1e-9)
-    beta=(B+step*D)[:,0]
-    param.beta=beta[offset:].copy()
-    if offset:param.beta0=float(beta[0])
-    remaining=absolute-step
-    target=param.lamin*param.lambdamax
-    param.lam=(param.lamin if remaining-target<=1e-10*max(1.,param.lambdamax)
-               else remaining/param.lambdamax)
-    _refresh_classification_state(param)
-
-
 def _refresh_classification_state(param):
-    """Rebuild the legacy active KKT state after a certified flat-face event."""
+    """Rebuild the scalar active KKT state after a certified path event."""
     A,C,y=param.A,param.C,param.y
     d=A.shape[1]
-    param.r=y*(A.dot(param.beta)+param.beta0)
+    regression = param.formulation in ["R1", "R2"]
+    score = A.dot(param.beta)+param.beta0
+    param.r = score-y if regression else y*score
     # LP endpoints can lie a few ulps outside a margin boundary. Include
     # those boundary samples; outgoing selection chooses their future side.
     param.F=param.r<=1.+1e-9
     if param.formulation=="C2":param.F&=param.r>=param.rho-1e-9
+    if param.formulation == "R1": param.F = np.ones(len(y),bool)
+    if param.formulation == "R2": param.F = np.abs(param.r)<=param.rho+1e-9
     P=A[param.F]
     if param.intercept and len(P):P=P-P.mean(axis=0)
     H=2*P.T.dot(P)
     param.M=np.block([[H,C.T],[C,np.zeros((len(C),len(C)))]])
     certificate=check_C1_certificate(param)
-    gradient=A.T.dot(2*y*h_prime(param.rho,param.formulation)(param.r))
+    values=2*h_prime(param.rho,param.formulation)(param.r)
+    gradient=A.T.dot(values if regression else y*values)
     absolute=param.lam*param.lambdamax
     param.s=(-(gradient+C.T.dot(certificate['dual']))/absolute if absolute>0
              else np.sign(param.beta))
@@ -853,13 +874,15 @@ def _refresh_classification_state(param):
     param.Xt=_C1_inverse(param.M[selected,:][:,selected])
 
 
-def _classification_flat_step(param,allow_no_progress=False):
-    """Continue a no-curvature C1/C2 state without adding a ridge.
+def _classification_flat_step(param,allow_no_progress=False,allow_equal_norm=False):
+    """Resolve a scalar optimal face without adding a ridge.
 
     First minimize lambda over KKT multipliers with the primal point fixed.
     If lambda cannot decrease, maximize the L1 norm over the current optimal
     polyhedral loss cell: a lower lambda selects the largest norm on this face.
     This is a primal pivot at the SAME lambda, not interpolation across a jump.
+    With allow_equal_norm, also choose a vertex representation of a curved
+    optimum to resolve repeated tiny coefficient exits in a dependent design.
     """
     from scipy.optimize import linprog
     A,C,y=param.A,param.C,param.y
@@ -872,13 +895,18 @@ def _classification_flat_step(param,allow_no_progress=False):
     # Variables [constraint multipliers, absolute lambda].
     inequalities=np.vstack([np.c_[C.T,-np.ones(d)],np.c_[-C.T,-np.ones(d)]])
     equalities=np.c_[C[:,active].T,np.sign(param.beta[active])]
-    fit=linprog(np.r_[np.zeros(k),1.],A_ub=inequalities,b_ub=np.r_[-gradient,gradient],
-                A_eq=equalities if np.any(active) else None,
-                b_eq=-gradient[active] if np.any(active) else None,
-                bounds=[(None,None)]*k+[(0.,absolute)],method='highs',
-                options=dict(primal_feasibility_tolerance=1e-9,dual_feasibility_tolerance=1e-9))
-    if not fit.success:raise RuntimeError('Classification flat-state certificate LP failed: '+fit.message)
-    lower=float(fit.x[-1]);next_lambda=max(target,lower)
+    if allow_equal_norm:
+        # A canonical representation of a curved optimum keeps lambda fixed;
+        # no redundant multiplier/lambda LP is needed before that pivot.
+        next_lambda=absolute
+    else:
+        fit=linprog(np.r_[np.zeros(k),1.],A_ub=inequalities,b_ub=np.r_[-gradient,gradient],
+                    A_eq=equalities if np.any(active) else None,
+                    b_eq=-gradient[active] if np.any(active) else None,
+                    bounds=[(None,None)]*k+[(0.,absolute)],method='highs',
+                    options=dict(primal_feasibility_tolerance=1e-9,dual_feasibility_tolerance=1e-9))
+        if not fit.success:raise RuntimeError('Classification flat-state certificate LP failed: '+fit.message)
+        lower=float(fit.x[-1]);next_lambda=max(target,lower)
     if next_lambda<absolute-1e-10*max(1.,absolute):
         param.lam=(param.lamin if next_lambda==target or not param.lambdamax
                    else next_lambda/param.lambdamax)
@@ -920,29 +948,54 @@ def _classification_flat_step(param,allow_no_progress=False):
     if not pivot.success:raise RuntimeError('Classification optimal-face pivot LP failed: '+pivot.message)
     old=np.r_[param.beta0,param.beta] if param.intercept else param.beta.copy()
     if (np.max(np.abs(pivot.x[:q]-old),initial=0.)<=1e-9
-            or (allow_no_progress and np.abs(pivot.x[offset:q]).sum()<=np.abs(param.beta).sum()+1e-9)):
+            or (allow_no_progress and not allow_equal_norm
+                and np.abs(pivot.x[offset:q]).sum()<=np.abs(param.beta).sum()+1e-9)):
         if allow_no_progress:return False
         raise RuntimeError('Classification flat-face pivot made no primal or lambda progress')
+    previous_beta, previous_bias = param.beta.copy(), param.beta0
     param.beta=pivot.x[offset:q].copy()
     if param.intercept:param.beta0=float(pivot.x[0])
-    _refresh_classification_state(param)
+    try:
+        _refresh_classification_state(param)
+    except RuntimeError:
+        param.beta, param.beta0 = previous_beta, previous_bias
+        _refresh_classification_state(param)
+        if allow_no_progress: return False
+        raise
     if not np.any(param.F):raise RuntimeError('Classification flat-face pivot did not reach a curvature boundary')
     param.flat_events=getattr(param,'flat_events',[])+[dict(kind='linear_face_pivot',lambda_value=absolute)]
     return True
 
 
+def _scalar_classification_step(param):
+    from ._classification_path import step
+    # Most post-flat knots have a perfectly valid curved direction. Solving
+    # two LPs before every such segment dominated the long C2 path runtime.
+    previous = (param.beta.copy(), param.beta0, param.lam)
+    try:
+        return step(param)
+    except (LA.LinAlgError, RuntimeError):
+        # A singular/unbounded cone or an unresolved zero-length segment can
+        # require a same-lambda optimal-face pivot. Restore the primal state
+        # before this fallback, including failures during state rebuilding.
+        param.beta, param.beta0, param.lam = previous
+        _refresh_classification_state(param)
+        if _classification_flat_step(param, allow_no_progress=True,
+                                     allow_equal_norm=param.formulation=="C1"):
+            return
+        raise
+
+
 def up_huber_cl(param):
-    """C2 shares exact classification events with C1, at rho and one."""
-    return up_cl(param)
+    """C2 events at both rho and one, using the current quadratic set."""
+    return _up_C2(param)
 
 
 def check_C2_certificate(param, tol=1e-7):
-    """Check the actual huberized-hinge objective, without a hidden ridge."""
-    if param.formulation!="C2":raise ValueError("Expected a C2 path state")
-    return check_C1_certificate(param,tol)
+    return check_C1_certificate(param, tol)
 
 
-# Compute the derivatives of the solution Beta and the derivative of lambda*subgradient thanks to the ODE
+
 def derivatives(activity, s, Mat, C, Inv, idr, number_act):
     """
     Compute the derivatives of the solution Beta and the derivative of lambda*subgradient
@@ -1023,7 +1076,7 @@ def h_prime(rho, typ):
         # NF*beta0 = (1-rho)*Nminus + np.sum(y[F])
         return lambda r: np.minimum(np.maximum(r, rho) - 1.0, 0.0)
 
-    elif typ in ["C1", "C2"]:
+    elif typ == "C1":
         # classification
         # grad(h)(r) is :
         # (r-1) if 1>r  ; 0  if r >1
@@ -1047,7 +1100,7 @@ def find_F(y, rho, typ):
     elif typ == "C2":
         # huber classify
         return (y >= rho) & (y <= 1)
-    elif typ in ["C1", "C2"]:
+    elif typ == "C1":
         return y <= 1
     else:
         # no huber

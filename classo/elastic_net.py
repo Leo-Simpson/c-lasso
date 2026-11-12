@@ -9,7 +9,7 @@ quadratic homotopy; R4 uses its mean-shift reduction to that same solver.
 import numpy as np
 from scipy import sparse
 from scipy.optimize import minimize
-from .multiclass_path import initialize_path
+from ._homotopy_geometry import initialize_path
 
 
 def validate_ridge(ridge):
@@ -23,16 +23,14 @@ def validate_ridge(ridge):
 
 
 class problem_elastic_net:
-    """Working-set homotopy problem for R1, R2, C1, C2, MC1 and MC2.
+    """Working-set homotopy problem for R1, R2, C1 and C2.
 
-    MC2 uses the signed, classwise Huberized squared-hinge loss with the
-    same lower margin rho_classification as C2 and a JOINT row-Linf penalty.
-    It is not a Crammer-Singer loss. Free rows precede feature rows.
+    Free rows precede feature rows. Multiclass models live on multi-class.
     """
     def __init__(self, data, typ="R1", ridge=0., w=None, intercept=False,
                  rho=1.345, rho_classification=-1., covariates=None):
         self.ridge = validate_ridge(ridge)
-        if typ not in ("R1", "R2", "C1", "C2", "MC1", "MC2"):
+        if typ not in ("R1", "R2", "C1", "C2"):
             raise ValueError("This homotopy requires a piecewise quadratic loss")
         X, C, y = data
         X = sparse.csr_matrix(X, dtype=float) if sparse.issparse(X) else np.asarray(X, float)
@@ -64,14 +62,7 @@ class problem_elastic_net:
         self.weights = np.r_[np.zeros(q),w]
         self.ridge_diagonal = np.r_[np.zeros(q), np.full(p,self.ridge)]
         self.unpenalized = self.weights == 0
-        if typ.startswith("MC"):
-            if y.dtype.kind not in 'biufUS' or (y.dtype.kind == 'f' and not np.isfinite(y).all()):
-                raise ValueError("Class labels must be finite numbers or strings")
-            self.classes, encoded = np.unique(y, return_inverse=True)
-            if len(self.classes) < 2:
-                raise ValueError("Multiclass problems require at least two classes")
-            self.targets = 2*np.eye(len(self.classes))[encoded]-1
-        elif typ.startswith("C"):
+        if typ.startswith("C"):
             if not set(y).issubset({-1,1}):
                 raise ValueError("Binary classification requires labels -1 and +1")
             self.classes = np.array([-1,1])
@@ -87,10 +78,10 @@ class problem_elastic_net:
         self._margin_offset = -y[:,None] if typ.startswith('R') else 0.
         self._margin_upper = np.inf if typ == 'R1' else (rho if typ == 'R2' else 1.)
         self._hinge_lower = (-rho if typ == 'R2' else
-                             rho_classification if typ in ('C2','MC2') else None)
+                             rho_classification if typ == 'C2' else None)
         if typ == 'R2' and (not np.isfinite(rho) or rho <= 0):
             raise ValueError("rho must be finite and positive")
-        if typ in ('C2','MC2') and (not np.isfinite(rho_classification) or rho_classification >= 1):
+        if typ == 'C2' and (not np.isfinite(rho_classification) or rho_classification >= 1):
             raise ValueError("rho_classification must be finite and smaller than 1")
         self.init = np.zeros((p+q,self.n_classes))
         if q:
@@ -175,13 +166,13 @@ def ridge_path(matrix, values, typ, ridge, w=None, intercept=False, rho=1.345,
     if typ in ('R3','R4'):
         if covariates is not None: raise ValueError("Unpenalized covariates are not supported for ridge R3/R4; intercept is supported")
         return _concomitant_path(matrix,values,typ,ridge,w,intercept,e,rho,true_lam,n_active)
-    from .solve_MC1 import pathlasso_MC1
+    from ._path_interpolation import evaluate_path
     pb = problem_elastic_net(matrix,typ,ridge,w,intercept,rho,rho_classification,covariates)
     relative = np.minimum(values/pb.lambdamax,1.) if true_lam and pb.lambdamax else (np.ones_like(values) if true_lam else values)
-    coefficients = np.asarray(pathlasso_MC1(pb,relative,n_active=n_active))
+    coefficients = np.asarray(evaluate_path(pb,relative,n_active=n_active))
     real = values if true_lam else values*pb.lambdamax
     if pb.path_info['stop_reason'] == 'n_active': real = pb.path_info['evaluated_lambdas']*pb.lambdamax
-    if not typ.startswith('MC'): coefficients = coefficients[:,:,0]
+    coefficients = coefficients[:,:,0]
     return coefficients,np.asarray(real),None,pb.lambdamax
 
 
@@ -191,5 +182,5 @@ def solve_path_elastic_net(pb, lamin=.01, max_events=2000, tol=1e-8, n_active=0)
     Diagnostics are in pb.path_info. Concomitant R3/R4 deliberately cannot
     construct problem_elastic_net: use Classo/pathlasso for their concomitant fits.
     """
-    from .mc1_path_engine import solve_path_MC1
-    return solve_path_MC1(pb,lamin,max_events,tol,n_active)
+    from ._quadratic_homotopy import solve_path_quadratic
+    return solve_path_quadratic(pb,lamin,max_events,tol,n_active)

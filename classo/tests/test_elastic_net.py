@@ -3,7 +3,7 @@ import numpy as np
 import pytest
 from classo import Classo, pathlasso
 from classo.elastic_net import problem_elastic_net
-from classo.mc1_path_engine import solve_path_MC1
+from classo._quadratic_homotopy import solve_path_quadratic
 
 
 def data(seed=37):
@@ -54,7 +54,7 @@ def reference(X,C,y,typ,lam,ridge,w,intercept=True,rho=1.345,lower=-1.,e=None):
     return out if multi else out[:,0]
 
 
-@pytest.mark.parametrize('typ',['R1','R2','C1','C2','MC1','MC2','R3','R4'])
+@pytest.mark.parametrize('typ',['R1','R2','C1','C2','R3','R4'])
 def test_independent_constrained_optimum(typ):
     pytest.importorskip('cvxpy')
     X,C,y=data(); w=np.array([.4,1.,2.,.7,1.3])
@@ -68,13 +68,13 @@ def test_independent_constrained_optimum(typ):
     if typ in ('R3','R4'): assert scale[0]>=0
 
 
-@pytest.mark.parametrize('typ',['R1','R2','C1','C2','MC1','MC2'])
+@pytest.mark.parametrize('typ',['R1','R2','C1','C2'])
 def test_segment_interiors_are_exact(typ):
     X,C,y=data(8)
     if typ.startswith('C'): y=np.where(y>0,1,-1)
     if typ.startswith('MC'): y=np.digitize(y,[-1,1])
     pb=problem_elastic_net((X,C,y),typ,ridge=3.,intercept=True)
-    B,L=solve_path_MC1(pb,.12)
+    B,L=solve_path_quadratic(pb,.12)
     assert pb.path_info['completed']
     assert max(pb.path_info['residuals'],default=0)<1e-5
     # Independently solve interiors, not merely the knots used by the engine.
@@ -143,12 +143,6 @@ def test_zero_scale_perspective():
         assert s<1e-6
 
 
-@pytest.mark.parametrize('typ',['C1','C2'])
-def test_binary_block_equivalence_with_ridge(typ):
-    X,C,y=data();y=np.where(y>0,1,-1)
-    maximum,b=Classo((X,C,y),.23,typ=typ,ridge=1.7,intercept=True,get_lambdamax=True)
-    B=Classo((X,C,y),2*.23*maximum,typ='M'+typ,ridge=1.7,intercept=True,true_lam=True)
-    np.testing.assert_allclose(B,np.c_[-b,b],atol=2e-7)
 
 
 @pytest.mark.parametrize('typ',['R3','R4'])
@@ -184,15 +178,6 @@ def test_r4_closed_zero_scale_baseline_and_positive_scale_fit():
     assert zero_scale==0
 
 
-def test_metadata_and_redundant_constraints():
-    from classo.solve_MC1 import problem_MC1
-    X,C,y=data(17); C=np.vstack([C,2*C,np.zeros_like(C)])
-    y=np.digitize(y,[-1,1]);Z=np.linspace(-1,1,len(X))[:,None]
-    B=Classo((X,C,y),.4,typ='MC1',ridge=2.,covariates=Z,intercept=True)
-    pb=problem_MC1((X,C,y),ridge=2.,covariates=Z,intercept=True)
-    from classo.solve_MC1 import Classo_MC1
-    np.testing.assert_allclose(B,Classo_MC1(pb,.4),atol=2e-7)
-    assert np.max(abs(pb.loss_gradient(B)[1][:2]))<1e-6
 
 
 @pytest.mark.parametrize('method',['first','max','lam'])

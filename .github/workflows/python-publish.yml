@@ -1,31 +1,73 @@
-# This workflows will upload a Python Package using Twine when a release is created
-# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
-
-name: Publish
+name: Release
 
 on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
   release:
-    types: [created]
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
-  deploy:
-
+  build:
     runs-on: ubuntu-latest
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install setuptools wheel twine
-    - name: Build and publish
-      env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      run: |
-        python setup.py sdist bdist_wheel
-        twine upload dist/*
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Install build and test tools
+        run: python -m pip install --upgrade build twine pytest '.[tests]'
+      - name: Test source
+        env:
+          MPLBACKEND: Agg
+        run: python -m pytest classo/tests -q
+      - name: Build wheel and source distribution
+        run: python -m build
+      - name: Check distribution metadata
+        run: python -m twine check --strict dist/*
+      - name: Test wheel installation outside the checkout
+        run: |
+          python -m venv "$RUNNER_TEMP/wheel-check"
+          "$RUNNER_TEMP/wheel-check/bin/python" -m pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/wheel-check/bin/python" - <<'PYCODE'
+          import importlib.metadata
+          import os
+          import classo
+          from classo import classo_problem
+
+          version = importlib.metadata.version("c-lasso")
+          assert classo.__version__ == version
+          if os.environ["GITHUB_EVENT_NAME"] == "release":
+              assert version == os.environ["GITHUB_REF_NAME"], (version, os.environ["GITHUB_REF_NAME"])
+          print("Installed c-lasso", version, "from", classo.__file__)
+          PYCODE
+      - uses: actions/upload-artifact@v7
+        with:
+          name: distributions
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    if: github.event_name == 'release' && github.repository == 'bio-datascience/c-lasso'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/c-lasso/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: distributions
+          path: dist/
+      - name: Publish to PyPI using Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@release/v1

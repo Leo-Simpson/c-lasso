@@ -13,7 +13,7 @@ Welcome to classo's documentation!
 
 c-lasso is a Python package that enables sparse and robust linear regression and classification with linear equality constraints on the model parameters. 
 
-The package is available on `https://github.com/Leo-Simpson/c-lasso`.
+The package is available on `https://github.com/bio-datascience/c-lasso`.
 
 
 .. toctree::

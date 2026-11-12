@@ -28,7 +28,7 @@ This package is intended to fill the gap between popular python tools such as [s
 Below we show several use cases of the package, including an application of sparse *log-contrast*
 regression tasks for *compositional* microbiome data.
 
-The code builds on results from several papers which can be found in the [References](#references). We also refer to the accompanying [JOSS paper submission](https://github.com/Leo-Simpson/c-lasso/blob/master/paper/paper.md), also available on [arXiv](https://arxiv.org/pdf/2011.00898.pdf).
+The code builds on results from several papers which can be found in the [References](#references). We also refer to the accompanying [JOSS paper submission](https://github.com/bio-datascience/c-lasso/blob/master/paper/paper.md), also available on [arXiv](https://arxiv.org/pdf/2011.00898.pdf).
 
 ## Table of Contents
 
@@ -203,12 +203,12 @@ Here, we only used stability selection as *default* model selection strategy.
 The command also allows you to inspect the computed stability profile for all variables 
 at the theoretical &lambda; 
 
-![1.StabSel](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/basic/StabSel.png)
+![1.StabSel](https://github.com/bio-datascience/c-lasso/blob/master/figures/basic/StabSel.png)
 
 
 The refitted &beta; values on the selected support are also displayed in the next plot
 
-![beta](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/basic/beta.png)
+![beta](https://github.com/bio-datascience/c-lasso/blob/master/figures/basic/beta.png)
 
 
 #### Advanced example             
@@ -296,17 +296,17 @@ Results :
 ```
 
 
-![2.StabSel](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/StabSel.png)
+![2.StabSel](https://github.com/bio-datascience/c-lasso/blob/master/figures/advanced/StabSel.png)
 
-![2.StabSel-beta](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/StabSel-beta.png)
+![2.StabSel-beta](https://github.com/bio-datascience/c-lasso/blob/master/figures/advanced/StabSel-beta.png)
 
-![2.CV-beta](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/CVbeta.png)
+![2.CV-beta](https://github.com/bio-datascience/c-lasso/blob/master/figures/advanced/CVbeta.png)
 
-![2.CV-graph](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/CV.png)
+![2.CV-graph](https://github.com/bio-datascience/c-lasso/blob/master/figures/advanced/CV.png)
 
-![2.LAM-beta](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/beta.png)
+![2.LAM-beta](https://github.com/bio-datascience/c-lasso/blob/master/figures/advanced/beta.png)
 
-![2.Path](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/advanced/Beta-path.png)
+![2.Path](https://github.com/bio-datascience/c-lasso/blob/master/figures/advanced/Beta-path.png)
 
 
 ## Log-contrast regression for microbiome data
@@ -368,13 +368,13 @@ print(problem.solution)
 
 ```
 
-![3.Stability profile R3](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R3-StabSel.png)
+![3.Stability profile R3](https://github.com/bio-datascience/c-lasso/blob/master/figures/exampleFilteredCOMBO/R3-StabSel.png)
 
-![3.Beta solution R3](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R3-StabSel-beta.png)
+![3.Beta solution R3](https://github.com/bio-datascience/c-lasso/blob/master/figures/exampleFilteredCOMBO/R3-StabSel-beta.png)
 
-![3.Stability profile R4](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R4-StabSel.png)
+![3.Stability profile R4](https://github.com/bio-datascience/c-lasso/blob/master/figures/exampleFilteredCOMBO/R4-StabSel.png)
 
-![3.Beta solution R4](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/exampleFilteredCOMBO/R4-StabSel-beta.png)
+![3.Beta solution R4](https://github.com/bio-datascience/c-lasso/blob/master/figures/exampleFilteredCOMBO/R4-StabSel-beta.png)
 
 
 <!---
@@ -441,15 +441,15 @@ LAMBDA FIXED :
    Running time :  0.287s
 ```
 
-![Ex4.1](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-Beta-path.png)
+![Ex4.1](https://github.com/bio-datascience/c-lasso/blob/master/figures/examplePH/R3-Beta-path.png)
 
-![Ex4.2](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-Sigma-path.png)
+![Ex4.2](https://github.com/bio-datascience/c-lasso/blob/master/figures/examplePH/R3-Sigma-path.png)
 
-![Ex4.3](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-StabSel.png)
+![Ex4.3](https://github.com/bio-datascience/c-lasso/blob/master/figures/examplePH/R3-StabSel.png)
 
-![Ex4.4](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-StabSel-beta.png)
+![Ex4.4](https://github.com/bio-datascience/c-lasso/blob/master/figures/examplePH/R3-StabSel-beta.png)
 
-![Ex4.5](https://github.com/Leo-Simpson/c-lasso/blob/master/figures/examplePH/R3-beta.png)
+![Ex4.5](https://github.com/bio-datascience/c-lasso/blob/master/figures/examplePH/R3-beta.png)
 
 
 ## Optimization schemes
@@ -511,12 +511,9 @@ with the mean shift (see [6]) and thus solved in (n + d) dimensions.
 
 
 
-## Fixed-ridge elastic net (development)
+## Development
 
-`Classo(..., ridge=2.0)` and `pathlasso(..., ridge=2.0)` add a fixed quadratic
-coefficient penalty to R1–R4, C1–C2 and joint MC1–MC2. R1/R2/C1/C2/MC1/MC2
-retain event-driven piecewise-affine paths. In R3/R4 ridge shares the scale
-perspective: R3 reparameterizes a quadratic path, and R4 uses its mean-shift
-reduction to the same solver. No conic dependency is required. Zero ridge
-preserves existing behavior.
-See [the interface, solver distinctions and examples](docs/elastic-net.md).
+See [DEVELOPMENT.md](DEVELOPMENT.md) for the separate multiclass, ridge and
+quantile branches.
+
+Scalar fixed ridge: see [the ridge guide](docs/elastic-net.md).

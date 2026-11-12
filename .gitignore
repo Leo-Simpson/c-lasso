@@ -1,3 +1,8 @@
+# Ignore heavy intermediate datafiles
+*.npy
+*.npz
+
+
 
 # Created by https://www.gitignore.io/api/osx,code,python,intellij,jupyternotebooks
 # Edit at https://www.gitignore.io/?templates=osx,code,python,intellij,jupyternotebooks
