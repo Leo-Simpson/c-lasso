@@ -1,5 +1,13 @@
 # Q1 sparse-path benchmark
 
+**Thread-control clarification:** these historical measurements requested one
+thread through OPENBLAS_NUM_THREADS, but did not verify the OpenMP runtime.
+Later inspection found that this OpenBLAS build uses OpenMP and can ignore
+that variable. The [four-method speed report](METHOD-SPEED.md) explicitly
+enforces and verifies one thread. The sparse benchmark script has also been
+corrected for future runs; the historical measurements below are preserved.
+
+
 Host: macOS-15.7.9-x86_64-i386-64bit, x86_64. Python/NumPy/SciPy and BLAS thread configuration are recorded in sparse-benchmark.json.
 
 All 18 cases completed and passed the paired objective check. Timings include initialization and KKT certification. Compare the same final absolute lambda: the event solver computes the prefix from lambda_max, while DR solves the final point. DR reuses the R1 iteration with the Q1 mean-shift adapter and matrix-free resolvents. DR KKT target is 1e-8; event endpoints reach roughly machine precision.

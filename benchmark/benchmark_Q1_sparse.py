@@ -1,11 +1,15 @@
 """Large-lambda / bounded-support Q1 timing; end-to-end and paired targets."""
 import os
-os.environ.setdefault('OPENBLAS_NUM_THREADS','1')
+os.environ['OPENBLAS_NUM_THREADS']='1'
+os.environ['OMP_NUM_THREADS']='1'
 import pathlib,sys,json,time,platform
 ROOT=pathlib.Path(__file__).resolve().parents[1];sys.path.insert(0,str(ROOT))
 import numpy as np,scipy
 from classo import Q1_path
 from classo.solve_Q1 import loss
+from threadpoolctl import threadpool_info, threadpool_limits
+_thread_limits=threadpool_limits(limits=1)
+assert all(pool['num_threads']==1 for pool in threadpool_info())
 rows=[]
 for n,p in [(80,500),(100,2000),(100,5000)]:
  rng=np.random.default_rng(804+p);X=rng.normal(size=(n,p));y=1+X[:,0]-X[:,1]+.4*rng.standard_t(4,size=n)
@@ -39,4 +43,4 @@ for n,p in [(80,500),(100,2000),(100,5000)]:
              objective_gap=gap,path_kkt=float(max(fit['kkt'])),dr_kkt=float(max(dr['kkt'])),dr_iterations=dr['iterations'])
    except Exception as e:row=dict(n=n,p=p,tau=tau,regime=regime,error=str(e))
    rows.append(row);print(row,flush=True)
-   (ROOT/'benchmark/q1-results/sparse-benchmark.json').write_text(json.dumps(dict(environment=dict(python=platform.python_version(),numpy=np.__version__,scipy=scipy.__version__,blas_threads=os.environ['OPENBLAS_NUM_THREADS']),rows=rows),indent=2))
+   (ROOT/'benchmark/q1-results/sparse-benchmark.json').write_text(json.dumps(dict(environment=dict(python=platform.python_version(),numpy=np.__version__,scipy=scipy.__version__,blas_threads=1,threadpools=[{k:v for k,v in pool.items() if k in ('user_api','internal_api','num_threads','version','threading_layer','architecture')} for pool in threadpool_info()]),rows=rows),indent=2))

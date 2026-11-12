@@ -235,3 +235,18 @@ nonconvergence, and rejection of support budgets for splitting schemes.
 PDS completion full regression suite: **352 passed in 408.82 seconds**,
 including 42 Q1 tests (16 added for the PDS schemes). The run overlapped
 independent validation, so its elapsed time is not a solver benchmark.
+
+## Controlled four-method speed comparison
+
+The new `benchmark/benchmark_Q1_methods.py` times all four production backends
+on matched single fits and complete 14-point paths. Eleven cases cover
+40x9, 80x500, and 100x2000 designs. It verifies one actual OpenMP/OpenBLAS
+thread through threadpoolctl; the old OPENBLAS_NUM_THREADS-only request did
+not reliably control this OpenMP build. Earlier timing records are historical;
+use [the controlled comparison](../../benchmark/q1-results/METHOD-SPEED.md).
+
+In this experiment P-PDS takes 3.67–11.95x the DR runtime; PF-PDS takes
+5.41–15.89x. P-PDS is consistently faster than PF-PDS. Event paths lead at
+large lambda; DR can match the event solver at some eight-slope endpoints.
+All timed fits pass the same KKT threshold and paired objective check.
+These are case-specific observations, not a universal performance guarantee.
