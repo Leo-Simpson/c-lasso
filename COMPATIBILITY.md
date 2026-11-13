@@ -33,7 +33,9 @@ remaining results:
 | Linux / Python 3.9–3.15, one job per minor | Latest compatible stable releases | Compatibility with current dependency resolution |
 | macOS and Windows / Python 3.15 | Latest compatible stable releases | Platform and numerical-library coverage |
 
-The minimum/reproduction job pins NumPy 1.24.4 and SciPy 1.10.1, with compatible
+Python 3.8–3.10 jobs use Ubuntu 22.04, which supplies these legacy interpreter
+builds; newer Python jobs use the current Ubuntu runner. The minimum/reproduction
+job pins NumPy 1.24.4 and SciPy 1.10.1, with compatible
 plotting/dataframe/test packages. It serves two explicit purposes: it tests the
 supported floor and preserves the originally reported numerical combination.
 This is not an assertion that every transitive dependency matches the students'
