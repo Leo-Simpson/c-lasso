@@ -262,7 +262,7 @@ def segment(X,C,y,beta,lam,D,active,quadratic,cap,free=0,lower=None,offset=0.):
 
 def step(param):
     """Take one scalar classification cone pivot, then restore the legacy path state."""
-    from .path_alg import check_C1_certificate,_C1_inverse,next_idr1
+    from .path_alg import check_C1_certificate,_C1_system,_classification_gram,next_idr1
     A,C,y = param.A,param.C,param.y
     lower = param.rho if param.formulation == "C2" else None
     free = int(param.intercept)
@@ -285,10 +285,7 @@ def step(param):
     param.r = y*(A@param.beta+param.beta0)
     param.F = param.r<=1.+1e-10
     if lower is not None: param.F &= param.r>=lower-1e-10
-    P = A[param.F]
-    if free and len(P): P=P-P.mean(axis=0)
-    H = 2*P.T@P
-    param.M = np.block([[H,C.T],[C,np.zeros((len(C),len(C)))]])
+    _classification_gram(param, param.F, rebuild=True)
     cert = check_C1_certificate(param)
     adjusted = _gradient(X,y,beta,lower)[free:]+C.T@cert['dual']
     absolute = param.lam*param.lambdamax
@@ -302,4 +299,4 @@ def step(param):
         if type(row) is not int and not isinstance(row,np.integer): break
         param.idr[int(row)] = True
     selection = param.activity+param.idr
-    param.Xt = _C1_inverse(param.M[selection,:][:,selection])
+    param.Xt = _C1_system(param.M[selection,:][:,selection])

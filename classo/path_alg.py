@@ -31,7 +31,7 @@ class parameters_for_update:
     Attributes :
         number_act  (int) : number of active parameter
         idr         : saves the independant rows of the matrix C resctricted to the actives parameters
-        Xt          :  inverse of M
+        Xt          :  active factorization or rank-aware inverse of M
         activity    :  list of boolean, activity[i] is True when variable i is active
         beta        : current solution beta
         s           : current subgradient
@@ -132,9 +132,15 @@ class parameters_for_update:
                 axis=0,
             )
 
+        if typ in ["C1", "C2"]:
+            self._gram_mask = self.F.copy()
+            self._gram_mean = (self.A[self.F].mean(axis=0) if np.any(self.F)
+                               else np.zeros(d))
+            self._gram_updates = 0
+
         N = self.M[self.activity + self.idr, :][:, self.activity + self.idr]
         if typ in ["R1", "R2", "C1", "C2"]:
-            self.Xt = _C1_inverse(N)
+            self.Xt = (_C1_system(N) if typ in ["C1", "C2"] else _C1_inverse(N))
         else:
             try:
                 self.Xt = LA.inv(N)
@@ -241,6 +247,53 @@ def solve_path(matrices, lamin, n_active, rho, typ, intercept=False):
     )
 
 
+def _C1_equilibrate(matrix):
+    """Symmetrically scale the active KKT matrix without changing its rank."""
+    scaling = np.ones(len(matrix))
+    balanced = matrix.copy()
+    for _ in range(5):
+        norm = np.max(np.abs(balanced), axis=1, initial=0.)
+        factor = np.ones_like(norm)
+        factor[norm > 0] = 1./np.sqrt(norm[norm > 0])
+        scaling *= factor
+        balanced = factor[:, None]*balanced*factor[None, :]
+    return balanced, scaling
+
+
+class _C1_factor:
+    """A well-conditioned active system, factored once and solved per RHS."""
+
+    def __init__(self, matrix, balanced, scaling, lu, pivots):
+        self.matrix, self.balanced, self.scaling = matrix, balanced, scaling
+        self.lu, self.pivots = lu, pivots
+
+    def solve(self, rhs):
+        from scipy.linalg import lu_solve
+        scaled_rhs = self.scaling*rhs
+        solution = lu_solve((self.lu, self.pivots), scaled_rhs, check_finite=False)
+        residual = self.balanced.dot(solution)-scaled_rhs
+        scale = max(1., np.linalg.norm(self.balanced, np.inf)*np.linalg.norm(solution, np.inf),
+                    np.linalg.norm(scaled_rhs, np.inf))
+        if not np.isfinite(solution).all() or np.max(abs(residual), initial=0.) > 64*np.finfo(float).eps*scale:
+            return _C1_inverse(self.matrix).dot(rhs)
+        return self.scaling*solution
+
+
+def _C1_system(matrix):
+    """Use a direct solve on safe full-rank faces; retain the tied-face policy."""
+    from scipy.linalg.lapack import get_lapack_funcs
+    if len(matrix) < 8:
+        return _C1_inverse(matrix)
+    balanced, scaling = _C1_equilibrate(matrix)
+    getrf, gecon = get_lapack_funcs(('getrf', 'gecon'), (balanced,))
+    lu, pivots, info = getrf(balanced)
+    if info == 0:
+        rcond, info = gecon(lu, np.linalg.norm(balanced, 1))
+        if info == 0 and rcond > 1e-9:
+            return _C1_factor(matrix, balanced, scaling, lu, pivots)
+    return _C1_inverse(matrix)
+
+
 def _C1_inverse(matrix):
     """Symmetric inverse, with a minimum-norm policy for tied directions.
 
@@ -250,20 +303,58 @@ def _C1_inverse(matrix):
     """
     # Symmetric equilibration prevents large feature scales from causing
     # genuine constraint directions to be mistaken for numerical nullspace.
-    scaling = np.ones(len(matrix))
-    balanced = matrix.copy()
-    for _ in range(5):
-        norm = np.max(np.abs(balanced), axis=1, initial=0.)
-        factor = np.ones_like(norm)
-        factor[norm > 0] = 1./np.sqrt(norm[norm > 0])
-        scaling *= factor
-        balanced = factor[:, None]*balanced*factor[None, :]
+    balanced, scaling = _C1_equilibrate(matrix)
     eigenvalues, vectors = LA.eigh(balanced)
     cutoff = 1e-12*np.max(np.abs(eigenvalues), initial=0.)
     nonzero = np.abs(eigenvalues) > cutoff
     inverse = np.zeros_like(eigenvalues)
     inverse[nonzero] = 1./eigenvalues[nonzero]
     return scaling[:, None]*(vectors*inverse).dot(vectors.T)*scaling[None, :]
+
+
+def _classification_gram(param, mask, rebuild=False):
+    """Maintain twice the centered sample scatter when hinge rows switch.
+
+    Welford additions/removals avoid subtracting two large raw Gram matrices.
+    Rebuild after 64 row changes, for a large batch, and at certified fallback
+    pivots; the rank-aware direction and original-loss checks remain in force.
+    """
+    A = param.A
+    previous = getattr(param, '_gram_mask', None)
+    changed = np.flatnonzero(previous != mask) if previous is not None else np.arange(len(A))
+    updates = getattr(param, '_gram_updates', 0)
+    if not rebuild and previous is not None and not len(changed):
+        return
+    if (rebuild or previous is None or A.shape[1] < 32 or updates+len(changed) >= 64
+            or len(changed) > max(8, min(np.sum(previous), np.sum(mask))//4)):
+        P = A[mask]
+        mean = np.mean(P, axis=0) if len(P) else np.zeros(A.shape[1])
+        if param.intercept:
+            P = P-mean
+        param.M[:A.shape[1], :A.shape[1]] = 2*P.T.dot(P)
+        param._gram_mean, param._gram_updates = mean, 0
+    else:
+        H = param.M[:A.shape[1], :A.shape[1]]
+        count = int(np.sum(previous))
+        mean = param._gram_mean.copy()
+        for row in changed:
+            entering = bool(mask[row])
+            if param.intercept:
+                delta = A[row]-mean
+                if entering:
+                    H += (2.*count/(count+1))*np.outer(delta, delta)
+                    mean += delta/(count+1)
+                elif count > 1:
+                    H -= (2.*count/(count-1))*np.outer(delta, delta)
+                    mean -= delta/(count-1)
+                else:
+                    H.fill(0.)
+                    mean.fill(0.)
+            else:
+                H += (2. if entering else -2.)*np.outer(A[row], A[row])
+            count += 1 if entering else -1
+        param._gram_mean, param._gram_updates = mean, updates+len(changed)
+    param._gram_mask = mask.copy()
 
 
 def check_C1_certificate(param, tol=1e-7):
@@ -521,6 +612,30 @@ def up_huber(param):
     return step(param)
 
 
+def _classification_coefficient_events(beta, direction, signs, dual_rate,
+                                       active, lam, maximum):
+    """Vectorized analytic coefficient exits and inactive dual entries."""
+    active = np.asarray(active, dtype=bool)
+    events = np.full(len(beta), lam)
+    exits = active & (np.abs(beta)>1e-12) & (beta*direction>0.)
+    events[exits] = beta[exits]/(direction[exits]*maximum)
+    entries = ~active & (np.abs(dual_rate-signs)>=1e-10) & (np.abs(signs)<=1.)
+    plus = entries & (dual_rate>signs)
+    minus = entries & ~plus
+    events[plus] = lam*(1+signs[plus])/(1+dual_rate[plus])
+    events[minus] = lam*(1-signs[minus])/(1-dual_rate[minus])
+    return events
+
+
+def _classification_sample_event(margins, rates, boundaries, cap):
+    """Find the first genuine sample crossing, retaining nearby distinct knots."""
+    for boundary in boundaries:
+        moving = (rates != 0.) & (np.abs(margins-boundary)>=1e-10)
+        roots = (boundary-margins[moving])/rates[moving]
+        cap = min(cap, np.min(roots[roots>0.], initial=cap))
+    return cap
+
+
 def up_cl(param):
     """
     Function to call to go from a breaking point to the next one
@@ -544,7 +659,6 @@ def up_cl(param):
     r = param.r
 
     d = len(activity)
-    L = [lam] * d
     Mat = M[:d, :d]
     beta_dot, lam_s_dot = derivatives(activity, s, Mat, M[d:, :d], Xt, idr, number_act)
     # At a tied margin event, choose the outgoing quadratic side rather
@@ -552,7 +666,7 @@ def up_cl(param):
     for _ in range(20):
         rate = -y*A.dot(beta_dot)
         if param.intercept:
-            rate += y*np.vdot(np.mean(A[F],axis=0),beta_dot)
+            rate += y*np.vdot(param._gram_mean,beta_dot)
         chosen = F.copy()
         boundary = np.abs(r-1.) <= 1e-10
         chosen[boundary & (rate > 1e-12)] = False
@@ -563,10 +677,9 @@ def up_cl(param):
         if not np.any(F):
             from ._classification_path import step
             return step(param)
-        P = A[F]-np.mean(A[F],axis=0) if param.intercept else A[F]
-        M[:d,:d] = 2*P.T.dot(P)
+        _classification_gram(param, F)
         reduced = M[activity+idr,:][:,activity+idr]
-        Xt = _C1_inverse(reduced)
+        Xt = _C1_system(reduced)
         beta_dot,lam_s_dot = derivatives(activity,s,M[:d,:d],M[d:,:d],Xt,idr,number_act)
     else:
         from ._classification_path import step
@@ -577,41 +690,16 @@ def up_cl(param):
     if np.any(zero_active & (beta_dot*s > 1e-10*max(1.,np.max(abs(beta_dot))))):
         from ._classification_path import step
         return step(param)
-    for i in range(d):
-        bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
-        if activity[i]:
-            # A small coefficient can still cross zero before any other
-            # event. A product threshold here is not invariant to X scaling.
-            if abs(bi) > 1e-12 and bi * di > 0:
-                L[i] = bi / (di * lambdamax)
-        else:
-            if abs(e - s0) < 1e-10 or abs(s0) > 1:
-                continue
-            if e > s0:
-                dl = (1 + s0) / (1 + e)
-            else:
-                dl = (1 - s0) / (1 - e)
-            L[i] = dl * lam
+    L = _classification_coefficient_events(beta, beta_dot, s, lam_s_dot,
+                                            activity, lam, lambdamax)
 
     dlamb = min(min(L), lam, lam - lamin)
     yADl = -y * A.dot(beta_dot) * lambdamax
     if param.intercept:
         # The intercept derivative uses the CURRENT quadratic sample set.
         # Using the original full-sample mean makes tracked margins drift.
-        yADl += y * np.vdot(np.mean(A[F], axis=0), beta_dot) * lambdamax
-    for j in range(len(r)):
-        #     find if there is a  0< dl < dlamb such that F[j] and r[j]+yADl[j]*dl > 1
-        # or  find if there is a  0< dl < dlamb such that not F[j] r[j]+yADl[j]*dl < 1
-        # Skip the boundary itself, not distinct nearby margin crossings.
-        # A 1e-4 band can leave a sample on the wrong loss piece.
-        if abs(r[j] - 1) < 1e-10:
-            continue
-        if yADl[j] != 0.0:
-            dl = (1 - r[j]) / yADl[j]
-        else:
-            dl = -1
-        if dl < dlamb and dl > 0:
-            dlamb = dl
+        yADl += y * np.vdot(param._gram_mean, beta_dot) * lambdamax
+    dlamb = _classification_sample_event(r, yADl, (1.,), dlamb)
 
     # Several samples can reach the same boundary at exactly one knot.
     # Switch all of them, including ties with a coefficient event.
@@ -626,42 +714,33 @@ def up_cl(param):
     r = r + yADl * dlamb
     lam = lam - dlamb
     if param.intercept:
-        AbarF = np.mean(A[F], axis=0)
+        AbarF = param._gram_mean
         beta0_dot = -np.vdot(AbarF, beta_dot)
         beta0 = param.beta0 - lambdamax * beta0_dot * dlamb
 
     if max_up:
         F[sample_switches] = ~F[sample_switches]
-        # sufficient :
-        # F = F | (r < 1. - 1e-10)
-        # necessary :
-        # F = F & (r <= 1. + 1e-10)
-        if param.intercept:
-            P = A[F] - np.mean(A[F], axis=0)
-            M[:d, :][:, :d] = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
+        _classification_gram(param, F)
+    # Update the active features and independent constraint rows.
+    for i in np.flatnonzero(L < dlamb + 1e-10):
+        if activity[i]:
+            activity[i], number_act = False, number_act - 1
+            if len(M) > d:
+                to_ad = next_idr2(idr, M[d:, :d][:, activity])
+                if type(to_ad) == int:
+                    idr[to_ad] = False
         else:
-            M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + eps_L2 * np.eye(d)
-    # Update matrix inverse, list of rows in C and activity
-    for i in range(d):
-        if L[i] < dlamb + 1e-10:
-            if activity[i]:
-                activity[i], number_act = False, number_act - 1
-                if len(M) > d:
-                    to_ad = next_idr2(idr, M[d:, :d][:, activity])
-                    if type(to_ad) == int:
-                        idr[to_ad] = False
-            else:
-                # x = M[:,activity+idr][i]
-                # al = M[i,i]-np.vdot(x,Xt.dot(x))
-                # if (abs(al)<1e-10): break
-                activity[i], number_act = True, number_act + 1
-                if len(M) > d:
-                    to_ad = next_idr1(idr, M[d:, :d][:, activity])
-                    if type(to_ad) == int:
-                        idr[to_ad] = True
+            # x = M[:,activity+idr][i]
+            # al = M[i,i]-np.vdot(x,Xt.dot(x))
+            # if (abs(al)<1e-10): break
+            activity[i], number_act = True, number_act + 1
+            if len(M) > d:
+                to_ad = next_idr1(idr, M[d:, :d][:, activity])
+                if type(to_ad) == int:
+                    idr[to_ad] = True
     N = M[activity + idr, :][:, activity + idr]
 
-    Xt = _C1_inverse(N)
+    Xt = _C1_system(N)
 
     param.number_act = number_act
     param.idr = idr
@@ -707,7 +786,6 @@ def _up_C2(param):
     r = param.r
 
     d = len(activity)
-    L = [lam] * d
     Mat = M[:d, :d]
     beta_dot, lam_s_dot = derivatives(activity, s, Mat, M[d:, :d], Xt, idr, number_act)
     if param.formulation in ("C1","C2"):
@@ -715,7 +793,7 @@ def _up_C2(param):
         # solving event times, including starts exactly at a hinge boundary.
         for _ in range(20):
             rate=-y*A.dot(beta_dot)
-            if param.intercept:rate+=y*np.vdot(np.mean(A[F],axis=0),beta_dot)
+            if param.intercept:rate+=y*np.vdot(param._gram_mean,beta_dot)
             chosen=F.copy()
             at_lower=(np.abs(r-param.rho)<=1e-10 if param.formulation=="C2" else np.zeros(len(r),bool))
             at_upper=np.abs(r-1.)<=1e-10
@@ -728,10 +806,9 @@ def _up_C2(param):
             if not np.any(F):
                 param.F=F
                 return _classification_flat_step(param)
-            P=A[F]-np.mean(A[F],axis=0) if param.intercept else A[F]
-            M[:d,:d]=2*P.T.dot(P)
+            _classification_gram(param, F)
             N=M[activity+idr,:][:,activity+idr]
-            Xt=_C1_inverse(N)
+            Xt=_C1_system(N)
             beta_dot,lam_s_dot=derivatives(activity,s,M[:d,:d],M[d:,:d],Xt,idr,number_act)
         else:
             # Coupled sample boundaries may require a joint cone pivot rather
@@ -744,34 +821,16 @@ def _up_C2(param):
     zero_active=np.asarray(activity)&(np.abs(beta)<=1e-9)
     if np.any(zero_active & (beta_dot*s>1e-10*max(1.,np.max(abs(beta_dot))))):
         return _scalar_classification_step(param)
-    for i in range(d):
-        bi, di, e, s0 = beta[i], beta_dot[i], lam_s_dot[i], s[i]
-        if activity[i]:
-            # A small coefficient can still cross zero before any other
-            # event. A product threshold here is not invariant to X scaling.
-            if abs(bi) > 1e-12 and bi * di > 0:
-                L[i] = bi / (di * lambdamax)
-        else:
-            if abs(e - s0) < 1e-10 or abs(s0) > 1:
-                continue
-            if e > s0:
-                dl = (1 + s0) / (1 + e)
-            else:
-                dl = (1 - s0) / (1 - e)
-            L[i] = dl * lam
+    L = _classification_coefficient_events(beta, beta_dot, s, lam_s_dot,
+                                            activity, lam, lambdamax)
 
     dlamb = min(min(L), lam, lam - lamin)
     yADl = -y * A.dot(beta_dot) * lambdamax
     if param.intercept:
         # The intercept derivative uses the CURRENT quadratic sample set.
         # Using the original full-sample mean makes tracked margins drift.
-        yADl += y * np.vdot(np.mean(A[F], axis=0), beta_dot) * lambdamax
-    for j in range(len(r)):
-        for boundary in boundaries:
-            if abs(r[j]-boundary)<1e-10 or yADl[j]==0.:
-                continue
-            crossing=(boundary-r[j])/yADl[j]
-            if 0<crossing<dlamb:dlamb=crossing
+        yADl += y * np.vdot(param._gram_mean, beta_dot) * lambdamax
+    dlamb = _classification_sample_event(r, yADl, boundaries, dlamb)
     # Toggle all sample events, including ties with coefficient events.
     sample_switches=np.flatnonzero(np.any([
         (np.abs(r+yADl*dlamb-boundary)<=1e-10)
@@ -784,42 +843,33 @@ def _up_C2(param):
     r = r + yADl * dlamb
     lam = lam - dlamb
     if param.intercept:
-        AbarF = np.mean(A[F], axis=0)
+        AbarF = param._gram_mean
         beta0_dot = -np.vdot(AbarF, beta_dot)
         beta0 = param.beta0 - lambdamax * beta0_dot * dlamb
 
     if max_up:
         F[sample_switches] = ~F[sample_switches]
-        # sufficient :
-        # F = F | (r < 1. - 1e-10)
-        # necessary :
-        # F = F & (r <= 1. + 1e-10)
-        if param.intercept and np.any(F):
-            P = A[F] - np.mean(A[F], axis=0)
-            M[:d, :][:, :d] = 2 * P.T.dot(P) + eps_L2 * np.eye(d)
+        _classification_gram(param, F)
+    # Update the active features and independent constraint rows.
+    for i in np.flatnonzero(L < dlamb + 1e-10):
+        if activity[i]:
+            activity[i], number_act = False, number_act - 1
+            if len(M) > d:
+                to_ad = next_idr2(idr, M[d:, :d][:, activity])
+                if type(to_ad) == int:
+                    idr[to_ad] = False
         else:
-            M[:d, :][:, :d] = 2 * A[F].T.dot(A[F]) + eps_L2 * np.eye(d)
-    # Update matrix inverse, list of rows in C and activity
-    for i in range(d):
-        if L[i] < dlamb + 1e-10:
-            if activity[i]:
-                activity[i], number_act = False, number_act - 1
-                if len(M) > d:
-                    to_ad = next_idr2(idr, M[d:, :d][:, activity])
-                    if type(to_ad) == int:
-                        idr[to_ad] = False
-            else:
-                # x = M[:,activity+idr][i]
-                # al = M[i,i]-np.vdot(x,Xt.dot(x))
-                # if (abs(al)<1e-10): break
-                activity[i], number_act = True, number_act + 1
-                if len(M) > d:
-                    to_ad = next_idr1(idr, M[d:, :d][:, activity])
-                    if type(to_ad) == int:
-                        idr[to_ad] = True
+            # x = M[:,activity+idr][i]
+            # al = M[i,i]-np.vdot(x,Xt.dot(x))
+            # if (abs(al)<1e-10): break
+            activity[i], number_act = True, number_act + 1
+            if len(M) > d:
+                to_ad = next_idr1(idr, M[d:, :d][:, activity])
+                if type(to_ad) == int:
+                    idr[to_ad] = True
     N = M[activity + idr, :][:, activity + idr]
 
-    Xt = _C1_inverse(N)
+    Xt = _C1_system(N)
 
     param.number_act = number_act
     param.idr = idr
@@ -848,10 +898,13 @@ def _refresh_classification_state(param):
     if param.formulation=="C2":param.F&=param.r>=param.rho-1e-9
     if param.formulation == "R1": param.F = np.ones(len(y),bool)
     if param.formulation == "R2": param.F = np.abs(param.r)<=param.rho+1e-9
-    P=A[param.F]
-    if param.intercept and len(P):P=P-P.mean(axis=0)
-    H=2*P.T.dot(P)
-    param.M=np.block([[H,C.T],[C,np.zeros((len(C),len(C)))]])
+    if regression:
+        P=A[param.F]
+        if param.intercept and len(P):P=P-P.mean(axis=0)
+        H=2*P.T.dot(P)
+        param.M=np.block([[H,C.T],[C,np.zeros((len(C),len(C)))]])
+    else:
+        _classification_gram(param, param.F, rebuild=True)
     certificate=check_C1_certificate(param)
     values=2*h_prime(param.rho,param.formulation)(param.r)
     gradient=A.T.dot(values if regression else y*values)
@@ -871,7 +924,7 @@ def _refresh_classification_state(param):
         rank=int(np.sum(diag>1e-10*max(1.,diag.max(initial=0.))))
         for j in pivots[:rank]:param.idr[int(j)]=True
     selected=param.activity+param.idr
-    param.Xt=_C1_inverse(param.M[selected,:][:,selected])
+    param.Xt=(_C1_inverse if regression else _C1_system)(param.M[selected,:][:,selected])
 
 
 def _classification_flat_step(param,allow_no_progress=False,allow_equal_norm=False):
@@ -1015,12 +1068,17 @@ def derivatives(activity, s, Mat, C, Inv, idr, number_act):
 
     """
     beta_dot = np.zeros(len(activity))
-    beta_dot[activity] = -Inv[:number_act, :number_act].dot(s[activity])
+    if hasattr(Inv, "solve"):
+        solution = Inv.solve(np.r_[s[activity], np.zeros(sum(idr))])
+        beta_dot[activity] = -solution[:number_act]
+    else:
+        beta_dot[activity] = -Inv[:number_act, :number_act].dot(s[activity])
     lam_s_dot = -Mat.dot(beta_dot)
 
     if len(C) > 0:
         v_dot = np.zeros(len(C))
-        v_dot[idr] = Inv[number_act:, :number_act].dot(s[activity])
+        v_dot[idr] = (solution[number_act:] if hasattr(Inv, "solve")
+                      else Inv[number_act:, :number_act].dot(s[activity]))
         lam_s_dot += C.T.dot(v_dot)
 
     return (beta_dot, lam_s_dot)
