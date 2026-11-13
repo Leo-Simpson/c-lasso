@@ -94,3 +94,40 @@ pivot error also reproduces with NumPy 2.4.2 / SciPy 1.17.1. The reported outgoi
 QP error passes locally in both environments; its full path remains a regression
 without claiming an independently reproduced root cause. The older numerical
 stack was tested on Python 3.11, rather than the reported Python 3.8.
+
+## Cheaper classification path updates
+
+Well-conditioned active C1/C2 KKT systems now retain an equilibrated LU
+factorization and solve for the requested direction. A reciprocal-condition
+estimate gates this path; singular or ill-conditioned faces retain the original
+equilibrated minimum-norm eigensolver. The solve also checks its backward error
+before accepting a direction. No additional penalty or rank threshold is used
+to replace a deficient face with a full-rank one.
+
+For a centered sample scatter S over m samples, adding a row x uses
+`S_new = S + m/(m+1) * (x-mean)(x-mean)^T`; removal uses the corresponding
+`m/(m-1)` downdate. The classifier stores twice this scatter. It rebuilds from
+the actual design after 64 row changes, for large batches, for tiny feature
+sets, and at degenerate/certified fallback pivots. The cached mean supplies
+intercept directions for the current quadratic sample set.
+
+Coefficient and sample event searches use the same analytic formulas in
+vectorized NumPy operations. Only features actually participating in the next
+event enter the Python update loop. KKT checks, close sample crossings and
+simultaneous events are retained.
+
+These changes lower constants rather than eliminate the cubic cost of active
+factorization. The full p-by-p Gram storage remains. In particular, a dense
+classification tail is still more expensive than a deliberately sparse path.
+The centered full-Gram reconstruction already existed in the October code;
+the later rank-aware inverse policy increased the cost of active solves.
+
+Validation: 320 maintenance tests pass on NumPy 2.4.2 / SciPy 1.17.1;
+78 classification/numerical checks pass on NumPy 1.24.4 / SciPy 1.10.1.
+A controlled synthetic C1 path with n=1000, p=450, intercept and zero-sum
+constraint takes 14.78 s before and 3.71 s after, with profiling disabled and
+one BLAS thread. Both runs visit 966 knots and at most 314 active features.
+Independent objective/KKT comparisons at 21 common lambda values per design
+(n=250/500/1000) agree within numerical precision. These are diagnostic
+single-run timings against maintenance commit 8f311ea, not a reproduction of
+the unavailable October/November benchmark dataset.
