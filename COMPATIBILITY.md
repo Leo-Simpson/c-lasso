@@ -5,7 +5,8 @@ remain in the matrix for existing scientific environments; current installations
 should use a currently maintained Python release. Raising the Python floor is a
 separate release-policy decision, not an incidental consequence of a solver fix.
 The matrix uses the latest patch available for each minor, except the deliberately
-frozen Python 3.8.19 reproduction job.
+frozen Python 3.8.18 compatibility job. The setup-python binary manifest supplies
+3.8.18, not the students' 3.8.19; the original NumPy/SciPy versions remain exact.
 
 The tested dependency floors are:
 
@@ -29,7 +30,7 @@ remaining results:
 
 | Environment | Dependency selection | Purpose |
 | --- | --- | --- |
-| Linux / Python 3.8.19 | `ci/constraints/minimum.txt` | Declared floors and the reported student numerical stack |
+| Linux / Python 3.8.18 | `ci/constraints/minimum.txt` | Declared floors and the reported student numerical stack |
 | Linux / Python 3.9–3.15, one job per minor | Latest compatible stable releases | Compatibility with current dependency resolution |
 | macOS and Windows / Python 3.15 | Latest compatible stable releases | Platform and numerical-library coverage |
 

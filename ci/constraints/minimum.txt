@@ -1,5 +1,5 @@
 # Maintenance compatibility floor and the reported student numerical stack.
-# The workflow uses Python 3.8.19. Keep these core versions frozen until the
+# The workflow uses Python 3.8.18. Keep these core versions frozen until the
 # supported floor is deliberately changed and its release impact reviewed.
 numpy==1.24.4
 scipy==1.10.1

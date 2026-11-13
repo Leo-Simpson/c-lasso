@@ -23,7 +23,7 @@ jobs:
       matrix:
         include:
           # The floor also retains the students' original numerical stack.
-          - {os: ubuntu-22.04, python: '3.8.19', dependencies: minimum}
+          - {os: ubuntu-22.04, python: '3.8.18', dependencies: minimum}
           - {os: ubuntu-22.04, python: '3.9', dependencies: latest}
           - {os: ubuntu-22.04, python: '3.10', dependencies: latest}
           - {os: ubuntu-latest, python: '3.11', dependencies: latest}
