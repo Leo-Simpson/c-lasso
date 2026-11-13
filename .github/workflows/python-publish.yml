@@ -13,6 +13,10 @@ permissions:
   contents: read
 
 jobs:
+  release-compatibility:
+    if: github.event_name == 'release'
+    uses: ./.github/workflows/build-and-test.yml
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -24,6 +28,11 @@ jobs:
           python-version: "3.12"
       - name: Install build and test tools
         run: python -m pip install --upgrade build twine pytest '.[tests]'
+      - name: Record build environment
+        if: always()
+        run: python ci/report_environment.py --output build-environment
+      - name: Verify dependency consistency
+        run: python -m pip check
       - name: Test source
         env:
           MPLBACKEND: Agg
@@ -50,6 +59,11 @@ jobs:
           print("Installed c-lasso", version, "from", classo.__file__)
           PYCODE
       - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: release-build-environment
+          path: build-environment/
+      - uses: actions/upload-artifact@v7
         with:
           name: distributions
           path: dist/*
@@ -57,7 +71,7 @@ jobs:
 
   publish:
     if: github.event_name == 'release' && github.repository == 'bio-datascience/c-lasso'
-    needs: build
+    needs: [build, release-compatibility]
     runs-on: ubuntu-latest
     environment:
       name: pypi

@@ -5,3 +5,6 @@ include CHANGELOG.md
 include RELEASING.md
 
 recursive-include classo/tests/fixtures *.npz *.md
+
+include COMPATIBILITY.md
+recursive-include ci *.py *.txt
