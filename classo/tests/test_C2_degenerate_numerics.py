@@ -75,3 +75,28 @@ def test_small_true_inactive_slope_still_produces_its_event():
     expected=(1.-gradient[2])/(1.+gdot[2])
     assert delta == pytest.approx(expected,rel=1e-10)
     assert delta < .4
+
+
+def test_score_scaled_cone_solve_handles_weak_curvature_and_binding_sign():
+    from classo._classification_path import _scaled_cone_solve
+    design=np.diag([1e-4,2.]);linear=np.array([1.,-2.])
+    def objective(v):
+        score=design@v
+        return score@score-linear@v,2*design.T@score-linear
+    fit=_scaled_cone_solve(objective,design,np.eye(2))
+    assert fit.success
+    np.testing.assert_allclose(fit.x,[5e7,0.],rtol=1e-9,atol=1e-7)
+    gradient=objective(fit.x)[1]
+    assert abs(gradient[0])<1e-7
+    assert gradient[1]>=0
+
+
+def test_score_scaled_cone_solve_preserves_a_true_null_direction():
+    from classo._classification_path import _scaled_cone_solve
+    design=np.diag([1.,0.])
+    def objective(v):
+        return v[0]**2-v[0],np.array([2*v[0]-1.,0.])
+    fit=_scaled_cone_solve(objective,design,np.empty((0,2)))
+    assert fit.success
+    np.testing.assert_allclose(fit.x,[.5,0.],atol=1e-10)
+    assert objective(fit.x)[0]==pytest.approx(-.25)

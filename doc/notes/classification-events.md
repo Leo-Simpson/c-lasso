@@ -131,3 +131,16 @@ Independent objective/KKT comparisons at 21 common lambda values per design
 (n=250/500/1000) agree within numerical precision. These are diagnostic
 single-run timings against maintenance commit 8f311ea, not a reproduction of
 the unavailable October/November benchmark dataset.
+
+
+## SciPy 1.15 outgoing-QP compatibility
+
+The expanded compatibility matrix reproduced the November 13 case-1 outgoing
+QP failure on Python 3.10 / NumPy 2.2.6 / SciPy 1.15.3. The original direction
+program and cone are retained. If its SLSQP result fails the existing acceptance
+check, retry through an invertible score-scaled coordinate change derived from
+the potential quadratic design. True null directions receive finite scaling;
+none is dropped and no curvature/penalty is added. Constraint-row and common
+objective scaling improve the line search without changing the minimizer.
+The result is checked in original coordinates before the existing fixed-face
+refinement and endpoint certificates. The ordinary path has no SVD retry cost.

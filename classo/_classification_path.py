@@ -49,6 +49,38 @@ def _gradient(X,y,beta,lower=None,offset=0.):
     return -2*X.T@(y*hinge)
 
 
+def _scaled_cone_solve(objective, design, J):
+    """Retry a stalled cone QP in score-scaled coordinates, without a ridge.
+
+    This is an invertible variable change: true null directions are retained
+    with finite scale, and inequality row scaling leaves the cone unchanged.
+    The caller verifies the result in the original coordinates.
+    """
+    q = design.shape[1]
+    _, singular, vh = np.linalg.svd(design, full_matrices=design.shape[0] < q)
+    largest = np.max(singular, initial=0.)
+    scales = np.full(q, 1./max(largest, 1.))
+    kept = np.flatnonzero(singular > 1e-10*largest)
+    scales[kept] = 1./singular[kept]
+    transform = vh.T*scales
+    linear_scale = max(np.max(abs(transform.T@objective(np.zeros(q))[1]), initial=0.), 1e-12)
+    transform *= linear_scale
+
+    def scaled_objective(v):
+        value, gradient = objective(transform@v)
+        return value/linear_scale**2, transform.T@gradient/linear_scale**2
+
+    rows = J@transform
+    if len(rows):
+        rows = rows/np.linalg.norm(rows, axis=1)[:, None]
+    constraints = [dict(type='ineq', fun=lambda v: rows@v, jac=lambda v: rows)] if len(rows) else []
+    fit = minimize(scaled_objective, np.zeros(q), jac=True, method='SLSQP',
+                   constraints=constraints, options=dict(ftol=1e-12, maxiter=2000))
+    fit.x = transform@fit.x
+    fit.fun, fit.jac = objective(fit.x)
+    return fit
+
+
 def direction(X,C,y,beta,lam,certificate,free=0,lower=None,offset=0.):
     """Descending-lambda direction in the scalar L1 critical cone."""
     tol = 1e-9
@@ -97,16 +129,21 @@ def direction(X,C,y,beta,lam,certificate,free=0,lower=None,offset=0.):
         constraints = [dict(type='ineq',fun=lambda v:J@v,jac=lambda v:J)] if len(J) else []
         fit = minimize(objective,np.zeros(N.shape[1]),jac=True,method='SLSQP',
                        constraints=constraints,options=dict(ftol=1e-12,maxiter=2000))
-        gradient = objective(fit.x)[1]
-        slack = J@fit.x
-        if len(J):
-            multipliers,_ = nnls(J.T,gradient,maxiter=10000)
-            residual = gradient-J.T@multipliers
-            complementarity = np.max(abs(multipliers*slack),initial=0.)
-        else: residual,complementarity = gradient,0.
-        if (np.min(slack,initial=0.) < -1e-8 or
-                (not fit.success and (np.max(abs(residual),initial=0.)>1e-7 or complementarity>1e-7))):
-            raise RuntimeError('Classification outgoing cone QP failed its KKT check: '+fit.message)
+        def accepted(result):
+            gradient = objective(result.x)[1]
+            slack = J@result.x
+            if len(J):
+                multipliers,_ = nnls(J.T,gradient,maxiter=10000)
+                residual = gradient-J.T@multipliers
+                complementarity = np.max(abs(multipliers*slack),initial=0.)
+            else: residual,complementarity = gradient,0.
+            return (np.min(slack,initial=0.) >= -1e-8 and
+                    (result.success or (np.max(abs(residual),initial=0.)<=1e-7 and complementarity<=1e-7)))
+
+        if not accepted(fit):
+            fit = _scaled_cone_solve(objective, A[interior|boundary|lower_boundary]@N, J)
+            if not accepted(fit):
+                raise RuntimeError('Classification outgoing cone QP failed its KKT check: '+fit.message)
         candidate = N@fit.x
 
     D = np.zeros_like(beta);D[working] = candidate
