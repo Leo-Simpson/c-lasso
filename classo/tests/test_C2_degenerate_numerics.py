@@ -56,3 +56,22 @@ def test_design_svd_retains_weak_curvature_and_true_nullspace():
 def test_inconsistent_true_nullspace_still_fails():
     with pytest.raises(np.linalg.LinAlgError, match='another outgoing face'):
         _solve_design(np.diag([1., 0.]), np.array([1., 1.]))
+
+
+def test_tied_inactive_bound_roundoff_is_not_a_negative_event():
+    # Both inactive slack and rate should be zero. Their rounding residues
+    # used to divide into a large negative time and stop a valid path.
+    C=np.ones((1,3));active=np.array([0,1]);signs=np.array([1.,-1.,0.])
+    gradient=np.array([-1.+3e-12,1.-3e-12,1.+8e-13])
+    gdot=np.array([11.,9.,9.+4e-14])
+    delta,_=_dual_segment(C,gradient,gdot,1.,.4,active,signs,0)
+    assert delta == pytest.approx(.4)
+
+
+def test_small_true_inactive_slope_still_produces_its_event():
+    C=np.ones((1,3));active=np.array([0,1]);signs=np.array([1.,-1.,0.])
+    gradient=np.array([-1.,1.,1.-1e-9]);gdot=np.array([1.,-1.,-1.+1e-7])
+    delta,_=_dual_segment(C,gradient,gdot,1.,.4,active,signs,0)
+    expected=(1.-gradient[2])/(1.+gdot[2])
+    assert delta == pytest.approx(expected,rel=1e-10)
+    assert delta < .4

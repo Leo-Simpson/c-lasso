@@ -67,3 +67,30 @@ from 101 to zero. These are single-run development measurements with one BLAS
 thread. Paths can choose different representatives at degenerate knots; both
 paths were independently objective-checked. The active-set-cap-30 path takes
 about 0.6 seconds and already required no flat-face LPs.
+
+## Rounded optimal faces and tied inactive bounds (2026-11-13)
+
+A tolerance-based flat-cell partition can include a sample whose current margin
+is just inside the neighboring curved cell. Requiring an exact flat-cell bound
+then excludes the certified starting point from its own pivot LP. Only these
+rounded boundary bounds are anchored to the current score: the upper flat cell
+uses `margin >= min(1, current_margin)` and the lower C2 cell uses
+`margin <= max(rho, current_margin)`. All other bounds remain unchanged, and a
+candidate still passes the existing original-loss KKT check at tolerance 1e-7.
+Using an exact partition everywhere was tested and rejected because rounded C2
+knots can then prevent valid continuation.
+
+An inactive bound tied throughout a segment has mathematically zero slack and
+zero rate. Floating-point residues in both could divide into a large negative
+event time. The unique-multiplier analytic event solver now bounds this
+uncertainty using active stationarity residuals and multiplier arithmetic.
+It ignores only rates indistinguishable from roundoff, and clamps only negative
+slack within that bound. Endpoint KKT checks remain unchanged. A separate test
+retains small genuine inactive-entry rates.
+
+Three supplied numerical-only paths are retained in the November 13 fixtures.
+The zero-length error reproduces with NumPy 1.24.4 / SciPy 1.10.1, and the trac
+pivot error also reproduces with NumPy 2.4.2 / SciPy 1.17.1. The reported outgoing
+QP error passes locally in both environments; its full path remains a regression
+without claiming an independently reproduced root cause. The older numerical
+stack was tested on Python 3.11, rather than the reported Python 3.8.

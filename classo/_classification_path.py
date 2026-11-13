@@ -193,7 +193,19 @@ def _dual_segment(C, gradient, gdot, lam, upper, active, signs, free):
     if not V.shape[1]:
         # Unique equality multiplier: every inactive condition is a scalar
         # affine inequality, so the next event is available analytically.
-        moving = rates > 0.
+        # A tied inactive bound can have roundoff in both its zero slack
+        # and zero slope. Dividing those residues creates an arbitrarily
+        # large negative event time. Bound that uncertainty using the active
+        # stationarity solve and floating-point multiplier arithmetic.
+        start_error = np.max(abs(E@u0-rhs), initial=0.)
+        slope_error = np.max(abs(E@udot-slope), initial=0.)
+        slack_tol = max(start_error, 64*np.finfo(float).eps*max(
+            scale, np.max(abs(C.T@u0), initial=0.)))
+        rate_tol = max(slope_error, 64*np.finfo(float).eps*max(
+            1., np.max(abs(gdot), initial=0.),
+            np.max(abs(C.T@udot), initial=0.)))
+        slack = np.where((slack < 0.) & (slack >= -slack_tol), 0., slack)
+        moving = rates > rate_tol
         roots = slack[moving]/rates[moving]
         delta = min(upper, np.min(roots, initial=upper))
         if delta < 0. and delta >= -64*np.finfo(float).eps*scale:
