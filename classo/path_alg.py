@@ -935,8 +935,13 @@ def _classification_flat_step(param,allow_no_progress=False,allow_equal_norm=Fal
     F=np.c_[np.zeros((d,offset)),np.eye(d)]
     rows=[np.c_[F,-np.eye(d)],np.c_[-F,-np.eye(d)]]
     rhs=[np.zeros(d),np.zeros(d)]
-    if np.any(low):rows.append(np.c_[signed[low],np.zeros((low.sum(),d))]);rhs.append(np.full(low.sum(),param.rho))
-    if np.any(high):rows.append(np.c_[-signed[high],np.zeros((high.sum(),d))]);rhs.append(-np.ones(high.sum()))
+    # Rounded knot scores may lie just inside the adjacent curved cell.
+    # The tolerance-based partition must not exclude the current certified
+    # point from its own pivot LP. Anchor only those boundary bounds to the
+    # current score; do not relax every sample by a fixed tolerance. The
+    # candidate still undergoes the unchanged original-loss KKT check below.
+    if np.any(low):rows.append(np.c_[signed[low],np.zeros((low.sum(),d))]);rhs.append(np.maximum(param.rho,margin[low]))
+    if np.any(high):rows.append(np.c_[-signed[high],np.zeros((high.sum(),d))]);rhs.append(-np.minimum(1.,margin[high]))
     tree=np.c_[np.zeros((k,offset)),C,np.zeros((k,d))]
     fixed_scores=np.c_[signed[curved],np.zeros((curved.sum(),d))]
     optimality=np.r_[loss_linear,np.full(d,absolute)]
