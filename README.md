@@ -44,6 +44,10 @@ The code builds on results from several papers which can be found in the [Refere
 
 ##  Installation
 
+Supported Python versions, dependency minimums and the CI matrix are documented
+in [COMPATIBILITY.md](COMPATIBILITY.md). Numerical regression tests run against
+both the frozen minimum stack and current stable dependencies.
+
 c-lasso is available on pip. You can install the package
 in the shell using
 

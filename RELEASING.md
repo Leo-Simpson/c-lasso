@@ -25,7 +25,8 @@ new publisher is configured successfully.
 ## Validate and release
 
 1. Merge the maintenance fixes and release preparation PR. Check both the Test
-   and Release workflows on the intended master commit.
+   and Release workflows on the intended master commit. The Test `build` gate
+   requires every supported compatibility job; see `COMPATIBILITY.md`.
 2. Review `CHANGELOG.md`, replace the unreleased heading with the release date,
    and merge that change before tagging.
 3. Fetch master and all tags. Versioneer derives package versions from Git tags;
@@ -39,7 +40,8 @@ new publisher is configured successfully.
 6. The workflow runs tests, builds both distributions (the wheel is built from
    the source distribution), checks metadata, and installs the wheel into a clean
    environment outside the checkout. For release events, its version must equal
-   the release tag. Only successful validation enables the publishing job.
+   the release tag. Release publication also reruns the complete compatibility
+   matrix on that commit. Both must pass before publishing is enabled.
 7. Verify https://pypi.org/project/c-lasso/1.0.12/ and install `c-lasso==1.0.12`
    in a fresh environment. Rebuild Read the Docs after confirming its repository
    connection points to `bio-datascience/c-lasso`.

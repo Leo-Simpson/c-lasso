@@ -1,38 +1,101 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: Test
 
 on:
   push:
-    branches: [ master ]
+    branches: [master, multi-class, ridge, quantile]
   pull_request:
-    branches: [ master ]
+    branches: [master, multi-class, ridge, quantile]
+  workflow_dispatch:
+  workflow_call:
+  schedule:
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
+  tests:
+    name: ${{ matrix.os }} / Python ${{ matrix.python }} / ${{ matrix.dependencies }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The floor also retains the students' original numerical stack.
+          - {os: ubuntu-latest, python: '3.8.19', dependencies: minimum}
+          - {os: ubuntu-latest, python: '3.9', dependencies: latest}
+          - {os: ubuntu-latest, python: '3.10', dependencies: latest}
+          - {os: ubuntu-latest, python: '3.11', dependencies: latest}
+          - {os: ubuntu-latest, python: '3.12', dependencies: latest}
+          - {os: ubuntu-latest, python: '3.13', dependencies: latest}
+          - {os: ubuntu-latest, python: '3.14', dependencies: latest}
+          - {os: ubuntu-latest, python: '3.15', dependencies: latest}
+          - {os: macos-latest, python: '3.15', dependencies: latest}
+          - {os: windows-latest, python: '3.15', dependencies: latest}
+    env:
+      MPLBACKEND: Agg
+      OPENBLAS_NUM_THREADS: '1'
+      OMP_NUM_THREADS: '1'
+      MKL_NUM_THREADS: '1'
+      VECLIB_MAXIMUM_THREADS: '1'
+      NUMEXPR_NUM_THREADS: '1'
+    defaults:
+      run:
+        shell: bash
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        pip install -r requirements.txt
-    - name: Lint with flake8
-      run: |
-        # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        pip install pytest
-        pip install pytest-cov
-        py.test --cov --cov-report html --cov-config=.coveragerc
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install supported dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [[ '${{ matrix.dependencies }}' == 'minimum' ]]; then
+            python -m pip install --only-binary=numpy,scipy,matplotlib,pandas -c ci/constraints/minimum.txt -e '.[tests]'
+          else
+            # No --pre: select current stable packages compatible with this Python.
+            python -m pip install --upgrade --only-binary=numpy,scipy,matplotlib,pandas -e '.[tests]'
+          fi
+      - name: Record exact environment and BLAS configuration
+        if: always()
+        run: python ci/report_environment.py --output ci-environment
+      - name: Verify dependency consistency
+        run: python -m pip check
+      - name: Run the complete suite
+        run: python -m pytest classo/tests -q --cov=classo --cov-report=xml --cov-config=.coveragerc --junitxml=test-results.xml
+      - name: Save environment, coverage and test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: tests-${{ matrix.os }}-py${{ matrix.python }}-${{ matrix.dependencies }}
+          path: |
+            ci-environment/
+            test-results.xml
+            coverage.xml
+          if-no-files-found: warn
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: python -m pip install flake8
+      - name: Check syntax and undefined names
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  # Retain the existing required status name as an aggregate matrix gate.
+  build:
+    if: always()
+    needs: [tests, lint]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require every compatibility job
+        env:
+          TEST_RESULT: ${{ needs.tests.result }}
+          LINT_RESULT: ${{ needs.lint.result }}
+        run: test "$TEST_RESULT" = success && test "$LINT_RESULT" = success

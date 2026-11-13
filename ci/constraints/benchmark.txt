@@ -1,0 +1,7 @@
+# Fixed numerical stack for solver runtime comparisons (Python 3.12.13).
+# Use the SAME machine, BLAS build and thread count for both solver revisions.
+# Record the complete freeze and BLAS configuration for every measurement.
+numpy==2.4.2
+scipy==1.17.1
+matplotlib==3.10.8
+pandas==2.3.3
